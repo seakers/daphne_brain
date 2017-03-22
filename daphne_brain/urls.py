@@ -20,10 +20,9 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from iFEED_API import views
 
 urlpatterns = [
-    url(r'^server/orbits/$', views.OrbitList.as_view()),
-    url(r'^server/instruments/$', views.InstrumentList.as_view()),
-    url(r'^admin/', admin.site.urls),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^server/ifeed/$', views.IFEEDServer.as_view()),
+    url(r'^server/admin/', admin.site.urls),
+    url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
