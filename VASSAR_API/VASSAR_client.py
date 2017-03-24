@@ -21,17 +21,14 @@
 
 import sys
 import glob
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/VASSAR_API/gen-py")
-
-from pyInterface import VASSARInterface
-
 
 from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
+from VASSAR_interface import VASSARInterface
 
-class pyClient():
+class VASSAR_client():
     
     def __init__(self):
         # Make socket

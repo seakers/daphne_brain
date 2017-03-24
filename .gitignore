@@ -4,3 +4,9 @@ daphne_brain/__pycache__/*
 *.DS_Store
 iFEED_API/__pycache__/*
 iFEED_API/migrations/__pycache__/*
+VASSAR_API/__pycache__/*
+*.ipynb
+data_mining_API/__pycache__/*
+data_mining_API/.ipynb_checkpoints/
+
+
