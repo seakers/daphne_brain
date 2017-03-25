@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'iFEED_API',
+    'data_mining_API',
+    'VASSAR_API'
 ]
 
 MIDDLEWARE = [

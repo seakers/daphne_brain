@@ -31,7 +31,6 @@ class IFEEDServer(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
         self.DataMiningClient = DataMiningClient()
-        print('...IFEEDServer init')
         #self.http_method_names = ['get','post'];
         pass
     
@@ -118,7 +117,6 @@ class IFEEDServer(APIView):
                 non_behavioral = []
                 for s in non_selected_arch_ids:
                     non_behavioral.append(int(s))
-                
 
                 # Temporary implementation of importing architecture data from csv file.
                 # Should be changed after implementing database
@@ -136,11 +134,11 @@ class IFEEDServer(APIView):
                         science = float(row[1])
                         cost = float(row[2])
                         self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
-                
-                
+
                 drivingFeatures = self.DataMiningClient.getDrivingFeatures(behavioral,non_behavioral,self.architectures,supp,conf,lift)
+                    
                 output = drivingFeatures
-                self.DataMiningClient.endConnection()
+                self.DataMiningClient.endConnection() 
 
             # End the connection before return statement
             self.VASSARClient.endConnection()

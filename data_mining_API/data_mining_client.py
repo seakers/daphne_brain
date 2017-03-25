@@ -62,12 +62,6 @@ class data_mining_client():
         #self.client.ping()
         print('getDrivingFeatures')
         print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
-        print(type(behavioral[0]))
-        print(type(non_behavioral[0]))
-        print(all_archs[0])
-        print(supp)
-        print(conf)
-        print(lift)
         
         archs_formatted = []
         for arch in all_archs:
@@ -81,7 +75,7 @@ class data_mining_client():
         
         return drivingFeatures
 
-
+    
     
 
 if __name__ == '__main__':
