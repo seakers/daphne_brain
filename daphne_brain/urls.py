@@ -21,6 +21,7 @@ from iFEED_API import views
 
 urlpatterns = [
     url(r'^server/ifeed/$', views.IFEEDServer.as_view()),
+    url(r'^server/vassar/$', views.VASSARServer.as_view()),
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

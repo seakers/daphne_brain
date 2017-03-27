@@ -29,7 +29,6 @@ class IFEEDServer(APIView):
     IFEEDServer
     """
     def __init__(self):
-        self.VASSARClient = VASSARClient()
         self.DataMiningClient = DataMiningClient()
         #self.http_method_names = ['get','post'];
         pass
@@ -39,7 +38,6 @@ class IFEEDServer(APIView):
         try:
             
             # Start connection with VASSAR
-            self.VASSARClient.startConnection()
             requestID = request.POST['ID']
             output = ''
             
@@ -60,35 +58,6 @@ class IFEEDServer(APIView):
                         self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
                 output = self.architectures
     
-            
-            elif(requestID=='get_orbit_list'):
-                list = self.VASSARClient.getOrbitList()
-                output = list
-            
-            elif(requestID=='get_instrument_list'):
-                list = self.VASSARClient.getInstrumentList()
-                output = list
-    
-            elif(requestID=='extract_info_from_bitString'):
-                bitString = request.POST['bitString']
-                orbitList = self.VASSARClient.getOrbitList()
-                instrList = self.VASSARClient.getInstrumentList()
-                # Compute the number of orbits and instruments
-                norb = len(orbitList)
-                ninstr = len(instrList)
-                
-                architecture = []
-                for i in range(norb):
-                    orbit = orbitList[i]
-                    assigned = []
-                    for j in range(ninstr):
-                        if bitString[i*ninstr+j]=='1':
-                            instrument = instrList[j]
-                            # Store the instrument names assigned to jth orbit
-                            assigned.append(instrument)
-                    # Store the name of the orbit and the assigned instruments
-                    architecture.append({'orbit':orbit,'children':assigned})
-                output = architecture
                 
             elif(requestID=='get_driving_features'):
                 
@@ -138,20 +107,98 @@ class IFEEDServer(APIView):
                 drivingFeatures = self.DataMiningClient.getDrivingFeatures(behavioral,non_behavioral,self.architectures,supp,conf,lift)
                     
                 output = drivingFeatures
-                self.DataMiningClient.endConnection() 
+                
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception:
+            print('Exception in IFEED HTTP Request POST')
+            self.DataMiningClient.endConnection()
+            return Response('')
+        
+    def get(self, request, format=None):
+        return Response({'test':'ifeed_get'})
+
+
+
+
+
+
+# Create your views here.
+class VASSARServer(APIView):
+    """
+    VASSARServer
+    """
+    def __init__(self):
+        self.VASSARClient = VASSARClient()
+        pass
+    
+    def post(self, request, format=None):
+        try:
+            
+            # Start connection with VASSAR
+            self.VASSARClient.startConnection()
+            requestID = request.POST['ID']
+            output = ''
+            
+            if(requestID=='get_orbit_list'):
+                list = self.VASSARClient.getOrbitList()
+                output = list
+            
+            elif(requestID=='get_instrument_list'):
+                list = self.VASSARClient.getInstrumentList()
+                output = list
+    
+            elif(requestID=='extract_info_from_bitString'):
+                bitString = request.POST['bitString']
+                orbitList = self.VASSARClient.getOrbitList()
+                instrList = self.VASSARClient.getInstrumentList()
+                # Compute the number of orbits and instruments
+                norb = len(orbitList)
+                ninstr = len(instrList)
+                
+                architecture = []
+                for i in range(norb):
+                    orbit = orbitList[i]
+                    assigned = []
+                    for j in range(ninstr):
+                        if bitString[i*ninstr+j]=='1':
+                            instrument = instrList[j]
+                            # Store the instrument names assigned to jth orbit
+                            assigned.append(instrument)
+                    # Store the name of the orbit and the assigned instruments
+                    architecture.append({'orbit':orbit,'children':assigned})
+                output = architecture
+                
+                
+            elif(requestID=='initialize_jess'):
+                message = self.VASSARClient.initializeJess()
+                output = message
+            
+            elif(requestID=='evaluate_architecture'):
+                architecture = self.VASSARClient.evaluateArchitecture()
+                output = architecture
 
             # End the connection before return statement
             self.VASSARClient.endConnection()
             return Response(output)
         
         except Exception:
-            print('Exception in IFEED HTTP Request POST')
+            print('Exception in VASSAR HTTP Request POST')
             self.VASSARClient.endConnection()
-            self.DataMiningClient.endConnection()
             return Response('')
         
     def get(self, request, format=None):
         return Response({'test':'ifeed_get'})
+
+
+
+
+
+
+
 
 
 
