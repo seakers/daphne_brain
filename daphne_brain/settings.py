@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
     'iFEED_API',
     'data_mining_API',
     'VASSAR_API'
@@ -127,4 +128,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, '/iFEED_API/static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "ROUTING": "daphne_brain.routing.channel_routing",
+    },
+}
+
