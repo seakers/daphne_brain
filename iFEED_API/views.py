@@ -123,6 +123,40 @@ class IFEEDServer(APIView):
 
 
 
+# Create your views here.
+class DatabaseServer(APIView):
+    """
+    DatabaseServer
+    """
+    def __init__(self):
+        self.VASSARClient = VASSARClient()
+        pass
+    
+    def post(self, request, format=None):
+        try:
+            
+            # Start connection with VASSAR
+            self.VASSARClient.startConnection()
+            requestID = request.POST['ID']
+            output = ''
+            
+            if(requestID=='get_orbit_list'):
+                list = self.VASSARClient.getOrbitList()
+                output = list
+
+            # End the connection before return statement
+            self.VASSARClient.endConnection()
+            return Response(output)
+        
+        except Exception:
+            print('Exception in VASSAR HTTP Request POST')
+            self.VASSARClient.endConnection()
+            return Response('')
+        
+    def get(self, request, format=None):
+        return Response({'test':'ifeed_get'})
+
+
 
 
 

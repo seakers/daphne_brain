@@ -59,8 +59,9 @@ class VASSAR_client():
         return message
     
     def evaluateArchitecture(self):
-        arch = self.client.eval('')
-        print('Test arch evaluated. Science: {0}, Cost: {1}'.format(arch.science, arch.cost))
+        arch_formatted = self.client.eval('')
+        arch = {'science':arch_formatted.science,'cost':arch_formatted.cost,'booleanString':arch_formatted.booleanString}
+        print('Test arch evaluated. Science: {0}, Cost: {1}'.format(arch['science'], arch['cost']))
         return arch
         
     def ping(self):
