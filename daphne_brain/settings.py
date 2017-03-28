@@ -132,7 +132,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG":{
+            "hosts":[("localhost",6379)],
+        },
         "ROUTING": "daphne_brain.routing.channel_routing",
     },
 }
