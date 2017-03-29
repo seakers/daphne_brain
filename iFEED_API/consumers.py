@@ -1,13 +1,31 @@
 from channels import Group
+from channels.sessions import channel_session
+import json
 
-def ws_message(message):
-    # ASGI WebSocket packet-received and send-packet message types
-    # both have a "text" key for their textual data.
-    message.reply_channel.send({
-        "text": message.content['text'],
+
+    
+@channel_session
+def ifeed_ws_message(message):
+    
+    Group("ifeed").send({
+        "text": "This is a message generated from ifeed ws"
     })
+    # payload = json.loads(message.content['text'])
+    # print(payload['id'])
+    # if payload['id']=='save_info':
+    #     message.channel_session['info'] = payload['info']
+    #     
+    # elif payload['id']=='extract_info':
+    #     print(message.channel_session['info'])
+    #     Group('ifeed').send({
+    #         "text":message.channel_session['info']
+    #     })
+    # else:
+    #     Group("ifeed").send({
+    #             "text":"ifeed web socket"
+    #     })
     
-    
+
 # @receiver(post_save, sender=BlogUpdate)
 # def send_update(sender, instance, **kwargs):
 #     Group("liveblog").send({
@@ -18,15 +36,41 @@ def ws_message(message):
 #     })
 
 
-
 # Connected to websocket.connect
-def ws_connect(message):
-    # Add to the group
-    Group("ifeed").add(message.reply_channel)
+@channel_session
+def ifeed_ws_connect(message):
     # Accept the connection request
     message.reply_channel.send({"accept": True})
+    # Store the channel session info
+    message.channel_session['temp'] = 'save channel session info'
+    # Add to the group
+    Group("ifeed").add(message.reply_channel)
 
+    
 # Connected to websocket.disconnect
-def ws_disconnect(message):
+@channel_session
+def ifeed_ws_disconnect(message):
     # Remove from the group on clean disconnect
     Group("ifeed").discard(message.reply_channel)
+    
+    
+    
+def server_ws_message(message):
+    server_message = message.content['text']
+    if server_message == 'apply_pareto_filter':
+        Group("ifeed").send({
+                "text":'apply_pareto_filter'
+        })
+    
+
+def server_ws_connect(message):
+    # Accept the connection request
+    message.reply_channel.send({"accept": True})
+    # Add to the group
+    Group("server").add(message.reply_channel)
+
+# Connected to websocket.disconnect
+def server_ws_disconnect(message):
+    # Remove from the group on clean disconnect
+    Group("server").discard(message.reply_channel)
+    

@@ -9,7 +9,7 @@ import sys,os
 import json
 import csv
 
-root = "/Users/bang/workspace/daphne/daphne-brain"
+#root = "/Users/bang/workspace/daphne/daphne-brain"
 root_ifeed = "/Users/bang/workspace/daphne/iFEED"
 
 sys.path.append("/Users/bang/workspace/daphne/daphne-brain/data_mining_API/")
