@@ -17,11 +17,20 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from iFEED_API import views
+from iFEED_API import iFEED_views
+from VASSAR_API import VASSAR_views
 
 urlpatterns = [
-    url(r'^server/ifeed/$', views.IFEEDServer.as_view()),
-    url(r'^server/vassar/$', views.VASSARServer.as_view()),
+    url(r'^server/ifeed/import-data/$', iFEED_views.importData.as_view()),
+    url(r'^server/vassar/get-orbit-list/$', VASSAR_views.getOrbitList.as_view()),
+    url(r'^server/vassar/get-instrument-list/$', VASSAR_views.getInstrumentList.as_view()),
+    url(r'^server/vassar/intialize-jess/$', VASSAR_views.initializeJess.as_view()),
+    url(r'^server/vassar/evaluate-architecture/$', VASSAR_views.evaluateArchitecture.as_view()),
+
+
+    
+    #url(r'^server/ifeed/$', views.IFEEDServer.as_view()),
+    #url(r'^server/vassar/$', views.VASSARServer.as_view()),
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

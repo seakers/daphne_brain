@@ -57,11 +57,9 @@ def ifeed_ws_disconnect(message):
     
 def server_ws_message(message):
     server_message = message.content['text']
-    if server_message == 'apply_pareto_filter':
-        Group("ifeed").send({
-                "text":'apply_pareto_filter'
-        })
-    
+    Group("ifeed").send({
+            "text": server_message
+    })
 
 def server_ws_connect(message):
     # Accept the connection request
