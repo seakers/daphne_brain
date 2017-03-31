@@ -6,7 +6,6 @@ import json
     
 @channel_session
 def ifeed_ws_message(message):
-    
     Group("ifeed").send({
         "text": "This is a message generated from ifeed ws"
     })
@@ -39,6 +38,9 @@ def ifeed_ws_message(message):
 # Connected to websocket.connect
 @channel_session
 def ifeed_ws_connect(message):
+    
+    print("ws connected from ifeed")
+    
     # Accept the connection request
     message.reply_channel.send({"accept": True})
     # Store the channel session info
