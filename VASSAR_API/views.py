@@ -54,7 +54,7 @@ class getInstrumentList(APIView):
             return Response(list)
         
         except Exception:
-            print('Exception in getting the orbit list')
+            print('Exception in getting the instrument list')
             self.VASSARClient.endConnection()
             return Response('')
 
@@ -92,7 +92,7 @@ class evaluateArchitecture(APIView):
             return Response(architecture)
         
         except Exception:
-            print('Exception in initializing jess')
+            print('Exception in evaluating an architecture')
             self.VASSARClient.endConnection()
             return Response('')
 

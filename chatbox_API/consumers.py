@@ -6,7 +6,8 @@ import json
     
 def chat_ws_message(message):
     text = message.content['text']
-    Group("chat").send({
+    print('Chat message received: {0}'.format(text))
+    Group("mycroft").send({
             "text": text
     })
 

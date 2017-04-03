@@ -26,7 +26,7 @@ from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
-from interface import interface as VASSARInterface
+from VASSARInterface import VASSARInterface
 
 
 from config.loader import ConfigurationLoader
@@ -37,26 +37,26 @@ config = ConfigurationLoader().load()
 class VASSARClient():
     
     def __init__(self):
-        
         port = config['vassar']['port']
         
         # Make socket
-        self.transport = TSocket.TSocket('localhost', port)
+        self.transport = TSocket.TSocket('localhost',port)
     
         # Buffering is critical. Raw sockets are very slow
         self.transport = TTransport.TBufferedTransport(self.transport)
     
         # Wrap in a protocol
         self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
-        
+
         # Create a client to use the protocol encoder
         self.client = VASSARInterface.Client(self.protocol)
+
         
-    
     def startConnection(self):
         # Connect
         self.transport.open()
 
+        
     
     def endConnection(self):
         # Close

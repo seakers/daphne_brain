@@ -24,14 +24,23 @@ from chatbox_API import views as ChatboxViews
 
 urlpatterns = [
     url(r'ifeed/import-data/$', iFEEDViews.importData.as_view()),
+    url(r'ifeed/apply-filter/$', iFEEDViews.applyFilter.as_view()),
+    url(r'ifeed/cancel-selections/$', iFEEDViews.cancelSelections.as_view()),
+    
     url(r'vassar/get-orbit-list/$', VASSARViews.getOrbitList.as_view()),
     url(r'vassar/get-instrument-list/$', VASSARViews.getInstrumentList.as_view()),
-    url(r'vassar/intialize-jess/$', VASSARViews.initializeJess.as_view()),
     url(r'vassar/evaluate-architecture/$', VASSARViews.evaluateArchitecture.as_view()),
+    url(r'vassar/initialize-jess/$', VASSARViews.initializeJess.as_view()),
+
+    
     url(r'data-mining/get-driving-features/$', DataMiningViews.getDrivingFeatures.as_view()),
 
     url(r'chat/update-utterance/$', ChatboxViews.updateUtterance.as_view()),
-
+    url(r'chat/update-system-response/$', ChatboxViews.updateSystemResponse.as_view()),
+    
+    
+    
+    
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

@@ -6,8 +6,9 @@ import json
     
 @channel_session
 def ifeed_ws_message(message):
+    text = message.content['text']
     Group("ifeed").send({
-        "text": "This is a message generated from ifeed ws"
+        "text": text
     })
     # payload = json.loads(message.content['text'])
     # print(payload['id'])
@@ -23,24 +24,11 @@ def ifeed_ws_message(message):
     #     Group("ifeed").send({
     #             "text":"ifeed web socket"
     #     })
-    
-
-# @receiver(post_save, sender=BlogUpdate)
-# def send_update(sender, instance, **kwargs):
-#     Group("liveblog").send({
-#         "text": json.dumps({
-#             "id": instance.id,
-#             "content": instance.content
-#         })
-#     })
 
 
 # Connected to websocket.connect
 @channel_session
 def ifeed_ws_connect(message):
-    
-    print("ws connected from ifeed")
-    
     # Accept the connection request
     message.reply_channel.send({"accept": True})
     # Store the channel session info
@@ -57,11 +45,20 @@ def ifeed_ws_disconnect(message):
     
     
     
+    
+    
+    
+    
+    
+    
+    
 def server_ws_message(message):
     server_message = message.content['text']
+    print(server_message)
+    """
     Group("ifeed").send({
             "text": server_message
-    })
+    })"""
 
 def server_ws_connect(message):
     # Accept the connection request

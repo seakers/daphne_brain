@@ -8,6 +8,7 @@ import numpy as np
 import sys,os
 import json
 import csv
+from channels import Group
 
 from config.loader import ConfigurationLoader
 
@@ -52,8 +53,24 @@ class importData(APIView):
             return Response('')
 
 
-
-
+class applyFilter(APIView):
+    def __init__(self):
+        pass
+    def post(self, request, format=None):
+        #text = request.POST['']
+        text = "apply_pareto_filter"
+        Group("ifeed").send({
+            "text": text
+        })
+class cancelSelections(APIView):
+    def __init__(self):
+        pass
+    def post(self, request, format=None):
+        #text = request.POST['']
+        text = "cancel_selections"
+        Group("ifeed").send({
+            "text": text
+        })
 
 def booleanString2booleanArray(booleanString):
     leng = len(booleanString)
