@@ -10,16 +10,13 @@ import json
 import csv
 from channels import Group
 
-from config.loader import ConfigurationLoader
-
-
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/data_mining_API/")
 
 # Print all paths included in sys.path
-# from pprint import pprint as p
-# p(sys.path)
+#from pprint import pprint as p
+#p(sys.path)
 
-
+from iFEED_API.venn_diagram.intersection import optimize_distance
+from config.loader import ConfigurationLoader
 
 config = ConfigurationLoader().load()
 
@@ -43,7 +40,17 @@ class importData(APIView):
                     bitString = booleanString2booleanArray(row[0])
                     science = float(row[1])
                     cost = float(row[2])
-                    self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
+                    
+                    rep = False
+                    for i,a in enumerate(self.architectures):
+                        # Check if the current bitString was seen before
+                        if a['bitString'] == bitString:
+                            rep = True
+                            break
+                    if rep:
+                        pass
+                    else:
+                        self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
             output = self.architectures
             request.session['data']=self.architectures
             return Response(output)
@@ -57,11 +64,14 @@ class applyFilter(APIView):
     def __init__(self):
         pass
     def post(self, request, format=None):
-        #text = request.POST['']
+        temp = request.POST['content']
+        print(temp)
         text = "apply_pareto_filter"
         Group("ifeed").send({
             "text": text
         })
+        return Response('')
+    
 class cancelSelections(APIView):
     def __init__(self):
         pass
@@ -71,7 +81,20 @@ class cancelSelections(APIView):
         Group("ifeed").send({
             "text": text
         })
-
+        return Response('')
+    
+class vennDiagramDistance(APIView):
+    def __init__(self):
+        pass
+    def post(self, request, format=None):
+        a1 = float(request.POST['a1'])
+        a2 = float(request.POST['a2'])
+        intersection = float(request.POST['intersection'])
+        res = optimize_distance(a1,a2,intersection)
+        
+        distance = res.x[0]
+        return Response(distance)
+        
 def booleanString2booleanArray(booleanString):
     leng = len(booleanString)
     boolArray = []
