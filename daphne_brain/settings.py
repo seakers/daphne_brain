@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'channels',
     'iFEED_API',
     'data_mining_API',
-    'VASSAR_API'
+    'VASSAR_API',
+    'histdb_API'
 ]
 
 MIDDLEWARE = [

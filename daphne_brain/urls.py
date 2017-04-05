@@ -30,6 +30,8 @@ urlpatterns = [
     url(r'vassar/evaluate-architecture/$', VASSARViews.evaluateArchitecture.as_view()),
     url(r'data-mining/get-driving-features/$', DataMiningViews.getDrivingFeatures.as_view()),
 
+    url(r'^histdb/', include('histdb_API.urls')),
+
     url(r'chat/update-utterance/$', ChatboxViews.updateUtterance.as_view()),
 
     url(r'^server/admin/', admin.site.urls),
