@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
@@ -25,11 +24,7 @@ SECRET_KEY = 'zy&+i575bdsi3ytivu*iv7c-3)r88_g6oykwnb*yt34imq&)81'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '10.0.2.2',
-    '127.0.0.1',
-    'localhost'
-]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -43,9 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'channels',
-#    'iFEED_API',
-#    'data_mining_API',
-#    'VASSAR_API',
+    'iFEED_API',
+    'data_mining_API',
+    'VASSAR_API',
     'histdb_API'
 ]
 
@@ -140,4 +135,3 @@ CHANNEL_LAYERS = {
         "ROUTING": "daphne_brain.routing.channel_routing",
     },
 }
-

@@ -17,22 +17,22 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
-#from iFEED_API import views as iFEEDViews
-#from VASSAR_API import views as VASSARViews
-#from data_mining_API import views as DataMiningViews
-#from chatbox_API import views as ChatboxViews
+from iFEED_API import views as iFEEDViews
+from VASSAR_API import views as VASSARViews
+from data_mining_API import views as DataMiningViews
+from chatbox_API import views as ChatboxViews
 
 urlpatterns = [
-    # url(r'ifeed/import-data/$', iFEEDViews.importData.as_view()),
-    # url(r'vassar/get-orbit-list/$', VASSARViews.getOrbitList.as_view()),
-    # url(r'vassar/get-instrument-list/$', VASSARViews.getInstrumentList.as_view()),
-    # url(r'vassar/intialize-jess/$', VASSARViews.initializeJess.as_view()),
-    # url(r'vassar/evaluate-architecture/$', VASSARViews.evaluateArchitecture.as_view()),
-    # url(r'data-mining/get-driving-features/$', DataMiningViews.getDrivingFeatures.as_view()),
+    url(r'ifeed/import-data/$', iFEEDViews.importData.as_view()),
+    url(r'vassar/get-orbit-list/$', VASSARViews.getOrbitList.as_view()),
+    url(r'vassar/get-instrument-list/$', VASSARViews.getInstrumentList.as_view()),
+    url(r'vassar/intialize-jess/$', VASSARViews.initializeJess.as_view()),
+    url(r'vassar/evaluate-architecture/$', VASSARViews.evaluateArchitecture.as_view()),
+    url(r'data-mining/get-driving-features/$', DataMiningViews.getDrivingFeatures.as_view()),
 
     url(r'^histdb/', include('histdb_API.urls')),
 
-    # url(r'chat/update-utterance/$', ChatboxViews.updateUtterance.as_view()),
+    url(r'chat/update-utterance/$', ChatboxViews.updateUtterance.as_view()),
 
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
