@@ -43,9 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'channels',
-    'iFEED_API',
-    'data_mining_API',
-    'VASSAR_API',
+#    'iFEED_API',
+#    'data_mining_API',
+#    'VASSAR_API',
     'histdb_API'
 ]
 
