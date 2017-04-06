@@ -27,7 +27,9 @@ urlpatterns = [
     url(r'ifeed/apply-filter/$', iFEEDViews.applyFilter.as_view()),
     url(r'ifeed/cancel-selections/$', iFEEDViews.cancelSelections.as_view()),
     url(r'ifeed/venn-diagram-distance/$', iFEEDViews.vennDiagramDistance.as_view()),
+    url(r'ifeed/update-feature-status-chart/$', iFEEDViews.updateFeatureStatusChart.as_view()),
     
+
     url(r'vassar/get-orbit-list/$', VASSARViews.getOrbitList.as_view()),
     url(r'vassar/get-instrument-list/$', VASSARViews.getInstrumentList.as_view()),
     url(r'vassar/evaluate-architecture/$', VASSARViews.evaluateArchitecture.as_view()),

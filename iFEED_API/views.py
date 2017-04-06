@@ -94,6 +94,30 @@ class vennDiagramDistance(APIView):
         
         distance = res.x[0]
         return Response(distance)
+    
+class updateFeatureStatusChart(APIView):
+    
+    def post(self,request,format=None):
+        
+        expression = request.POST['expression']
+        conf_given_f = float(request.POST['conf_given_f'])
+        conf_given_s = float(request.POST['conf_given_s'])
+        lift = float(request.POST['lift'])
+        
+        payload = {'expression':expression,
+                  'conf_given_f':conf_given_f,
+                  'conf_given_s':conf_given_s,
+                  'lift':lift}
+        message = json.dumps(payload)
+        print(message)
+        
+        Group("ifeed-feature").send({
+            "text": message
+        })
+        return Response('')
+    
+    
+    
         
 def booleanString2booleanArray(booleanString):
     leng = len(booleanString)
