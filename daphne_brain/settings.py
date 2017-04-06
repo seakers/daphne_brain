@@ -135,3 +135,12 @@ CHANNEL_LAYERS = {
         "ROUTING": "daphne_brain.routing.channel_routing",
     },
 }
+
+ALCHEMY_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'localhost',
+    'port': '5432',
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
+    'database': 'ceos'
+}
