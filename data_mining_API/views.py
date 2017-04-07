@@ -20,7 +20,7 @@ from data_mining_API.api import DataMiningClient
 
 
 # Create your views here.
-class getDrivingFeatures(APIView):
+class GetDrivingFeatures(APIView):
 
     def __init__(self):
         self.DataMiningClient = DataMiningClient()

@@ -10,16 +10,16 @@ import json
 import csv
 
 
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/VASSAR_API/")
 # Print all paths included in sys.path
 # from pprint import pprint as p
 # p(sys.path)
 
-from VASSAR_API.api import VASSARClient
+sys.path.append("/Users/bang/workspace/daphne/daphne-brain/VASSAR_API/")
+from api import VASSARClient
 
 
 
-class getOrbitList(APIView):
+class GetOrbitList(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
     
@@ -39,7 +39,7 @@ class getOrbitList(APIView):
             return Response('')
 
 
-class getInstrumentList(APIView):
+class GetInstrumentList(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
     
@@ -59,7 +59,7 @@ class getInstrumentList(APIView):
             return Response('')
 
 
-class initializeJess(APIView):
+class InitializeJess(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
     
@@ -78,7 +78,7 @@ class initializeJess(APIView):
             return Response('')
 
 
-class evaluateArchitecture(APIView):
+class EvaluateArchitecture(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
     

@@ -21,7 +21,7 @@ from config.loader import ConfigurationLoader
 config = ConfigurationLoader().load()
 
 
-class importData(APIView):
+class ImportData(APIView):
     def __init__(self):
         pass
     def post(self, request, format=None):
@@ -29,6 +29,7 @@ class importData(APIView):
             output = None
             # Set the path of the file containing data
             file_path = config['iFEED']['path'] + request.POST['path']
+            
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
@@ -60,7 +61,7 @@ class importData(APIView):
             return Response('')
 
 
-class applyFilter(APIView):
+class ApplyFilter(APIView):
     def __init__(self):
         pass
     def post(self, request, format=None):
@@ -72,7 +73,7 @@ class applyFilter(APIView):
         })
         return Response('')
     
-class cancelSelections(APIView):
+class CancelSelections(APIView):
     def __init__(self):
         pass
     def post(self, request, format=None):
@@ -83,7 +84,7 @@ class cancelSelections(APIView):
         })
         return Response('')
     
-class vennDiagramDistance(APIView):
+class VennDiagramDistance(APIView):
     def __init__(self):
         pass
     def post(self, request, format=None):
@@ -95,7 +96,7 @@ class vennDiagramDistance(APIView):
         distance = res.x[0]
         return Response(distance)
     
-class updateFeatureStatusChart(APIView):
+class UpdateFeatureStatusChart(APIView):
     
     def post(self,request,format=None):
         
@@ -128,5 +129,3 @@ def booleanString2booleanArray(booleanString):
         else:
             boolArray.append(True)
     return boolArray
-
-
