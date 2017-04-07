@@ -26,7 +26,7 @@ from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
-from VASSARInterface import VASSARInterface
+from VASSAR_API.interface import interface as VASSARInterface
 
 
 from config.loader import ConfigurationLoader
