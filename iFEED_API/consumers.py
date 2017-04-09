@@ -27,22 +27,40 @@ def ifeed_ws_disconnect(message):
     
     
     
-def ifeedFeature_ws_message(message):
+def ifeed_feature_metric_message(message):
     text = message.content['text']
-    Group("ifeed-feature").send({"text": text})
+    Group("ifeed_feature_metric").send({"text": text})
+    
+    
 # Connected to websocket.connect
-def ifeedFeature_ws_connect(message):
+def ifeed_feature_metric_connect(message):
     # Accept the connection request
     message.reply_channel.send({"accept": True})
     # Add to the group
-    Group("ifeed-feature").add(message.reply_channel)
+    Group("ifeed_feature_metric").add(message.reply_channel)
+    
+    
 # Connected to websocket.disconnect
-def ifeedFeature_ws_disconnect(message):
+def ifeed_feature_metric_disconnect(message):
     # Remove from the group on clean disconnect
-    Group("ifeed-feature").discard(message.reply_channel)
+    Group("ifeed_feature_metric").discard(message.reply_channel)
     
     
+def ifeed_feature_status_message(message):
+    text = message.content['text']
+    Group("ifeed_feature_status").send({"text": text})
     
+# Connected to websocket.connect
+def ifeed_feature_status_connect(message):
+    # Accept the connection request
+    message.reply_channel.send({"accept": True})
+    # Add to the group
+    Group("ifeed_feature_status").add(message.reply_channel)
+    
+# Connected to websocket.disconnect
+def ifeed_feature_status_disconnect(message):
+    # Remove from the group on clean disconnect
+    Group("ifeed_feature_status").discard(message.reply_channel)
     
     
     

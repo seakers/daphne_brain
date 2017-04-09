@@ -84,6 +84,7 @@ class CancelSelections(APIView):
         })
         return Response('')
     
+    
 class VennDiagramDistance(APIView):
     def __init__(self):
         pass
@@ -96,10 +97,10 @@ class VennDiagramDistance(APIView):
         distance = res.x[0]
         return Response(distance)
     
-class UpdateFeatureStatusChart(APIView):
+    
+class UpdateFeatureMetricChart(APIView):
     
     def post(self,request,format=None):
-        
         expression = request.POST['expression']
         conf_given_f = float(request.POST['conf_given_f'])
         conf_given_s = float(request.POST['conf_given_s'])
@@ -109,16 +110,65 @@ class UpdateFeatureStatusChart(APIView):
                   'conf_given_f':conf_given_f,
                   'conf_given_s':conf_given_s,
                   'lift':lift}
-        message = json.dumps(payload)
-        print(message)
-        
-        Group("ifeed-feature").send({
+        message = json.dumps(payload)        
+        Group("ifeed_feature_metric").send({
             "text": message
         })
         return Response('')
     
+class ResetFeatureMetricChart(APIView):
+    
+    def post(self,request):
+        Group("ifeed_feature_metric").send({
+            "text": "reset"
+        })
+        return Response('')
     
     
+class UpdateFeatureApplicationStatus(APIView):
+    
+    def post(self,request,format=None):
+        expression = request.POST['expression']
+        option = request.POST['option']
+        
+        payload = {'expression':expression,
+                  'option':option}
+        message = json.dumps(payload)
+        
+        Group("ifeed_feature_status").send({
+            "text": message
+        })
+        return Response('')
+        
+        
+class RequestFeatureApplicationStatus(APIView):
+    
+    def post(self,request):
+        Group("ifeed_feature_status").send({
+            "text": "request_feature_status"
+        })
+        return Response('')        
+
+class ApplyFeatureExpression(APIView):
+    
+    def post(self,request):
+        option = request.POST['option']
+        expression = request.POST['expression']
+        
+        if option=='apply':
+            id = 'apply_feature_expression'
+        elif option=='update':
+            id = 'update_feature_expression'
+        
+        payload = {'id':id, 
+                'expression':expression}
+        message = json.dumps(payload)
+        
+        Group("ifeed").send({
+            "text": message
+        })
+        return Response('')
+        
         
 def booleanString2booleanArray(booleanString):
     leng = len(booleanString)
