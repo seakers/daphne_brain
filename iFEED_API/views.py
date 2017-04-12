@@ -152,16 +152,20 @@ class RequestFeatureApplicationStatus(APIView):
 class ApplyFeatureExpression(APIView):
     
     def post(self,request):
+        
         option = request.POST['option']
         expression = request.POST['expression']
+        source = request.POST['source']
         
         if option=='apply':
             id = 'apply_feature_expression'
         elif option=='update':
             id = 'update_feature_expression'
+
         
         payload = {'id':id, 
-                'expression':expression}
+                'expression':expression,
+                'source':source}
         message = json.dumps(payload)
         
         Group("ifeed").send({
