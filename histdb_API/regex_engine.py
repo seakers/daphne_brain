@@ -39,7 +39,6 @@ def ask_question(question):
             session.close()
 
     print('The result is', result)
-
     if not result:
         return ['No answer']
 
