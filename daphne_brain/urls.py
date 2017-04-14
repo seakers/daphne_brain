@@ -20,39 +20,21 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
 
-    url(r'^server/ifeed/', include('iFEED_API.urls')),
+    url(r'api/ifeed/', include('iFEED_API.urls')),
     
-    url(r'^server/vassar/', include('VASSAR_API.urls')),
+    url(r'api/vassar/', include('VASSAR_API.urls')),
     
-    url(r'^server/data-mining/', include('data_mining_API.urls')),
+    url(r'api/data-mining/', include('data_mining_API.urls')),
     
-    url(r'^histdb/', include('histdb_API.urls')),
+    url(r'histdb/', include('histdb_API.urls')),
     
-    url(r'^server/chat/', include('chatbox_API.urls')),
+    url(r'api/chat/', include('chatbox_API.urls')),
     
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
-
-
-"""
-Write functions interfacing with the front end
-
- - Sending WS messages
-1. Send commands to iFEED
-2. broadcast messages to chat and/or mycroft
-3. Send questions and commands to mycroft for parsing
- 
- - Receiving http commands
-1. From iFEED
-2. From Mycroft
-3. From Chat server
-"""
-
-
-
 
 
 
