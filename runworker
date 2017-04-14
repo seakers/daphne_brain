@@ -1,1 +1,1 @@
-python manage.py runworker
+PASSWORD="" python manage.py runworker

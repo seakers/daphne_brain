@@ -1,67 +1,55 @@
 from channels import Group
 from channels.sessions import channel_session
 import json
-
+import hashlib
 
     
 @channel_session
 def ifeed_ws_message(message):
-    Group("ifeed").send({
-        "text": "This is a message generated from ifeed ws"
-    })
-    # payload = json.loads(message.content['text'])
-    # print(payload['id'])
-    # if payload['id']=='save_info':
-    #     message.channel_session['info'] = payload['info']
-    #     
-    # elif payload['id']=='extract_info':
-    #     print(message.channel_session['info'])
-    #     Group('ifeed').send({
-    #         "text":message.channel_session['info']
-    #     })
-    # else:
-    #     Group("ifeed").send({
-    #             "text":"ifeed web socket"
-    #     })
     
-
-# @receiver(post_save, sender=BlogUpdate)
-# def send_update(sender, instance, **kwargs):
-#     Group("liveblog").send({
-#         "text": json.dumps({
-#             "id": instance.id,
-#             "content": instance.content
-#         })
-#     })
-
-
-# Connected to websocket.connect
+    key = message.content['path'].lstrip('ifeed/')
+    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
+    text = message.content['text']
+    Group(hash_key).send({"text": text})
+    
+    
 @channel_session
 def ifeed_ws_connect(message):
     
-    print("ws connected from ifeed")
-    
     # Accept the connection request
     message.reply_channel.send({"accept": True})
-    # Store the channel session info
-    message.channel_session['temp'] = 'save channel session info'
+    
+    key = message.content['path'].lstrip('ifeed/')
+    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
     # Add to the group
-    Group("ifeed").add(message.reply_channel)
+    Group(hash_key).add(message.reply_channel)
 
     
-# Connected to websocket.disconnect
 @channel_session
 def ifeed_ws_disconnect(message):
+    
+    key = message.content['path'].lstrip('ifeed/')
+    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
     # Remove from the group on clean disconnect
-    Group("ifeed").discard(message.reply_channel)
+    Group(hash_key).discard(message.reply_channel)
+    
+    
+
+    
+    
     
     
     
 def server_ws_message(message):
     server_message = message.content['text']
+    print(server_message)
+    """
     Group("ifeed").send({
             "text": server_message
-    })
+    })"""
 
 def server_ws_connect(message):
     # Accept the connection request

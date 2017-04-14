@@ -8,29 +8,38 @@ import numpy as np
 import sys,os
 import json
 import csv
+import hashlib
+from channels import Group
 
-from config.loader import ConfigurationLoader
-
-
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/data_mining_API/")
 
 # Print all paths included in sys.path
-# from pprint import pprint as p
-# p(sys.path)
+#from pprint import pprint as p
+#p(sys.path)
 
-
+from iFEED_API.venn_diagram.intersection import optimize_distance
+from config.loader import ConfigurationLoader
 
 config = ConfigurationLoader().load()
 
 
-class importData(APIView):
-    def __init__(self):
-        pass
+
+class ImportData(APIView):
+    
+    """ Imports data from a csv file. To be deprecated in the future.
+
+    Request Args:
+        path: Relative path to a csv file residing inside iFEED project folder
+        
+    Returns:
+        architectures: a list of python dict containing the basic architecture information.
+        
+    """
     def post(self, request, format=None):
         try:
             output = None
             # Set the path of the file containing data
             file_path = config['iFEED']['path'] + request.POST['path']
+            
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
@@ -42,7 +51,17 @@ class importData(APIView):
                     bitString = booleanString2booleanArray(row[0])
                     science = float(row[1])
                     cost = float(row[2])
-                    self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
+                    
+                    rep = False
+                    for i,a in enumerate(self.architectures):
+                        # Check if the current bitString was seen before
+                        if a['bitString'] == bitString:
+                            rep = True
+                            break
+                    if rep:
+                        pass
+                    else:
+                        self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
             output = self.architectures
             request.session['data']=self.architectures
             return Response(output)
@@ -51,10 +70,159 @@ class importData(APIView):
             print('Exception in importing data for iFEED')
             return Response('')
 
+    
+    
+class VennDiagramDistance(APIView):
+    
+    """ Optimizes the distance between two circles in a Venn diagram
 
+    Request Args:
+        a1: the area of the first circle
+        a2: the area of the second circle
+        intersection: the intersecting area of two circles
+        
+    Returns:
+        The distance between two circles
+        
+    """
+    def __init__(self):
+        pass
+    def post(self, request, format=None):
+        a1 = float(request.POST['a1'])
+        a2 = float(request.POST['a2'])
+        intersection = float(request.POST['intersection'])
+        res = optimize_distance(a1,a2,intersection)
+        
+        distance = res.x[0]
+        return Response(distance)
+    
+    
+class UpdateFeatureMetricChart(APIView):
+    
+    """ Makes an update to the Feature Metric Chart page
 
+    Request Args:
+        key: the user identifier
+        source: the source name
+        expression: the feature expression
+        conf_given_f: confidence(F->S) of the feature
+        conf_given_s: confidence(S->F) of the feature
+        lift: lift of the feature
+    """
+    def post(self,request,format=None):
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        
+        expression = request.POST['expression']
+        conf_given_f = float(request.POST['conf_given_f'])
+        conf_given_s = float(request.POST['conf_given_s'])
+        lift = float(request.POST['lift'])
+        
+        data = {'target':'ifeed.feature_metric_chart',
+                'expression':expression,
+                'conf_given_f':conf_given_f,
+                'conf_given_s':conf_given_s,
+                'lift':lift}
+        
+        message = json.dumps(data)   
+        
+        Group(hash_key).send({
+            "text": message
+        })
+        return Response('')
+    
+    
+class UpdateFeatureApplicationStatus(APIView):
+    
+    """ Makes an update to the Feature Application Status page
 
+    Request Args:
+        key: the user identifier
+        expression: the feature expression
+        option: options in updating a new feature. Should be one of {'new','add','within','remove','deactivated','temp'}
 
+    """    
+    def post(self,request,format=None):
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        expression = request.POST['expression']
+        option = request.POST['option']
+        
+        data = {'target':'ifeed.feature_application_status',
+                'id':'update',
+                'expression':expression,
+                'option':option}
+        message = json.dumps(data)
+        
+        Group(hash_key).send({
+            "text": message
+        })
+        return Response('')
+        
+        
+        
+class RequestFeatureApplicationStatus(APIView):
+    
+    """ Makes a request to Feature Application Status page for updates
+
+    Request args:
+        key: the user identifier
+        source: the source name
+    """    
+    def post(self,request):
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        #source = request.POST['source']
+        
+        data = {'target':'ifeed.feature_application_status',
+                'id':'request'}
+        message = json.dumps(data)
+        
+        Group(hash_key).send({
+            "text": message
+        })
+        return Response('')        
+
+    
+class ApplyFeatureExpression(APIView):
+    
+    """ Applies a feature in the main iFEED GUI
+
+    Request args:
+        key: the user identifier
+        source: the source name
+        expression: expression of the feature
+        option: options in applying the feature
+    """    
+    
+    def post(self,request):
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        source = request.POST['source']
+        expression = request.POST['expression']
+        option = request.POST['option']
+        
+        if option=='apply':
+            id = 'apply_feature'
+        elif option=='update':
+            id = 'update_feature'
+
+        data = {'target':'ifeed',
+                'id':id, 
+                'expression':expression,
+                'source':source}
+        message = json.dumps(data)
+        
+        Group(hash_key).send({
+            "text": message
+        })
+        return Response('')
+        
+        
 def booleanString2booleanArray(booleanString):
     leng = len(booleanString)
     boolArray = []
@@ -64,5 +232,3 @@ def booleanString2booleanArray(booleanString):
         else:
             boolArray.append(True)
     return boolArray
-
-
