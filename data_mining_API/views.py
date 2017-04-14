@@ -25,7 +25,7 @@ class GetDrivingFeatures(APIView):
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
-    
+
     def post(self, request, format=None):
         
         try:
