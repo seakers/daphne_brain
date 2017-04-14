@@ -1,68 +1,43 @@
 from channels import Group
 from channels.sessions import channel_session
 import json
-
+import hashlib
 
     
 @channel_session
 def ifeed_ws_message(message):
-    text = message.content['text']
-    Group("ifeed").send({"text": text})
     
-# Connected to websocket.connect
+    key = message.content['path'].lstrip('ifeed/')
+    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
+    text = message.content['text']
+    Group(hash_key).send({"text": text})
+    
+    
 @channel_session
 def ifeed_ws_connect(message):
+    
     # Accept the connection request
     message.reply_channel.send({"accept": True})
+    
+    key = message.content['path'].lstrip('ifeed/')
+    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
     # Add to the group
-    Group("ifeed").add(message.reply_channel)
-# Connected to websocket.disconnect
+    Group(hash_key).add(message.reply_channel)
+
+    
 @channel_session
 def ifeed_ws_disconnect(message):
+    
+    key = message.content['path'].lstrip('ifeed/')
+    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
     # Remove from the group on clean disconnect
-    Group("ifeed").discard(message.reply_channel)
+    Group(hash_key).discard(message.reply_channel)
     
     
-    
-    
-    
-    
-def ifeed_feature_metric_message(message):
-    text = message.content['text']
-    Group("ifeed_feature_metric").send({"text": text})
-    
-    
-# Connected to websocket.connect
-def ifeed_feature_metric_connect(message):
-    # Accept the connection request
-    message.reply_channel.send({"accept": True})
-    # Add to the group
-    Group("ifeed_feature_metric").add(message.reply_channel)
-    
-    
-# Connected to websocket.disconnect
-def ifeed_feature_metric_disconnect(message):
-    # Remove from the group on clean disconnect
-    Group("ifeed_feature_metric").discard(message.reply_channel)
-    
-    
-def ifeed_feature_status_message(message):
-    text = message.content['text']
-    Group("ifeed_feature_status").send({"text": text})
-    
-# Connected to websocket.connect
-def ifeed_feature_status_connect(message):
-    # Accept the connection request
-    message.reply_channel.send({"accept": True})
-    # Add to the group
-    Group("ifeed_feature_status").add(message.reply_channel)
-    
-# Connected to websocket.disconnect
-def ifeed_feature_status_disconnect(message):
-    # Remove from the group on clean disconnect
-    Group("ifeed_feature_status").discard(message.reply_channel)
-    
-    
+
     
     
     

@@ -8,6 +8,7 @@ import numpy as np
 import sys,os
 import json
 import csv
+import hashlib
 from channels import Group
 
 
@@ -21,9 +22,18 @@ from config.loader import ConfigurationLoader
 config = ConfigurationLoader().load()
 
 
+
 class ImportData(APIView):
-    def __init__(self):
-        pass
+    
+    """ Imports data from a csv file. To be deprecated in the future.
+
+    Request Args:
+        path: Relative path to a csv file residing inside iFEED project folder
+        
+    Returns:
+        architectures: a list of python dict containing the basic architecture information.
+        
+    """
     def post(self, request, format=None):
         try:
             output = None
@@ -60,32 +70,21 @@ class ImportData(APIView):
             print('Exception in importing data for iFEED')
             return Response('')
 
-
-class ApplyFilter(APIView):
-    def __init__(self):
-        pass
-    def post(self, request, format=None):
-        temp = request.POST['content']
-        print(temp)
-        text = "apply_pareto_filter"
-        Group("ifeed").send({
-            "text": text
-        })
-        return Response('')
-    
-class CancelSelections(APIView):
-    def __init__(self):
-        pass
-    def post(self, request, format=None):
-        #text = request.POST['']
-        text = "cancel_selections"
-        Group("ifeed").send({
-            "text": text
-        })
-        return Response('')
     
     
 class VennDiagramDistance(APIView):
+    
+    """ Optimizes the distance between two circles in a Venn diagram
+
+    Request Args:
+        a1: the area of the first circle
+        a2: the area of the second circle
+        intersection: the intersecting area of two circles
+        
+    Returns:
+        The distance between two circles
+        
+    """
     def __init__(self):
         pass
     def post(self, request, format=None):
@@ -100,75 +99,125 @@ class VennDiagramDistance(APIView):
     
 class UpdateFeatureMetricChart(APIView):
     
+    """ Makes an update to the Feature Metric Chart page
+
+    Request Args:
+        key: the user identifier
+        source: the source name
+        expression: the feature expression
+        conf_given_f: confidence(F->S) of the feature
+        conf_given_s: confidence(S->F) of the feature
+        lift: lift of the feature
+    """
     def post(self,request,format=None):
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        
         expression = request.POST['expression']
         conf_given_f = float(request.POST['conf_given_f'])
         conf_given_s = float(request.POST['conf_given_s'])
         lift = float(request.POST['lift'])
         
-        payload = {'expression':expression,
-                  'conf_given_f':conf_given_f,
-                  'conf_given_s':conf_given_s,
-                  'lift':lift}
-        message = json.dumps(payload)        
-        Group("ifeed_feature_metric").send({
+        data = {'target':'ifeed.feature_metric_chart',
+                'expression':expression,
+                'conf_given_f':conf_given_f,
+                'conf_given_s':conf_given_s,
+                'lift':lift}
+        
+        message = json.dumps(data)   
+        
+        Group(hash_key).send({
             "text": message
-        })
-        return Response('')
-    
-class ResetFeatureMetricChart(APIView):
-    
-    def post(self,request):
-        Group("ifeed_feature_metric").send({
-            "text": "reset"
         })
         return Response('')
     
     
 class UpdateFeatureApplicationStatus(APIView):
     
+    """ Makes an update to the Feature Application Status page
+
+    Request Args:
+        key: the user identifier
+        expression: the feature expression
+        option: options in updating a new feature. Should be one of {'new','add','within','remove','deactivated','temp'}
+
+    """    
     def post(self,request,format=None):
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         expression = request.POST['expression']
         option = request.POST['option']
         
-        payload = {'expression':expression,
-                  'option':option}
-        message = json.dumps(payload)
+        data = {'target':'ifeed.feature_application_status',
+                'id':'update',
+                'expression':expression,
+                'option':option}
+        message = json.dumps(data)
         
-        Group("ifeed_feature_status").send({
+        Group(hash_key).send({
             "text": message
         })
         return Response('')
         
         
+        
 class RequestFeatureApplicationStatus(APIView):
     
+    """ Makes a request to Feature Application Status page for updates
+
+    Request args:
+        key: the user identifier
+        source: the source name
+    """    
     def post(self,request):
-        Group("ifeed_feature_status").send({
-            "text": "request_feature_status"
+        
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        #source = request.POST['source']
+        
+        data = {'target':'ifeed.feature_application_status',
+                'id':'request'}
+        message = json.dumps(data)
+        
+        Group(hash_key).send({
+            "text": message
         })
         return Response('')        
 
+    
 class ApplyFeatureExpression(APIView):
+    
+    """ Applies a feature in the main iFEED GUI
+
+    Request args:
+        key: the user identifier
+        source: the source name
+        expression: expression of the feature
+        option: options in applying the feature
+    """    
     
     def post(self,request):
         
-        option = request.POST['option']
-        expression = request.POST['expression']
+        key = request.POST['key']
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         source = request.POST['source']
+        expression = request.POST['expression']
+        option = request.POST['option']
         
         if option=='apply':
-            id = 'apply_feature_expression'
+            id = 'apply_feature'
         elif option=='update':
-            id = 'update_feature_expression'
+            id = 'update_feature'
 
-        
-        payload = {'id':id, 
+        data = {'target':'ifeed',
+                'id':id, 
                 'expression':expression,
                 'source':source}
-        message = json.dumps(payload)
+        message = json.dumps(data)
         
-        Group("ifeed").send({
+        Group(hash_key).send({
             "text": message
         })
         return Response('')
