@@ -1,4 +1,5 @@
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
 import re, datetime
 import dateparser
 
@@ -32,10 +33,10 @@ def ask_question(question):
             # for mission in query.all():
             #     result.append(mission.name)
             if match.group(1) == 'mission':
-                query = session.query(models.Mission).filter(models.Mission.name == match.group(2))
+                query = session.query(models.Mission).filter(func.lower(models.Mission.name) == match.group(2))
                 result.append(str(query.first().launch_date))
             else:
-                query = session.query(models.Instrument).filter(models.Instrument.name == match.group(2))
+                query = session.query(models.Instrument).filter(func.lower(models.Instrument.name) == match.group(2))
                 result.append(str(query.first().missions[0].launch_date))
             session.commit()
         except:
