@@ -15,9 +15,7 @@ import csv
 # p(sys.path)
 
 sys.path.append("/Users/bang/workspace/daphne/daphne-brain/VASSAR_API/")
-from api import VASSARClient
-
-
+from VASSAR_API.api import VASSARClient
 
 class GetOrbitList(APIView):
     def __init__(self):
