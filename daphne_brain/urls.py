@@ -26,7 +26,7 @@ urlpatterns = [
     
     url(r'api/data-mining/', include('data_mining_API.urls')),
     
-    url(r'histdb/', include('histdb_API.urls')),
+    url(r'api/histdb/', include('histdb_API.urls')),
     
     url(r'api/chat/', include('chatbox_API.urls')),
     

@@ -18,7 +18,6 @@ import csv
 from VASSAR_API.api import VASSARClient
 
 
-
 class GetOrbitList(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
