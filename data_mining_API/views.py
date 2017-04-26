@@ -10,7 +10,6 @@ import json
 import csv
 
 
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/data_mining_API/")
 # Print all paths included in sys.path
 # from pprint import pprint as p
 # p(sys.path)
