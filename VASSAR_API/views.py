@@ -14,8 +14,9 @@ import csv
 # from pprint import pprint as p
 # p(sys.path)
 
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/VASSAR_API/")
+
 from VASSAR_API.api import VASSARClient
+
 
 class GetOrbitList(APIView):
     def __init__(self):

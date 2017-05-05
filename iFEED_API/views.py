@@ -96,42 +96,7 @@ class VennDiagramDistance(APIView):
         distance = res.x[0]
         return Response(distance)
     
-    
-class UpdateFeatureMetricChart(APIView):
-    
-    """ Makes an update to the Feature Metric Chart page
 
-    Request Args:
-        key: the user identifier
-        source: the source name
-        expression: the feature expression
-        conf_given_f: confidence(F->S) of the feature
-        conf_given_s: confidence(S->F) of the feature
-        lift: lift of the feature
-    """
-    def post(self,request,format=None):
-        
-        key = request.POST['key']
-        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-        
-        expression = request.POST['expression']
-        conf_given_f = float(request.POST['conf_given_f'])
-        conf_given_s = float(request.POST['conf_given_s'])
-        lift = float(request.POST['lift'])
-        
-        data = {'target':'ifeed.feature_metric_chart',
-                'expression':expression,
-                'conf_given_f':conf_given_f,
-                'conf_given_s':conf_given_s,
-                'lift':lift}
-        
-        message = json.dumps(data)   
-        
-        Group(hash_key).send({
-            "text": message
-        })
-        return Response('')
-    
     
 class UpdateFeatureApplicationStatus(APIView):
     
@@ -210,6 +175,8 @@ class ApplyFeatureExpression(APIView):
             id = 'apply_feature'
         elif option=='update':
             id = 'update_feature'
+        elif option=='test':
+            id = 'test_feature'
 
         data = {'target':'ifeed',
                 'id':id, 
