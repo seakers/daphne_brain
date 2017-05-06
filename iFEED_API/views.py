@@ -27,6 +27,7 @@ from config.loader import ConfigurationLoader
 
 config = ConfigurationLoader().load()
 
+logger.error('Testing logger')
 
 
 class ImportData(APIView):
