@@ -182,13 +182,18 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file','console'],
+            'level': 'ERROR',
             'propagate': True,
         },
         'iFEED': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        }
+        'VASSAR': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
             'propagate': True,
         }
     },
