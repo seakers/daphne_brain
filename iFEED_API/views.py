@@ -1,3 +1,8 @@
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('iFEED')
+
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
@@ -18,6 +23,7 @@ from channels import Group
 
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
+#from util.log import getLogger
 
 config = ConfigurationLoader().load()
 
@@ -36,10 +42,10 @@ class ImportData(APIView):
     """
     def post(self, request, format=None):
         try:
+            
             output = None
             # Set the path of the file containing data
             file_path = config['iFEED']['path'] + request.POST['path']
-            
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
@@ -67,7 +73,7 @@ class ImportData(APIView):
             return Response(output)
         
         except Exception:
-            print('Exception in importing data for iFEED')
+            logger.exception('Exception in importing data for iFEED')
             return Response('')
 
     
