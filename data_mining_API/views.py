@@ -1,3 +1,9 @@
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('data-mining')
+
+
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
@@ -69,7 +75,7 @@ class GetDrivingFeatures(APIView):
             return Response(output)
         
         except Exception as detail:
-            print('Exception in getDrivingFeatures: ' + detail)
+            logger.exception('Exception in getDrivingFeatures: ' + detail)
             self.DataMiningClient.endConnection()
             return Response('')
 

@@ -168,13 +168,13 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'ERROR',
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR + '/logs/daphne.log',
             'formatter': 'simple',
         },
         'console':{
-            'level':'INFO',
+            'level':'DEBUG',
             'class':'logging.StreamHandler',
             'formatter': 'standard',
         },
@@ -192,11 +192,21 @@ LOGGING = {
             'handlers': ['file','console'],
             'level': 'ERROR',
             'propagate': True,
-        }
+        },
         'VASSAR': {
             'handlers': ['file','console'],
             'level': 'ERROR',
             'propagate': True,
-        }
+        },
+        'data-mining': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },        
+        'debugging': {
+            'handlers': ['file','console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
