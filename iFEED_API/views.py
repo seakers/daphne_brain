@@ -27,8 +27,6 @@ from config.loader import ConfigurationLoader
 
 config = ConfigurationLoader().load()
 
-
-
 class ImportData(APIView):
     
     """ Imports data from a csv file. To be deprecated in the future.
@@ -42,7 +40,7 @@ class ImportData(APIView):
     """
     def post(self, request, format=None):
         try:
-            
+            logger.debug('iFEED import data HTTP request')
             output = None
             # Set the path of the file containing data
             file_path = config['iFEED']['path'] + request.POST['path']
