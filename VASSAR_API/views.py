@@ -1,3 +1,8 @@
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('VASSAR')
+
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
@@ -14,8 +19,9 @@ import csv
 # from pprint import pprint as p
 # p(sys.path)
 
-sys.path.append("/Users/bang/workspace/daphne/daphne-brain/VASSAR_API/")
+
 from VASSAR_API.api import VASSARClient
+
 
 class GetOrbitList(APIView):
     def __init__(self):
@@ -32,7 +38,7 @@ class GetOrbitList(APIView):
             return Response(list)
         
         except Exception:
-            print('Exception in getting the orbit list')
+            logger.exception('Exception in getting the orbit list')
             self.VASSARClient.endConnection()
             return Response('')
 
@@ -52,7 +58,7 @@ class GetInstrumentList(APIView):
             return Response(list)
         
         except Exception:
-            print('Exception in getting the instrument list')
+            logger.exception('Exception in getting the instrument list')
             self.VASSARClient.endConnection()
             return Response('')
 
@@ -71,7 +77,7 @@ class InitializeJess(APIView):
             return Response(message)
         
         except Exception:
-            print('Exception in initializing jess')
+            logger.exception('Exception in initializing jess')
             self.VASSARClient.endConnection()
             return Response('')
 
@@ -90,7 +96,7 @@ class EvaluateArchitecture(APIView):
             return Response(architecture)
         
         except Exception:
-            print('Exception in evaluating an architecture')
+            logger.exception('Exception in evaluating an architecture')
             self.VASSARClient.endConnection()
             return Response('')
 

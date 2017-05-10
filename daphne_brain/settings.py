@@ -19,15 +19,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'zy&+i575bdsi3ytivu*iv7c-3)r88_g6oykwnb*yt34imq&)81'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
 
 
 # Application definition
@@ -146,4 +144,67 @@ ALCHEMY_DATABASE = {
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'ceos'
+}
+
+
+# Logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '[%(asctime)s] - %(name)s - %(levelname)s - %(message)s'
+        },
+        'standard': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR + '/logs/daphne.log',
+            'formatter': 'simple',
+        },
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+        'null': {
+            'class': 'logging.NullHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'iFEED': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'VASSAR': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'data-mining': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },        
+        'debugging': {
+            'handlers': ['file','console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }

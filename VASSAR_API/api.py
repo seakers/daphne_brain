@@ -19,8 +19,10 @@
 # under the License.
 #
 
-import sys
+import os,sys
 import glob
+
+sys.path.append(os.path.dirname(__file__))
 
 from thrift import Thrift
 from thrift.transport import TSocket

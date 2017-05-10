@@ -1,3 +1,8 @@
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('iFEED')
+
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
@@ -18,10 +23,9 @@ from channels import Group
 
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
+#from util.log import getLogger
 
 config = ConfigurationLoader().load()
-
-
 
 class ImportData(APIView):
     
@@ -36,10 +40,10 @@ class ImportData(APIView):
     """
     def post(self, request, format=None):
         try:
+            logger.debug('iFEED import data HTTP request')
             output = None
             # Set the path of the file containing data
             file_path = config['iFEED']['path'] + request.POST['path']
-            
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
@@ -67,7 +71,7 @@ class ImportData(APIView):
             return Response(output)
         
         except Exception:
-            print('Exception in importing data for iFEED')
+            logger.exception('Exception in importing data for iFEED')
             return Response('')
 
     
@@ -96,42 +100,7 @@ class VennDiagramDistance(APIView):
         distance = res.x[0]
         return Response(distance)
     
-    
-class UpdateFeatureMetricChart(APIView):
-    
-    """ Makes an update to the Feature Metric Chart page
 
-    Request Args:
-        key: the user identifier
-        source: the source name
-        expression: the feature expression
-        conf_given_f: confidence(F->S) of the feature
-        conf_given_s: confidence(S->F) of the feature
-        lift: lift of the feature
-    """
-    def post(self,request,format=None):
-        
-        key = request.POST['key']
-        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-        
-        expression = request.POST['expression']
-        conf_given_f = float(request.POST['conf_given_f'])
-        conf_given_s = float(request.POST['conf_given_s'])
-        lift = float(request.POST['lift'])
-        
-        data = {'target':'ifeed.feature_metric_chart',
-                'expression':expression,
-                'conf_given_f':conf_given_f,
-                'conf_given_s':conf_given_s,
-                'lift':lift}
-        
-        message = json.dumps(data)   
-        
-        Group(hash_key).send({
-            "text": message
-        })
-        return Response('')
-    
     
 class UpdateFeatureApplicationStatus(APIView):
     
@@ -210,6 +179,8 @@ class ApplyFeatureExpression(APIView):
             id = 'apply_feature'
         elif option=='update':
             id = 'update_feature'
+        elif option=='test':
+            id = 'test_feature'
 
         data = {'target':'ifeed',
                 'id':id, 
