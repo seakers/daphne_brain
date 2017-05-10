@@ -42,6 +42,47 @@ instruments_in_mission_table = Table('instruments_in_mission', DeclarativeBase.m
                                      Column('mission_id', Integer, ForeignKey('missions.id')),
                                      Column('instrument_id', Integer, ForeignKey('instruments.id')))
 
+measurements_of_instrument_table = Table('measurements_of_instrument', DeclarativeBase.metadata,
+                                         Column('instrument_id', Integer, ForeignKey('instruments.id')),
+                                         Column('measurement_id', Integer, ForeignKey('measurements.id')))
+
+instrument_wavebands_table = Table('instrument_wavebands', DeclarativeBase.metadata,
+                                     Column('instrument_id', Integer, ForeignKey('instruments.id')),
+                                     Column('waveband_id', Integer, ForeignKey('wavebands.id')))
+
+class BroadMeasurementCategory(DeclarativeBase):
+    """Sqlalchemy broad measurement categories model"""
+    __tablename__ = 'broad_measurement_categories'
+
+    id = Column(Integer, primary_key=True)
+    name = Column('name', String)
+    description = Column('description', String)
+    measurement_categories = relationship('MeasurementCategory', back_populates='broad_measurement_category')
+
+
+class MeasurementCategory(DeclarativeBase):
+    """Sqlalchemy measurement categories model"""
+    __tablename__ = 'measurement_categories'
+
+    id = Column(Integer, primary_key=True)
+    name = Column('name', String)
+    description = Column('description', String)
+    broad_measurement_category_id = Column(Integer, ForeignKey('broad_measurement_categories.id'))
+    broad_measurement_category = relationship('BroadMeasurementCategory', back_populates='measurement_categories')
+    measurements = relationship('Measurement', back_populates='measurement_category')
+
+
+class Measurement(DeclarativeBase):
+    """Sqlalchemy measurements model"""
+    __tablename__ = 'measurements'
+
+    id = Column(Integer, primary_key=True)
+    name = Column('name', String)
+    description = Column('description', String)
+    measurement_category_id = Column(Integer, ForeignKey('measurement_categories.id'))
+    measurement_category = relationship('MeasurementCategory', back_populates='measurements')
+    instruments = relationship('Instrument', secondary=measurements_of_instrument_table, back_populates='measurements')
+
 
 class Agency(DeclarativeBase):
     """Sqlalchemy agencies model"""
@@ -99,6 +140,15 @@ class GeometryType(DeclarativeBase):
 
     instruments = relationship('Instrument', secondary=geometry_of_instrument_table, back_populates='geometries')
 
+class Waveband(DeclarativeBase):
+    """Sqlalchemy wavebands model"""
+    __tablename__ = 'wavebands'
+
+    id = Column(Integer, primary_key=True)
+    name = Column('name', String)
+    wavelengths = Column('wavelengths', String, nullable=True)
+
+    instruments = relationship('Instrument', secondary=instrument_wavebands_table, back_populates='wavebands')
 
 class Instrument(DeclarativeBase):
     """Sqlalchemy instruments model"""
@@ -131,8 +181,16 @@ class Instrument(DeclarativeBase):
                                              'No Access', name='data_access_values'), nullable=True)
     data_format = Column('data_format', String, nullable=True)
     measurements_and_applications = Column('measurements_and_applications', String, nullable=True)
+    resolution_summary = Column('resolution_summary', String, nullable=True)
+    best_resolution = Column('best_resolution', String, nullable=True)
+    swath_summary = Column('swath_summary', String, nullable=True)
+    max_swath = Column('max_swath', String, nullable=True)
+    accuracy_summary = Column('accuracy_summary', String, nullable=True)
+    waveband_summary = Column('waveband_summary', String, nullable=True)
 
     agencies = relationship('Agency', secondary=designers_table, back_populates='instruments')
     types = relationship('InstrumentType', secondary=type_of_instrument_table, back_populates='instruments')
     geometries = relationship('GeometryType', secondary=geometry_of_instrument_table, back_populates='instruments')
     missions = relationship('Mission', secondary=instruments_in_mission_table, back_populates='instruments')
+    measurements = relationship('Measurement', secondary=measurements_of_instrument_table, back_populates='instruments')
+    wavebands = relationship('Waveband', secondary=instrument_wavebands_table, back_populates='instruments')

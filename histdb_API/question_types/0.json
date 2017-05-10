@@ -1,0 +1,10 @@
+{
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "mandatory": true },
+    { "name": "year1", "type": "year", "mandatory": false },
+    { "name": "year2", "type": "year", "mandatory": false }
+  ],
+  "query": "boilerplate",
+  "response": "The missions are ${response}"
+}
