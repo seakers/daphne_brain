@@ -1,1 +1,1 @@
-PASSWORD="" daphne -b 127.0.0.1 -p 8001 daphne_brain.asgi:channel_layer
+PASSWORD="" SECRET_KEY="iufdifd" daphne -b 127.0.0.1 -p 8001 daphne_brain.asgi:channel_layer
