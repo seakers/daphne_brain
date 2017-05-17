@@ -1,3 +1,8 @@
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('config')
+
 import json
 from os.path import join, dirname, isfile
 
@@ -17,7 +22,8 @@ class ConfigurationLoader():
                     with open(DEFAULT_CONFIG) as f:
                         self.config = json.load(f)
                 except:
-                    print("Exception in loading the configuration file")
+                    logger.exception("Exception in loading the configuration file")
+
             else:
                 print("Configuration file not found in {0}".format(DEFAULT_CONFIG))
             return self.config
