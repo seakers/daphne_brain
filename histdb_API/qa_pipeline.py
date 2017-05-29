@@ -3,7 +3,10 @@ import numpy as np
 import json
 import os
 from tensorflow.contrib import learn
-
+import histdb_API.models as models
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
+from string import Template
 
 def clean_str(spacy_doc):
     # Pre-process the strings
@@ -11,7 +14,9 @@ def clean_str(spacy_doc):
     for token in spacy_doc:
 
         # If stopword or punctuation, ignore token and continue
-        if token.is_stop or token.is_punct:
+        if (token.is_stop and not (token.lemma_ == "which" or token.lemma_ == "how" or token.lemma_ == "what"
+                                   or token.lemma_ == "when" or token.lemma_ == "why")) \
+                or token.is_punct:
             continue
 
         # Lemmatize the token and yield
@@ -59,11 +64,67 @@ def load_type_info(question_type):
         type_info = json.load(file)
     return [type_info["params"], type_info["query"], type_info["response"]]
 
+def extract_measurement(processed_question, already_extracted):
+    # Get a list of measurements
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    measurements = session.query(models.Measurement).all()
+    # For every measurement, check if it has already been read and try to find the first occurrence
+    for measurement in measurements:
+        proc_measurement = measurement.strip().lower()
+        start = 0
+        for other_measurement in already_extracted:
+            if other_measurement[0] == proc_measurement:
+                start = other_measurement[1] + len(other_measurement[1])
+        index = processed_question.text.find(proc_measurement, start)
+        if index != -1:
+            return (proc_measurement, index)
+    return None
+
+extract_function = {}
+extract_function["measurement"] = extract_measurement
+
 def extract_data(processed_question, params):
-    pass
+    extracted_data = {}
+    already_extracted = {}
+    for param in params:
+        extracted_param = extract_function[param["type"]](processed_question, already_extracted[param["type"]])
+        if extracted_param != None:
+            extracted_data[param["name"]] = extracted_param[0]
+            already_extracted[param["type"]].append(extracted_param)
+    return extracted_data
 
 def query(query, data):
-    pass
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
 
-def build_answer(response_template, response):
-    pass
+    # Build the final query to the database
+    always_template = Template(query["always"])
+    expression = always_template.substitute(data)
+    for opt_cond in query["opt"]:
+        if opt_cond["cond"] in data:
+            opt_template = Template(opt_cond["query_part"])
+            expression += opt_template.substitute(data)
+    end_template = Template(query["end"])
+    expression += end_template.substitute(data)
+    query_db = eval(expression)
+    result = None
+    response = "No response"
+    if query["result_type"] == "list":
+        result = []
+        for row in query_db.all():
+            result.append(eval("row." + query["result_field"]))
+        if len(result) > 0:
+            response = result[0]
+            for text in result[1:]:
+                response += ", " + text
+        else:
+            response = "none"
+    return response
+
+def build_answer(response_template, response, data):
+    complete_data = data
+    complete_data["response"] = response
+    answer_template = Template(response_template)
+    answer = answer_template.substitute(complete_data)
+    return answer

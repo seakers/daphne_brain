@@ -19,12 +19,12 @@ class Question(APIView):
         question_type = qa_pipeline.classify(processed_question)
         # Load list of required and optional parameters from question, query and response format for question type
         [params, query, response_template] = qa_pipeline.load_type_info(question_type)
-        # TODO: Extract required and optional parameters
+        # Extract required and optional parameters
         data = qa_pipeline.extract_data(processed_question, params)
-        # TODO: Query the database
+        # Query the database
         response = qa_pipeline.query(query, data)
-        # TODO: Construct the response from the database query and the response format
-        answer = qa_pipeline.build_answer(response_template, response)
-        answer = question_type
+        # Construct the response from the database query and the response format
+        answer = qa_pipeline.build_answer(response_template, response, data)
+
         # Return the answer to the client
         return Response({'answer': answer})
