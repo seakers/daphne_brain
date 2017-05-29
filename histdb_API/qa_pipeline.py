@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 import json
 import os
+import dateparser
+import datetime
 from tensorflow.contrib import learn
 import histdb_API.models as models
 from sqlalchemy.orm import sessionmaker
@@ -64,6 +66,7 @@ def load_type_info(question_type):
         type_info = json.load(file)
     return [type_info["params"], type_info["query"], type_info["response"]]
 
+
 def extract_measurement(processed_question, already_extracted):
     # Get a list of measurements
     engine = models.db_connect()
@@ -71,26 +74,62 @@ def extract_measurement(processed_question, already_extracted):
     measurements = session.query(models.Measurement).all()
     # For every measurement, check if it has already been read and try to find the first occurrence
     for measurement in measurements:
-        proc_measurement = measurement.strip().lower()
+        proc_measurement = measurement.name.strip().lower()
         start = 0
         for other_measurement in already_extracted:
             if other_measurement[0] == proc_measurement:
-                start = other_measurement[1] + len(other_measurement[1])
+                start = other_measurement[1] + len(other_measurement[0])
         index = processed_question.text.find(proc_measurement, start)
         if index != -1:
-            return (proc_measurement, index)
+            return proc_measurement, index
     return None
+
+
+def extract_date(processed_question, already_extracted):
+    # For now just pick the years
+    for word in processed_question:
+        if len(word) == 4 and word.like_num:
+            already_written = False
+            for other_year in already_extracted:
+                if word.idx == other_year[1]:
+                    already_written = True
+            if already_written:
+                continue
+            return word.text, word.idx
+
 
 extract_function = {}
 extract_function["measurement"] = extract_measurement
+extract_function["year"] = extract_date
+
+
+def process_measurement(extracted_data, options):
+    return extracted_data
+
+
+def process_date(extracted_data, options):
+    date_parsing_settings = {}
+    if options == "begin":
+        date_parsing_settings = {'RELATIVE_BASE': datetime.datetime(2020, 1, 1)}
+    elif options == "end":
+        date_parsing_settings = {'RELATIVE_BASE': datetime.datetime(2020, 12, 31)}
+    return dateparser.parse(extracted_data, settings=date_parsing_settings)
+
+
+process_function = {}
+process_function["measurement"] = process_measurement
+process_function["year"] = process_date
+
 
 def extract_data(processed_question, params):
     extracted_data = {}
     already_extracted = {}
     for param in params:
+        already_extracted[param["type"]] = []
+    for param in params:
         extracted_param = extract_function[param["type"]](processed_question, already_extracted[param["type"]])
         if extracted_param != None:
-            extracted_data[param["name"]] = extracted_param[0]
+            extracted_data[param["name"]] = process_function[param["type"]](extracted_param[0], param["options"])
             already_extracted[param["type"]].append(extracted_param)
     return extracted_data
 
