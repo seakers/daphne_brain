@@ -10,4 +10,5 @@ data_mining_API/__pycache__/*
 data_mining_API/.ipynb_checkpoints/
 *.pyc
 db.sqlite3
+histdb_API/model
 /logs/daphne.log

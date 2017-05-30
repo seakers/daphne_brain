@@ -2,7 +2,10 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from . import regex_engine
+import spacy
+from . import qa_pipeline
+
+nlp = spacy.load('en')
 
 class Question(APIView):
     """
@@ -10,7 +13,18 @@ class Question(APIView):
     """
 
     def post(self, request, format=None):
+        # Preprocess the question
+        processed_question = nlp(request.data['question'])
+        # Classify the question, obtaining a question type
+        question_type = qa_pipeline.classify(processed_question)
+        # Load list of required and optional parameters from question, query and response format for question type
+        [params, query, response_template] = qa_pipeline.load_type_info(question_type)
+        # Extract required and optional parameters
+        data = qa_pipeline.extract_data(processed_question, params)
+        # Query the database
+        response = qa_pipeline.query(query, data)
+        # Construct the response from the database query and the response format
+        answer = qa_pipeline.build_answer(response_template, response, data)
 
-        answer = regex_engine.ask_question(request.data['question'])
-        # TODO: Answer from DB list to human language -> This will be needed for ML algorithm as well
-        return Response({'answer': answer[0]})
+        # Return the answer to the client
+        return Response({'answer': answer})
