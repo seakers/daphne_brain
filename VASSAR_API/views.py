@@ -90,7 +90,10 @@ class EvaluateArchitecture(APIView):
         try:
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
-            architecture = self.VASSARClient.evaluateArchitecture()
+                        
+            bitString = request.POST['bitString']                
+            architecture = self.VASSARClient.evaluateArchitecture(bitString)            
+            
             # End the connection before return statement
             self.VASSARClient.endConnection()
             return Response(architecture)
@@ -99,6 +102,3 @@ class EvaluateArchitecture(APIView):
             logger.exception('Exception in evaluating an architecture')
             self.VASSARClient.endConnection()
             return Response('')
-
-
-

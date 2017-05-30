@@ -69,8 +69,8 @@ class VASSARClient():
         print(message)
         return message
     
-    def evaluateArchitecture(self):
-        arch_formatted = self.client.eval('')
+    def evaluateArchitecture(self,bitString):
+        arch_formatted = self.client.eval(bitString)
         arch = {'science':arch_formatted.science,'cost':arch_formatted.cost,'booleanString':arch_formatted.booleanString}
         print('Test arch evaluated. Science: {0}, Cost: {1}'.format(arch['science'], arch['cost']))
         return arch

@@ -1,1 +1,1 @@
-PASSWORD="" python manage.py runworker
+PASSWORD="" SECRET_KEY="iufdifd" python manage.py runworker

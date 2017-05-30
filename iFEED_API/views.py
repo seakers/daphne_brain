@@ -17,10 +17,7 @@ import hashlib
 from channels import Group
 
 
-# Print all paths included in sys.path
-#from pprint import pprint as p
-#p(sys.path)
-
+from messagebus.message import Message
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 #from util.log import getLogger
@@ -100,60 +97,107 @@ class VennDiagramDistance(APIView):
         distance = res.x[0]
         return Response(distance)
     
-
     
-class UpdateFeatureApplicationStatus(APIView):
     
-    """ Makes an update to the Feature Application Status page
+class UpdateUtterance(APIView):
 
-    Request Args:
-        key: the user identifier
-        expression: the feature expression
-        option: options in updating a new feature. Should be one of {'new','add','within','remove','deactivated','temp'}
-
-    """    
-    def post(self,request,format=None):
+    def __init__(self):
+        pass
+    def post(self, request, format=None):
         
         key = request.POST['key']
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-        expression = request.POST['expression']
-        option = request.POST['option']
+        utteranceSerialized = request.POST['utterance']
+        utterances = json.loads(utteranceSerialized)
         
-        data = {'target':'ifeed.feature_application_status',
-                'id':'update',
-                'expression':expression,
-                'option':option}
-        message = json.dumps(data)
+        print(utterances[0])
+        
+        Group("mycroft").send({
+            "text": utterances[0]
+        })
+
+        return Response('')
+    
+    
+
+class UpdateSystemResponse(APIView):
+    
+    def __init__(self):
+        pass
+    
+    def post(self, request, format=None):
+        
+        print('Update system response')
+        
+        utterance = request.POST['utterance']
+        
+        daphneMessage = Message(target=['chat'],content=[utterance],context=None)
+        message = daphneMessage.serialize()
+        
+        key = '1235419'
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         
         Group(hash_key).send({
             "text": message
         })
         return Response('')
-        
-        
-        
-class RequestFeatureApplicationStatus(APIView):
     
-    """ Makes a request to Feature Application Status page for updates
+    
+    
 
-    Request args:
-        key: the user identifier
-        source: the source name
-    """    
-    def post(self,request):
-        
-        key = request.POST['key']
-        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-        #source = request.POST['source']
-        
-        data = {'target':'ifeed.feature_application_status',
-                'id':'request'}
-        message = json.dumps(data)
-        
-        Group(hash_key).send({
-            "text": message
-        })
-        return Response('')        
+    
+#class UpdateFeatureApplicationStatus(APIView):
+#    
+#    """ Makes an update to the Feature Application Status page
+#
+#    Request Args:
+#        key: the user identifier
+#        expression: the feature expression
+#        option: options in updating a new feature. Should be one of {'new','add','within','remove','deactivated','temp'}
+#
+#    """    
+#    def post(self,request,format=None):
+#        
+#        key = request.POST['key']
+#        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+#        expression = request.POST['expression']
+#        option = request.POST['option']
+#        
+#        data = {'target':'ifeed.feature_application_status',
+#                'id':'update',
+#                'expression':expression,
+#                'option':option}
+#        message = json.dumps(data)
+#        
+#        Group(hash_key).send({
+#            "text": message
+#        })
+#        return Response('')
+#        
+#        
+#        
+#class RequestFeatureApplicationStatus(APIView):
+#    
+#    """ Makes a request to Feature Application Status page for updates
+#
+#    Request args:
+#        key: the user identifier
+#        source: the source name
+#    """    
+#    def post(self,request):
+#        
+#        key = request.POST['key']
+#        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+#        #source = request.POST['source']
+#        
+#        data = {'target':'ifeed.feature_application_status',
+#                'id':'request'}
+#        message = json.dumps(data)
+#        
+#        Group(hash_key).send({
+#            "text": message
+#        })
+#        return Response('')        
 
     
 class ApplyFeatureExpression(APIView):
