@@ -120,7 +120,7 @@ class UpdateUtterance(APIView):
     
     
 
-class updateSystemResponse(APIView):
+class UpdateSystemResponse(APIView):
     
     def __init__(self):
         pass
