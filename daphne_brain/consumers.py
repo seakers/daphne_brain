@@ -8,7 +8,8 @@ import hashlib
 @channel_session
 def ws_message(message):
     
-    key = message.content['path'].lstrip('/')
+    key = message.content['path'].lstrip('api/')
+    
     hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
     
     textMessage = message.content['text']
@@ -25,8 +26,8 @@ def ws_connect(message):
     
     # Accept the connection request
     message.reply_channel.send({"accept": True})
-    
-    key = message.content['path'].lstrip('/')  
+
+    key = message.content['path'].lstrip('api/')  
         
     hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
     
@@ -37,7 +38,7 @@ def ws_connect(message):
 @channel_session
 def ws_disconnect(message):
     
-    key = message.content['path'].lstrip('/')
+    key = message.content['path'].lstrip('api/')
     hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
     
     # Remove from the group on clean disconnect
