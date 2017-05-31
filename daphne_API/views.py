@@ -20,3 +20,16 @@ class Command(APIView):
         command_type, other_info = command_processing.get_command_type(processed_command)
         # If command is to switch modes, send new mode back, if not
         return Response({'command': processed_command.text, 'command_type': command_type, 'other_info': other_info})
+
+class CommandList(APIView):
+    """
+    Get a list of commands, either for all the system or for a single subsystem
+    """
+
+    def get(self, request, format=None):
+        # List of commands for the general system
+        pass
+
+    def post(self, request, format=None):
+        # List of commands for a single subsystem
+        pass
