@@ -2,10 +2,8 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import spacy
 import daphne_API.command_processing as command_processing
-
-nlp = spacy.load('en')
+from daphne_brain.nlp_object import nlp
 
 
 class Command(APIView):
