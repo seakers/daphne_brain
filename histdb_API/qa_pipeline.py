@@ -133,6 +133,11 @@ def extract_data(processed_question, params):
             already_extracted[param["type"]].append(extracted_param)
     return extracted_data
 
+
+def augment_data(data):
+    data['now'] = datetime.datetime.now()
+    return data
+
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
