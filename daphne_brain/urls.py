@@ -20,6 +20,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
 
+    url(r'api/daphne/', include('daphne_API.urls')),
+
     url(r'api/ifeed/', include('iFEED_API.urls')),
     
     url(r'api/vassar/', include('VASSAR_API.urls')),

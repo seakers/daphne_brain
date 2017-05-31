@@ -200,7 +200,12 @@ LOGGING = {
             'handlers': ['file','console'],
             'level': 'ERROR',
             'propagate': True,
-        },        
+        },  
+        'mycroft': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },           
         'debugging': {
             'handlers': ['file','console'],
             'level': 'DEBUG',

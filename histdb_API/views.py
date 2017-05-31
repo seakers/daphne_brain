@@ -21,6 +21,8 @@ class Question(APIView):
         [params, query, response_template] = qa_pipeline.load_type_info(question_type)
         # Extract required and optional parameters
         data = qa_pipeline.extract_data(processed_question, params)
+        # Add extra parameters to data
+        data = qa_pipeline.augment_data(data)
         # Query the database
         response = qa_pipeline.query(query, data)
         # Construct the response from the database query and the response format
