@@ -6,13 +6,13 @@ from mycroft_API.consumers import mycroft_ws_connect, mycroft_ws_disconnect, myc
 
 channel_routing = [
     
-    route("websocket.receive", mycroft_ws_message, path=r"/mycroft/"),
-    route("websocket.connect", mycroft_ws_connect, path=r"/mycroft/"),
-    route("websocket.disconnect", mycroft_ws_disconnect, path=r"/mycroft/"),  
+    route("websocket.receive", mycroft_ws_message, path=r"/api/mycroft/"),
+    route("websocket.connect", mycroft_ws_connect, path=r"/api/mycroft/"),
+    route("websocket.disconnect", mycroft_ws_disconnect, path=r"/api/mycroft/"),  
     
-    route("websocket.receive", ws_message, path=r"^/"),
-    route("websocket.connect", ws_connect, path=r"^/"),
-    route("websocket.disconnect", ws_disconnect, path=r"^/"),
+    route("websocket.receive", ws_message, path=r"^/api/"),
+    route("websocket.connect", ws_connect, path=r"^/api/"),
+    route("websocket.disconnect", ws_disconnect, path=r"^/api/"),
     
     # HTTP requests are automatically routed to django views
 ]
