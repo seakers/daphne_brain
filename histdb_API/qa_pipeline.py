@@ -105,12 +105,29 @@ def sorted_list_of_features_by_index(processed_question, feature_list, number_of
     return obt_feature_list
 
 
+def extract_mission(processed_question, number_of_features):
+    # Get a list of missions
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    missions = [mission.name.strip().lower() for mission in session.query(models.Mission).all()]
+    return sorted_list_of_features_by_index(processed_question, missions, number_of_features)
+
+
 def extract_measurement(processed_question, number_of_features):
     # Get a list of measurements
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
     measurements = [measurement.name.strip().lower() for measurement in session.query(models.Measurement).all()]
     return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+
+
+def extract_technology(processed_question, number_of_features):
+    # Get a list of technologies and types
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    technologies = [technology.lower() for technology in models.technologies]
+    technologies = technologies + [type.name.strip().lower() for type in session.query(models.InstrumentType).all()]
+    return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
 
 
 def extract_date(processed_question, number_of_features):
@@ -124,11 +141,21 @@ def extract_date(processed_question, number_of_features):
 
 
 extract_function = {}
+extract_function["mission"] = extract_mission
 extract_function["measurement"] = extract_measurement
+extract_function["technology"] = extract_technology
 extract_function["year"] = extract_date
 
 
+def process_mission(extracted_data, options):
+    return extracted_data
+
+
 def process_measurement(extracted_data, options):
+    return extracted_data
+
+
+def process_technology(extracted_data, options):
     return extracted_data
 
 
@@ -142,7 +169,9 @@ def process_date(extracted_data, options):
 
 
 process_function = {}
+process_function["mission"] = process_mission
 process_function["measurement"] = process_measurement
+process_function["technology"] = process_technology
 process_function["year"] = process_date
 
 
