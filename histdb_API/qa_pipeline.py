@@ -9,6 +9,9 @@ import histdb_API.models as models
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
 from string import Template
+import Levenshtein as lev
+import operator
+
 
 def clean_str(spacy_doc):
     # Pre-process the strings
@@ -61,41 +64,63 @@ def classify(question):
 
     return prediction[0]
 
+
 def load_type_info(question_type):
     with open('./histdb_API/question_types/' + str(question_type) + '.json', 'r') as file:
         type_info = json.load(file)
     return [type_info["params"], type_info["query"], type_info["response"]]
 
 
-def extract_measurement(processed_question, already_extracted):
+def feature_list_by_ratio(processed_question, feature_list):
+    """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
+    ratio_ordered = []
+    length_question = len(processed_question.text)
+    for feature in feature_list:
+        length_feature = len(feature)
+        if length_feature > length_question:
+            ratio_ordered.append((feature, 0, -1))
+        else:
+            substrings = [processed_question.text[i:i+length_feature].lower() for i in range(length_question-length_feature)]
+            ratios = [lev.ratio(substrings[i], feature) for i in range(length_question-length_feature)]
+            max_index, max_ratio = max(enumerate(ratios), key=operator.itemgetter(1))
+            ratio_ordered.append((feature, max_ratio, max_index))
+
+    ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -ratio_info[1])
+    ratio_ordered = [ratio_info for ratio_info in ratio_ordered if ratio_info[1] > 0.9]
+    return ratio_ordered
+
+
+def crop_list(list, max_size):
+    if len(list) > max_size:
+        return list[:max_size-1]
+    else:
+        return list
+
+
+def sorted_list_of_features_by_index(processed_question, feature_list, number_of_features):
+    obt_feature_list = feature_list_by_ratio(processed_question, feature_list)
+    obt_feature_list = crop_list(obt_feature_list, number_of_features)
+    obt_feature_list = sorted(obt_feature_list, key=lambda ratio_info: ratio_info[2])
+    obt_feature_list = [feature[0] for feature in obt_feature_list]
+    return obt_feature_list
+
+
+def extract_measurement(processed_question, number_of_features):
     # Get a list of measurements
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    measurements = session.query(models.Measurement).all()
-    # For every measurement, check if it has already been read and try to find the first occurrence
-    for measurement in measurements:
-        proc_measurement = measurement.name.strip().lower()
-        start = 0
-        for other_measurement in already_extracted:
-            if other_measurement[0] == proc_measurement:
-                start = other_measurement[1] + len(other_measurement[0])
-        index = processed_question.text.find(proc_measurement, start)
-        if index != -1:
-            return proc_measurement, index
-    return None
+    measurements = [measurement.name.strip().lower() for measurement in session.query(models.Measurement).all()]
+    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
 
 
-def extract_date(processed_question, already_extracted):
+def extract_date(processed_question, number_of_features):
     # For now just pick the years
+    extracted_list = []
     for word in processed_question:
         if len(word) == 4 and word.like_num:
-            already_written = False
-            for other_year in already_extracted:
-                if word.idx == other_year[1]:
-                    already_written = True
-            if already_written:
-                continue
-            return word.text, word.idx
+            extracted_list.append(word.text)
+
+    return crop_list(extracted_list, number_of_features)
 
 
 extract_function = {}
@@ -122,15 +147,26 @@ process_function["year"] = process_date
 
 
 def extract_data(processed_question, params):
+    """ Extract the features from the processed question, with a correcting factor """
+    number_of_features = {}
+    extracted_raw_data = {}
     extracted_data = {}
-    already_extracted = {}
+    # Count how many params of each type are needed
     for param in params:
-        already_extracted[param["type"]] = []
+        if param["type"] in number_of_features:
+            number_of_features[param["type"]] += 1
+        else:
+            number_of_features[param["type"]] = 1
+    # Try to extract the required number of parameters
+    for type, num in number_of_features.items():
+        extracted_raw_data[type] = extract_function[type](processed_question, num)
+    # For each parameter check if it's needed and apply postprocessing; TODO: Add needed check
     for param in params:
-        extracted_param = extract_function[param["type"]](processed_question, already_extracted[param["type"]])
+        extracted_param = None
+        if len(extracted_raw_data[param["type"]]) > 0:
+            extracted_param = extracted_raw_data[param["type"]].pop(0)
         if extracted_param != None:
-            extracted_data[param["name"]] = process_function[param["type"]](extracted_param[0], param["options"])
-            already_extracted[param["type"]].append(extracted_param)
+            extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"])
     return extracted_data
 
 
@@ -141,6 +177,8 @@ def augment_data(data):
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
+
+    # TODO: Check if everything mandatory is there, if not return NO ANSWER
 
     # Build the final query to the database
     always_template = Template(query["always"])
