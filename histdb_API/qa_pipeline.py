@@ -74,7 +74,7 @@ def load_type_info(question_type):
 def feature_list_by_ratio(processed_question, feature_list):
     """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
     ratio_ordered = []
-    length_question = len(processed_question)
+    length_question = len(processed_question.text)
     for feature in feature_list:
         length_feature = len(feature)
         if length_feature > length_question:
@@ -153,7 +153,10 @@ def extract_data(processed_question, params):
     extracted_data = {}
     # Count how many params of each type are needed
     for param in params:
-        number_of_features[param["type"]] += 1
+        if param["type"] in number_of_features:
+            number_of_features[param["type"]] += 1
+        else:
+            number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
     for type, num in number_of_features.items():
         extracted_raw_data[type] = extract_function[type](processed_question, num)
