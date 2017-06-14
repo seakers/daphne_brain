@@ -7,15 +7,11 @@
   ],
   "query":
   {
-    "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%')))",
-    "opt":
-    [
-      { "cond": "year1", "query_part": ".filter(models.Mission.launch_date > data['year1'])" },
-      { "cond": "year2", "query_part": ".filter(models.Mission.launch_date < data['year2'])" }
-    ],
-    "end": ".order_by(models.Mission.launch_date)",
+    "always": "session.query(models.Instrument.name).join(models.Mission, models.Instrument.missions).group_by(models.Instrument.name).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%'))).having(func.min(models.Mission.launch_date) < data['now']).having(func.max(models.Mission.eol_date) > data['now'])",
+    "opt": [],
+    "end": ".order_by(func.min(models.Mission.launch_date))",
     "result_type": "list",
     "result_field": "name"
   },
-  "response": "The missions that measure ${measurement} are ${response}"
+  "response": "The instruments that currently measure ${measurement} are ${response}"
 }
