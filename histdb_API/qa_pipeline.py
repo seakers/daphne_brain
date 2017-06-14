@@ -7,7 +7,7 @@ import datetime
 from tensorflow.contrib import learn
 import histdb_API.models as models
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
+from sqlalchemy import func, text
 from string import Template
 import Levenshtein as lev
 import operator
@@ -86,13 +86,13 @@ def feature_list_by_ratio(processed_question, feature_list):
             ratio_ordered.append((feature, max_ratio, max_index))
 
     ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -ratio_info[1])
-    ratio_ordered = [ratio_info for ratio_info in ratio_ordered if ratio_info[1] > 0.9]
+    ratio_ordered = [ratio_info for ratio_info in ratio_ordered if ratio_info[1] > 0.75]
     return ratio_ordered
 
 
 def crop_list(list, max_size):
     if len(list) > max_size:
-        return list[:max_size-1]
+        return list[:max_size]
     else:
         return list
 
