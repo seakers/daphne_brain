@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Enum, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Enum, ForeignKey, Table, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
@@ -174,10 +174,9 @@ class Instrument(DeclarativeBase):
     full_name = Column('full_name', String, nullable=True)
     status = Column('status', String)
     maturity = Column('maturity', String, nullable=True)
-    technology = Column('technology', Enum(*technologies, name='technologies'), nullable=True)
-    sampling = Column('sampling', Enum('Imaging', 'Sounding', 'Other', 'TBD', name='sampling_values'))
-    data_access = Column('data_access', Enum('Open Access', 'Constrained Access', 'Very Constrained Access',
-                                             'No Access', name='data_access_values'), nullable=True)
+    technology = Column('technology', String, CheckConstraint("technology IN ('" + "', '".join(technologies) + "')"), nullable=True)
+    sampling = Column('sampling', String, CheckConstraint("sampling IN ('Imaging', 'Sounding', 'Other', 'TBD')"))
+    data_access = Column('data_access', String, CheckConstraint("data_access IN (''Open Access', 'Constrained Access', 'Very Constrained Access', 'No Access')"), nullable=True)
     data_format = Column('data_format', String, nullable=True)
     measurements_and_applications = Column('measurements_and_applications', String, nullable=True)
     resolution_summary = Column('resolution_summary', String, nullable=True)

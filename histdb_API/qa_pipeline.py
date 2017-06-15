@@ -7,7 +7,7 @@ import datetime
 from tensorflow.contrib import learn
 import histdb_API.models as models
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func, text
+from sqlalchemy import func, text, or_
 from string import Template
 import Levenshtein as lev
 import operator
@@ -80,8 +80,8 @@ def feature_list_by_ratio(processed_question, feature_list):
         if length_feature > length_question:
             ratio_ordered.append((feature, 0, -1))
         else:
-            substrings = [processed_question.text[i:i+length_feature].lower() for i in range(length_question-length_feature)]
-            ratios = [lev.ratio(substrings[i], feature) for i in range(length_question-length_feature)]
+            substrings = [processed_question.text[i:i+length_feature].lower() for i in range(length_question-length_feature+1)]
+            ratios = [lev.ratio(substrings[i], feature.lower()) for i in range(length_question-length_feature+1)]
             max_index, max_ratio = max(enumerate(ratios), key=operator.itemgetter(1))
             ratio_ordered.append((feature, max_ratio, max_index))
 
@@ -109,7 +109,7 @@ def extract_mission(processed_question, number_of_features):
     # Get a list of missions
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    missions = [mission.name.strip().lower() for mission in session.query(models.Mission).all()]
+    missions = [' ' + mission.name.strip().lower() for mission in session.query(models.Mission).all()]
     return sorted_list_of_features_by_index(processed_question, missions, number_of_features)
 
 
@@ -125,7 +125,7 @@ def extract_technology(processed_question, number_of_features):
     # Get a list of technologies and types
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    technologies = [technology.lower() for technology in models.technologies]
+    technologies = [technology for technology in models.technologies]
     technologies = technologies + [type.name.strip().lower() for type in session.query(models.InstrumentType).all()]
     return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
 
@@ -148,7 +148,7 @@ extract_function["year"] = extract_date
 
 
 def process_mission(extracted_data, options):
-    return extracted_data
+    return extracted_data[1:]
 
 
 def process_measurement(extracted_data, options):
@@ -231,6 +231,11 @@ def query(query, data):
                 response += ", " + text
         else:
             response = "none"
+    elif query["result_type"] == "date":
+        row = query_db.first()
+        result = eval("row." + query["result_field"])
+        response = result.strftime('%d %B %Y')
+
     return response
 
 def build_answer(response_template, response, data):
