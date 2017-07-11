@@ -1,0 +1,15 @@
+{
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "options": "", "mandatory": true }
+  ],
+  "query":
+  {
+    "always": "session.query(models.MeasurementMostCommonOrbit).filter(models.MeasurementMostCommonOrbit.measurement.ilike('%${measurement}%'))",
+    "opt": [],
+    "end": "",
+    "result_type": "orbit",
+    "result_field": "orbit"
+  },
+  "response": "The most common orbit for ${measurement} is ${response}"
+}

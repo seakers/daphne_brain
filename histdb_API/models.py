@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Enum, ForeignKey, Table, CheckConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Time, ForeignKey, Table, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
@@ -47,8 +47,8 @@ measurements_of_instrument_table = Table('measurements_of_instrument', Declarati
                                          Column('measurement_id', Integer, ForeignKey('measurements.id')))
 
 instrument_wavebands_table = Table('instrument_wavebands', DeclarativeBase.metadata,
-                                     Column('instrument_id', Integer, ForeignKey('instruments.id')),
-                                     Column('waveband_id', Integer, ForeignKey('wavebands.id')))
+                                   Column('instrument_id', Integer, ForeignKey('instruments.id')),
+                                   Column('waveband_id', Integer, ForeignKey('wavebands.id')))
 
 technologies = ('Absorption-band MW radiometer/spectrometer', 'Atmospheric lidar', 'Broad-band radiometer',
                 'Cloud and precipitation radar', 'Communications system', 'Data collection system',
@@ -64,6 +64,7 @@ technologies = ('Absorption-band MW radiometer/spectrometer', 'Atmospheric lidar
                 'Narrow-band channel IR radiometer', 'Non-scanning MW radiometer', 'Radar altimeter',
                 'Radar scatterometer', 'Radio-positioning system', 'Satellite-to-satellite ranging system',
                 'Solar irradiance monitor', 'Space environment monitor', 'Star tracker')
+
 
 class BroadMeasurementCategory(DeclarativeBase):
     """Sqlalchemy broad measurement categories model"""
@@ -127,10 +128,23 @@ class Mission(DeclarativeBase):
     orbit_period = Column('orbit_period', String, nullable=True)
     orbit_sense = Column('orbit_sense', String, nullable=True)
     orbit_inclination = Column('orbit_inclination', String, nullable=True)
+    orbit_inclination_num = Column('orbit_inclination_num', Float, nullable=True)
+    orbit_inclination_class = Column('orbit_inclination_class', String, CheckConstraint(
+        "orbit_inclination_class IN ('Equatorial', 'Near Equatorial', 'Mid Latitude', 'Near Polar', 'Polar')"),
+                                     nullable=True)
     orbit_altitude = Column('orbit_altitude', String, nullable=True)
+    orbit_altitude_num = Column('orbit_altitude_num', Integer, nullable=True)
+    orbit_altitude_class = Column('orbit_altitude_class', String, CheckConstraint(
+        "orbit_altitude_class IN ('VL', 'L', 'M', 'H', 'VH')"), nullable=True)
     orbit_longitude = Column('orbit_longitude', String, nullable=True)
     orbit_LST = Column('orbit_lst', String, nullable=True)
+    orbit_LST_time = Column('orbit_lst_time', Time, nullable=True)
+    orbit_LST_class = Column('orbit_lst_class', String, CheckConstraint(
+        "orbit_lst_class IN ('DD', 'AM', 'Noon', 'PM')"), nullable=True)
     repeat_cycle = Column('repeat_cycle', String, nullable=True)
+    repeat_cycle_num = Column('repeat_cycle_num', Float, nullable=True)
+    repeat_cycle_class = Column('repeat_cycle_class', String, CheckConstraint(
+        "repeat_cycle_class IN ('Long', 'Short')"), nullable=True)
 
     agencies = relationship('Agency', secondary=operators_table, back_populates='missions')
     instruments = relationship('Instrument', secondary=instruments_in_mission_table, back_populates='missions')
@@ -155,6 +169,7 @@ class GeometryType(DeclarativeBase):
 
     instruments = relationship('Instrument', secondary=geometry_of_instrument_table, back_populates='geometries')
 
+
 class Waveband(DeclarativeBase):
     """Sqlalchemy wavebands model"""
     __tablename__ = 'wavebands'
@@ -165,6 +180,7 @@ class Waveband(DeclarativeBase):
 
     instruments = relationship('Instrument', secondary=instrument_wavebands_table, back_populates='wavebands')
 
+
 class Instrument(DeclarativeBase):
     """Sqlalchemy instruments model"""
     __tablename__ = 'instruments'
@@ -174,9 +190,11 @@ class Instrument(DeclarativeBase):
     full_name = Column('full_name', String, nullable=True)
     status = Column('status', String)
     maturity = Column('maturity', String, nullable=True)
-    technology = Column('technology', String, CheckConstraint("technology IN ('" + "', '".join(technologies) + "')"), nullable=True)
+    technology = Column('technology', String, CheckConstraint("technology IN ('" + "', '".join(technologies) + "')"),
+                        nullable=True)
     sampling = Column('sampling', String, CheckConstraint("sampling IN ('Imaging', 'Sounding', 'Other', 'TBD')"))
-    data_access = Column('data_access', String, CheckConstraint("data_access IN (''Open Access', 'Constrained Access', 'Very Constrained Access', 'No Access')"), nullable=True)
+    data_access = Column('data_access', String, CheckConstraint(
+        "data_access IN ('Open Access', 'Constrained Access', 'Very Constrained Access', 'No Access')"), nullable=True)
     data_format = Column('data_format', String, nullable=True)
     measurements_and_applications = Column('measurements_and_applications', String, nullable=True)
     resolution_summary = Column('resolution_summary', String, nullable=True)
@@ -192,3 +210,21 @@ class Instrument(DeclarativeBase):
     missions = relationship('Mission', secondary=instruments_in_mission_table, back_populates='instruments')
     measurements = relationship('Measurement', secondary=measurements_of_instrument_table, back_populates='instruments')
     wavebands = relationship('Waveband', secondary=instrument_wavebands_table, back_populates='instruments')
+
+
+class TechTypeMostCommonOrbit(DeclarativeBase):
+    """Sqlalchemy TechTypeMostCommonOrbit model"""
+    __tablename__ = 'techtype_most_common_orbits'
+
+    id = Column(Integer, primary_key=True)
+    techtype = Column('techype', String)
+    orbit = Column('orbit', String, nullable=True)
+
+
+class MeasurementMostCommonOrbit(DeclarativeBase):
+    """Sqlalchemy MeasurementMostCommonOrbit model"""
+    __tablename__ = 'measurement_most_common_orbits'
+
+    id = Column(Integer, primary_key=True)
+    measurement = Column('measurement', String)
+    orbit = Column('orbit', String, nullable=True)
