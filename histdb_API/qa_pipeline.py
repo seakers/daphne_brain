@@ -235,6 +235,46 @@ def query(query, data):
         row = query_db.first()
         result = eval("row." + query["result_field"])
         response = result.strftime('%d %B %Y')
+    elif query["result_type"] == "orbit":
+        row = query_db.first()
+        result = eval("row." + query["result_field"])
+        # Build an orbit natural name from the orbit code
+        orbit_codes = {
+            "GEO": "geostationary",
+            "LEO": "low earth",
+            "HEO": "highly elliptical",
+            "SSO": "sun-synchronous",
+            "Eq": "equatorial",
+            "NearEq": "near equatorial",
+            "MidLat": "mid latitude",
+            "NearPo": "near polar",
+            "Po": "polar",
+            "DD": "dawn-dusk local solar time",
+            "AM": "morning local solar time",
+            "Noon": "noon local solar time",
+            "PM": "afternoon local solar time",
+            "VL": "very low altitude",
+            "L": "low altitude",
+            "M": "medium altitude",
+            "H": "high altitude",
+            "VH": "very high altitude",
+            "NRC": "no repeat cycle",
+            "SRC": "short repeat cycle",
+            "LRC": "long repeat cycle"
+        }
+        if result != None:
+            orbit_parts = result.split('-')
+            response = "a "
+            first = True
+            for orbit_part in orbit_parts:
+                if first:
+                    first = False
+                else:
+                    response += ', '
+                response += orbit_codes[orbit_part]
+            response += " orbit"
+        else:
+            response = "none"
 
     return response
 
