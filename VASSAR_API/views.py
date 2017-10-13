@@ -1,8 +1,5 @@
 import logging
 
-# Get an instance of a logger
-logger = logging.getLogger('VASSAR')
-
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
@@ -14,20 +11,17 @@ import sys,os
 import json
 import csv
 
-
-# Print all paths included in sys.path
-# from pprint import pprint as p
-# p(sys.path)
-
-
 from VASSAR_API.api import VASSARClient
+
+# Get an instance of a logger
+logger = logging.getLogger('VASSAR')
 
 
 class GetOrbitList(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
     
-    def post(self, request, format=None):
+    def get(self, request, format=None):
         try:
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -47,7 +41,7 @@ class GetInstrumentList(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()
     
-    def post(self, request, format=None):
+    def get(self, request, format=None):
         try:
             # Start connection with VASSAR
             self.VASSARClient.startConnection()

@@ -1,8 +1,5 @@
 import logging
 
-# Get an instance of a logger
-logger = logging.getLogger('iFEED')
-
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
@@ -16,11 +13,13 @@ import csv
 import hashlib
 from channels import Group
 
-
 from messagebus.message import Message
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 #from util.log import getLogger
+
+# Get an instance of a logger
+logger = logging.getLogger('iFEED')
 
 config = ConfigurationLoader().load()
 
@@ -38,41 +37,39 @@ class ImportData(APIView):
     def post(self, request, format=None):
         try:
             logger.debug('iFEED import data HTTP request')
-            output = None
+
             # Set the path of the file containing data
-            file_path = config['iFEED']['path'] + request.POST['path']
+            file_path = os.path.dirname(os.path.abspath(__file__)) + '/data/' + request.POST['filename']
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
                 read = csv.reader(csvfile, delimiter=',')
                 self.architectures = []
+                bit_strings = set()
                 # For each row, store the information
                 for ind, row in enumerate(read):
                     # Change boolean string to boolean array
-                    bitString = booleanString2booleanArray(row[0])
+                    bitString = self.booleanString2booleanArray(row[0])
                     science = float(row[1])
                     cost = float(row[2])
-                    
-                    rep = False
-                    for i,a in enumerate(self.architectures):
-                        # Check if the current bitString was seen before
-                        if a['bitString'] == bitString:
-                            rep = True
-                            break
-                    if rep:
-                        pass
-                    else:
+
+                    logger.debug(bitString)
+
+                    if row[0] not in bit_strings:
                         self.architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
-            output = self.architectures
-            request.session['data']=self.architectures
-            return Response(output)
+                        bit_strings.add(row[0])
+
+            request.session['data'] = self.architectures
+            return Response(self.architectures)
         
         except Exception:
             logger.exception('Exception in importing data for iFEED')
             return Response('')
 
-    
-    
+    def booleanString2booleanArray(self, booleanString):
+        return [b == "1" for b in booleanString]
+
+
 class VennDiagramDistance(APIView):
     
     """ Optimizes the distance between two circles in a Venn diagram
@@ -96,9 +93,8 @@ class VennDiagramDistance(APIView):
         
         distance = res.x[0]
         return Response(distance)
-    
-    
-    
+
+
 class UpdateUtterance(APIView):
 
     def __init__(self):
@@ -117,8 +113,7 @@ class UpdateUtterance(APIView):
         })
 
         return Response('')
-    
-    
+
 
 class UpdateSystemResponse(APIView):
     
@@ -141,10 +136,6 @@ class UpdateSystemResponse(APIView):
             "text": message
         })
         return Response('')
-    
-    
-    
-
     
 #class UpdateFeatureApplicationStatus(APIView):
 #    
@@ -236,14 +227,3 @@ class ApplyFeatureExpression(APIView):
             "text": message
         })
         return Response('')
-        
-        
-def booleanString2booleanArray(booleanString):
-    leng = len(booleanString)
-    boolArray = []
-    for i in range(leng):
-        if booleanString[i]=='0':
-            boolArray.append(False)
-        else:
-            boolArray.append(True)
-    return boolArray
