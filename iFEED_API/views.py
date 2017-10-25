@@ -49,14 +49,13 @@ class ImportData(APIView):
                 # For each row, store the information
                 for ind, row in enumerate(read):
                     # Change boolean string to boolean array
-                    bitString = self.booleanString2booleanArray(row[0])
+                    inputs = self.booleanString2booleanArray(row[0])
                     science = float(row[1])
                     cost = float(row[2])
-
-                    logger.debug(bitString)
-
+                    outputs = [science, cost]
+                    
                     if row[0] not in bit_strings:
-                        architectures.append({'id':ind,'bitString':bitString,'science':science,'cost':cost})
+                        self.architectures.append({'id':ind, 'inputs':inputs, 'outputs':outputs})
                         bit_strings.add(row[0])
 
             request.session['data'] = architectures
@@ -68,6 +67,7 @@ class ImportData(APIView):
 
     def booleanString2booleanArray(self, booleanString):
         return [b == "1" for b in booleanString]
+    
 
 
 class VennDiagramDistance(APIView):
@@ -99,6 +99,7 @@ class UpdateUtterance(APIView):
 
     def __init__(self):
         pass
+    
     def post(self, request, format=None):
         
         key = request.POST['key']
