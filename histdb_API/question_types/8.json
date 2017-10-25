@@ -1,0 +1,15 @@
+{
+  "params":
+  [
+    { "name": "mission", "type": "mission", "options": "", "mandatory": true }
+  ],
+  "query":
+  {
+    "always": "session.query(models.Mission).filter(models.Mission.name.ilike('%${mission}%'))",
+    "opt": [],
+    "end": "",
+    "result_type": "date",
+    "result_field": "launch_date"
+  },
+  "response": "Mission ${mission} was launched in ${response}"
+}

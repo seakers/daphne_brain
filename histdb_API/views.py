@@ -2,10 +2,9 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import spacy
+from daphne_brain.nlp_object import nlp
 from . import qa_pipeline
 
-nlp = spacy.load('en')
 
 class Question(APIView):
     """
@@ -21,6 +20,8 @@ class Question(APIView):
         [params, query, response_template] = qa_pipeline.load_type_info(question_type)
         # Extract required and optional parameters
         data = qa_pipeline.extract_data(processed_question, params)
+        # Add extra parameters to data
+        data = qa_pipeline.augment_data(data)
         # Query the database
         response = qa_pipeline.query(query, data)
         # Construct the response from the database query and the response format

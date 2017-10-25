@@ -1,0 +1,15 @@
+{
+  "params":
+  [
+    { "name": "technology", "type": "technology", "options": "", "mandatory": true }
+  ],
+  "query":
+  {
+    "always": "session.query(models.TechTypeMostCommonOrbit).filter(models.TechTypeMostCommonOrbit.techtype.ilike('%${technology}%'))",
+    "opt": [],
+    "end": "",
+    "result_type": "orbit",
+    "result_field": "orbit"
+  },
+  "response": "The most common orbit for ${technology} is ${response}"
+}

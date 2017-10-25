@@ -1,0 +1,17 @@
+{
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "options": "", "mandatory": true },
+    { "name": "year1", "type": "year", "options": "begin", "mandatory": false },
+    { "name": "year2", "type": "year", "options": "end", "mandatory": false }
+  ],
+  "query":
+  {
+    "always": "session.query(models.Instrument.name).join(models.Mission, models.Instrument.missions).group_by(models.Instrument.name).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%'))).having(func.min(models.Mission.launch_date) < data['now']).having(func.max(models.Mission.eol_date) > data['now'])",
+    "opt": [],
+    "end": ".order_by(func.min(models.Mission.launch_date))",
+    "result_type": "list",
+    "result_field": "name"
+  },
+  "response": "The instruments that currently measure ${measurement} are ${response}"
+}

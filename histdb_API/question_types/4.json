@@ -1,13 +1,13 @@
 {
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "mandatory": true },
+    { "name": "technology", "type": "technology", "options": "", "mandatory": true },
     { "name": "year1", "type": "year", "options": "begin", "mandatory": false },
     { "name": "year2", "type": "year", "options": "end", "mandatory": false }
   ],
   "query":
   {
-    "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%')))",
+    "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(or_(models.Instrument.technology.ilike('%${technology}%'), models.Instrument.types.any(models.InstrumentType.name.ilike('%${technology}%'))))",
     "opt":
     [
       { "cond": "year1", "query_part": ".filter(models.Mission.eol_date > data['year1'])" },
@@ -17,5 +17,5 @@
     "result_type": "list",
     "result_field": "name"
   },
-  "response": "The missions that measure ${measurement} are ${response}"
+  "response": "The missions that fly ${technology} are ${response}"
 }
