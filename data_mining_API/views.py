@@ -61,6 +61,7 @@ class GetDrivingFeatures(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
+            logger.debug(request.session)
             architectures = request.session['data']
             for a in architectures:
                 temp = a['bitString']
@@ -76,7 +77,7 @@ class GetDrivingFeatures(APIView):
             return Response(output)
         
         except Exception as detail:
-            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
 
