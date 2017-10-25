@@ -61,13 +61,13 @@ class GetDrivingFeatures(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
+            logger.debug(request.session)
             architectures = request.session['data']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeatures(behavioral,non_behavioral,architectures,supp,conf,lift)
-            
-            # Store the mined features as a session data
-            # request.session['features'] = drivingFeatures
-            
+
+            drivingFeatures = self.DataMiningClient.getDrivingFeatures(behavioral, non_behavioral,
+                                                                       architectures, supp, conf, lift)
+                
             output = drivingFeatures
 
             # End the connection before return statement
@@ -75,7 +75,7 @@ class GetDrivingFeatures(APIView):
             return Response(output)
         
         except Exception as detail:
-            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
         
@@ -147,9 +147,9 @@ def booleanArray2booleanString(booleanArray):
     leng = len(booleanArray)
     boolString = ''
     for i in range(leng):
-        if booleanArray[i]==True:
-            boolString = boolString + '1';
+        if booleanArray[i] == True:
+            boolString += '1'
         else:
-            boolString = boolString + '0';
+            boolString += '0'
     return boolString
 
