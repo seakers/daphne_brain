@@ -50,7 +50,7 @@ class GetDrivingFeatures(APIView):
             behavioral = []
             for s in selected_arch_ids:
                 behavioral.append(int(s))
-            
+
             # Get non-selected arch id's
             non_selected = request.POST['non_selected']
             non_selected = non_selected[1:-1]
@@ -62,12 +62,12 @@ class GetDrivingFeatures(APIView):
 
             # Load architecture data from the session info
             architectures = request.session['data']
-            for a in architectures:
-                temp = a['bitString']
-                a['bitString'] = booleanArray2booleanString(temp)
 
             drivingFeatures = self.DataMiningClient.getDrivingFeatures(behavioral,non_behavioral,architectures,supp,conf,lift)
-                
+            
+            # Store the mined features as a session data
+            # request.session['features'] = drivingFeatures
+            
             output = drivingFeatures
 
             # End the connection before return statement
@@ -78,9 +78,71 @@ class GetDrivingFeatures(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + detail)
             self.DataMiningClient.endConnection()
             return Response('')
+        
+        
+class GetMarginalDrivingFeatures(APIView):
 
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
 
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get threshold values for the metrics
+            supp = float(request.POST['supp'])
+            conf = float(request.POST['conf'])
+            lift = float(request.POST['lift'])
+            
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
 
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+                
+            featureName = request.POST['featureName']            
+            highlighted = json.loads(request.POST['highlighted'])
+
+            # Load architecture data from the session info
+            architectures = request.session['data']
+            for a in architectures:
+                temp = a['bitString']
+                a['bitString'] = booleanArray2booleanString(temp)
+
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(behavioral,non_behavioral,architectures,
+                                                                               featureName,highlighted,supp,conf,lift)
+            
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            self.DataMiningClient.endConnection()
+            return Response('')
+        
+        
+        
+        
+        
 def booleanArray2booleanString(booleanArray):
     leng = len(booleanArray)
     boolString = ''

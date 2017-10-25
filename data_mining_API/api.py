@@ -29,7 +29,7 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from data_mining_API.interface import interface as DataMiningInterface
-from data_mining_API.interface.ttypes import Architecture, DrivingFeature
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, Feature
 
 
 from config.loader import ConfigurationLoader
@@ -75,7 +75,7 @@ class DataMiningClient():
             
             archs_formatted = []
             for arch in all_archs:
-                archs_formatted.append(Architecture(arch['id'],arch['bitString'],arch['science'],arch['cost']))
+                archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
     
             drivingFeatures_formatted = self.client.getDrivingFeatures(behavioral, non_behavioral, archs_formatted, supp, conf, lift)
             drivingFeatures = []
@@ -85,8 +85,27 @@ class DataMiningClient():
         except Exception:
             print(Exception)
 
-
         return drivingFeatures
 
     
+    def getMarginalDrivingFeatures(self, behavioral, non_behavioral, all_archs, featureName, archs_with_feature, supp, conf, lift):
+        try:
+            print('getMarginalDrivingFeatures')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+            
+            archs_formatted = []
+            for arch in all_archs:
+                archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
+                    
+            drivingFeatures_formatted = self.client.getMarginalDrivingFeatures(behavioral, non_behavioral, archs_formatted, 
+                                                                       featureName, archs_with_feature, supp, conf, lift)
+                        
+            drivingFeatures = []
+            
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+                
+        except Exception:
+            print(Exception)
 
+        return drivingFeatures
