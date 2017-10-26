@@ -85,7 +85,10 @@ class EvaluateArchitecture(APIView):
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
-            inputs = request.POST['inputs']                
+            inputs = request.POST['inputs']   
+                        
+            inputs = json.loads(inputs)
+            
             architecture = self.VASSARClient.evaluateArchitecture(inputs)            
             
             # End the connection before return statement
@@ -108,16 +111,20 @@ class CritiqueArchitecture(APIView):
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
-            inputs = request.POST['inputs']                
+            inputs = request.POST['inputs']   
+                        
+            inputs = json.loads(inputs)
+            
             critique = self.VASSARClient.critiqueArchitecture(inputs)            
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
+            
             return Response(critique)
         
         except Exception:
             
-            logger.exception('Exception in evaluating an architecture')
+            logger.exception('Exception in generating a critique for an architecture')
             
             self.VASSARClient.endConnection()
             return Response('')
