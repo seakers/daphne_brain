@@ -13,7 +13,7 @@ import sys
 from thrift.transport import TTransport
 
 
-class ArchitectureInfo(object):
+class BinaryInputArchitecture(object):
     """
     Structs are the basic complex data structures. They are comprised of fields
     which each have an integer identifier, a type, a symbolic name, and an
@@ -24,22 +24,22 @@ class ArchitectureInfo(object):
     manual management in some languages.
 
     Attributes:
-     - science
-     - cost
-     - booleanString
+     - id
+     - inputs
+     - outputs
     """
 
     thrift_spec = (
         None,  # 0
-        (1, TType.DOUBLE, 'science', None, None, ),  # 1
-        (2, TType.DOUBLE, 'cost', None, None, ),  # 2
-        (3, TType.STRING, 'booleanString', 'UTF8', None, ),  # 3
+        (1, TType.I32, 'id', None, None, ),  # 1
+        (2, TType.LIST, 'inputs', (TType.BOOL, None, False), None, ),  # 2
+        (3, TType.LIST, 'outputs', (TType.DOUBLE, None, False), None, ),  # 3
     )
 
-    def __init__(self, science=None, cost=None, booleanString=None,):
-        self.science = science
-        self.cost = cost
-        self.booleanString = booleanString
+    def __init__(self, id=None, inputs=None, outputs=None,):
+        self.id = id
+        self.inputs = inputs
+        self.outputs = outputs
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -51,18 +51,28 @@ class ArchitectureInfo(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.DOUBLE:
-                    self.science = iprot.readDouble()
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
-                if ftype == TType.DOUBLE:
-                    self.cost = iprot.readDouble()
+                if ftype == TType.LIST:
+                    self.inputs = []
+                    (_etype3, _size0) = iprot.readListBegin()
+                    for _i4 in range(_size0):
+                        _elem5 = iprot.readBool()
+                        self.inputs.append(_elem5)
+                    iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
-                if ftype == TType.STRING:
-                    self.booleanString = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                if ftype == TType.LIST:
+                    self.outputs = []
+                    (_etype9, _size6) = iprot.readListBegin()
+                    for _i10 in range(_size6):
+                        _elem11 = iprot.readDouble()
+                        self.outputs.append(_elem11)
+                    iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             else:
@@ -74,18 +84,24 @@ class ArchitectureInfo(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
-        oprot.writeStructBegin('ArchitectureInfo')
-        if self.science is not None:
-            oprot.writeFieldBegin('science', TType.DOUBLE, 1)
-            oprot.writeDouble(self.science)
+        oprot.writeStructBegin('BinaryInputArchitecture')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
             oprot.writeFieldEnd()
-        if self.cost is not None:
-            oprot.writeFieldBegin('cost', TType.DOUBLE, 2)
-            oprot.writeDouble(self.cost)
+        if self.inputs is not None:
+            oprot.writeFieldBegin('inputs', TType.LIST, 2)
+            oprot.writeListBegin(TType.BOOL, len(self.inputs))
+            for iter12 in self.inputs:
+                oprot.writeBool(iter12)
+            oprot.writeListEnd()
             oprot.writeFieldEnd()
-        if self.booleanString is not None:
-            oprot.writeFieldBegin('booleanString', TType.STRING, 3)
-            oprot.writeString(self.booleanString.encode('utf-8') if sys.version_info[0] == 2 else self.booleanString)
+        if self.outputs is not None:
+            oprot.writeFieldBegin('outputs', TType.LIST, 3)
+            oprot.writeListBegin(TType.DOUBLE, len(self.outputs))
+            for iter13 in self.outputs:
+                oprot.writeDouble(iter13)
+            oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
