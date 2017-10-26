@@ -121,13 +121,9 @@ class GetMarginalDrivingFeatures(APIView):
 
             # Load architecture data from the session info
             architectures = request.session['data']
-            for a in architectures:
-                temp = a['bitString']
-                a['bitString'] = booleanArray2booleanString(temp)
 
             drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(behavioral,non_behavioral,architectures,
-                                                                               featureName,highlighted,supp,conf,lift)
-            
+                                                                               featureName,highlighted,supp,conf,lift)            
             output = drivingFeatures
 
             # End the connection before return statement

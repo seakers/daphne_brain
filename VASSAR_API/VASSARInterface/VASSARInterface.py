@@ -28,10 +28,10 @@ class Iface(object):
     def initJess(self):
         pass
 
-    def eval(self, booleanString):
+    def eval(self, inputs):
         """
         Parameters:
-         - booleanString
+         - inputs
         """
         pass
 
@@ -39,6 +39,13 @@ class Iface(object):
         pass
 
     def getInstrumentList(self):
+        pass
+
+    def getCritique(self, arch):
+        """
+        Parameters:
+         - arch
+        """
         pass
 
 
@@ -105,18 +112,18 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "initJess failed: unknown result")
 
-    def eval(self, booleanString):
+    def eval(self, inputs):
         """
         Parameters:
-         - booleanString
+         - inputs
         """
-        self.send_eval(booleanString)
+        self.send_eval(inputs)
         return self.recv_eval()
 
-    def send_eval(self, booleanString):
+    def send_eval(self, inputs):
         self._oprot.writeMessageBegin('eval', TMessageType.CALL, self._seqid)
         args = eval_args()
-        args.booleanString = booleanString
+        args.inputs = inputs
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -188,6 +195,37 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getInstrumentList failed: unknown result")
 
+    def getCritique(self, arch):
+        """
+        Parameters:
+         - arch
+        """
+        self.send_getCritique(arch)
+        return self.recv_getCritique()
+
+    def send_getCritique(self, arch):
+        self._oprot.writeMessageBegin('getCritique', TMessageType.CALL, self._seqid)
+        args = getCritique_args()
+        args.arch = arch
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getCritique(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getCritique_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getCritique failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -198,6 +236,7 @@ class Processor(Iface, TProcessor):
         self._processMap["eval"] = Processor.process_eval
         self._processMap["getOrbitList"] = Processor.process_getOrbitList
         self._processMap["getInstrumentList"] = Processor.process_getInstrumentList
+        self._processMap["getCritique"] = Processor.process_getCritique
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -258,7 +297,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = eval_result()
         try:
-            result.success = self._handler.eval(args.booleanString)
+            result.success = self._handler.eval(args.inputs)
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
@@ -305,6 +344,25 @@ class Processor(Iface, TProcessor):
             logging.exception(ex)
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getInstrumentList", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_getCritique(self, seqid, iprot, oprot):
+        args = getCritique_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getCritique_result()
+        try:
+            result.success = self._handler.getCritique(args.arch)
+            msg_type = TMessageType.REPLY
+        except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as ex:
+            msg_type = TMessageType.EXCEPTION
+            logging.exception(ex)
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getCritique", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -500,16 +558,16 @@ class initJess_result(object):
 class eval_args(object):
     """
     Attributes:
-     - booleanString
+     - inputs
     """
 
     thrift_spec = (
         None,  # 0
-        (1, TType.STRING, 'booleanString', 'UTF8', None, ),  # 1
+        (1, TType.LIST, 'inputs', (TType.BOOL, None, False), None, ),  # 1
     )
 
-    def __init__(self, booleanString=None,):
-        self.booleanString = booleanString
+    def __init__(self, inputs=None,):
+        self.inputs = inputs
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -521,8 +579,13 @@ class eval_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.STRING:
-                    self.booleanString = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                if ftype == TType.LIST:
+                    self.inputs = []
+                    (_etype17, _size14) = iprot.readListBegin()
+                    for _i18 in range(_size14):
+                        _elem19 = iprot.readBool()
+                        self.inputs.append(_elem19)
+                    iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             else:
@@ -535,9 +598,12 @@ class eval_args(object):
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
         oprot.writeStructBegin('eval_args')
-        if self.booleanString is not None:
-            oprot.writeFieldBegin('booleanString', TType.STRING, 1)
-            oprot.writeString(self.booleanString.encode('utf-8') if sys.version_info[0] == 2 else self.booleanString)
+        if self.inputs is not None:
+            oprot.writeFieldBegin('inputs', TType.LIST, 1)
+            oprot.writeListBegin(TType.BOOL, len(self.inputs))
+            for iter20 in self.inputs:
+                oprot.writeBool(iter20)
+            oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -564,7 +630,7 @@ class eval_result(object):
     """
 
     thrift_spec = (
-        (0, TType.STRUCT, 'success', (ArchitectureInfo, ArchitectureInfo.thrift_spec), None, ),  # 0
+        (0, TType.STRUCT, 'success', (BinaryInputArchitecture, BinaryInputArchitecture.thrift_spec), None, ),  # 0
     )
 
     def __init__(self, success=None,):
@@ -581,7 +647,7 @@ class eval_result(object):
                 break
             if fid == 0:
                 if ftype == TType.STRUCT:
-                    self.success = ArchitectureInfo()
+                    self.success = BinaryInputArchitecture()
                     self.success.read(iprot)
                 else:
                     iprot.skip(ftype)
@@ -684,10 +750,10 @@ class getOrbitList_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype3, _size0) = iprot.readListBegin()
-                    for _i4 in range(_size0):
-                        _elem5 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem5)
+                    (_etype24, _size21) = iprot.readListBegin()
+                    for _i25 in range(_size21):
+                        _elem26 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem26)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -704,8 +770,8 @@ class getOrbitList_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter6 in self.success:
-                oprot.writeString(iter6.encode('utf-8') if sys.version_info[0] == 2 else iter6)
+            for iter27 in self.success:
+                oprot.writeString(iter27.encode('utf-8') if sys.version_info[0] == 2 else iter27)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -793,10 +859,10 @@ class getInstrumentList_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype10, _size7) = iprot.readListBegin()
-                    for _i11 in range(_size7):
-                        _elem12 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem12)
+                    (_etype31, _size28) = iprot.readListBegin()
+                    for _i32 in range(_size28):
+                        _elem33 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem33)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -813,8 +879,136 @@ class getInstrumentList_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter13 in self.success:
-                oprot.writeString(iter13.encode('utf-8') if sys.version_info[0] == 2 else iter13)
+            for iter34 in self.success:
+                oprot.writeString(iter34.encode('utf-8') if sys.version_info[0] == 2 else iter34)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class getCritique_args(object):
+    """
+    Attributes:
+     - arch
+    """
+
+    thrift_spec = (
+        None,  # 0
+        (1, TType.STRUCT, 'arch', (BinaryInputArchitecture, BinaryInputArchitecture.thrift_spec), None, ),  # 1
+    )
+
+    def __init__(self, arch=None,):
+        self.arch = arch
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, (self.__class__, self.thrift_spec))
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.arch = BinaryInputArchitecture()
+                    self.arch.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
+            return
+        oprot.writeStructBegin('getCritique_args')
+        if self.arch is not None:
+            oprot.writeFieldBegin('arch', TType.STRUCT, 1)
+            self.arch.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class getCritique_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+    thrift_spec = (
+        (0, TType.LIST, 'success', (TType.STRING, 'UTF8', False), None, ),  # 0
+    )
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, (self.__class__, self.thrift_spec))
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype38, _size35) = iprot.readListBegin()
+                    for _i39 in range(_size35):
+                        _elem40 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem40)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
+            return
+        oprot.writeStructBegin('getCritique_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRING, len(self.success))
+            for iter41 in self.success:
+                oprot.writeString(iter41.encode('utf-8') if sys.version_info[0] == 2 else iter41)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
