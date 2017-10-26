@@ -41,10 +41,10 @@ class Iface(object):
     def getInstrumentList(self):
         pass
 
-    def getCritique(self, arch):
+    def getCritique(self, inputs):
         """
         Parameters:
-         - arch
+         - inputs
         """
         pass
 
@@ -195,18 +195,18 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getInstrumentList failed: unknown result")
 
-    def getCritique(self, arch):
+    def getCritique(self, inputs):
         """
         Parameters:
-         - arch
+         - inputs
         """
-        self.send_getCritique(arch)
+        self.send_getCritique(inputs)
         return self.recv_getCritique()
 
-    def send_getCritique(self, arch):
+    def send_getCritique(self, inputs):
         self._oprot.writeMessageBegin('getCritique', TMessageType.CALL, self._seqid)
         args = getCritique_args()
-        args.arch = arch
+        args.inputs = inputs
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -354,7 +354,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getCritique_result()
         try:
-            result.success = self._handler.getCritique(args.arch)
+            result.success = self._handler.getCritique(args.inputs)
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
@@ -904,16 +904,16 @@ class getInstrumentList_result(object):
 class getCritique_args(object):
     """
     Attributes:
-     - arch
+     - inputs
     """
 
     thrift_spec = (
         None,  # 0
-        (1, TType.STRUCT, 'arch', (BinaryInputArchitecture, BinaryInputArchitecture.thrift_spec), None, ),  # 1
+        (1, TType.LIST, 'inputs', (TType.BOOL, None, False), None, ),  # 1
     )
 
-    def __init__(self, arch=None,):
-        self.arch = arch
+    def __init__(self, inputs=None,):
+        self.inputs = inputs
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -925,9 +925,13 @@ class getCritique_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.STRUCT:
-                    self.arch = BinaryInputArchitecture()
-                    self.arch.read(iprot)
+                if ftype == TType.LIST:
+                    self.inputs = []
+                    (_etype38, _size35) = iprot.readListBegin()
+                    for _i39 in range(_size35):
+                        _elem40 = iprot.readBool()
+                        self.inputs.append(_elem40)
+                    iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             else:
@@ -940,9 +944,12 @@ class getCritique_args(object):
             oprot.trans.write(oprot._fast_encode(self, (self.__class__, self.thrift_spec)))
             return
         oprot.writeStructBegin('getCritique_args')
-        if self.arch is not None:
-            oprot.writeFieldBegin('arch', TType.STRUCT, 1)
-            self.arch.write(oprot)
+        if self.inputs is not None:
+            oprot.writeFieldBegin('inputs', TType.LIST, 1)
+            oprot.writeListBegin(TType.BOOL, len(self.inputs))
+            for iter41 in self.inputs:
+                oprot.writeBool(iter41)
+            oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -987,10 +994,10 @@ class getCritique_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype38, _size35) = iprot.readListBegin()
-                    for _i39 in range(_size35):
-                        _elem40 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem40)
+                    (_etype45, _size42) = iprot.readListBegin()
+                    for _i46 in range(_size42):
+                        _elem47 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem47)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1007,8 +1014,8 @@ class getCritique_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter41 in self.success:
-                oprot.writeString(iter41.encode('utf-8') if sys.version_info[0] == 2 else iter41)
+            for iter48 in self.success:
+                oprot.writeString(iter48.encode('utf-8') if sys.version_info[0] == 2 else iter48)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()

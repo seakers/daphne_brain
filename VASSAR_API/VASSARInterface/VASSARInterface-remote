@@ -29,7 +29,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  BinaryInputArchitecture eval( inputs)')
     print('   getOrbitList()')
     print('   getInstrumentList()')
-    print('   getCritique(BinaryInputArchitecture arch)')
+    print('   getCritique( inputs)')
     print('')
     sys.exit(0)
 
