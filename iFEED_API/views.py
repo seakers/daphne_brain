@@ -44,7 +44,7 @@ class ImportData(APIView):
             with open(file_path) as csvfile:
                 # Read the file as a csv file
                 read = csv.reader(csvfile, delimiter=',')
-                architectures = []
+                self.architectures = []
                 bit_strings = set()
                 # For each row, store the information
                 for ind, row in enumerate(read):
@@ -58,8 +58,8 @@ class ImportData(APIView):
                         self.architectures.append({'id':ind, 'inputs':inputs, 'outputs':outputs})
                         bit_strings.add(row[0])
 
-            request.session['data'] = architectures
-            return Response(architectures)
+            request.session['data'] = self.architectures
+            return Response(self.architectures)
         
         except Exception:
             logger.exception('Exception in importing data for iFEED')

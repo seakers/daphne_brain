@@ -26,9 +26,10 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void ping()')
     print('  string initJess()')
-    print('  ArchitectureInfo eval(string booleanString)')
+    print('  BinaryInputArchitecture eval( inputs)')
     print('   getOrbitList()')
     print('   getInstrumentList()')
+    print('   getCritique( inputs)')
     print('')
     sys.exit(0)
 
@@ -124,7 +125,7 @@ elif cmd == 'eval':
     if len(args) != 1:
         print('eval requires 1 args')
         sys.exit(1)
-    pp.pprint(client.eval(args[0],))
+    pp.pprint(client.eval(eval(args[0]),))
 
 elif cmd == 'getOrbitList':
     if len(args) != 0:
@@ -137,6 +138,12 @@ elif cmd == 'getInstrumentList':
         print('getInstrumentList requires 0 args')
         sys.exit(1)
     pp.pprint(client.getInstrumentList())
+
+elif cmd == 'getCritique':
+    if len(args) != 1:
+        print('getCritique requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getCritique(eval(args[0]),))
 
 else:
     print('Unrecognized method %s' % cmd)
