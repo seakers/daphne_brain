@@ -88,7 +88,7 @@ class DataMiningClient():
         return drivingFeatures
 
     
-    def getMarginalDrivingFeatures(self, behavioral, non_behavioral, all_archs, featureName, archs_with_feature, supp, conf, lift):
+    def getMarginalDrivingFeaturesConjunctive(self, behavioral, non_behavioral, all_archs, featureName, archs_with_feature, supp, conf, lift):
         try:
             print('getMarginalDrivingFeatures')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
@@ -99,6 +99,30 @@ class DataMiningClient():
                     
             drivingFeatures_formatted = self.client.getMarginalDrivingFeatures(behavioral, non_behavioral, archs_formatted, 
                                                                        featureName, archs_with_feature, supp, conf, lift)
+                        
+            drivingFeatures = []
+            
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+                
+        except Exception:
+            print(Exception)
+
+        return drivingFeatures
+
+    
+        
+    def getMarginalDrivingFeatures(self, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+        try:
+            print('getMarginalDrivingFeatures')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+            
+            archs_formatted = []
+            for arch in all_archs:
+                archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
+                    
+            drivingFeatures_formatted = self.client.getMarginalDrivingFeatures(behavioral, non_behavioral, archs_formatted, 
+                                                                       featureExpression, supp, conf, lift)
                         
             drivingFeatures = []
             

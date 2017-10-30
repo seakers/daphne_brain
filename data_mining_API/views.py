@@ -80,8 +80,9 @@ class GetDrivingFeatures(APIView):
             return Response('')
         
         
-class GetMarginalDrivingFeatures(APIView):
-
+        
+class GetMarginalDrivingFeaturesConjunctive(APIView):
+    
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -122,8 +123,48 @@ class GetMarginalDrivingFeatures(APIView):
             # Load architecture data from the session info
             architectures = request.session['data']
 
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(behavioral,non_behavioral,architectures,
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeaturesConjunctive(behavioral,non_behavioral,architectures,
                                                                                featureName,highlighted,supp,conf,lift)            
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            self.DataMiningClient.endConnection()
+            return Response('')
+        
+        
+class GetMarginalDrivingFeatures(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get threshold values for the metrics
+            supp = float(request.POST['supp'])
+            conf = float(request.POST['conf'])
+            lift = float(request.POST['lift'])
+            
+            # Get selected arch id's
+            selected = json.loads(request.POST['selected'])
+            non_behavioral = json.loads(request.POST['non_selected'])
+                
+            featureExpression = request.POST['featureExpression']            
+
+            # Load architecture data from the session info
+            architectures = request.session['data']
+
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(behavioral,non_behavioral,architectures,
+                                                                               featureExpression,supp,conf,lift)            
             output = drivingFeatures
 
             # End the connection before return statement
