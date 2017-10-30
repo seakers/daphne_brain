@@ -28,9 +28,11 @@ class CriticizeArchitecture(APIView):
             
             critique = self.get_history_critique(inputs)
             
-            critique = self.get_expert_critique(inputs)
+            critique += self.get_expert_critique(inputs)
+            
+            critiques = json.dumps(critique)
                                 
-            return Response(critique)
+            return Response(critiques)
         
         except Exception:
             
@@ -44,10 +46,13 @@ class CriticizeArchitecture(APIView):
 
             historian_critic = Critic()
 
-            historian_critic.criticizeArchitecture(inputs)
+            critique = historian_critic.criticizeArchitecture(inputs)
+            
+            return critique
 
         except Exception:
             logger.exception('Exc in generating a critique using historical database')
+            
             raise
 
 

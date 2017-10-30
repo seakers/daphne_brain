@@ -142,8 +142,11 @@ class Critic:
 #                    "I have found %d designs that are similar to yours but a little better " % len(res),
 #                    '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res])
 #                ])
-#        # Return result
-#        return result
+
+
+
+        # Return result
+        return result
         
         
         
