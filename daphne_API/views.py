@@ -17,7 +17,7 @@ class Command(APIView):
         # Classify the question, obtaining a question type
         command_type, other_info = command_processing.get_command_type(processed_command)
         # If command is to switch modes, send new mode back, if not
-        return Response({'command': processed_command.text, 'command_type': command_type, 'other_info': other_info})
+        return Response({'response': processed_command.text, 'command_type': command_type, 'other_info': other_info})
 
 class CommandList(APIView):
     """

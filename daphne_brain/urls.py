@@ -27,8 +27,6 @@ urlpatterns = [
     url(r'api/vassar/', include('VASSAR_API.urls')),
     
     url(r'api/data-mining/', include('data_mining_API.urls')),
-    
-    url(r'api/histdb/', include('histdb_API.urls')),
         
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
