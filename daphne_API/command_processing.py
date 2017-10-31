@@ -1,7 +1,5 @@
 import os
-import spacy
 
-from daphne_brain.nlp_object import nlp
 from daphne_API.historian import qa_pipeline
 
 import numpy as np

@@ -3,7 +3,7 @@ import json
 import numpy as np
 from sqlalchemy.orm import sessionmaker
 
-import histdb_API.models as models
+import daphne_API.models as models
 
 
 class Critic:
