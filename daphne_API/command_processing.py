@@ -8,18 +8,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import learn
 
-def get_label_using_logits(logits, top_number=1):
-    logits = np.ndarray.tolist(logits)
-    predicted_labels = []
-    for item in logits:
-        index_list = np.argsort(item)[-top_number:]
-        index_list = index_list[::-1]
-        predicted_labels.append(np.ndarray.tolist(index_list))
-    return predicted_labels
-
+from daphne_API import data_helpers
 
 def classify_command(command):
-    cleaned_command = qa_pipeline.clean_str(command)
+    cleaned_command = data_helpers.clean_str(command)
 
     # Map data into vocabulary
     vocab_path = os.path.join("./daphne_API/models/general/vocab")
@@ -50,7 +42,7 @@ def classify_command(command):
 
             # get the prediction
             result_logits = sess.run(logits, {input_x: x_test, dropout_keep_prob: 1.0})
-            prediction = get_label_using_logits(result_logits, top_number=1)
+            prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
     return prediction[0]
 
