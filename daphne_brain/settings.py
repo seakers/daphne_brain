@@ -195,6 +195,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'critic': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },        
         'data-mining': {
             'handlers': ['file','console'],
             'level': 'ERROR',

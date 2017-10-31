@@ -75,6 +75,10 @@ class VASSARClient():
         print('Test arch evaluated. Science: {0}, Cost: {1}'.format(arch['science'], arch['cost']))
         return arch
         
+    def critiqueArchitecture(self,bitString):
+        return self.client.getCritique(bitString)
+        
+        
     def ping(self):
         self.client.ping()
         print('ping()')

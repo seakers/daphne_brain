@@ -85,8 +85,11 @@ class EvaluateArchitecture(APIView):
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
-            bitString = request.POST['bitString']                
-            architecture = self.VASSARClient.evaluateArchitecture(bitString)            
+            inputs = request.POST['inputs']   
+                        
+            inputs = json.loads(inputs)
+            
+            architecture = self.VASSARClient.evaluateArchitecture(inputs)            
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
