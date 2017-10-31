@@ -10,31 +10,16 @@ import numpy as np
 import tensorflow as tf
 from sqlalchemy.orm import sessionmaker
 from tensorflow.contrib import learn
+from daphne_API import data_helpers
 
 import daphne_API.historian.models as models
 
 
-def clean_str(spacy_doc):
-    # Pre-process the strings
-    tokens = []
-    for token in spacy_doc:
-
-        # If stopword or punctuation, ignore token and continue
-        if (token.is_stop and not (token.lemma_ == "which" or token.lemma_ == "how" or token.lemma_ == "what"
-                                   or token.lemma_ == "when" or token.lemma_ == "why")) \
-                or token.is_punct:
-            continue
-
-        # Lemmatize the token and yield
-        tokens.append(token.lemma_)
-    return " ".join(tokens)
-
-
 def classify(question):
-    cleaned_question = clean_str(question)
+    cleaned_question = data_helpers.clean_str(question)
 
     # Map data into vocabulary
-    vocab_path = os.path.join("./histdb_API/model/vocab")
+    vocab_path = os.path.join("./daphne_API/models/Historian/vocab")
     vocab_processor = learn.preprocessing.VocabularyProcessor.restore(vocab_path)
     x_test = np.array(list(vocab_processor.transform([cleaned_question])))
 
@@ -42,7 +27,7 @@ def classify(question):
 
     # Evaluation
     # ==================================================
-    checkpoint_file = tf.train.latest_checkpoint("./histdb_API/model/checkpoints")
+    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/Historian/checkpoints")
     graph = tf.Graph()
     with graph.as_default():
         session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
@@ -58,16 +43,17 @@ def classify(question):
             dropout_keep_prob = graph.get_operation_by_name("dropout_keep_prob").outputs[0]
 
             # Tensors we want to evaluate
-            predictions = graph.get_operation_by_name("output/predictions").outputs[0]
+            logits = graph.get_operation_by_name("output/logits").outputs[0]
 
             # get the prediction
-            prediction = sess.run(predictions, {input_x: x_test, dropout_keep_prob: 1.0})
+            result_logits = sess.run(logits, {input_x: x_test, dropout_keep_prob: 1.0})
+            prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
-    return prediction[0]
+    return prediction[0][0]
 
 
 def load_type_info(question_type):
-    with open('./histdb_API/question_types/' + str(question_type) + '.json', 'r') as file:
+    with open('./daphne_API/command_types/Historian/' + str(question_type) + '.json', 'r') as file:
         type_info = json.load(file)
     return [type_info["params"], type_info["query"], type_info["response"]]
 
