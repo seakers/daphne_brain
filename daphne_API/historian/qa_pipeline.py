@@ -1,16 +1,17 @@
-import tensorflow as tf
-import numpy as np
-import json
-import os
-import dateparser
 import datetime
-from tensorflow.contrib import learn
-import histdb_API.models as models
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func, text, or_
-from string import Template
-import Levenshtein as lev
+import json
 import operator
+import os
+from string import Template
+
+import Levenshtein as lev
+import dateparser
+import numpy as np
+import tensorflow as tf
+from sqlalchemy.orm import sessionmaker
+from tensorflow.contrib import learn
+
+import daphne_API.historian.models as models
 
 
 def clean_str(spacy_doc):

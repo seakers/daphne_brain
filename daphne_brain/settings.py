@@ -41,8 +41,7 @@ INSTALLED_APPS = [
     'channels',
     'iFEED_API',
     'data_mining_API',
-    'VASSAR_API',
-    'histdb_API'
+    'VASSAR_API'
 ]
 
 MIDDLEWARE = [
@@ -196,16 +195,16 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'critic': {
+            'handlers': ['file','console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },        
         'data-mining': {
             'handlers': ['file','console'],
             'level': 'ERROR',
             'propagate': True,
-        },  
-        'mycroft': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },           
+        },
         'debugging': {
             'handlers': ['file','console'],
             'level': 'DEBUG',
