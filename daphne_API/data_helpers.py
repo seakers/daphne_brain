@@ -1,3 +1,5 @@
+import numpy as np
+
 def clean_str(spacy_doc):
     # Pre-process the strings
     tokens = []

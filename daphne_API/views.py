@@ -23,8 +23,7 @@ class Command(APIView):
         if "context" not in request.session:
             request.session["context"] = {}
 
-        if "answers" in request.session["context"]:
-            request.session["context"]["answers"] = []
+        request.session["context"]["answers"] = []
         
         # Act based on the types
         for command_type in command_types:

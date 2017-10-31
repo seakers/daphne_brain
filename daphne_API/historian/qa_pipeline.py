@@ -9,6 +9,7 @@ import dateparser
 import numpy as np
 import tensorflow as tf
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import or_
 from tensorflow.contrib import learn
 from daphne_API import data_helpers
 
@@ -49,7 +50,11 @@ def classify(question):
             result_logits = sess.run(logits, {input_x: x_test, dropout_keep_prob: 1.0})
             prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
-    return prediction[0][0]
+    named_labels = set()
+    for filename in os.listdir("./daphne_API/command_types/Historian"):
+        specific_label = int(filename.split('.', 1)[0])
+        named_labels.add(specific_label)
+    return list(named_labels)[prediction[0][0]]
 
 
 def load_type_info(question_type):
