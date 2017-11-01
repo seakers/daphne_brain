@@ -57,17 +57,10 @@ class VASSARClient():
     def startConnection(self):
         # Connect
         self.transport.open()
-
-        
     
     def endConnection(self):
         # Close
         self.transport.close()
-        
-    def initializeJess(self):
-        message = self.client.initJess()
-        print(message)
-        return message
     
     def evaluateArchitecture(self,bitString):
         arch_formatted = self.client.eval(bitString)

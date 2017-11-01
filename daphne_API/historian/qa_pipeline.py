@@ -28,7 +28,7 @@ def classify(question):
 
     # Evaluation
     # ==================================================
-    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/Historian/checkpoints")
+    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/Historian/")
     graph = tf.Graph()
     with graph.as_default():
         session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
