@@ -20,7 +20,7 @@ def classify_command(command):
 
     # Evaluation
     # ==================================================
-    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/general/checkpoints")
+    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/general/")
     graph = tf.Graph()
     with graph.as_default():
         session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)

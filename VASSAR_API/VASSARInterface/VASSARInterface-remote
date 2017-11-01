@@ -25,10 +25,10 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('')
     print('Functions:')
     print('  void ping()')
-    print('  string initJess()')
     print('  BinaryInputArchitecture eval( inputs)')
     print('   getOrbitList()')
     print('   getInstrumentList()')
+    print('   getObjectiveList()')
     print('   getCritique( inputs)')
     print('')
     sys.exit(0)
@@ -115,12 +115,6 @@ if cmd == 'ping':
         sys.exit(1)
     pp.pprint(client.ping())
 
-elif cmd == 'initJess':
-    if len(args) != 0:
-        print('initJess requires 0 args')
-        sys.exit(1)
-    pp.pprint(client.initJess())
-
 elif cmd == 'eval':
     if len(args) != 1:
         print('eval requires 1 args')
@@ -138,6 +132,12 @@ elif cmd == 'getInstrumentList':
         print('getInstrumentList requires 0 args')
         sys.exit(1)
     pp.pprint(client.getInstrumentList())
+
+elif cmd == 'getObjectiveList':
+    if len(args) != 0:
+        print('getObjectiveList requires 0 args')
+        sys.exit(1)
+    pp.pprint(client.getObjectiveList())
 
 elif cmd == 'getCritique':
     if len(args) != 1:
