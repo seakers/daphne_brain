@@ -97,7 +97,7 @@ class DataMiningClient():
             for arch in all_archs:
                 archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
                     
-            drivingFeatures_formatted = self.client.getMarginalDrivingFeatures(behavioral, non_behavioral, archs_formatted, 
+            drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesConjunctive(behavioral, non_behavioral, archs_formatted, 
                                                                        featureName, archs_with_feature, supp, conf, lift)
                         
             drivingFeatures = []
@@ -105,8 +105,8 @@ class DataMiningClient():
             for df in drivingFeatures_formatted:
                 drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
                 
-        except Exception:
-            print(Exception)
+        except Exception as e:
+            print('Exc in calling getMarginalDrivingFeaturesConjunctive(): '+str(e))
 
         return drivingFeatures
 
@@ -129,7 +129,7 @@ class DataMiningClient():
             for df in drivingFeatures_formatted:
                 drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
                 
-        except Exception:
-            print(Exception)
+        except Exception as e:
+            print('Exc in calling getMarginalDrivingFeatures(): '+str(e))
 
         return drivingFeatures

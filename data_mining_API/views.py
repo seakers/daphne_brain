@@ -99,23 +99,8 @@ class GetMarginalDrivingFeaturesConjunctive(APIView):
             lift = float(request.POST['lift'])
             
             # Get selected arch id's
-            selected = request.POST['selected']
-            selected = selected[1:-1]
-            selected_arch_ids = selected.split(',')
-            # Convert strings to ints
-            behavioral = []
-            for s in selected_arch_ids:
-                behavioral.append(int(s))
-
-            # Get non-selected arch id's
-            non_selected = request.POST['non_selected']
-            non_selected = non_selected[1:-1]
-            non_selected_arch_ids = non_selected.split(',')
-            
-            # Convert strings to ints
-            non_behavioral = []
-            for s in non_selected_arch_ids:
-                non_behavioral.append(int(s))
+            behavioral = json.loads(request.POST['selected'])
+            non_behavioral = json.loads(request.POST['non_selected'])
                 
             featureName = request.POST['featureName']            
             highlighted = json.loads(request.POST['highlighted'])
@@ -123,8 +108,7 @@ class GetMarginalDrivingFeaturesConjunctive(APIView):
             # Load architecture data from the session info
             architectures = request.session['data']
 
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeaturesConjunctive(behavioral,non_behavioral,architectures,
-                                                                               featureName,highlighted,supp,conf,lift)            
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeaturesConjunctive(behavioral,non_behavioral,architectures,featureName,highlighted,supp,conf,lift)            
             output = drivingFeatures
 
             # End the connection before return statement
@@ -155,7 +139,7 @@ class GetMarginalDrivingFeatures(APIView):
             lift = float(request.POST['lift'])
             
             # Get selected arch id's
-            selected = json.loads(request.POST['selected'])
+            behavioral = json.loads(request.POST['selected'])
             non_behavioral = json.loads(request.POST['non_selected'])
                 
             featureExpression = request.POST['featureExpression']            
