@@ -30,6 +30,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getInstrumentList()')
     print('   getObjectiveList()')
     print('   getCritique( inputs)')
+    print('   getScoreExplanation( arch)')
     print('')
     sys.exit(0)
 
@@ -144,6 +145,12 @@ elif cmd == 'getCritique':
         print('getCritique requires 1 args')
         sys.exit(1)
     pp.pprint(client.getCritique(eval(args[0]),))
+
+elif cmd == 'getScoreExplanation':
+    if len(args) != 1:
+        print('getScoreExplanation requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getScoreExplanation(eval(args[0]),))
 
 else:
     print('Unrecognized method %s' % cmd)

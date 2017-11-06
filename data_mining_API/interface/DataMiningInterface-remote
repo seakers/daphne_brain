@@ -26,7 +26,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void ping()')
     print('   getDrivingFeatures( behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
-    print('   getMarginalDrivingFeatures( behavioral,  non_behavioral,  all_archs, string feature,  archs_with_feature, double supp, double conf, double lift)')
+    print('   getMarginalDrivingFeaturesConjunctive( behavioral,  non_behavioral,  all_archs, string feature,  archs_with_feature, double supp, double conf, double lift)')
+    print('   getMarginalDrivingFeatures( behavioral,  non_behavioral,  all_archs, string featureExpression, double supp, double conf, double lift)')
     print('')
     sys.exit(0)
 
@@ -118,11 +119,17 @@ elif cmd == 'getDrivingFeatures':
         sys.exit(1)
     pp.pprint(client.getDrivingFeatures(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]),))
 
-elif cmd == 'getMarginalDrivingFeatures':
+elif cmd == 'getMarginalDrivingFeaturesConjunctive':
     if len(args) != 8:
-        print('getMarginalDrivingFeatures requires 8 args')
+        print('getMarginalDrivingFeaturesConjunctive requires 8 args')
         sys.exit(1)
-    pp.pprint(client.getMarginalDrivingFeatures(eval(args[0]), eval(args[1]), eval(args[2]), args[3], eval(args[4]), eval(args[5]), eval(args[6]), eval(args[7]),))
+    pp.pprint(client.getMarginalDrivingFeaturesConjunctive(eval(args[0]), eval(args[1]), eval(args[2]), args[3], eval(args[4]), eval(args[5]), eval(args[6]), eval(args[7]),))
+
+elif cmd == 'getMarginalDrivingFeatures':
+    if len(args) != 7:
+        print('getMarginalDrivingFeatures requires 7 args')
+        sys.exit(1)
+    pp.pprint(client.getMarginalDrivingFeatures(eval(args[0]), eval(args[1]), eval(args[2]), args[3], eval(args[4]), eval(args[5]), eval(args[6]),))
 
 else:
     print('Unrecognized method %s' % cmd)
