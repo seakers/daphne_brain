@@ -1,12 +1,11 @@
 import os
 
-from daphne_API.historian import qa_pipeline
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import learn
 
-from daphne_API import data_helpers
+from daphne_API import data_helpers, qa_pipeline
+
 
 def classify_command(command):
     cleaned_command = data_helpers.clean_str(command)
@@ -44,31 +43,47 @@ def classify_command(command):
 
     return prediction[0]
 
-def ifeed_command(processed_command):
+def ifeed_command(processed_command, context):
     pass
 
-def vassar_command(processed_command):
-    pass
-
-def critic_command(processed_command):
-    pass
-
-def historian_command(processed_command):
+def vassar_command(processed_command, context):
     # Classify the question, obtaining a question type
-    question_type = qa_pipeline.classify(processed_command)
+    question_type = qa_pipeline.classify(processed_command, "VASSAR")
     # Load list of required and optional parameters from question, query and response format for question type
-    [params, query, response_template] = qa_pipeline.load_type_info(question_type)
+    [params, function, voice_response_template, visual_response_template] = \
+        qa_pipeline.load_type_info(question_type, "VASSAR")
     # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params)
+    data = qa_pipeline.extract_data(processed_command, params, context)
     # Add extra parameters to data
-    data = qa_pipeline.augment_data(data)
+    data = qa_pipeline.augment_data(data, context)
     # Query the database
-    response = qa_pipeline.query(query, data)
+    result = qa_pipeline.run_function(function, data)
     # Construct the response from the database query and the response format
-    answer = qa_pipeline.build_answer(response_template, response, data)
+    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
 
     # Return the answer to the client
-    return answer
+    return answers
+
+def critic_command(processed_command, context):
+    pass
+
+def historian_command(processed_command, context):
+    # Classify the question, obtaining a question type
+    question_type = qa_pipeline.classify(processed_command, "Historian")
+    # Load list of required and optional parameters from question, query and response format for question type
+    [params, query, voice_response_template, visual_response_template] = \
+        qa_pipeline.load_type_info(question_type, "Historian")
+    # Extract required and optional parameters
+    data = qa_pipeline.extract_data(processed_command, params, context)
+    # Add extra parameters to data
+    data = qa_pipeline.augment_data(data, context)
+    # Query the database
+    result = qa_pipeline.query(query, data)
+    # Construct the response from the database query and the response format
+    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
+
+    # Return the answer to the client
+    return answers
 
 def think_response(context):
     # TODO: Make this intelligent, e.g. hook this to a rule based engine

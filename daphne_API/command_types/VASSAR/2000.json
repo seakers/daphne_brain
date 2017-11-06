@@ -1,0 +1,27 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "design_id", "type": "design_id", "options": "", "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "run_func.VASSAR_load_objectives_information('${design_id}', data['designs'])",
+    "result_type": "list",
+    "result_fields": {
+      "obj_name": "item.objective_name",
+      "obj_value": "item.satisfaction",
+      "obj_weight": "item.weight"
+    }
+  },
+  "voice_response": {
+    "type": "list",
+    "begin": "The reasons for the score of design ${design_id} are: ",
+    "repeat": "objective ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
+    "end": "."
+  },
+  "visual_response": {
+    "type": "list",
+    "item_template": "Objective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+  }
+}

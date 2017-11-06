@@ -1,11 +1,8 @@
 import datetime
 import json
-import operator
 import os
 from string import Template
 
-import Levenshtein as lev
-import dateparser
 import numpy as np
 import tensorflow as tf
 from sqlalchemy.orm import sessionmaker
@@ -14,13 +11,16 @@ from tensorflow.contrib import learn
 from daphne_API import data_helpers
 
 import daphne_API.historian.models as models
+import daphne_API.data_extractors as extractors
+import daphne_API.data_processors as processors
+import daphne_API.runnable_functions as run_func
 
 
-def classify(question):
+def classify(question, module_name):
     cleaned_question = data_helpers.clean_str(question)
 
     # Map data into vocabulary
-    vocab_path = os.path.join("./daphne_API/models/Historian/vocab")
+    vocab_path = os.path.join("./daphne_API/models/" + module_name + "/vocab")
     vocab_processor = learn.preprocessing.VocabularyProcessor.restore(vocab_path)
     x_test = np.array(list(vocab_processor.transform([cleaned_question])))
 
@@ -28,7 +28,7 @@ def classify(question):
 
     # Evaluation
     # ==================================================
-    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/Historian/")
+    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/" + module_name + "/")
     graph = tf.Graph()
     with graph.as_default():
         session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
@@ -51,123 +51,43 @@ def classify(question):
             prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
     named_labels = set()
-    for filename in os.listdir("./daphne_API/command_types/Historian"):
+    for filename in os.listdir("./daphne_API/command_types/" + module_name):
         specific_label = int(filename.split('.', 1)[0])
         named_labels.add(specific_label)
     return list(named_labels)[prediction[0][0]]
 
 
-def load_type_info(question_type):
-    with open('./daphne_API/command_types/Historian/' + str(question_type) + '.json', 'r') as file:
+def load_type_info(question_type, module_name):
+    with open('./daphne_API/command_types/' + module_name + '/' + str(question_type) + '.json', 'r') as file:
         type_info = json.load(file)
-    return [type_info["params"], type_info["query"], type_info["response"]]
-
-
-def feature_list_by_ratio(processed_question, feature_list):
-    """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
-    ratio_ordered = []
-    length_question = len(processed_question.text)
-    for feature in feature_list:
-        length_feature = len(feature)
-        if length_feature > length_question:
-            ratio_ordered.append((feature, 0, -1))
-        else:
-            substrings = [processed_question.text[i:i+length_feature].lower() for i in range(length_question-length_feature+1)]
-            ratios = [lev.ratio(substrings[i], feature.lower()) for i in range(length_question-length_feature+1)]
-            max_index, max_ratio = max(enumerate(ratios), key=operator.itemgetter(1))
-            ratio_ordered.append((feature, max_ratio, max_index))
-
-    ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -ratio_info[1])
-    ratio_ordered = [ratio_info for ratio_info in ratio_ordered if ratio_info[1] > 0.75]
-    return ratio_ordered
-
-
-def crop_list(list, max_size):
-    if len(list) > max_size:
-        return list[:max_size]
-    else:
-        return list
-
-
-def sorted_list_of_features_by_index(processed_question, feature_list, number_of_features):
-    obt_feature_list = feature_list_by_ratio(processed_question, feature_list)
-    obt_feature_list = crop_list(obt_feature_list, number_of_features)
-    obt_feature_list = sorted(obt_feature_list, key=lambda ratio_info: ratio_info[2])
-    obt_feature_list = [feature[0] for feature in obt_feature_list]
-    return obt_feature_list
-
-
-def extract_mission(processed_question, number_of_features):
-    # Get a list of missions
-    engine = models.db_connect()
-    session = sessionmaker(bind=engine)()
-    missions = [' ' + mission.name.strip().lower() for mission in session.query(models.Mission).all()]
-    return sorted_list_of_features_by_index(processed_question, missions, number_of_features)
-
-
-def extract_measurement(processed_question, number_of_features):
-    # Get a list of measurements
-    engine = models.db_connect()
-    session = sessionmaker(bind=engine)()
-    measurements = [measurement.name.strip().lower() for measurement in session.query(models.Measurement).all()]
-    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
-
-
-def extract_technology(processed_question, number_of_features):
-    # Get a list of technologies and types
-    engine = models.db_connect()
-    session = sessionmaker(bind=engine)()
-    technologies = [technology for technology in models.technologies]
-    technologies = technologies + [type.name.strip().lower() for type in session.query(models.InstrumentType).all()]
-    return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
-
-
-def extract_date(processed_question, number_of_features):
-    # For now just pick the years
-    extracted_list = []
-    for word in processed_question:
-        if len(word) == 4 and word.like_num:
-            extracted_list.append(word.text)
-
-    return crop_list(extracted_list, number_of_features)
+    information = []
+    information.append(type_info["params"])
+    if type_info["type"] == "db_query":
+        information.append(type_info["query"])
+    elif type_info["type"] == "run_function":
+        information.append(type_info["function"])
+    information.append(type_info["voice_response"])
+    information.append(type_info["visual_response"])
+    return information
 
 
 extract_function = {}
-extract_function["mission"] = extract_mission
-extract_function["measurement"] = extract_measurement
-extract_function["technology"] = extract_technology
-extract_function["year"] = extract_date
-
-
-def process_mission(extracted_data, options):
-    return extracted_data[1:]
-
-
-def process_measurement(extracted_data, options):
-    return extracted_data
-
-
-def process_technology(extracted_data, options):
-    return extracted_data
-
-
-def process_date(extracted_data, options):
-    date_parsing_settings = {}
-    if options == "begin":
-        date_parsing_settings = {'RELATIVE_BASE': datetime.datetime(2020, 1, 1)}
-    elif options == "end":
-        date_parsing_settings = {'RELATIVE_BASE': datetime.datetime(2020, 12, 31)}
-    return dateparser.parse(extracted_data, settings=date_parsing_settings)
+extract_function["mission"] = extractors.extract_mission
+extract_function["measurement"] = extractors.extract_measurement
+extract_function["technology"] = extractors.extract_technology
+extract_function["year"] = extractors.extract_date
+extract_function["design_id"] = extractors.extract_design_id
 
 
 process_function = {}
-process_function["mission"] = process_mission
-process_function["measurement"] = process_measurement
-process_function["technology"] = process_technology
-process_function["year"] = process_date
+process_function["mission"] = processors.process_mission
+process_function["measurement"] = processors.not_processed
+process_function["technology"] = processors.not_processed
+process_function["year"] = processors.process_date
+process_function["design_id"] = processors.not_processed
 
 
-def extract_data(processed_question, params):
+def extract_data(processed_question, params, context):
     """ Extract the features from the processed question, with a correcting factor """
     number_of_features = {}
     extracted_raw_data = {}
@@ -180,20 +100,23 @@ def extract_data(processed_question, params):
             number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
     for type, num in number_of_features.items():
-        extracted_raw_data[type] = extract_function[type](processed_question, num)
+        extracted_raw_data[type] = extract_function[type](processed_question, num, context)
     # For each parameter check if it's needed and apply postprocessing; TODO: Add needed check
     for param in params:
         extracted_param = None
         if len(extracted_raw_data[param["type"]]) > 0:
             extracted_param = extracted_raw_data[param["type"]].pop(0)
-        if extracted_param != None:
-            extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"])
+        if extracted_param is not None:
+            extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"], context)
     return extracted_data
 
 
-def augment_data(data):
+def augment_data(data, context):
     data['now'] = datetime.datetime.now()
+    data['designs'] = context['data']
+    # TODO: Add useful information from context if needed
     return data
+
 
 def query(query, data):
     engine = models.db_connect()
@@ -254,7 +177,7 @@ def query(query, data):
             "SRC": "short repeat cycle",
             "LRC": "long repeat cycle"
         }
-        if result != None:
+        if result is not None:
             orbit_parts = result.split('-')
             response = "a "
             first = True
@@ -270,9 +193,56 @@ def query(query, data):
 
     return response
 
-def build_answer(response_template, response, data):
+
+def run_function(function_info, data):
+    # TODO: Check if everything mandatory is there, if not return NO ANSWER
+
+    # Run the function and save the results
+    run_template = Template(function_info["run_template"])
+    run_command = run_template.substitute(data)
+    command_result = eval(run_command)
+
+    result = None
+    if function_info["result_type"] == "list":
+        result = []
+        for item in command_result:
+            result_row = {}
+            for key, value in function_info["result_fields"].items():
+                result_row[key] = eval(value)
+            result.append(result_row)
+
+    return result
+
+def build_answers(voice_response_template, visual_response_template, result, data):
     complete_data = data
-    complete_data["response"] = response
-    answer_template = Template(response_template)
-    answer = answer_template.substitute(complete_data)
-    return answer
+    complete_data["result"] = result
+
+    answers = {}
+
+    # Create voice response
+    if voice_response_template["type"] == "list":
+        voice_answer = ""
+        begin_template = Template(voice_response_template["begin"])
+        voice_answer += begin_template.substitute(complete_data)
+        repeat_template = Template(voice_response_template["repeat"])
+        first = True
+        for item in complete_data["result"]:
+            if first:
+                first = False
+            else:
+                voice_answer += ", "
+            voice_answer += repeat_template.substitute(item)
+        end_template = Template(voice_response_template["end"])
+        voice_answer += end_template.substitute(complete_data)
+        answers["voice_answer"] = voice_answer
+
+    # Create visual response
+    if visual_response_template["type"] == "list":
+        visual_answer = "<ul>"
+        item_template = Template(visual_response_template["item_template"])
+        for item in complete_data["result"]:
+            visual_answer += "<li>" + item_template.substitute(item) + "</li>"
+        visual_answer += "</ul>"
+        answers["visual_answer"] = visual_answer
+
+    return answers
