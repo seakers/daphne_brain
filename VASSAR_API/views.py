@@ -57,25 +57,6 @@ class GetInstrumentList(APIView):
             return Response('')
 
 
-class InitializeJess(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
-    
-    def post(self, request, format=None):
-        try:
-            # Start connection with VASSAR
-            self.VASSARClient.startConnection()
-            message = self.VASSARClient.initializeJess()
-            # End the connection before return statement
-            self.VASSARClient.endConnection()
-            return Response(message)
-        
-        except Exception:
-            logger.exception('Exception in initializing jess')
-            self.VASSARClient.endConnection()
-            return Response('')
-
-
 class EvaluateArchitecture(APIView):
     def __init__(self):
         self.VASSARClient = VASSARClient()

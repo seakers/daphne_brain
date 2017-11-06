@@ -14,10 +14,31 @@ class Command(APIView):
     def post(self, request, format=None):
         # Preprocess the command
         processed_command = nlp(request.data['command'].strip().lower())
-        # Classify the question, obtaining a question type
-        command_type, other_info = command_processing.get_command_type(processed_command)
+
+        # Classify the command, obtaining a command type
+        command_options = ["iFEED", "VASSAR", "Critic", "Historian"]
+        command_types = command_processing.classify_command(processed_command)
+
+        # Define context and see if it was already defined for this session
+        if "context" not in request.session:
+            request.session["context"] = {}
+
+        request.session["context"]["answers"] = []
+        
+        # Act based on the types
+        for command_type in command_types:
+            if command_options[command_type] == "iFEED":
+                request.session["context"]["answers"].append(command_processing.ifeed_command(processed_command))
+            if command_options[command_type] == "VASSAR":
+                request.session["context"]["answers"].append(command_processing.vassar_command(processed_command))
+            if command_options[command_type] == "Critic":
+                request.session["context"]["answers"].append(command_processing.critic_command(processed_command))
+            if command_options[command_type] == "Historian":
+                request.session["context"]["answers"].append(command_processing.historian_command(processed_command))
+
+        response = command_processing.think_response(request.session["context"])
         # If command is to switch modes, send new mode back, if not
-        return Response({'command': processed_command.text, 'command_type': command_type, 'other_info': other_info})
+        return Response({"response": response})
 
 class CommandList(APIView):
     """
