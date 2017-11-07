@@ -124,36 +124,8 @@ def query(query, data):
 
     # TODO: Check if everything mandatory is there, if not return NO ANSWER
 
-    # Build the final query to the database
-    always_template = Template(query["always"])
-    expression = always_template.substitute(data)
-    for opt_cond in query["opt"]:
-        if opt_cond["cond"] in data:
-            opt_template = Template(opt_cond["query_part"])
-            expression += opt_template.substitute(data)
-    end_template = Template(query["end"])
-    expression += end_template.substitute(data)
-    query_db = eval(expression)
-    result = None
-    response = "No response"
-    if query["result_type"] == "list":
-        result = []
-        for row in query_db.all():
-            result.append(eval("row." + query["result_field"]))
-        if len(result) > 0:
-            response = result[0]
-            for text in result[1:]:
-                response += ", " + text
-        else:
-            response = "none"
-    elif query["result_type"] == "date":
-        row = query_db.first()
-        result = eval("row." + query["result_field"])
-        response = result.strftime('%d %B %Y')
-    elif query["result_type"] == "orbit":
-        row = query_db.first()
-        result = eval("row." + query["result_field"])
-        # Build an orbit natural name from the orbit code
+    def print_orbit(orbit):
+        text_orbit = ""
         orbit_codes = {
             "GEO": "geostationary",
             "LEO": "low earth",
@@ -177,21 +149,49 @@ def query(query, data):
             "SRC": "short repeat cycle",
             "LRC": "long repeat cycle"
         }
-        if result is not None:
-            orbit_parts = result.split('-')
-            response = "a "
+        if orbit is not None:
+            orbit_parts = orbit.split('-')
+            text_orbit = "a "
             first = True
             for orbit_part in orbit_parts:
                 if first:
                     first = False
                 else:
-                    response += ', '
-                response += orbit_codes[orbit_part]
-            response += " orbit"
+                    text_orbit += ', '
+                text_orbit += orbit_codes[orbit_part]
+            text_orbit += " orbit"
         else:
-            response = "none"
+            text_orbit = "none"
+        return text_orbit
 
-    return response
+    def print_date(date):
+        return date.strftime('%d %B %Y')
+
+    # Build the final query to the database
+    always_template = Template(query["always"])
+    expression = always_template.substitute(data)
+    for opt_cond in query["opt"]:
+        if opt_cond["cond"] in data:
+            opt_template = Template(opt_cond["query_part"])
+            expression += opt_template.substitute(data)
+    end_template = Template(query["end"])
+    expression += end_template.substitute(data)
+    query_db = eval(expression)
+    result = None
+    if query["result_type"] == "list":
+        result = []
+        for row in query_db.all():
+            result_row = {}
+            for key, value in query["result_fields"].items():
+                result_row[key] = eval(value)
+            result.append(result_row)
+    elif query["result_type"] == "single":
+        row = query_db.first()
+        result = {}
+        for key, value in query["result_fields"].items():
+            result[key] = eval(value)
+
+    return result
 
 
 def run_function(function_info, data):
@@ -219,30 +219,52 @@ def build_answers(voice_response_template, visual_response_template, result, dat
 
     answers = {}
 
+    def build_text_from_list(templates):
+        text = ""
+        begin_template = Template(templates["begin"])
+        text += begin_template.substitute(complete_data)
+        repeat_template = Template(templates["repeat"])
+        first = True
+        if len(complete_data["result"]) > 0:
+            for item in complete_data["result"]:
+                if first:
+                    first = False
+                else:
+                    text += ", "
+                    text += repeat_template.substitute(item)
+        else:
+            text += "none"
+        end_template = Template(templates["end"])
+        text += end_template.substitute(complete_data)
+        return text
+
+    def build_text_from_single(template):
+        text_template = Template(template["template"])
+        result_data = complete_data
+        for key, value in complete_data["result"].items():
+            result_data[key] = value
+        text = text_template.substitute(result_data)
+        return text
+
     # Create voice response
     if voice_response_template["type"] == "list":
-        voice_answer = ""
-        begin_template = Template(voice_response_template["begin"])
-        voice_answer += begin_template.substitute(complete_data)
-        repeat_template = Template(voice_response_template["repeat"])
-        first = True
-        for item in complete_data["result"]:
-            if first:
-                first = False
-            else:
-                voice_answer += ", "
-            voice_answer += repeat_template.substitute(item)
-        end_template = Template(voice_response_template["end"])
-        voice_answer += end_template.substitute(complete_data)
-        answers["voice_answer"] = voice_answer
+        answers["voice_answer"] = build_text_from_list(voice_response_template)
+    elif voice_response_template["type"] == "single":
+        answers["voice_answer"] = build_text_from_single(voice_response_template)
 
     # Create visual response
-    if visual_response_template["type"] == "list":
-        visual_answer = "<ul>"
+    if visual_response_template["type"] == "text":
+        answers["visual_answer_type"] = "text"
+        if visual_response_template["from"] == "list":
+            answers["visual_answer"] = build_text_from_list(visual_response_template)
+        elif visual_response_template["from"] == "single":
+            answers["visual_answer"] = build_text_from_single(visual_response_template)
+    elif visual_response_template["type"] == "list":
+        answers["visual_answer_type"] = "list"
+        visual_answer = []
         item_template = Template(visual_response_template["item_template"])
         for item in complete_data["result"]:
-            visual_answer += "<li>" + item_template.substitute(item) + "</li>"
-        visual_answer += "</ul>"
+            visual_answer.append(item_template.substitute(item))
         answers["visual_answer"] = visual_answer
 
     return answers

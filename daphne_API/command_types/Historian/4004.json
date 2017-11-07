@@ -1,4 +1,5 @@
 {
+  "type": "db_query",
   "params":
   [
     { "name": "technology", "type": "technology", "options": "", "mandatory": true },
@@ -15,7 +16,21 @@
     ],
     "end": ".order_by(models.Mission.launch_date)",
     "result_type": "list",
-    "result_field": "name"
+    "result_fields": {
+      "name": "row.name"
+    }
   },
-  "response": "The missions that fly ${technology} are ${response}"
+  "voice_response": {
+    "type": "list",
+    "begin": "The missions that fly ${technology} are ",
+    "repeat": "${name}",
+    "end": "."
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "list",
+    "begin": "The missions that fly ${technology} are ",
+    "repeat": "${name}",
+    "end": "."
+  }
 }

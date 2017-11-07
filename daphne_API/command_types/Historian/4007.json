@@ -1,4 +1,5 @@
 {
+  "type": "db_query",
   "params":
   [
     { "name": "measurement", "type": "measurement", "options": "", "mandatory": true }
@@ -8,8 +9,19 @@
     "always": "session.query(models.MeasurementMostCommonOrbit).filter(models.MeasurementMostCommonOrbit.measurement.ilike('%${measurement}%'))",
     "opt": [],
     "end": "",
-    "result_type": "orbit",
-    "result_field": "orbit"
+    "result_type": "single",
+    "result_fields": {
+      "orbit": "print_orbit(row.orbit)"
+    }
   },
-  "response": "The most common orbit for ${measurement} is ${response}"
+  "voice_response": {
+    "type": "single",
+    "template": "The most common orbit for ${measurement} is ${orbit}."
+
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "single",
+    "template": "The most common orbit for ${measurement} is ${orbit}."
+  }
 }

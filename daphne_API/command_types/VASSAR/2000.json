@@ -10,8 +10,8 @@
     "result_type": "list",
     "result_fields": {
       "obj_name": "item.objective_name",
-      "obj_value": "item.satisfaction",
-      "obj_weight": "item.weight"
+      "obj_value": "str(\"%.2f\" % round(item.satisfaction,2))",
+      "obj_weight": "str(\"%.2f\" % round(item.weight,2))"
     }
   },
   "voice_response": {
