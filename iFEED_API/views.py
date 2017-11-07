@@ -58,7 +58,11 @@ class ImportData(APIView):
                         self.architectures.append({'id':ind, 'inputs':inputs, 'outputs':outputs})
                         bit_strings.add(row[0])
 
-            request.session['data'] = self.architectures
+            # Define context and see if it was already defined for this session
+            if 'context' not in request.session:
+                request.session['context'] = {}
+
+            request.session['context']['data'] = self.architectures
             return Response(self.architectures)
         
         except Exception:

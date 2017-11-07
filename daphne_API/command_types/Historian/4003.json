@@ -1,4 +1,5 @@
 {
+  "type": "db_query",
   "params":
   [
     { "name": "measurement", "type": "measurement", "options": "", "mandatory": true },
@@ -11,7 +12,21 @@
     "opt": [],
     "end": ".order_by(func.min(models.Mission.launch_date))",
     "result_type": "list",
-    "result_field": "name"
+    "result_fields": {
+      "name": "row.name"
+    }
   },
-  "response": "The instruments that currently measure ${measurement} are ${response}"
+  "voice_response": {
+    "type": "list",
+    "begin": "The instruments that currently measure ${measurement} are ",
+    "repeat": "${name}",
+    "end": "."
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "list",
+    "begin": "The instruments that currently measure ${measurement} are ",
+    "repeat": "${name}",
+    "end": "."
+  }
 }

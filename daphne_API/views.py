@@ -28,17 +28,22 @@ class Command(APIView):
         # Act based on the types
         for command_type in command_types:
             if command_options[command_type] == "iFEED":
-                request.session["context"]["answers"].append(command_processing.ifeed_command(processed_command))
+                request.session["context"]["answers"].append(
+                    command_processing.ifeed_command(processed_command, request.session["context"]))
             if command_options[command_type] == "VASSAR":
-                request.session["context"]["answers"].append(command_processing.vassar_command(processed_command))
+                request.session["context"]["answers"].append(
+                    command_processing.vassar_command(processed_command, request.session["context"]))
             if command_options[command_type] == "Critic":
-                request.session["context"]["answers"].append(command_processing.critic_command(processed_command))
+                request.session["context"]["answers"].append(
+                    command_processing.critic_command(processed_command, request.session["context"]))
             if command_options[command_type] == "Historian":
-                request.session["context"]["answers"].append(command_processing.historian_command(processed_command))
+                request.session["context"]["answers"].append(
+                    command_processing.historian_command(processed_command, request.session["context"]))
 
         response = command_processing.think_response(request.session["context"])
         # If command is to switch modes, send new mode back, if not
         return Response({"response": response})
+
 
 class CommandList(APIView):
     """

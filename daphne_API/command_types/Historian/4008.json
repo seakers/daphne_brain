@@ -1,4 +1,5 @@
 {
+  "type": "db_query",
   "params":
   [
     { "name": "mission", "type": "mission", "options": "", "mandatory": true }
@@ -8,8 +9,19 @@
     "always": "session.query(models.Mission).filter(models.Mission.name.ilike('%${mission}%'))",
     "opt": [],
     "end": "",
-    "result_type": "date",
-    "result_field": "launch_date"
+    "result_type": "single",
+    "result_fields": {
+      "launch_date": "print_date(row.launch_date)"
+    }
   },
-  "response": "Mission ${mission} was launched in ${response}"
+  "voice_response": {
+    "type": "single",
+    "template": "Mission ${mission} was launched in ${launch_date}."
+
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "single",
+    "template": "Mission ${mission} was launched in ${launch_date}."
+  }
 }
