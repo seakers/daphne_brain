@@ -224,14 +224,14 @@ def build_answers(voice_response_template, visual_response_template, result, dat
         begin_template = Template(templates["begin"])
         text += begin_template.substitute(complete_data)
         repeat_template = Template(templates["repeat"])
-        first = True
         if len(complete_data["result"]) > 0:
+            first = True
             for item in complete_data["result"]:
                 if first:
                     first = False
                 else:
                     text += ", "
-                    text += repeat_template.substitute(item)
+                text += repeat_template.substitute(item)
         else:
             text += "none"
         end_template = Template(templates["end"])
