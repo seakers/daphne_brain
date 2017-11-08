@@ -1,5 +1,6 @@
 import csv
 import json
+import string
 import numpy as np
 from sqlalchemy.orm import sessionmaker
 
@@ -35,6 +36,12 @@ class CRITIC:
 
     # Used to compute CRITIC1.csv
 
+    def get_arnau_format(self, bitstring):
+        arch_critic = []
+        for orbit in range(5):
+            arch_critic.append(''.join([string.ascii_uppercase[instr - 12*orbit] for instr in range(12*orbit, 12*(orbit + 1)) if bitstring[instr]]))
+        return arch_critic
+
     def get_similar_instruments(self, orbit, instrument):
         # Get instruments with similar characteristics and similar orbits
         query = self.session.query(models.Instrument) \
@@ -58,7 +65,8 @@ class CRITIC:
         if orbit1["type"] == mission2.orbit_type:
             score += 1
         # Score orbit altitude
-        if orbit1["altitude"] - 50 < mission2.orbit_altitude < orbit1["altitude"] + 50:
+        if mission2.orbit_altitude_num is not None and \
+                                        orbit1["altitude"] - 50 < mission2.orbit_altitude_num < orbit1["altitude"] + 50:
             score += 1
         # Score orbit LST
         if orbit1["LST"] == mission2.orbit_LST:
@@ -101,7 +109,7 @@ class CRITIC:
         # Find the best matches for i1xi2 (greedy)
         for k in range(len(instruments1)):
             i1i2 = np.argmax(sim)
-            i1 = i1i2 / N
+            i1 = int(i1i2 / N)
             i2 = i1i2 % N
             score += sim[i1, i2]/len(instruments1)
             sim[i1, :] = 0
@@ -145,7 +153,7 @@ class CRITIC:
 
     def match_features(self, arch):
         res = []
-        with open("EOSS_features.csv", "r") as csvfile:
+        with open("./daphne_API/critic/EOSS_features.csv", "r") as csvfile:
             features = csv.reader(csvfile, delimiter=':')
             for row in features:
                 match = True
@@ -248,10 +256,10 @@ class CRITIC:
 
     def match_similar(self, arch):
         res = []
-        with open("../../iFEED_API/data/EOSS_data.csv", "r") as csvfile:
-            architectures = csv.reader(csvfile, delimiter=':')
+        with open("./iFEED_API/data/EOSS_data.csv", "r") as csvfile:
+            architectures = csv.reader(csvfile, delimiter=',')
             for row in architectures:
-                diff = self.arch_differences(arch, json.loads(row[0]))
+                diff = self.arch_differences(arch, self.get_arnau_format(row[0]))
                 # Get similar architectures (1 change maximum)
                 if len(diff) == 1:
                     res.append([diff, float(row[1]), float(row[2])])
@@ -311,54 +319,58 @@ class CRITIC:
         #                    (instrument["alias"], orbit["alias"], len(res)),
         #                str(', '.join([r.name for r in res]))
         #        ])
+        # Convert architecture format
+        arch_critic = self.get_arnau_format(arch)
+
+
         # Type 2: Mission by mission
         missions_database = self.session.query(models.Mission)
-        for o in range(len(arch)):
+        for o in range(len(arch_critic)):
             orbit = self.orbits_dataset[o]
-            instruments = [next(ii for ii in self.instruments_dataset if ii["alias"] == i) for i in arch[o]]
+            instruments = [next(ii for ii in self.instruments_dataset if ii["alias"] == i) for i in arch_critic[o]]
             res = self.missions_similarity(orbit, instruments, missions_database)
             if len(instruments) > 0:
                 if res[0] < 6:
-                    result.append([
-                        "historian2",
-                        "Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it" % \
+                    result.append({
+                        "type": "historian2",
+                        "advice": "Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it" % \
                             (str([i["alias"] for i in instruments]), orbit["alias"])
-                    ])
+                    })
                 else:
-                    result.append([
-                        "historian2",
-                        "The most similar mission to %s in orbit %s is %s (score: %.2f/10)" % \
-                            (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]),
+                    result.append({
+                        "type": "historian2",
+                        "advice": "The most similar mission to %s in orbit %s is %s (score: %.2f/10)" % \
+                            (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]) +
                         '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
                             (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)])
-                    ])
+                    })
         # Analyst
-        if len(''.join(arch)) > 0:
-            res = self.match_features(arch)
+        if len(''.join(arch_critic)) > 0:
+            res = self.match_features(arch_critic)
             if len(res) == 0:
-                result.append([
-                    "analyst",
-                    "Your design doesn't have much in common with other good designs"
-                ])
+                result.append({
+                    "type": "analyst",
+                    "advice": "Your design doesn't have much in common with other good designs"
+                })
             else:
-                result.append([
-                    "analyst",
-                    "Your design seems to have %d common features among good designs" % len(res),
+                result.append({
+                    "type": "analyst",
+                    "advice": "Your design seems to have %d common features among good designs" % len(res) +
                     '<br>'.join(["Features: %s" % r for r in res])
-                ])
+                })
         # Explorer
-        if len(''.join(arch)) > 0:
-            res = self.match_similar(arch)
+        if len(''.join(arch_critic)) > 0:
+            res = self.match_similar(arch_critic)
             if len(res) == 0:
-                result.append([
-                    "explorer",
-                    "I tried a few changes and couldn't find an easy way to improve your design"
-                ])
+                result.append({
+                    "type": "explorer",
+                    "advice": "I tried a few changes and couldn't find an easy way to improve your design"
+                })
             else:
-                result.append([
-                    "explorer",
-                    "I have found %d designs that are similar to yours but a little better " % len(res),
+                result.append({
+                    "type": "explorer",
+                    "advice": "I have found %d designs that are similar to yours but a little better " % len(res) +
                     '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res])
-                ])
+                })
         # Return result
         return result
