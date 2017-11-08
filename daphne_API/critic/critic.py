@@ -332,45 +332,45 @@ class CRITIC:
             if len(instruments) > 0:
                 if res[0] < 6:
                     result.append({
-                        "type": "historian2",
-                        "advice": "Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it" % \
+                        "type": "Historian",
+                        "advice": "Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it." % \
                             (str([i["alias"] for i in instruments]), orbit["alias"])
                     })
                 else:
                     result.append({
-                        "type": "historian2",
+                        "type": "Historian",
                         "advice": "The most similar mission to %s in orbit %s is %s (score: %.2f/10)" % \
                             (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]) +
                         '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
-                            (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)])
+                            (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.'
                     })
         # Analyst
         if len(''.join(arch_critic)) > 0:
             res = self.match_features(arch_critic)
             if len(res) == 0:
                 result.append({
-                    "type": "analyst",
-                    "advice": "Your design doesn't have much in common with other good designs"
+                    "type": "Analyst",
+                    "advice": "Your design doesn't have much in common with other good designs."
                 })
             else:
                 result.append({
-                    "type": "analyst",
+                    "type": "Analyst",
                     "advice": "Your design seems to have %d common features among good designs" % len(res) +
-                    '<br>'.join(["Features: %s" % r for r in res])
+                    '<br>'.join(["Features: %s" % r for r in res]) + '.'
                 })
         # Explorer
         if len(''.join(arch_critic)) > 0:
             res = self.match_similar(arch_critic)
             if len(res) == 0:
                 result.append({
-                    "type": "explorer",
-                    "advice": "I tried a few changes and couldn't find an easy way to improve your design"
+                    "type": "Explorer",
+                    "advice": "I tried a few changes and couldn't find an easy way to improve your design."
                 })
             else:
                 result.append({
-                    "type": "explorer",
+                    "type": "Explorer",
                     "advice": "I have found %d designs that are similar to yours but a little better " % len(res) +
-                    '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res])
+                    '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res]) + '.'
                 })
         # Return result
         return result

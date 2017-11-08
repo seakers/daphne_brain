@@ -21,6 +21,6 @@
   },
   "visual_response": {
     "type": "list",
-    "item_template": "${adv_type}: ${advice}"
+    "item_template": "<b>${adv_type}</b>: ${advice}"
   }
 }
