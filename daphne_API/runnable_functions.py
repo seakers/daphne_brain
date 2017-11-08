@@ -36,7 +36,7 @@ def Critic_general_call(design_id, designs):
         result = []
         for advice in result1:
             result.append({
-                "type": "expert",
+                "type": "Expert",
                 "advice": advice
             })
         # Criticize architecture (based on database)

@@ -17,11 +17,11 @@
   "voice_response": {
     "type": "list",
     "begin": "The reasons for the score of design ${design_id} are: ",
-    "repeat": "objective ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
+    "repeat": "stakeholder ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
-    "item_template": "Objective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+    "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
   }
 }
