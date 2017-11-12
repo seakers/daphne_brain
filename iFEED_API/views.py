@@ -50,6 +50,7 @@ class ImportData(APIView):
                 self.architectures = []
                 bit_strings = set()
                 # For each row, store the information
+                id = 0
                 for ind, row in enumerate(read):
                     # Change boolean string to boolean array
                     inputs = self.booleanString2booleanArray(row[0])
@@ -61,6 +62,7 @@ class ImportData(APIView):
                         self.architectures.append({'id':self.archID, 'inputs':inputs, 'outputs':outputs})
                         bit_strings.add(row[0])
                         self.archID+=1
+
 
             # Define context and see if it was already defined for this session
             if 'data' not in request.session:
