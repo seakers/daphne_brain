@@ -70,11 +70,81 @@ class EvaluateArchitecture(APIView):
                         
             inputs = json.loads(inputs)
             
-            architecture = self.VASSARClient.evaluateArchitecture(inputs)            
+            architecture = self.VASSARClient.evaluateArchitecture(inputs)    
+
+            # If there is no session data, initialize and create a new dataset
+            if 'data' not in request.session:
+                request.session['data'] = []
+                
+            if 'archID' not in request.session:
+                request.session['archID'] = None
+
+            self.architectures = request.session['data']
+            self.archID = request.session['archID'] 
+            
+            if self.archID is None:
+                self.archID = 0
+            
+            architecture['id'] = self.archID
+            
+            self.archID += 1
+            self.architectures.append(architecture)
+            
+            request.session['archID'] = self.archID            
+            request.session['data'] = self.architectures
+
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
             return Response(architecture)
+        
+        except Exception:
+            logger.exception('Exception in evaluating an architecture')
+            self.VASSARClient.endConnection()
+            return Response('')
+        
+        
+        
+class RunLocalSearch(APIView):
+    
+    def __init__(self):
+        self.VASSARClient = VASSARClient()
+    
+    def post(self, request, format=None):
+        try:
+            # Start connection with VASSAR
+            self.VASSARClient.startConnection()
+                        
+            inputs = request.POST['inputs']   
+                        
+            inputs = json.loads(inputs)
+            
+            architectures = self.VASSARClient.runLocalSearch(inputs)    
+
+            # If there is no session data, initialize and create a new dataset
+            if 'data' not in request.session:
+                request.session['data'] = []
+                
+            if 'archID' not in request.session:
+                request.session['archID'] = None
+
+            self.architectures = request.session['data']
+            self.archID = request.session['archID'] 
+            
+            if self.archID is None:
+                self.archID = 0
+                
+            for arch in architectures:                
+                arch['id'] = self.archID
+                self.archID += 1
+                self.architectures.append(arch)
+            
+            request.session['archID'] = self.archID            
+            request.session['data'] = self.architectures
+            
+            # End the connection before return statement
+            self.VASSARClient.endConnection()
+            return Response(architectures)
         
         except Exception:
             logger.exception('Exception in evaluating an architecture')
