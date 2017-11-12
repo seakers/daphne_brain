@@ -65,8 +65,15 @@ class VASSARClient():
     def evaluateArchitecture(self,bitString):
         arch_formatted = self.client.eval(bitString)
         arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
-        #print('New architecture evaluated. Science: {0}, Cost: {1}'.format(arch_formatted['outputs'][0], arch_formatted['outputs'][1]))
         return arch
+    
+    def runLocalSearch(self,bitString):
+        archs_formatted = self.client.runLocalSearch(bitString)
+        archs = []
+        for arch_formatted in archs_formatted:
+            arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+            archs.append(arch)
+        return archs   
         
     def critiqueArchitecture(self,bitString):
         return self.client.getCritique(bitString)
