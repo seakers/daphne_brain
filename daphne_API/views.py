@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
+import daphne_API.command_lists as command_lists
 
 
 class Command(APIView):
@@ -52,7 +53,7 @@ class CommandList(APIView):
 
     def get(self, request, format=None):
         # List of commands for the general system
-        pass
+        return Response({"list": command_lists.general_commands})
 
     def post(self, request, format=None):
         # List of commands for a single subsystem
