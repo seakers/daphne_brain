@@ -6,5 +6,7 @@ urlpatterns = [
     url(r'get-orbit-list/$', views.GetOrbitList.as_view()),
     url(r'get-instrument-list/$', views.GetInstrumentList.as_view()),
     
-    url(r'evaluate-architecture/$', views.EvaluateArchitecture.as_view())
+    url(r'evaluate-architecture/$', views.EvaluateArchitecture.as_view()),
+    url(r'run-local-search/$', views.RunLocalSearch.as_view())
+    
 ]

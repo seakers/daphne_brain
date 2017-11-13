@@ -8,7 +8,7 @@ import json
 
 from VASSAR_API.api import VASSARClient
 
-from critic_API.historian_critic import Critic
+#from critic_API.historian_critic import Critic
 
 
 # Get an instance of a logger
@@ -43,12 +43,12 @@ class CriticizeArchitecture(APIView):
     def get_history_critique(self,inputs):
 
         try:
-
-            historian_critic = Critic()
-
-            critique = historian_critic.criticizeArchitecture(inputs)
-            
-            return critique
+            pass
+#            historian_critic = Critic()
+#
+#            critique = historian_critic.criticizeArchitecture(inputs)
+#            
+#            return critique
 
         except Exception:
             logger.exception('Exc in generating a critique using historical database')

@@ -40,6 +40,9 @@ class ImportData(APIView):
 
             # Set the path of the file containing data
             file_path = os.path.dirname(os.path.abspath(__file__)) + '/data/' + request.POST['filename']
+            
+            self.archID = 0
+            
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
@@ -54,17 +57,20 @@ class ImportData(APIView):
                     science = float(row[1])
                     cost = float(row[2])
                     outputs = [science, cost]
-                    
+                                        
                     if row[0] not in bit_strings:
-                        self.architectures.append({'id': id, 'inputs':inputs, 'outputs':outputs})
+                        self.architectures.append({'id':self.archID, 'inputs':inputs, 'outputs':outputs})
                         bit_strings.add(row[0])
-                        id += 1
+                        self.archID+=1
+
 
             # Define context and see if it was already defined for this session
-            if 'context' not in request.session:
-                request.session['context'] = {}
+            if 'data' not in request.session:
+                request.session['data'] = []
 
-            request.session['context']['data'] = self.architectures
+            request.session['data'] = self.architectures
+            request.session['archID'] = self.archID
+                        
             return Response(self.architectures)
         
         except Exception:
