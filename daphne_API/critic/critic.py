@@ -298,6 +298,67 @@ class CRITIC:
                     f.write(orbit1["alias"]+"\t"+str(sorted([i["alias"] for i in instruments1]))+"\t"+result[1].name+"\t"+str(result[0])+"\n")
         f.close()
 
+
+    def historian_critic(self, arch):
+        result = []
+        # Convert architecture format
+        arch_critic = self.get_arnau_format(arch)
+
+        # Type 2: Mission by mission
+        missions_database = self.session.query(models.Mission)
+        for o in range(len(arch_critic)):
+            orbit = self.orbits_dataset[o]
+            instruments = [next(ii for ii in self.instruments_dataset if ii["alias"] == i) for i in arch_critic[o]]
+            res = self.missions_similarity(orbit, instruments, missions_database)
+            if len(instruments) > 0:
+                if res[0] < 6:
+                    result.append("Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it." % \
+                                  (str([i["alias"] for i in instruments]), orbit["alias"]))
+                else:
+                    result.append("The most similar mission to %s in orbit %s is %s (score: %.2f/10)." % \
+                                  (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]))
+                        # +
+                        # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
+                        #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
+        return result
+
+    def analyst_critic(self, arch):
+        result = []
+        # Convert architecture format
+        arch_critic = self.get_arnau_format(arch)
+
+        if len(''.join(arch_critic)) > 0:
+            res = self.match_features(arch_critic)
+            if len(res) == 0:
+                result.append("Your design doesn't have much in common with other good designs.")
+            else:
+                result.append("Your design seems to have %d common features among good designs" % len(res) +
+                    '<br>'.join(["Features: %s" % r for r in res]) + '.')
+        return result
+
+
+    def explorer_critic(self, arch):
+        result = []
+        # Convert architecture format
+        arch_critic = self.get_arnau_format(arch)
+
+        if len(''.join(arch_critic)) > 0:
+            pass
+            # TODO: Use the local search by Harris instead of the Arnau function
+            # res = self.match_similar(arch_critic)
+            # if len(res) == 0:
+            #     result.append({
+            #         "type": "Explorer",
+            #         "advice": "I tried a few changes and couldn't find an easy way to improve your design."
+            #     })
+            # else:
+            #     result.append({
+            #         "type": "Explorer",
+            #         "advice": "I have found %d designs that are similar to yours but a little better " % len(res) +
+            #         '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res]) + '.'
+            #     })
+        return result
+
     def criticize_arch(self, arch):
         result = []
         # Type 1: Instrument by intrument
@@ -319,61 +380,29 @@ class CRITIC:
         #                    (instrument["alias"], orbit["alias"], len(res)),
         #                str(', '.join([r.name for r in res]))
         #        ])
-        # Convert architecture format
-        arch_critic = self.get_arnau_format(arch)
-
-
         # Type 2: Mission by mission
-        missions_database = self.session.query(models.Mission)
-        for o in range(len(arch_critic)):
-            orbit = self.orbits_dataset[o]
-            instruments = [next(ii for ii in self.instruments_dataset if ii["alias"] == i) for i in arch_critic[o]]
-            res = self.missions_similarity(orbit, instruments, missions_database)
-            if len(instruments) > 0:
-                if res[0] < 6:
-                    result.append({
-                        "type": "Historian",
-                        "advice": "Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it." % \
-                            (str([i["alias"] for i in instruments]), orbit["alias"])
-                    })
-                else:
-                    result.append({
-                        "type": "Historian",
-                        "advice": "The most similar mission to %s in orbit %s is %s (score: %.2f/10)." % \
-                            (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0])
-                        #+
-                        #'<br>'.join(["Instrument similar to %s (score: %.2f)" % \
-                        #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.'
-                    })
+        historian_results = self.historian_critic(arch)
+        for hist in historian_results:
+            result.append({
+                "type": "Historian",
+                "advice": hist
+            })
+
         # Analyst
-        if len(''.join(arch_critic)) > 0:
-            res = self.match_features(arch_critic)
-            if len(res) == 0:
-                result.append({
-                    "type": "Analyst",
-                    "advice": "Your design doesn't have much in common with other good designs."
-                })
-            else:
-                result.append({
-                    "type": "Analyst",
-                    "advice": "Your design seems to have %d common features among good designs" % len(res) +
-                    '<br>'.join(["Features: %s" % r for r in res]) + '.'
-                })
+        analyst_results = self.analyst_critic(arch)
+        for anal in analyst_results:
+            result.append({
+                "type": "Analyst",
+                "advice": anal
+            })
+
         # Explorer
-        if len(''.join(arch_critic)) > 0:
-            pass
-            # TODO: Use the local search by Harris instead of the Arnau function
-            # res = self.match_similar(arch_critic)
-            # if len(res) == 0:
-            #     result.append({
-            #         "type": "Explorer",
-            #         "advice": "I tried a few changes and couldn't find an easy way to improve your design."
-            #     })
-            # else:
-            #     result.append({
-            #         "type": "Explorer",
-            #         "advice": "I have found %d designs that are similar to yours but a little better " % len(res) +
-            #         '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res]) + '.'
-            #     })
+        explorer_results = self.explorer_critic(arch)
+        for expl in explorer_results:
+            result.append({
+                "type": "Explorer",
+                "advice": expl
+            })
+
         # Return result
         return result
