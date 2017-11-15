@@ -77,6 +77,7 @@ extract_function["measurement"] = extractors.extract_measurement
 extract_function["technology"] = extractors.extract_technology
 extract_function["year"] = extractors.extract_date
 extract_function["design_id"] = extractors.extract_design_id
+extract_function["agent"] = extractors.extract_agent
 
 
 process_function = {}
@@ -85,6 +86,7 @@ process_function["measurement"] = processors.not_processed
 process_function["technology"] = processors.not_processed
 process_function["year"] = processors.process_date
 process_function["design_id"] = processors.not_processed
+process_function["agent"] = processors.not_processed
 
 
 def extract_data(processed_question, params, context):
@@ -213,6 +215,7 @@ def run_function(function_info, data):
 
     return result
 
+
 def build_answers(voice_response_template, visual_response_template, result, data):
     complete_data = data
     complete_data["result"] = result
@@ -238,6 +241,7 @@ def build_answers(voice_response_template, visual_response_template, result, dat
         text += end_template.substitute(complete_data)
         return text
 
+
     def build_text_from_single(template):
         text_template = Template(template["template"])
         result_data = complete_data
@@ -261,10 +265,13 @@ def build_answers(voice_response_template, visual_response_template, result, dat
             answers["visual_answer"] = build_text_from_single(visual_response_template)
     elif visual_response_template["type"] == "list":
         answers["visual_answer_type"] = "list"
-        visual_answer = []
+        visual_answer = {}
+        begin_template = Template(visual_response_template["begin"])
+        visual_answer["begin"] = begin_template.substitute(complete_data)
+        visual_answer["list"] = []
         item_template = Template(visual_response_template["item_template"])
         for item in complete_data["result"]:
-            visual_answer.append(item_template.substitute(item))
+            visual_answer["list"].append(item_template.substitute(item))
         answers["visual_answer"] = visual_answer
 
     return answers

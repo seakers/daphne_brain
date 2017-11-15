@@ -81,3 +81,12 @@ def extract_design_id(processed_question, number_of_features, context):
         if word.text in design_ids:
             extracted_list.append(word.text)
     return crop_list(extracted_list, number_of_features)
+
+
+def extract_agent(processed_question, number_of_features, context):
+    agents = ["expert", "historian", "analyst", "explorer"]
+    extracted_list = []
+    for word in processed_question:
+        if word.lower_ in agents:
+            extracted_list.append(word.lower_)
+    return crop_list(extracted_list, number_of_features)

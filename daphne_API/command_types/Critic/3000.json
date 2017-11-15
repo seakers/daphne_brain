@@ -15,12 +15,13 @@
   },
   "voice_response": {
     "type": "list",
-    "begin": "The advice I have is: ",
+    "begin": "The advice I have for design ${design_id} is: ",
     "repeat": "${adv_type}: ${advice}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
+    "begin": "The advice I have for design ${design_id} is: ",
     "item_template": "<b>${adv_type}</b>: ${advice}"
   }
 }
