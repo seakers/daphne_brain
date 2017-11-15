@@ -3,7 +3,7 @@ import daphne_API.historian.models as models
 from VASSAR_API.api import VASSARClient
 
 general_commands = [
-    'stop'
+    'Stop'
 ]
 
 ifeed_commands = [
@@ -11,23 +11,24 @@ ifeed_commands = [
 ]
 
 vassar_commands = [
-    'why does design ${design_id} have this science benefit?'
+    'Why does design ${design_id} have this science benefit?'
 ]
 
 critic_commands = [
-    'what do you think of design ${design_id}?'
+    'What do you think of design ${design_id}?',
+    'What does agent ${agent} think of design ${design_id}?'
 ]
 
 historian_commands = [
-    'which missions can measure ${measurement} [between ${year} and ${year}]?',
-    'which missions do we currently use to measure ${measurement}?',
-    'which instruments can measure ${measurement} [between ${year} and ${year}]?',
-    'which instruments do we currently use to measure ${measurement}?',
-    'which missions have flown ${technology} [between ${year} and ${year}]?',
-    'which missions are currently flying ${technology}?',
-    'which orbit is the most typical for ${technology}?',
-    'which orbit is the most typical for ${measurement}?',
-    'when was mission ${mission} launched?'
+    'Which missions can measure ${measurement} [between ${year} and ${year}]?',
+    'Which missions do we currently use to measure ${measurement}?',
+    'Which instruments can measure ${measurement} [between ${year} and ${year}]?',
+    'Which instruments do we currently use to measure ${measurement}?',
+    'Which missions have flown ${technology} [between ${year} and ${year}]?',
+    'Which missions are currently flying ${technology}?',
+    'Which orbit is the most typical for ${technology}?',
+    'Which orbit is the most typical for ${measurement}?',
+    'When was mission ${mission} launched?'
 ]
 
 
