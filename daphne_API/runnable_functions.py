@@ -58,24 +58,26 @@ def Critic_specific_call(design_id, agent, designs):
     client = VASSARClient()
     try:
         result = []
+        result_arr = []
         num_design_id = int(design_id[1:])
         if agent == 'expert':
             # Start connection with VASSAR
             client.startConnection()
             # Criticize architecture (based on rules)
-            result = client.client.getCritique(designs[num_design_id]['inputs'])
+            result_arr = client.client.getCritique(designs[num_design_id]['inputs'])
             client.endConnection()
         elif agent == 'historian':
             # Criticize architecture (based on database)
-            result = critic.historian_critic(designs[num_design_id]['inputs'])
+            result_arr = critic.historian_critic(designs[num_design_id]['inputs'])
         elif agent == 'analyst':
             # Criticize architecture (based on database)
-            result = critic.analyst_critic(designs[num_design_id]['inputs'])
+            result_arr = critic.analyst_critic(designs[num_design_id]['inputs'])
         elif agent == 'explorer':
             # Criticize architecture (based on database)
-            result = critic.explorer_critic(designs[num_design_id]['inputs'])
+            result_arr = critic.explorer_critic(designs[num_design_id]['inputs'])
         # Send response
-
+        for res in result_arr:
+            result.append({'advice': res})
         return result
 
     except Exception:

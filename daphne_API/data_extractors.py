@@ -87,6 +87,6 @@ def extract_agent(processed_question, number_of_features, context):
     agents = ["expert", "historian", "analyst", "explorer"]
     extracted_list = []
     for word in processed_question:
-        if word.text in agents:
-            extracted_list.append(word.text.lower)
+        if word.lower_ in agents:
+            extracted_list.append(word.lower_)
     return crop_list(extracted_list, number_of_features)
