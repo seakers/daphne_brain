@@ -339,10 +339,11 @@ class CRITIC:
                 else:
                     result.append({
                         "type": "Historian",
-                        "advice": "The most similar mission to %s in orbit %s is %s (score: %.2f/10)" % \
-                            (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]) +
-                        '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
-                            (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.'
+                        "advice": "The most similar mission to %s in orbit %s is %s (score: %.2f/10)." % \
+                            (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0])
+                        #+
+                        #'<br>'.join(["Instrument similar to %s (score: %.2f)" % \
+                        #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.'
                     })
         # Analyst
         if len(''.join(arch_critic)) > 0:
@@ -360,17 +361,19 @@ class CRITIC:
                 })
         # Explorer
         if len(''.join(arch_critic)) > 0:
-            res = self.match_similar(arch_critic)
-            if len(res) == 0:
-                result.append({
-                    "type": "Explorer",
-                    "advice": "I tried a few changes and couldn't find an easy way to improve your design."
-                })
-            else:
-                result.append({
-                    "type": "Explorer",
-                    "advice": "I have found %d designs that are similar to yours but a little better " % len(res) +
-                    '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res]) + '.'
-                })
+            pass
+            # TODO: Use the local search by Harris instead of the Arnau function
+            # res = self.match_similar(arch_critic)
+            # if len(res) == 0:
+            #     result.append({
+            #         "type": "Explorer",
+            #         "advice": "I tried a few changes and couldn't find an easy way to improve your design."
+            #     })
+            # else:
+            #     result.append({
+            #         "type": "Explorer",
+            #         "advice": "I have found %d designs that are similar to yours but a little better " % len(res) +
+            #         '<br>'.join(["Designs: %s (Science: %.2f, Cost: %.2f)" % (r[0], r[1], r[2]) for r in res]) + '.'
+            #     })
         # Return result
         return result
