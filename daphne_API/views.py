@@ -5,7 +5,7 @@ from rest_framework import status
 import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
-
+import json
 
 class Command(APIView):
     """
@@ -23,7 +23,8 @@ class Command(APIView):
         # Define context and see if it was already defined for this session
         if 'context' not in request.session:
             request.session['context'] = {}
-
+                
+        request.session['context']['data'] = request.session['data']    
         request.session['context']['answers'] = []
         
         # Act based on the types
