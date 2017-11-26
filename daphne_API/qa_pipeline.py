@@ -116,6 +116,10 @@ def extract_data(processed_question, params, context):
 def augment_data(data, context):
     data['now'] = datetime.datetime.now()
     data['designs'] = context['data']
+    if context['behavioral']:
+        data['behavioral'] = context['behavioral']
+    if context['non_behavioral']:
+        data['non_behavioral'] = context['non_behavioral']
     # TODO: Add useful information from context if needed
     return data
 
@@ -240,7 +244,6 @@ def build_answers(voice_response_template, visual_response_template, result, dat
         end_template = Template(templates["end"])
         text += end_template.substitute(complete_data)
         return text
-
 
     def build_text_from_single(template):
         text_template = Template(template["template"])

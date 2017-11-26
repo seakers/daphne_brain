@@ -44,7 +44,23 @@ def classify_command(command):
     return prediction[0]
 
 def ifeed_command(processed_command, context):
-    pass
+    print("Command classified as iFEED type")
+    # Classify the question, obtaining a question type
+    question_type = qa_pipeline.classify(processed_command, "iFEED")
+    # Load list of required and optional parameters from question, query and response format for question type
+    [params, function, voice_response_template, visual_response_template] = \
+        qa_pipeline.load_type_info(question_type, "iFEED")
+    # Extract required and optional parameters
+    data = qa_pipeline.extract_data(processed_command, params, context)
+    # Add extra parameters to data
+    data = qa_pipeline.augment_data(data, context)
+    # Query the database
+    result = qa_pipeline.run_function(function, data)
+    # Construct the response from the database query and the response format
+    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
+
+    # Return the answer to the client
+    return answers
 
 def vassar_command(processed_command, context):
     # Classify the question, obtaining a question type
