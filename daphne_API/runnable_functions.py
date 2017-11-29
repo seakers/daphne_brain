@@ -40,9 +40,7 @@ def parse_base_feature_expression(feature_expression):
     orbitIndices = argSplit[0]
     instrumentIndices = argSplit[1]
     numbers = argSplit[2]
-    
-    print(feature_expression)
-    
+        
     if orbitIndices:
         orbitNames = [ORBIT_DATASET[int(i)]['name'] for i in orbitIndices.split(",")]
     if instrumentIndices:
@@ -75,7 +73,6 @@ def parse_base_feature_expression(feature_expression):
     
     except ValueError as e:
         msg = "Error in parsing feature expression: {}".format(feature_expression) 
-        print(msg)
         logger.error(msg)        
     
 def parse_feature_expression(feature_expression):
@@ -110,7 +107,6 @@ def data_mining_run(designs, behavioral, non_behavioral):
         
         result = []
         for i in range(3): # Generate answers for the first 5 features
-            print(features[i]['name'])            
             advice = parse_feature_expression(features[i]['name'])
             result.append({
                 "type": "Expert",

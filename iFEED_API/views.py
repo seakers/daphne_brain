@@ -94,8 +94,9 @@ class SetTargetRegion(APIView):
             selected_arch_ids = selected.split(',')
             # Convert strings to ints
             behavioral = []
-            for s in selected_arch_ids:
-                behavioral.append(int(s))
+            if selected_arch_ids:
+                for s in selected_arch_ids:
+                    behavioral.append(int(s))
 
             # Get non-selected arch id's
             non_selected = request.POST['non_selected']
@@ -103,8 +104,9 @@ class SetTargetRegion(APIView):
             non_selected_arch_ids = non_selected.split(',')
             # Convert strings to ints
             non_behavioral = []
-            for s in non_selected_arch_ids:
-                non_behavioral.append(int(s))
+            if non_selected_arch_ids:
+                for s in non_selected_arch_ids:
+                    non_behavioral.append(int(s))
 
             # Define context and see if it was already defined for this session
             if 'context' not in request.session:
@@ -121,33 +123,30 @@ class SetTargetRegion(APIView):
             return Response('')
 
 
-    
-    
-    
-    
-#    class VennDiagramDistance(APIView):
-#    
-#    """ Optimizes the distance between two circles in a Venn diagram
-#
-#    Request Args:
-#        a1: the area of the first circle
-#        a2: the area of the second circle
-#        intersection: the intersecting area of two circles
-#        
-#    Returns:
-#        The distance between two circles
-#        
-#    """
-#    def __init__(self):
-#        pass
-#    def post(self, request, format=None):
-#        a1 = float(request.POST['a1'])
-#        a2 = float(request.POST['a2'])
-#        intersection = float(request.POST['intersection'])
-#        res = optimize_distance(a1,a2,intersection)
-#        
-#        distance = res.x[0]
-#        return Response(distance)
+
+class VennDiagramDistance(APIView):
+
+    """ Optimizes the distance between two circles in a Venn diagram
+
+    Request Args:
+        a1: the area of the first circle
+        a2: the area of the second circle
+        intersection: the intersecting area of two circles
+
+    Returns:
+        The distance between two circles
+
+    """
+    def __init__(self):
+        pass
+    def post(self, request, format=None):
+        a1 = float(request.POST['a1'])
+        a2 = float(request.POST['a2'])
+        intersection = float(request.POST['intersection'])
+        res = optimize_distance(a1,a2,intersection)
+
+        distance = res.x[0]
+        return Response(distance)
 
 #
 #class UpdateUtterance(APIView):

@@ -8,5 +8,5 @@ urlpatterns = [
     url(r'set-target/$', views.SetTargetRegion.as_view()),
     
     
-    # url(r'venn-diagram-distance/$', views.VennDiagramDistance.as_view()),
+    url(r'venn-diagram-distance/$', views.VennDiagramDistance.as_view()),
 ]
