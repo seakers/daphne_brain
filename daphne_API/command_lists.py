@@ -6,11 +6,11 @@ general_commands = [
     'Stop'
 ]
 
-ifeed_commands = [
+datamining_commands = [
 
 ]
 
-vassar_commands = [
+analyst_commands = [
     'Why does design ${design_id} have this science benefit?'
 ]
 
