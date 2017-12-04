@@ -57,10 +57,10 @@ class CommandList(APIView):
         command_list_request = request.data['command_list']
         if command_list_request == 'general':
             command_list = command_lists.general_commands
-        elif command_list_request == 'ifeed':
-            command_list = command_lists.ifeed_commands
-        elif command_list_request == 'vassar':
-            command_list = command_lists.vassar_commands
+        elif command_list_request == 'datamining':
+            command_list = command_lists.datamining_commands
+        elif command_list_request == 'analyst':
+            command_list = command_lists.analyst_commands
         elif command_list_request == 'critic':
             command_list = command_lists.critic_commands
         elif command_list_request == 'historian':
