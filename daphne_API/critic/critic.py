@@ -312,11 +312,11 @@ class CRITIC:
             res = self.missions_similarity(orbit, instruments, missions_database)
             if len(instruments) > 0:
                 if res[0] < 6:
-                    result.append("Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it." % \
-                                  (str([i["alias"] for i in instruments]), orbit["alias"]))
+                    result.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
+                                  orbit["alias"])
                 else:
-                    result.append("The most similar mission to %s in orbit %s is %s (score: %.2f/10)." % \
-                                  (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]))
+                    result.append("A past mission is really similar to your design in orbit %s: %s." % \
+                                  (orbit["alias"], res[1].name))
                         # +
                         # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
                         #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
