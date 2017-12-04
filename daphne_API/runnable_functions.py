@@ -143,21 +143,95 @@ def Critic_general_call(design_id, designs):
     critic = CRITIC()
 
     try:
+        this_design = None
+        num_design_id = int(design_id[1:])
+                
+        for design in designs:
+            if num_design_id == design['id']:
+                this_design = design
+                break
+        
+        if this_design is None:
+            raise ValueError("Design id {} not found in the database".format(design_id))
+        else:
+            pass
+        
         # Start connection with VASSAR
         client.startConnection()
-        num_design_id = int(design_id[1:])
+        
         # Criticize architecture (based on rules)
-        result1 = client.client.getCritique(designs[num_design_id]['inputs'])
-        client.endConnection()
+        result1 = client.client.getCritique(this_design['inputs'])
         result = []
         for advice in result1:
             result.append({
                 "type": "Expert",
                 "advice": advice
             })
-        # Criticize architecture (based on database)
-        result2 = critic.criticize_arch(designs[num_design_id]['inputs'])
+            
+        # Criticize architecture (based on explorer)
+        def getAdvicesFromBitStringDiff(diff):
+            out = []
+            ninstr = len(INSTRUMENT_DATASET)
+                        
+            for i in range(len(diff)):
+                advice = []
+                if diff[i] == 1:
+                    advice.append("add")
+                elif diff[i] == -1:
+                    advice.append("remove")
+                else:
+                    continue
+                    
+                orbitIndex = i // ninstr # Floor division
+                instrIndex = i % ninstr # Get the remainder                
+                advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['name']))
+                advice.append("to orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
+                    
+                advice = " ".join(advice)
+                out.append(advice)
+            
+            return ", and ".join(out)
+                
+        original_outputs = this_design['outputs']
+        original_inputs = this_design['inputs']
+        
+        archs = client.runLocalSearch(this_design['inputs'])
+        advices = []
+        for arch in archs:
+            new_outputs = arch['outputs']
+            
+            new_design_inputs = arch['inputs']
+            diff = [a-b for a,b in zip(new_design_inputs,original_inputs)]  
+            advice = [getAdvicesFromBitStringDiff(diff)]
+            
+            # TODO: Generalize the code for getting non-dominated solutions
+            if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
+                # New solution dominates the original solution
+                advice.append(" to increase science and lower cost.")
+            elif new_outputs[0] > original_outputs[0]:
+                advice.append(" to increase science.")
+            elif new_outputs[1] < original_outputs[1]:
+                advice.append(" to lower cost.")
+            else:
+                continue
+                
+            advice = "".join(advice)
+            advices.append(advice)
+                
+        client.endConnection()
+        result2 = []
+        for advice in advices:
+            result2.append({
+                "type": "Explorer",
+                "advice": advice
+            }) 
         result.extend(result2)
+            
+            
+        # Criticize architecture (based on database)
+        result3 = critic.criticize_arch(this_design['inputs'])
+        result.extend(result3)
+
         # Send response
 
         return result
