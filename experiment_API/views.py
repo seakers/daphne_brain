@@ -30,12 +30,12 @@ class StartExperiment(APIView):
         # Save experiment start info
         request.session['experiment'] = {}
         request.session['experiment']['id'] = new_id
-        request.session['experiment']['start_date'] = datetime.datetime.now()
+        request.session['experiment']['start_date'] = datetime.datetime.now().isoformat()
         request.session['experiment']['dialog'] = []
         request.session['experiment']['architectures'] = []
         request.session['experiment']['architectures'].append({
             'arch': request.session['data'][0],
-            'time': datetime.datetime.now()
+            'time': datetime.datetime.now().isoformat()
         })
 
         return Response({

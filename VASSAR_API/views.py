@@ -98,9 +98,10 @@ class EvaluateArchitecture(APIView):
             if 'experiment' in request.session:
                 request.session['experiment']['architectures'].append({
                     'arch': architecture,
-                    'time': datetime.datetime.now()
+                    'time': datetime.datetime.now().isoformat()
                 })
 
+            request.session.modified = True
             
             # End the connection before return statement
             self.VASSARClient.endConnection()

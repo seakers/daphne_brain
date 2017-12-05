@@ -48,10 +48,12 @@ class Command(APIView):
         # save data for experiment
         if 'experiment' in request.session:
             request.session['experiment']['dialog'].append({
-                'question': request.data['command'],
+                'question': processed_command.text,
                 'answer': response,
-                'time': datetime.datetime.now()
+                'time': datetime.datetime.now().isoformat()
             })
+
+        request.session.modified = True
 
         # If command is to switch modes, send new mode back, if not
         return Response({'response': response})
