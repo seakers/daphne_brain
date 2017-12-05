@@ -12,6 +12,7 @@ import json
 import csv
 import hashlib
 from channels import Group
+import datetime
 
 from messagebus.message import Message
 from iFEED_API.venn_diagram.intersection import optimize_distance
@@ -65,9 +66,24 @@ class ImportData(APIView):
 
             # If experiment is running, change architectures for those of experiment
             if 'experiment' in request.session:
-                self.architectures = []
-                for arch in request.session['experiment']['architectures']:
-                    self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
+                if 'start_date2' not in request.session['experiment']:
+                    architectures_name = 'architectures1'
+                else:
+                    architectures_name = 'architectures2'
+
+                if request.session['experiment']['new_data']:
+                    # Save initial archs into experiment
+                    for arch in self.architectures:
+                        request.session['experiment'][architectures_name].append({
+                            'arch': arch,
+                            'time': datetime.datetime.now().isoformat()
+                        })
+                    request.session['experiment']['new_data'] = False
+                else:
+                    # Recover archs when reloading
+                    self.architectures = []
+                    for arch in request.session['experiment'][architectures_name]:
+                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
 
 
             # Define context and see if it was already defined for this session
@@ -102,7 +118,8 @@ class SetTargetRegion(APIView):
             behavioral = []
             if selected_arch_ids:
                 for s in selected_arch_ids:
-                    behavioral.append(int(s))
+                    if not len(s)==0:
+                        behavioral.append(int(s))
 
             # Get non-selected arch id's
             non_selected = request.POST['non_selected']
@@ -112,7 +129,8 @@ class SetTargetRegion(APIView):
             non_behavioral = []
             if non_selected_arch_ids:
                 for s in non_selected_arch_ids:
-                    non_behavioral.append(int(s))
+                    if not len(s)==0:
+                        non_behavioral.append(int(s))
 
             # Define context and see if it was already defined for this session
             if 'context' not in request.session:
