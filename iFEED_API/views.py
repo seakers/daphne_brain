@@ -63,6 +63,12 @@ class ImportData(APIView):
                         bit_strings.add(row[0])
                         self.archID+=1
 
+            # If experiment is running, change architectures for those of experiment
+            if 'experiment' in request.session:
+                self.architectures = []
+                for arch in request.session['experiment']['architectures']:
+                    self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
+
 
             # Define context and see if it was already defined for this session
             if 'data' not in request.session:
