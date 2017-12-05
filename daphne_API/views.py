@@ -47,7 +47,11 @@ class Command(APIView):
 
         # save data for experiment
         if 'experiment' in request.session:
-            request.session['experiment']['dialog'].append({
+            if 'start_date2' not in request.session['experiment']:
+                dialog = 'dialog1'
+            else:
+                dialog = 'dialog2'
+            request.session['experiment'][dialog].append({
                 'question': processed_command.text,
                 'answer': response,
                 'time': datetime.datetime.now().isoformat()

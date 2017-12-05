@@ -60,3 +60,12 @@ def objectives_list():
     objectives = VASSAR.client.getObjectiveList()
     VASSAR.endConnection()
     return objectives
+
+
+orbits_alias = [
+    "1: LEO-600-polar-NA (Inclined, non-sun-synchronous)",
+    "2: SSO-600-SSO-AM (Sun-synchronous Medium Altitude Morning)",
+    "3: SSO-600-SSO-DD (Sun-synchronous Medium Altitude Dawn-Dusk)",
+    "4: SSO-800-SSO-DD (Sun-synchronous High Altitude Dawn-Dusk)",
+    "5: SSO-800-SSO-PM (Sun-synchronous High Altitude Afternoon)"
+]
