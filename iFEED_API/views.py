@@ -96,7 +96,8 @@ class SetTargetRegion(APIView):
             behavioral = []
             if selected_arch_ids:
                 for s in selected_arch_ids:
-                    behavioral.append(int(s))
+                    if not len(s)==0:
+                        behavioral.append(int(s))
 
             # Get non-selected arch id's
             non_selected = request.POST['non_selected']
@@ -106,7 +107,8 @@ class SetTargetRegion(APIView):
             non_behavioral = []
             if non_selected_arch_ids:
                 for s in non_selected_arch_ids:
-                    non_behavioral.append(int(s))
+                    if not len(s)==0:
+                        non_behavioral.append(int(s))
 
             # Define context and see if it was already defined for this session
             if 'context' not in request.session:
