@@ -6,6 +6,7 @@ import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
 import json
+import datetime
 
 class Command(APIView):
     """
@@ -43,6 +44,15 @@ class Command(APIView):
                     command_processing.historian_command(processed_command, request.session['context']))
 
         response = command_processing.think_response(request.session['context'])
+
+        # save data for experiment
+        if 'experiment' in request.session:
+            request.session['experiment']['dialog'].append({
+                'question': request.data['command'],
+                'answer': response,
+                'time': datetime.datetime.now()
+            })
+
         # If command is to switch modes, send new mode back, if not
         return Response({'response': response})
 

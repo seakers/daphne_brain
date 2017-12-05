@@ -10,6 +10,7 @@ import numpy as np
 import sys,os
 import json
 import csv
+import datetime
 
 from VASSAR_API.api import VASSARClient
 
@@ -92,6 +93,13 @@ class EvaluateArchitecture(APIView):
             
             request.session['archID'] = self.archID            
             request.session['data'] = self.architectures
+
+            # save data for experiment
+            if 'experiment' in request.session:
+                request.session['experiment']['architectures'].append({
+                    'arch': architecture,
+                    'time': datetime.datetime.now()
+                })
 
             
             # End the connection before return statement

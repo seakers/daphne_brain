@@ -29,6 +29,8 @@ urlpatterns = [
     url(r'api/critic/', include('critic_API.urls')),
     
     url(r'api/data-mining/', include('data_mining_API.urls')),
+
+    url(r'api/experiment/', include('experiment_API.urls')),
         
     url(r'^server/admin/', admin.site.urls),
     url(r'^server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
