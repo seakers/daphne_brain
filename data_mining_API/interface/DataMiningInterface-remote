@@ -26,6 +26,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void ping()')
     print('   getDrivingFeatures( behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
+    print('   runAutomatedLocalSearch( behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesConjunctive( behavioral,  non_behavioral,  all_archs, string feature,  archs_with_feature, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeatures( behavioral,  non_behavioral,  all_archs, string featureExpression, double supp, double conf, double lift)')
     print('')
@@ -118,6 +119,12 @@ elif cmd == 'getDrivingFeatures':
         print('getDrivingFeatures requires 6 args')
         sys.exit(1)
     pp.pprint(client.getDrivingFeatures(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]),))
+
+elif cmd == 'runAutomatedLocalSearch':
+    if len(args) != 6:
+        print('runAutomatedLocalSearch requires 6 args')
+        sys.exit(1)
+    pp.pprint(client.runAutomatedLocalSearch(eval(args[0]), eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]),))
 
 elif cmd == 'getMarginalDrivingFeaturesConjunctive':
     if len(args) != 8:

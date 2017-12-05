@@ -194,8 +194,8 @@ class CRITIC:
                 if len(row[6]) > 1:
                     for o in range(len(arch)):
                         if row[6][0] in arch(o):
-                           if [c in arch[o] for c in row[6]]:
-                               match = False
+                            if [c in arch[o] for c in row[6]]:
+                                match = False
                 # emptyOrbit
                 emptyOrbit = int(row[7])-1
                 if emptyOrbit > -1:
@@ -312,11 +312,11 @@ class CRITIC:
             res = self.missions_similarity(orbit, instruments, missions_database)
             if len(instruments) > 0:
                 if res[0] < 6:
-                    result.append("Your mission is odd: There are no similar missions to %s in orbit %s in the database. Consider changing it." % \
-                                  (str([i["alias"] for i in instruments]), orbit["alias"]))
+                    result.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
+                                  orbit["alias"])
                 else:
-                    result.append("The most similar mission to %s in orbit %s is %s (score: %.2f/10)." % \
-                                  (str([i["alias"] for i in instruments]), orbit["alias"], res[1].name, res[0]))
+                    result.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
+                                  (orbit["alias"], res[1].name))
                         # +
                         # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
                         #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
@@ -380,6 +380,8 @@ class CRITIC:
         #                    (instrument["alias"], orbit["alias"], len(res)),
         #                str(', '.join([r.name for r in res]))
         #        ])
+        
+        
         # Type 2: Mission by mission
         historian_results = self.historian_critic(arch)
         for hist in historian_results:
@@ -388,21 +390,21 @@ class CRITIC:
                 "advice": hist
             })
 
-        # Analyst
-        analyst_results = self.analyst_critic(arch)
-        for anal in analyst_results:
-            result.append({
-                "type": "Analyst",
-                "advice": anal
-            })
+#        # Analyst
+#        analyst_results = self.analyst_critic(arch)
+#        for anal in analyst_results:
+#            result.append({
+#                "type": "Analyst",
+#                "advice": anal
+#            })
 
-        # Explorer
-        explorer_results = self.explorer_critic(arch)
-        for expl in explorer_results:
-            result.append({
-                "type": "Explorer",
-                "advice": expl
-            })
+#        # Explorer
+#        explorer_results = self.explorer_critic(arch)
+#        for expl in explorer_results:
+#            result.append({
+#                "type": "Explorer",
+#                "advice": expl
+#            })
 
         # Return result
         return result

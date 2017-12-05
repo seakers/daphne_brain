@@ -116,10 +116,11 @@ def extract_data(processed_question, params, context):
 def augment_data(data, context):
     data['now'] = datetime.datetime.now()
     data['designs'] = context['data']
-#    if context['behavioral']:
-#        data['behavioral'] = context['behavioral']
-#    if context['non_behavioral']:
-#        data['non_behavioral'] = context['non_behavioral']
+    
+    if 'behavioral' in context:
+        data['behavioral'] = context['behavioral']
+    if 'non_behavioral' in context:
+        data['non_behavioral'] = context['non_behavioral']
     # TODO: Add useful information from context if needed
     return data
 

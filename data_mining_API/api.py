@@ -82,8 +82,27 @@ class DataMiningClient():
             
             for df in drivingFeatures_formatted:
                 drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
-        except Exception:
-            print(Exception)
+        except Exception as e:
+            print("Exc in getDrivingFeatures: " + str(e))
+
+        return drivingFeatures
+    
+    def runAutomatedLocalSearch(self, behavioral, non_behavioral, all_archs, supp, conf, lift):
+        try:
+            print('getDrivingFeatures')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+            
+            archs_formatted = []
+            for arch in all_archs:
+                archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
+    
+            drivingFeatures_formatted = self.client.runAutomatedLocalSearch(behavioral, non_behavioral, archs_formatted, supp, conf, lift)
+            drivingFeatures = []
+            
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+        except Exception as e:
+            print("Exc in runAutomatedLocalSearch: " + str(e))
 
         return drivingFeatures
 

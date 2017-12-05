@@ -6,6 +6,7 @@ import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
 import json
+import datetime
 
 class Command(APIView):
     """
@@ -43,6 +44,17 @@ class Command(APIView):
                     command_processing.historian_command(processed_command, request.session['context']))
 
         response = command_processing.think_response(request.session['context'])
+
+        # save data for experiment
+        if 'experiment' in request.session:
+            request.session['experiment']['dialog'].append({
+                'question': processed_command.text,
+                'answer': response,
+                'time': datetime.datetime.now().isoformat()
+            })
+
+        request.session.modified = True
+
         # If command is to switch modes, send new mode back, if not
         return Response({'response': response})
 
@@ -57,10 +69,10 @@ class CommandList(APIView):
         command_list_request = request.data['command_list']
         if command_list_request == 'general':
             command_list = command_lists.general_commands
-        elif command_list_request == 'ifeed':
-            command_list = command_lists.ifeed_commands
-        elif command_list_request == 'vassar':
-            command_list = command_lists.vassar_commands
+        elif command_list_request == 'datamining':
+            command_list = command_lists.datamining_commands
+        elif command_list_request == 'analyst':
+            command_list = command_lists.analyst_commands
         elif command_list_request == 'critic':
             command_list = command_lists.critic_commands
         elif command_list_request == 'historian':
