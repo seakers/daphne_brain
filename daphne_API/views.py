@@ -89,4 +89,8 @@ class CommandList(APIView):
             command_list = command_lists.technologies_list()
         elif command_list_request == 'objectives':
             command_list = command_lists.objectives_list()
+        elif command_list_request == 'orb_alias':
+            command_list = command_lists.orbits_alias
+        elif command_list_request == 'instr_alias':
+            command_list = command_lists.instruments_alias
         return Response({'list': command_list})
