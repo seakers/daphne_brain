@@ -39,6 +39,7 @@ class StartExperiment(APIView):
             'arch': request.session['data'][0],
             'time': datetime.datetime.now().isoformat()
         })
+        request.session.modified = True
 
         return Response(request.session['experiment'])
 
@@ -47,6 +48,7 @@ class FinishStage(APIView):
 
     def get(self, request, format=None):
         request.session['experiment']['end_date1'] = datetime.datetime.now().isoformat()
+        request.session.modified = True
         return Response(request.session['experiment'])
 
 
@@ -54,6 +56,7 @@ class StartStage(APIView):
 
     def get(self, request, format=None):
         request.session['experiment']['start_date2'] = datetime.datetime.now().isoformat()
+        request.session.modified = True
         return Response(request.session['experiment'])
 
 
@@ -70,6 +73,7 @@ class EndExperiment(APIView):
 
     def get(self, request, format=None):
         request.session['experiment']['end_date2'] = datetime.datetime.now().isoformat()
+        request.session.modified = True
         # Save experiment results to file
         with open('./experiment_API/results/' + str(request.session['experiment']['id']) + '.json', 'w') as f:
             json.dump(request.session['experiment'], f)
