@@ -315,7 +315,7 @@ class CRITIC:
                     result.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
                                   orbit["alias"])
                 else:
-                    result.append("A past mission is really similar to your design in orbit %s: %s." % \
+                    result.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
                                   (orbit["alias"], res[1].name))
                         # +
                         # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
