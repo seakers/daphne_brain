@@ -11,11 +11,11 @@ import sys
 logger = logging.getLogger('VASSAR')
 
 ORBIT_DATASET = [
-    {"alias":"0", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
-    {"alias":"1", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
-    {"alias":"2", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
-    {"alias":"3", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
-    {"alias":"4", "name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
+    {"alias":"1", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
+    {"alias":"2", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
+    {"alias":"3", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
+    {"alias":"4", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
+    {"alias":"5", "name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
 
 INSTRUMENT_DATASET = [
     {"alias":"A", "name": "ACE_ORCA", "type": "Ocean colour instruments", "technology": "Medium-resolution spectro-radiometer", "geometry": "Cross-track scanning", "wavebands": ["UV","VIS","NIR","SWIR"]},
@@ -57,14 +57,14 @@ def data_mining_run(designs, behavioral, non_behavioral):
             pass
         else:
             maxFeatures = len(features)
-                                    
-        for i in range(maxFeatures): # Generate answers for the first 3 features            
+
+        for i in range(maxFeatures): # Generate answers for the first 3 features
             advice = feature_expression_to_string(features[i]['name'])
             result.append({
                 "type": "Analyzer",
                 "advice": advice
             })
-        return result            
+        return result
     
     except Exception:
         logger.exception('Exception in running data mining')
@@ -90,7 +90,7 @@ def VASSAR_load_objectives_information(design_id, designs):
         return None
 
 
-def Critic_general_call(design_id, designs):
+def Critic_general_call(design_id, designs, experiment_stage=0):
     client = VASSARClient()
     critic = CRITIC()
 
@@ -149,7 +149,7 @@ def Critic_general_call(design_id, designs):
         original_outputs = this_design['outputs']
         original_inputs = this_design['inputs']
         
-        archs = client.runLocalSearch(this_design['inputs'])
+        archs = client.runLocalSearch(this_design['inputs'], experiment_stage)
         advices = []
         for arch in archs:
             new_outputs = arch['outputs']
