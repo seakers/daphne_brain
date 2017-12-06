@@ -6,7 +6,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.Critic_general_call('${design_id}', data['designs'])",
+    "run_template": "run_func.Critic_general_call('${design_id}', data['designs'], data['experiment_stage'])",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",

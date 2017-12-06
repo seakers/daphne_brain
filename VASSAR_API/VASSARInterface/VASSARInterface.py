@@ -32,10 +32,11 @@ class Iface(object):
         """
         pass
 
-    def runLocalSearch(self, inputs):
+    def runLocalSearch(self, inputs, experiment_stage):
         """
         Parameters:
          - inputs
+         - experiment_stage
         """
         pass
 
@@ -131,18 +132,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "eval failed: unknown result")
 
-    def runLocalSearch(self, inputs):
+    def runLocalSearch(self, inputs, experiment_stage):
         """
         Parameters:
          - inputs
+         - experiment_stage
         """
-        self.send_runLocalSearch(inputs)
+        self.send_runLocalSearch(inputs, experiment_stage)
         return self.recv_runLocalSearch()
 
-    def send_runLocalSearch(self, inputs):
+    def send_runLocalSearch(self, inputs, experiment_stage):
         self._oprot.writeMessageBegin('runLocalSearch', TMessageType.CALL, self._seqid)
         args = runLocalSearch_args()
         args.inputs = inputs
+        args.experiment_stage = experiment_stage
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -375,7 +378,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = runLocalSearch_result()
         try:
-            result.success = self._handler.runLocalSearch(args.inputs)
+            result.success = self._handler.runLocalSearch(args.inputs, args.experiment_stage)
             msg_type = TMessageType.REPLY
         except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
             raise
@@ -702,15 +705,18 @@ class runLocalSearch_args(object):
     """
     Attributes:
      - inputs
+     - experiment_stage
     """
 
     thrift_spec = (
         None,  # 0
         (1, TType.LIST, 'inputs', (TType.BOOL, None, False), None, ),  # 1
+        (2, TType.I32, 'experiment_stage', None, None, ),  # 2
     )
 
-    def __init__(self, inputs=None,):
+    def __init__(self, inputs=None, experiment_stage=None,):
         self.inputs = inputs
+        self.experiment_stage = experiment_stage
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -731,6 +737,11 @@ class runLocalSearch_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I32:
+                    self.experiment_stage = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -747,6 +758,10 @@ class runLocalSearch_args(object):
             for iter27 in self.inputs:
                 oprot.writeBool(iter27)
             oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.experiment_stage is not None:
+            oprot.writeFieldBegin('experiment_stage', TType.I32, 2)
+            oprot.writeI32(self.experiment_stage)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
