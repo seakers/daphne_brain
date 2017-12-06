@@ -67,8 +67,8 @@ class VASSARClient():
         arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
         return arch
     
-    def runLocalSearch(self,bitString):
-        archs_formatted = self.client.runLocalSearch(bitString)
+    def runLocalSearch(self,bitString, experiment_stage):
+        archs_formatted = self.client.runLocalSearch(bitString, experiment_stage)
         archs = []
         for arch_formatted in archs_formatted:
             arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
