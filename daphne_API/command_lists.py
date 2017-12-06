@@ -60,3 +60,28 @@ def objectives_list():
     objectives = VASSAR.client.getObjectiveList()
     VASSAR.endConnection()
     return objectives
+
+
+orbits_alias = [
+    "1: LEO-600-polar-NA (Inclined, non-sun-synchronous)",
+    "2: SSO-600-SSO-AM (Sun-synchronous Medium Altitude Morning)",
+    "3: SSO-600-SSO-DD (Sun-synchronous Medium Altitude Dawn-Dusk)",
+    "4: SSO-800-SSO-DD (Sun-synchronous High Altitude Dawn-Dusk)",
+    "5: SSO-800-SSO-PM (Sun-synchronous High Altitude Afternoon)"
+]
+
+
+instruments_alias = [
+    "A: ACE_ORCA, Ocean colour instruments, Medium-resolution spectro-radiometer",
+    "B: ACE_POL, Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
+    "C: ACE_LID, Lidars, Atmospheric lidar",
+    "D: CLAR_ERB, Hyperspectral imagers, Multi-purpose imaging Vis/IR radiometer",
+    "E: ACE_CPR, Cloud profile and rain radars, Cloud and precipitation radar",
+    "F: DESD_SAR, Imaging microwave radars, Imaging radar (SAR)",
+    "G: DESD_LID, Lidars, Lidar altimeter",
+    "H: GACM_VIS, Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
+    "I: GACM_SWIR, Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
+    "J: HYSP_TIR, Imaging multi-spectral radiometers (vis/IR), Medium-resolution IR spectrometer",
+    "K: POSTEPS_IRS, Atmospheric temperature and humidity sounders, Medium-resolution IR spectrometer",
+    "L: CNES_KaRIN, Radar altimeters, Radar altimeter"
+]

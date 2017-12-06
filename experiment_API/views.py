@@ -30,15 +30,14 @@ class StartExperiment(APIView):
         # Save experiment start info
         request.session['experiment'] = {}
         request.session['experiment']['id'] = new_id
+        request.session['experiment']['new_data'] = True
         request.session['experiment']['start_date1'] = datetime.datetime.now().isoformat()
         request.session['experiment']['stage1'] = 'with_ca' if new_id % 2 == 0 else 'without_ca'
         request.session['experiment']['stage2'] = 'without_ca' if new_id % 2 == 0 else 'with_ca'
-        request.session['experiment']['dialog'] = []
-        request.session['experiment']['architectures'] = []
-        request.session['experiment']['architectures'].append({
-            'arch': request.session['data'][0],
-            'time': datetime.datetime.now().isoformat()
-        })
+        request.session['experiment']['dialog1'] = []
+        request.session['experiment']['dialog2'] = []
+        request.session['experiment']['architectures1'] = []
+        request.session['experiment']['architectures2'] = []
         request.session.modified = True
 
         return Response(request.session['experiment'])
@@ -56,6 +55,7 @@ class StartStage(APIView):
 
     def get(self, request, format=None):
         request.session['experiment']['start_date2'] = datetime.datetime.now().isoformat()
+        request.session['experiment']['new_data'] = True
         request.session.modified = True
         return Response(request.session['experiment'])
 

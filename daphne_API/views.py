@@ -47,7 +47,11 @@ class Command(APIView):
 
         # save data for experiment
         if 'experiment' in request.session:
-            request.session['experiment']['dialog'].append({
+            if 'start_date2' not in request.session['experiment']:
+                dialog = 'dialog1'
+            else:
+                dialog = 'dialog2'
+            request.session['experiment'][dialog].append({
                 'question': processed_command.text,
                 'answer': response,
                 'time': datetime.datetime.now().isoformat()
@@ -85,4 +89,8 @@ class CommandList(APIView):
             command_list = command_lists.technologies_list()
         elif command_list_request == 'objectives':
             command_list = command_lists.objectives_list()
+        elif command_list_request == 'orb_alias':
+            command_list = command_lists.orbits_alias
+        elif command_list_request == 'instr_alias':
+            command_list = command_lists.instruments_alias
         return Response({'list': command_list})
