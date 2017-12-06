@@ -228,6 +228,7 @@ def Critic_general_call(design_id, designs):
             
             advices = []
             if not len(features) == 0:
+                                
                 # Compare features to the current design
                 unsatisfied = get_feature_unsatisfied(features[0]['name'], this_design)
                 satisfied = get_feature_satisfied(features[0]['name'], this_design)
@@ -246,7 +247,7 @@ def Critic_general_call(design_id, designs):
                 for exp in satisfied:
                     if exp == "":
                         continue
-                    advices.append("Based on the data mining result, these are the good features. You should keep them: " + feature_expression_to_string(exp, isCritique=False))                    
+                    advices.append("Based on the data mining result, these are the good features. Consider keeping them: " + feature_expression_to_string(exp, isCritique=False))                    
             
             # End the connection before return statement
             client.endConnection()
@@ -254,7 +255,7 @@ def Critic_general_call(design_id, designs):
             for i in range(len(advices)): # Generate answers for the first 5 features
                 advice = advices[i]
                 result4.append({
-                    "type": "Analyzer",
+                    "type": "Analyst",
                     "advice": advice
                 })
 
@@ -370,7 +371,7 @@ def base_feature_expression_to_string(feature_expression, isCritique = False):
             else:              
                 out = "no spacecraft flies in orbit {}".format(orbitNames[0])
         else:
-            raise ValueError('Uncrecognized feature name')
+            raise ValueError('Uncrecognized feature name: {}'.format(featureType))
         return out
     
     except Exception as e:
@@ -420,7 +421,7 @@ def get_feature_satisfied(expression, design):
         else:
             individual_features = [expression]
             
-        for feat in individual_features:            
+        for feat in individual_features:  
             satisfied = apply_base_filter(feat,design)
             if satisfied:
                 out.append(feat)        
@@ -445,18 +446,16 @@ def get_feature_unsatisfied(expression, design):
         else:
             individual_features = [expression]
             
-        for feat in individual_features:            
+        for feat in individual_features:  
             satisfied = apply_base_filter(feat,design)
             if not satisfied:
                 out.append(feat)
-                
-        "&&".join(out)
         return "&&".join(out)
     
         
-def apply_base_filter(filter,design):
+def apply_base_filter(filterExpression,design):
 
-    expression = filter
+    expression = filterExpression
     
     # Preset filter: {presetName[orbits;instruments;numbers]} 
     if expression[0] == "{" and expression[-1] == "}":
@@ -464,7 +463,7 @@ def apply_base_filter(filter,design):
     
     norb = len(ORBIT_DATASET)
     ninstr = len(INSTRUMENT_DATASET)
-    type = expression.split("[")[0]
+    featureType = expression.split("[")[0]
     arguments = expression.split("[")[1]
     arguments = arguments[:-1]
     
@@ -477,27 +476,27 @@ def apply_base_filter(filter,design):
     
     try:
         out = None
-        if type is "present":
+        if featureType == "present":
             if len(instr)==0:
                 return False
             out = False
             instr = int(instr)
             for i in range(norb):
-                if inputs[ninstr*i*instr]:
+                if inputs[ninstr*i + instr]:
                     out=True
                     break
 
-        elif type is "absent":
+        elif featureType == "absent":
             if len(instr)==0:
                 return False
             out = True
             instr = int(instr)
             for i in range(norb):
-                if inputs[ninstr*i*instr]:
+                if inputs[ninstr*i + instr]:
                     out=False
                     break     
                     
-        elif type is "inOrbit":
+        elif featureType == "inOrbit":
             orbit = int(orbit)
             
             if "," in instr:
@@ -516,7 +515,7 @@ def apply_base_filter(filter,design):
                 if inputs[orbit*ninstr + instrument]:
                     out = True
 
-        elif type is "notInOrbit":
+        elif featureType == "notInOrbit":
             orbit = int(orbit)
             
             if "," in instr:
@@ -535,21 +534,21 @@ def apply_base_filter(filter,design):
                 if inputs[orbit*ninstr + instrument]:
                     out = False            
 
-        elif type is "together":
+        elif featureType == "together":
             out = False
             instruments = instr.split(",")
             for i in range(norb):
                 found = True
                 for j in range(len(instruments)):
                     temp = int(instruments[j])
-                    if inputs[i*ninstr+temp] is False:
+                    if inputs[i*ninstr + temp] is False:
                         found=False
                 
                 if found:
                     out = True
                     break
                     
-        elif type is "separate":
+        elif featureType == "separate":
             out = True
             instruments = instr.split(",")
             for i in range(norb):
@@ -565,7 +564,7 @@ def apply_base_filter(filter,design):
                 if out is False:
                     break
             
-        elif type is "emptyOrbit":
+        elif featureType == "emptyOrbit":
             out = True
             orbit = int(orbit)
             
@@ -574,7 +573,7 @@ def apply_base_filter(filter,design):
                     out = False
                     break
             
-        elif type is "numOrbits":
+        elif featureType == "numOrbits":
             count = 0
             out = False
             numb = int(numb)
@@ -588,6 +587,8 @@ def apply_base_filter(filter,design):
             if numb==count:
                 out = True
                 
+        else:
+            raise ValueError("Feature type not recognized: {}".format(featureType))
                     
     except Exception as e:
         raise ValueError("Exe in applying the base filter: " + str(e))
