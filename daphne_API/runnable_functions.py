@@ -422,7 +422,6 @@ def get_feature_satisfied(expression, design):
             individual_features = [expression]
             
         for feat in individual_features:  
-            print("feature expression: " + feat)
             satisfied = apply_base_filter(feat,design)
             if satisfied:
                 out.append(feat)        
@@ -448,7 +447,6 @@ def get_feature_unsatisfied(expression, design):
             individual_features = [expression]
             
         for feat in individual_features:  
-            print("feature expression: "+ feat)
             satisfied = apply_base_filter(feat,design)
             if not satisfied:
                 out.append(feat)
@@ -484,7 +482,7 @@ def apply_base_filter(filterExpression,design):
             out = False
             instr = int(instr)
             for i in range(norb):
-                if inputs[ninstr*i*instr]:
+                if inputs[ninstr*i + instr]:
                     out=True
                     break
 
@@ -494,7 +492,7 @@ def apply_base_filter(filterExpression,design):
             out = True
             instr = int(instr)
             for i in range(norb):
-                if inputs[ninstr*i*instr]:
+                if inputs[ninstr*i + instr]:
                     out=False
                     break     
                     
@@ -543,7 +541,7 @@ def apply_base_filter(filterExpression,design):
                 found = True
                 for j in range(len(instruments)):
                     temp = int(instruments[j])
-                    if inputs[i*ninstr+temp] is False:
+                    if inputs[i*ninstr + temp] is False:
                         found=False
                 
                 if found:
