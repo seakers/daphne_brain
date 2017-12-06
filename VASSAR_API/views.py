@@ -96,7 +96,11 @@ class EvaluateArchitecture(APIView):
 
             # save data for experiment
             if 'experiment' in request.session:
-                request.session['experiment']['architectures'].append({
+                if 'start_date2' not in request.session['experiment']:
+                    architectures_name = 'architectures1'
+                else:
+                    architectures_name = 'architectures2'
+                request.session['experiment'][architectures_name].append({
                     'arch': architecture,
                     'time': datetime.datetime.now().isoformat()
                 })
