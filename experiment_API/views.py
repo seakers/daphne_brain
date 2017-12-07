@@ -31,7 +31,7 @@ class StartExperiment(APIView):
         request.session['experiment'] = {}
         request.session['experiment']['id'] = new_id
         request.session['experiment']['new_data'] = True
-        request.session['experiment']['start_date1'] = datetime.datetime.now().isoformat()
+        request.session['experiment']['start_date1'] = datetime.datetime.utcnow().isoformat()
         request.session['experiment']['stage1'] = 'with_ca' if new_id % 2 == 0 else 'without_ca'
         request.session['experiment']['stage2'] = 'without_ca' if new_id % 2 == 0 else 'with_ca'
         request.session['experiment']['dialog1'] = []
@@ -46,7 +46,7 @@ class StartExperiment(APIView):
 class FinishStage(APIView):
 
     def get(self, request, format=None):
-        request.session['experiment']['end_date1'] = datetime.datetime.now().isoformat()
+        request.session['experiment']['end_date1'] = datetime.datetime.utcnow().isoformat()
         request.session.modified = True
         return Response(request.session['experiment'])
 
@@ -54,7 +54,7 @@ class FinishStage(APIView):
 class StartStage(APIView):
 
     def get(self, request, format=None):
-        request.session['experiment']['start_date2'] = datetime.datetime.now().isoformat()
+        request.session['experiment']['start_date2'] = datetime.datetime.utcnow().isoformat()
         request.session['experiment']['new_data'] = True
         request.session.modified = True
         return Response(request.session['experiment'])
@@ -72,7 +72,7 @@ class ReloadExperiment(APIView):
 class EndExperiment(APIView):
 
     def get(self, request, format=None):
-        request.session['experiment']['end_date2'] = datetime.datetime.now().isoformat()
+        request.session['experiment']['end_date2'] = datetime.datetime.utcnow().isoformat()
         request.session.modified = True
         # Save experiment results to file
         with open('./experiment_API/results/' + str(request.session['experiment']['id']) + '.json', 'w') as f:

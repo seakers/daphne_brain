@@ -61,7 +61,7 @@ class Command(APIView):
             request.session['experiment'][dialog].append({
                 'question': processed_command.text,
                 'answer': response,
-                'time': datetime.datetime.now().isoformat()
+                'time': datetime.datetime.utcnow().isoformat()
             })
 
         request.session.modified = True
