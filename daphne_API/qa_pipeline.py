@@ -114,7 +114,7 @@ def extract_data(processed_question, params, context):
 
 
 def augment_data(data, context):
-    data['now'] = datetime.datetime.now()
+    data['now'] = datetime.datetime.utcnow()
     data['designs'] = context['data']
 
     if 'experiment_stage' in context:
