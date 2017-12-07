@@ -76,7 +76,7 @@ class ImportData(APIView):
                     for arch in self.architectures:
                         request.session['experiment'][architectures_name].append({
                             'arch': arch,
-                            'time': datetime.datetime.now().isoformat()
+                            'time': datetime.datetime.utcnow().isoformat()
                         })
                     request.session['experiment']['new_data'] = False
                 else:

@@ -102,7 +102,7 @@ class EvaluateArchitecture(APIView):
                     architectures_name = 'architectures2'
                 request.session['experiment'][architectures_name].append({
                     'arch': architecture,
-                    'time': datetime.datetime.now().isoformat()
+                    'time': datetime.datetime.utcnow().isoformat()
                 })
 
             request.session.modified = True
