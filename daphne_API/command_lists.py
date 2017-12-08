@@ -16,19 +16,19 @@ analyst_commands = [
 
 critic_commands = [
     'What do you think of design ${design_id}?',
-    'What does agent ${agent} think of design ${design_id}?'
+    #'What does agent ${agent} think of design ${design_id}?'
 ]
 
 historian_commands = [
-    'Which missions can measure ${measurement} [between ${year} and ${year}]?',
-    'Which missions do we currently use to measure ${measurement}?',
-    'Which instruments can measure ${measurement} [between ${year} and ${year}]?',
-    'Which instruments do we currently use to measure ${measurement}?',
-    'Which missions have flown ${technology} [between ${year} and ${year}]?',
-    'Which missions are currently flying ${technology}?',
+    #'Which missions can measure ${measurement} [between ${year} and ${year}]?',
+    #'Which missions do we currently use to measure ${measurement}?',
+    #'Which instruments can measure ${measurement} [between ${year} and ${year}]?',
+    #'Which instruments do we currently use to measure ${measurement}?',
+    #'Which missions have flown ${technology} [between ${year} and ${year}]?',
+    #'Which missions are currently flying ${technology}?',
     'Which orbit is the most typical for ${technology}?',
     'Which orbit is the most typical for ${measurement}?',
-    'When was mission ${mission} launched?'
+    #'When was mission ${mission} launched?'
 ]
 
 
