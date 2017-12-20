@@ -64,26 +64,26 @@ class ImportData(APIView):
                         bit_strings.add(row[0])
                         self.archID+=1
 
-            # If experiment is running, change architectures for those of experiment
-            if 'experiment' in request.session:
-                if 'start_date2' not in request.session['experiment']:
-                    architectures_name = 'architectures1'
-                else:
-                    architectures_name = 'architectures2'
-
-                if request.session['experiment']['new_data']:
-                    # Save initial archs into experiment
-                    for arch in self.architectures:
-                        request.session['experiment'][architectures_name].append({
-                            'arch': arch,
-                            'time': datetime.datetime.utcnow().isoformat()
-                        })
-                    request.session['experiment']['new_data'] = False
-                else:
-                    # Recover archs when reloading
-                    self.architectures = []
-                    for arch in request.session['experiment'][architectures_name]:
-                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
+#            # If experiment is running, change architectures for those of experiment
+#            if 'experiment' in request.session:
+#                if 'start_date2' not in request.session['experiment']:
+#                    architectures_name = 'architectures1'
+#                else:
+#                    architectures_name = 'architectures2'
+#
+#                if request.session['experiment']['new_data']:
+#                    # Save initial archs into experiment
+#                    for arch in self.architectures:
+#                        request.session['experiment'][architectures_name].append({
+#                            'arch': arch,
+#                            'time': datetime.datetime.utcnow().isoformat()
+#                        })
+#                    request.session['experiment']['new_data'] = False
+#                else:
+#                    # Recover archs when reloading
+#                    self.architectures = []
+#                    for arch in request.session['experiment'][architectures_name]:
+#                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
 
 
             # Define context and see if it was already defined for this session
