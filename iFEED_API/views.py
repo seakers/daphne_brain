@@ -24,6 +24,13 @@ logger = logging.getLogger('iFEED')
 
 config = ConfigurationLoader().load()
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 class ImportData(APIView):
     
     """ Imports data from a csv file. To be deprecated in the future.
@@ -40,29 +47,65 @@ class ImportData(APIView):
             logger.debug('iFEED import data HTTP request')
 
             # Set the path of the file containing data
-            file_path = os.path.dirname(os.path.abspath(__file__)) + '/data/' + request.POST['filename']
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', request.POST['file_path'])
             
+            inputType = request.POST['input_type']
+            inputNum = int(request.POST['input_num'])
+            outputNum = int(request.POST['output_num'])
+
             self.archID = 0
-            
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
                 read = csv.reader(csvfile, delimiter=',')
                 self.architectures = []
-                bit_strings = set()
+
+                inputs_unique_set = set()
                 # For each row, store the information
-                id = 0
                 for ind, row in enumerate(read):
-                    # Change boolean string to boolean array
-                    inputs = self.booleanString2booleanArray(row[0])
-                    science = float(row[1])
-                    cost = float(row[2])
-                    outputs = [science, cost]
-                                        
-                    if row[0] not in bit_strings:
+                    if ind == 0: # Check if the first line is a header
+                        header = False
+                        for cell in row:
+                            if not is_number(cell) and cell != "": 
+                                # If one of the entries is not a number or an empty string
+                                # First line is a header
+                                header = True
+                                break
+                        if header:
+                            continue
+
+                    inputs = []
+                    outputs = []
+
+                    # Import inputs
+                    for i in range(inputNum):
+                        if inputType == "BooleanArray": 
+                            # Assumes that there is only one column for the inputs
+                            inputs = self.booleanString2booleanArray(row[i])
+                        else:
+                            inp = row[i]
+                            if inp == "":
+                                inp = 0
+                            else:
+                                inp = float(inp)
+                            inputs.append(inp)
+
+                    for i in range(outputNum):
+                        out = row[i + inputNum]
+                        if out == "":
+                            out = 0
+                        else:
+                            out = float(out)
+                        outputs.append(out)
+
+                    hashedInput = hash(tuple(inputs))
+                    if hashedInput not in inputs_unique_set:
                         self.architectures.append({'id':self.archID, 'inputs':inputs, 'outputs':outputs})
-                        bit_strings.add(row[0])
-                        self.archID+=1
+                        self.archID += 1
+                        inputs_unique_set.add(hashedInput)
+                    else:
+                        #print(hashedInput)
+                        pass
 
 #            # If experiment is running, change architectures for those of experiment
 #            if 'experiment' in request.session:
@@ -84,7 +127,6 @@ class ImportData(APIView):
 #                    self.architectures = []
 #                    for arch in request.session['experiment'][architectures_name]:
 #                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
-
 
             # Define context and see if it was already defined for this session
             if 'data' not in request.session:
