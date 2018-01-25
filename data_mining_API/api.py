@@ -30,7 +30,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 from data_mining_API.interface import interface as DataMiningInterface
-from data_mining_API.interface.ttypes import BinaryInputArchitecture, Feature
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature
 
 
 from config.loader import ConfigurationLoader
@@ -69,26 +69,36 @@ class DataMiningClient():
         self.client.ping()
         print('ping()')
         
-    def getDrivingFeatures(self, behavioral, non_behavioral, all_archs, supp, conf, lift):
-        try:
-            print('getDrivingFeatures')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
-            
-            archs_formatted = []
+    def getDrivingFeatures(self, problem, inputType, behavioral, non_behavioral, all_archs, supp, conf, lift):
+        # try:
+        print('getDrivingFeatures')
+        print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+        
+        archs_formatted = []
+        if inputType == "binary":
             for arch in all_archs:
                 archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
-    
-            drivingFeatures_formatted = self.client.getDrivingFeatures(behavioral, non_behavioral, archs_formatted, supp, conf, lift)
-            drivingFeatures = []
-            
-            for df in drivingFeatures_formatted:
-                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
-        except Exception as e:
-            print("Exc in getDrivingFeatures: " + str(e))
+            drivingFeatures_formatted = self.client.getDrivingFeaturesBinary(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
+
+        elif inputType == "discrete":
+            for arch in all_archs:
+                inputs = []
+                for i in arch['inputs']:
+                    inputs.append(int(i))
+                archs_formatted.append(DiscreteInputArchitecture(arch['id'], inputs, arch['outputs']))
+
+            drivingFeatures_formatted = self.client.getDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
+
+        drivingFeatures = []
+        for df in drivingFeatures_formatted:
+            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+
+        # except Exception as e:
+        #     print("Exc in getDrivingFeatures: " + str(e))
 
         return drivingFeatures
     
-    def runAutomatedLocalSearch(self, behavioral, non_behavioral, all_archs, supp, conf, lift):
+    def runAutomatedLocalSearch(self, problem, behavioral, non_behavioral, all_archs, supp, conf, lift):
         try:
             print('getDrivingFeatures')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
@@ -97,7 +107,7 @@ class DataMiningClient():
             for arch in all_archs:
                 archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
     
-            drivingFeatures_formatted = self.client.runAutomatedLocalSearch(behavioral, non_behavioral, archs_formatted, supp, conf, lift)
+            drivingFeatures_formatted = self.client.runAutomatedLocalSearchBinary(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
             drivingFeatures = []
             
             for df in drivingFeatures_formatted:
@@ -108,7 +118,7 @@ class DataMiningClient():
         return drivingFeatures
 
     
-    def getMarginalDrivingFeaturesConjunctive(self, behavioral, non_behavioral, all_archs, featureName, archs_with_feature, supp, conf, lift):
+    def getMarginalDrivingFeaturesConjunctive(self, problem, behavioral, non_behavioral, all_archs, featureName, archs_with_feature, supp, conf, lift):
         try:
             print('getMarginalDrivingFeatures')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
@@ -117,7 +127,7 @@ class DataMiningClient():
             for arch in all_archs:
                 archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
                     
-            drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesConjunctive(behavioral, non_behavioral, archs_formatted, 
+            drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesConjunctiveBinary(problem, behavioral, non_behavioral, archs_formatted, 
                                                                        featureName, archs_with_feature, supp, conf, lift)
                         
             drivingFeatures = []
@@ -132,7 +142,7 @@ class DataMiningClient():
 
     
         
-    def getMarginalDrivingFeatures(self, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def getMarginalDrivingFeatures(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
         try:
             print('getMarginalDrivingFeatures')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
@@ -141,7 +151,7 @@ class DataMiningClient():
             for arch in all_archs:
                 archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
                     
-            drivingFeatures_formatted = self.client.getMarginalDrivingFeatures(behavioral, non_behavioral, archs_formatted, 
+            drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, archs_formatted, 
                                                                        featureExpression, supp, conf, lift)
                         
             drivingFeatures = []

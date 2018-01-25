@@ -64,9 +64,10 @@ class GetDrivingFeatures(APIView):
             logger.debug(request.session)
             architectures = request.session['data']
 
-            problemType = request.POST['problem']
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, behavioral, non_behavioral,
+            drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
                                                                        architectures, supp, conf, lift)
                 
             output = drivingFeatures
