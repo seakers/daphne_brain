@@ -28,6 +28,7 @@ from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
+
 from data_mining_API.interface import interface as DataMiningInterface
 from data_mining_API.interface.ttypes import BinaryInputArchitecture, Feature
 
