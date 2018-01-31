@@ -79,7 +79,7 @@ class ImportData(APIView):
 
                     # Import inputs
                     for i in range(inputNum):
-                        if inputType == "BooleanArray": 
+                        if inputType == "binary": 
                             # Assumes that there is only one column for the inputs
                             inputs = self.booleanString2booleanArray(row[i])
                         else:

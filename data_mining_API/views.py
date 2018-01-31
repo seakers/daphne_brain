@@ -81,7 +81,62 @@ class GetDrivingFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
         
+# Create your views here.
+class GetDrivingFeaturesAutomated(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
         
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get threshold values for the metrics
+            supp = float(request.POST['supp'])
+            conf = float(request.POST['conf'])
+            lift = float(request.POST['lift'])
+            
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            logger.debug(request.session)
+            architectures = request.session['data']
+
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.getDrivingFeaturesAutomated(problem, inputType, behavioral, non_behavioral,
+                                                                       architectures, supp, conf, lift)
+                
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
         
 class GetMarginalDrivingFeaturesConjunctive(APIView):
     
@@ -110,7 +165,10 @@ class GetMarginalDrivingFeaturesConjunctive(APIView):
             # Load architecture data from the session info
             architectures = request.session['data']
 
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeaturesConjunctive(behavioral,non_behavioral,architectures,featureName,highlighted,supp,conf,lift)            
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeaturesConjunctive(problem, inputType, behavioral,non_behavioral,architectures,featureName,highlighted,supp,conf,lift)            
             output = drivingFeatures
 
             # End the connection before return statement
@@ -149,7 +207,10 @@ class GetMarginalDrivingFeatures(APIView):
             # Load architecture data from the session info
             architectures = request.session['data']
 
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(behavioral,non_behavioral,architectures,
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(problem, inputType, behavioral,non_behavioral,architectures,
                                                                                featureExpression,supp,conf,lift)            
             output = drivingFeatures
 
@@ -161,9 +222,6 @@ class GetMarginalDrivingFeatures(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + detail)
             self.DataMiningClient.endConnection()
             return Response('')
-        
-        
-        
         
         
 def booleanArray2booleanString(booleanArray):
