@@ -7,5 +7,6 @@ urlpatterns = [
     url(r'get-driving-features-automated/$', views.GetDrivingFeaturesAutomated.as_view()),
     url(r'get-marginal-driving-features-conjunctive/$', views.GetMarginalDrivingFeaturesConjunctive.as_view()),
     url(r'get-marginal-driving-features/$', views.GetMarginalDrivingFeatures.as_view()),
-    
+    url(r'cluster-data/$', views.ClusterData.as_view()),
+    url(r'get-cluster/$', views.GetCluster.as_view()),
 ]

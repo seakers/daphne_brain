@@ -15,13 +15,12 @@ import sys,os
 import json
 import csv
 
-
 # Print all paths included in sys.path
 # from pprint import pprint as p
 # p(sys.path)
 
 from data_mining_API.api import DataMiningClient
-
+#from cluster import Clustering
 
 
 # Create your views here.
@@ -180,7 +179,6 @@ class GetMarginalDrivingFeaturesConjunctive(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
         
-        
 class GetMarginalDrivingFeatures(APIView):
 
     def __init__(self):
@@ -222,7 +220,107 @@ class GetMarginalDrivingFeatures(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + detail)
             self.DataMiningClient.endConnection()
             return Response('')
+
+class ClusterData(APIView):
+
+    def __init__(self):
+        pass
+
+    def post(self, request, format=None):
         
+        try:
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            architectures = request.session['data']
+
+            data = []
+            for arch in architectures:
+                if arch['id'] in behavioral:
+                    data.append(arch['outputs'])
+                else:
+                    pass
+
+            id_list = behavioral
+
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            with open(os.path.join(dir_path,"data.csv"), "w") as file:
+
+                for i, row in enumerate(data):
+                    out = []
+                    out.append(str(id_list[i]))
+
+                    for val in row:
+                        out.append(str(val))
+                    out = ",".join(out)
+                    file.write(out + "\n")
+
+            # clustering = new Clustering(data)
+            #drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
+            #                                                           architectures, supp, conf, lift)
+                
+            #output = drivingFeatures
+
+            return Response("")
+        
+        except Exception as detail:
+            logger.exception('Exception in clustering: ' + str(detail))
+            return Response('')
+    
+
+class GetCluster(APIView):
+
+    def __init__(self):
+        pass
+
+    def post(self, request, format=None):
+        try:
+
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            labels = []
+            id_list = []
+
+            with open(os.path.join(dir_path,"labels.csv"), "r") as file:
+
+                content = file.read().split("\n")
+
+                for row in content:
+                    if row == "":
+                        continue
+                    elif "," in row:
+                        id_list.append(row.split(",")[0])
+                        labels.append(row.split(",")[1])
+                    else:
+                        labels.append(row)
+
+            out = {
+                "id": id_list,
+                "labels": labels
+            }
+            return Response(out)
+        
+        except Exception as detail:
+            logger.exception('Exception in getting cluster labels: ' + str(detail))
+            return Response('')        
         
 def booleanArray2booleanString(booleanArray):
     leng = len(booleanArray)
@@ -233,4 +331,3 @@ def booleanArray2booleanString(booleanArray):
         else:
             boolString += '0'
     return boolString
-
