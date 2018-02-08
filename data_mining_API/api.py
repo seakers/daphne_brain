@@ -1,24 +1,5 @@
 #!/usr/bin/env python
 
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements. See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership. The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License. You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
-
 import sys,os
 import glob
 
@@ -155,10 +136,8 @@ class DataMiningClient():
             print('Exc in calling getMarginalDrivingFeaturesConjunctive(): ' + str(e))
 
         return drivingFeatures
-
-    
         
-    def getMarginalDrivingFeatures(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def getMarginalDrivingFeatures(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression,logicalConnective, supp, conf, lift):
         try:
             print('getMarginalDrivingFeatures')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
@@ -168,7 +147,7 @@ class DataMiningClient():
                 for arch in all_archs:
                     archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
                 drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, archs_formatted, 
-                                                                           featureExpression, supp, conf, lift)
+                                                                           featureExpression, logicalConnective, supp, conf, lift)
 
             elif inputType == "discrete":
                 for arch in all_archs:
@@ -177,7 +156,7 @@ class DataMiningClient():
                         inputs.append(int(i))
                     archs_formatted.append(DiscreteInputArchitecture(arch['id'], inputs, arch['outputs']))
                 drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, archs_formatted, 
-                                                                           featureExpression, supp, conf, lift)
+                                                                           featureExpression, logicalConnective, supp, conf, lift)
                         
             drivingFeatures = []
             

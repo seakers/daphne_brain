@@ -20,8 +20,6 @@ import csv
 # p(sys.path)
 
 from data_mining_API.api import DataMiningClient
-#from cluster import Clustering
-
 
 # Create your views here.
 class GetDrivingFeatures(APIView):
@@ -200,7 +198,8 @@ class GetMarginalDrivingFeatures(APIView):
             behavioral = json.loads(request.POST['selected'])
             non_behavioral = json.loads(request.POST['non_selected'])
                 
-            featureExpression = request.POST['featureExpression']            
+            featureExpression = request.POST['featureExpression']      
+            logicalConnective = request.POST['logical_connective']      
 
             # Load architecture data from the session info
             architectures = request.session['data']
@@ -209,7 +208,7 @@ class GetMarginalDrivingFeatures(APIView):
             inputType = request.POST['input_type']
 
             drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(problem, inputType, behavioral,non_behavioral,architectures,
-                                                                               featureExpression,supp,conf,lift)            
+                                                                               featureExpression,logicalConnective, supp,conf,lift)            
             output = drivingFeatures
 
             # End the connection before return statement
@@ -262,25 +261,30 @@ class ClusterData(APIView):
 
             id_list = behavioral
 
-            dir_path = os.path.dirname(os.path.realpath(__file__))
-            with open(os.path.join(dir_path,"data.csv"), "w") as file:
+            # dir_path = os.path.dirname(os.path.realpath(__file__))
+            # with open(os.path.join(dir_path,"data.csv"), "w") as file:
 
-                for i, row in enumerate(data):
-                    out = []
-                    out.append(str(id_list[i]))
+            #     for i, row in enumerate(data):
+            #         out = []
+            #         out.append(str(id_list[i]))
 
-                    for val in row:
-                        out.append(str(val))
-                    out = ",".join(out)
-                    file.write(out + "\n")
+            #         for val in row:
+            #             out.append(str(val))
+            #         out = ",".join(out)
+            #         file.write(out + "\n")
 
-            # clustering = new Clustering(data)
-            #drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
-            #                                                           architectures, supp, conf, lift)
-                
-            #output = drivingFeatures
+            from cluster import Clustering
+            
+            clustering = Clustering(data)
 
-            return Response("")
+            labels = clustering.kMeans()
+
+            out = {
+                "id": id_list,
+                "labels": labels
+            }
+            
+            return Response(out)
         
         except Exception as detail:
             logger.exception('Exception in clustering: ' + str(detail))

@@ -13,6 +13,7 @@ import csv
 import hashlib
 from channels import Group
 import datetime
+from random import *
 
 from messagebus.message import Message
 from iFEED_API.venn_diagram.intersection import optimize_distance
@@ -53,6 +54,8 @@ class ImportData(APIView):
             inputNum = int(request.POST['input_num'])
             outputNum = int(request.POST['output_num'])
 
+            problem = request.POST['problem']
+
             self.archID = 0
             # Open the file
             with open(file_path) as csvfile:
@@ -77,6 +80,17 @@ class ImportData(APIView):
                     inputs = []
                     outputs = []
 
+                    if problem == "constellation":
+                        # Filter out outliers
+                         
+                        if float(row[40]) > 22000: # mean_resp
+                            continue
+                        elif float(row[41]) > 93000: # latency
+                            continue
+                        else:
+                            if random() > 0.2:
+                                continue
+
                     # Import inputs
                     for i in range(inputNum):
                         if inputType == "binary": 
@@ -85,7 +99,7 @@ class ImportData(APIView):
                         else:
                             inp = row[i]
                             if inp == "":
-                                inp = 0
+                                inp = -1
                             else:
                                 inp = float(inp)
                             inputs.append(inp)

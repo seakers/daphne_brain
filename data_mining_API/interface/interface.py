@@ -63,7 +63,7 @@ class Iface(object):
         """
         pass
 
-    def getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
         """
         Parameters:
          - problem
@@ -71,6 +71,7 @@ class Iface(object):
          - non_behavioral
          - all_archs
          - featureExpression
+         - logical_connective
          - supp
          - conf
          - lift
@@ -118,7 +119,7 @@ class Iface(object):
         """
         pass
 
-    def getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
         """
         Parameters:
          - problem
@@ -126,6 +127,7 @@ class Iface(object):
          - non_behavioral
          - all_archs
          - featureExpression
+         - logical_connective
          - supp
          - conf
          - lift
@@ -297,7 +299,7 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMarginalDrivingFeaturesConjunctiveBinary failed: unknown result")
 
-    def getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
         """
         Parameters:
          - problem
@@ -305,14 +307,15 @@ class Client(Iface):
          - non_behavioral
          - all_archs
          - featureExpression
+         - logical_connective
          - supp
          - conf
          - lift
         """
-        self.send_getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift)
+        self.send_getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift)
         return self.recv_getMarginalDrivingFeaturesBinary()
 
-    def send_getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def send_getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
         self._oprot.writeMessageBegin('getMarginalDrivingFeaturesBinary', TMessageType.CALL, self._seqid)
         args = getMarginalDrivingFeaturesBinary_args()
         args.problem = problem
@@ -320,6 +323,7 @@ class Client(Iface):
         args.non_behavioral = non_behavioral
         args.all_archs = all_archs
         args.featureExpression = featureExpression
+        args.logical_connective = logical_connective
         args.supp = supp
         args.conf = conf
         args.lift = lift
@@ -475,7 +479,7 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMarginalDrivingFeaturesConjunctiveDiscrete failed: unknown result")
 
-    def getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
         """
         Parameters:
          - problem
@@ -483,14 +487,15 @@ class Client(Iface):
          - non_behavioral
          - all_archs
          - featureExpression
+         - logical_connective
          - supp
          - conf
          - lift
         """
-        self.send_getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift)
+        self.send_getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift)
         return self.recv_getMarginalDrivingFeaturesDiscrete()
 
-    def send_getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, supp, conf, lift):
+    def send_getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
         self._oprot.writeMessageBegin('getMarginalDrivingFeaturesDiscrete', TMessageType.CALL, self._seqid)
         args = getMarginalDrivingFeaturesDiscrete_args()
         args.problem = problem
@@ -498,6 +503,7 @@ class Client(Iface):
         args.non_behavioral = non_behavioral
         args.all_archs = all_archs
         args.featureExpression = featureExpression
+        args.logical_connective = logical_connective
         args.supp = supp
         args.conf = conf
         args.lift = lift
@@ -648,7 +654,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getMarginalDrivingFeaturesBinary_result()
         try:
-            result.success = self._handler.getMarginalDrivingFeaturesBinary(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.supp, args.conf, args.lift)
+            result.success = self._handler.getMarginalDrivingFeaturesBinary(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.logical_connective, args.supp, args.conf, args.lift)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -740,7 +746,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getMarginalDrivingFeaturesDiscrete_result()
         try:
-            result.success = self._handler.getMarginalDrivingFeaturesDiscrete(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.supp, args.conf, args.lift)
+            result.success = self._handler.getMarginalDrivingFeaturesDiscrete(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.logical_connective, args.supp, args.conf, args.lift)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1567,18 +1573,20 @@ class getMarginalDrivingFeaturesBinary_args(object):
      - non_behavioral
      - all_archs
      - featureExpression
+     - logical_connective
      - supp
      - conf
      - lift
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, supp=None, conf=None, lift=None,):
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, logical_connective=None, supp=None, conf=None, lift=None,):
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
         self.featureExpression = featureExpression
+        self.logical_connective = logical_connective
         self.supp = supp
         self.conf = conf
         self.lift = lift
@@ -1634,16 +1642,21 @@ class getMarginalDrivingFeaturesBinary_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 6:
-                if ftype == TType.DOUBLE:
-                    self.supp = iprot.readDouble()
+                if ftype == TType.STRING:
+                    self.logical_connective = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 7:
                 if ftype == TType.DOUBLE:
-                    self.conf = iprot.readDouble()
+                    self.supp = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             elif fid == 8:
+                if ftype == TType.DOUBLE:
+                    self.conf = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
                 if ftype == TType.DOUBLE:
                     self.lift = iprot.readDouble()
                 else:
@@ -1687,16 +1700,20 @@ class getMarginalDrivingFeaturesBinary_args(object):
             oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
             oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
             oprot.writeFieldEnd()
+        if self.logical_connective is not None:
+            oprot.writeFieldBegin('logical_connective', TType.STRING, 6)
+            oprot.writeString(self.logical_connective.encode('utf-8') if sys.version_info[0] == 2 else self.logical_connective)
+            oprot.writeFieldEnd()
         if self.supp is not None:
-            oprot.writeFieldBegin('supp', TType.DOUBLE, 6)
+            oprot.writeFieldBegin('supp', TType.DOUBLE, 7)
             oprot.writeDouble(self.supp)
             oprot.writeFieldEnd()
         if self.conf is not None:
-            oprot.writeFieldBegin('conf', TType.DOUBLE, 7)
+            oprot.writeFieldBegin('conf', TType.DOUBLE, 8)
             oprot.writeDouble(self.conf)
             oprot.writeFieldEnd()
         if self.lift is not None:
-            oprot.writeFieldBegin('lift', TType.DOUBLE, 8)
+            oprot.writeFieldBegin('lift', TType.DOUBLE, 9)
             oprot.writeDouble(self.lift)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1723,9 +1740,10 @@ getMarginalDrivingFeaturesBinary_args.thrift_spec = (
     (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
     (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
     (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
-    (6, TType.DOUBLE, 'supp', None, None, ),  # 6
-    (7, TType.DOUBLE, 'conf', None, None, ),  # 7
-    (8, TType.DOUBLE, 'lift', None, None, ),  # 8
+    (6, TType.STRING, 'logical_connective', 'UTF8', None, ),  # 6
+    (7, TType.DOUBLE, 'supp', None, None, ),  # 7
+    (8, TType.DOUBLE, 'conf', None, None, ),  # 8
+    (9, TType.DOUBLE, 'lift', None, None, ),  # 9
 )
 
 
@@ -2519,18 +2537,20 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
      - non_behavioral
      - all_archs
      - featureExpression
+     - logical_connective
      - supp
      - conf
      - lift
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, supp=None, conf=None, lift=None,):
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, logical_connective=None, supp=None, conf=None, lift=None,):
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
         self.featureExpression = featureExpression
+        self.logical_connective = logical_connective
         self.supp = supp
         self.conf = conf
         self.lift = lift
@@ -2586,16 +2606,21 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 6:
-                if ftype == TType.DOUBLE:
-                    self.supp = iprot.readDouble()
+                if ftype == TType.STRING:
+                    self.logical_connective = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 7:
                 if ftype == TType.DOUBLE:
-                    self.conf = iprot.readDouble()
+                    self.supp = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             elif fid == 8:
+                if ftype == TType.DOUBLE:
+                    self.conf = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
                 if ftype == TType.DOUBLE:
                     self.lift = iprot.readDouble()
                 else:
@@ -2639,16 +2664,20 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
             oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
             oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
             oprot.writeFieldEnd()
+        if self.logical_connective is not None:
+            oprot.writeFieldBegin('logical_connective', TType.STRING, 6)
+            oprot.writeString(self.logical_connective.encode('utf-8') if sys.version_info[0] == 2 else self.logical_connective)
+            oprot.writeFieldEnd()
         if self.supp is not None:
-            oprot.writeFieldBegin('supp', TType.DOUBLE, 6)
+            oprot.writeFieldBegin('supp', TType.DOUBLE, 7)
             oprot.writeDouble(self.supp)
             oprot.writeFieldEnd()
         if self.conf is not None:
-            oprot.writeFieldBegin('conf', TType.DOUBLE, 7)
+            oprot.writeFieldBegin('conf', TType.DOUBLE, 8)
             oprot.writeDouble(self.conf)
             oprot.writeFieldEnd()
         if self.lift is not None:
-            oprot.writeFieldBegin('lift', TType.DOUBLE, 8)
+            oprot.writeFieldBegin('lift', TType.DOUBLE, 9)
             oprot.writeDouble(self.lift)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2675,9 +2704,10 @@ getMarginalDrivingFeaturesDiscrete_args.thrift_spec = (
     (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
     (4, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 4
     (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
-    (6, TType.DOUBLE, 'supp', None, None, ),  # 6
-    (7, TType.DOUBLE, 'conf', None, None, ),  # 7
-    (8, TType.DOUBLE, 'lift', None, None, ),  # 8
+    (6, TType.STRING, 'logical_connective', 'UTF8', None, ),  # 6
+    (7, TType.DOUBLE, 'supp', None, None, ),  # 7
+    (8, TType.DOUBLE, 'conf', None, None, ),  # 8
+    (9, TType.DOUBLE, 'lift', None, None, ),  # 9
 )
 
 
