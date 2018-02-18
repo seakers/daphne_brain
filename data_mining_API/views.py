@@ -135,48 +135,6 @@ class GetDrivingFeaturesAutomated(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
         
-class GetMarginalDrivingFeaturesConjunctive(APIView):
-    
-    def __init__(self):
-        self.DataMiningClient = DataMiningClient()
-        pass
-
-    def post(self, request, format=None):
-        
-        try:
-            # Start data mining client
-            self.DataMiningClient.startConnection()
-            
-            # Get threshold values for the metrics
-            supp = float(request.POST['supp'])
-            conf = float(request.POST['conf'])
-            lift = float(request.POST['lift'])
-            
-            # Get selected arch id's
-            behavioral = json.loads(request.POST['selected'])
-            non_behavioral = json.loads(request.POST['non_selected'])
-                
-            featureName = request.POST['featureName']            
-            highlighted = json.loads(request.POST['highlighted'])
-
-            # Load architecture data from the session info
-            architectures = request.session['data']
-
-            problem = request.POST['problem']
-            inputType = request.POST['input_type']
-
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeaturesConjunctive(problem, inputType, behavioral,non_behavioral,architectures,featureName,highlighted,supp,conf,lift)            
-            output = drivingFeatures
-
-            # End the connection before return statement
-            self.DataMiningClient.endConnection() 
-            return Response(output)
-        
-        except Exception as detail:
-            logger.exception('Exception in getDrivingFeatures: ' + detail)
-            self.DataMiningClient.endConnection()
-            return Response('')
-        
 class GetMarginalDrivingFeatures(APIView):
 
     def __init__(self):
@@ -228,6 +186,9 @@ class ClusterData(APIView):
     def post(self, request, format=None):
         
         try:
+
+            param = int(request.POST['param'])
+
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
@@ -277,7 +238,7 @@ class ClusterData(APIView):
             
             clustering = Clustering(data)
 
-            labels = clustering.kMeans()
+            labels = clustering.kMeans(param)
 
             out = {
                 "id": id_list,

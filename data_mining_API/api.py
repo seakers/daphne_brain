@@ -105,37 +105,6 @@ class DataMiningClient():
         #     print("Exc in getDrivingFeatures: " + str(e))
 
         return drivingFeatures
-    
-    def getMarginalDrivingFeaturesConjunctive(self, problem, inputType, behavioral, non_behavioral, all_archs, featureName, archs_with_feature, supp, conf, lift):
-        try:
-            print('getMarginalDrivingFeatures')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
-            
-            archs_formatted = []
-            if inputType == "binary":
-                for arch in all_archs:
-                    archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
-                drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesConjunctiveBinary(problem, behavioral, non_behavioral, archs_formatted, 
-                                                                           featureName, archs_with_feature, supp, conf, lift)
-
-            elif inputType == "discrete":
-                for arch in all_archs:
-                    inputs = []
-                    for i in arch['inputs']:
-                        inputs.append(int(i))
-                    archs_formatted.append(DiscreteInputArchitecture(arch['id'], inputs, arch['outputs']))
-                drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesConjunctiveDiscrete(problem, behavioral, non_behavioral, archs_formatted, 
-                                                                           featureName, archs_with_feature, supp, conf, lift)
-                            
-            drivingFeatures = []
-            
-            for df in drivingFeatures_formatted:
-                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
-                
-        except Exception as e:
-            print('Exc in calling getMarginalDrivingFeaturesConjunctive(): ' + str(e))
-
-        return drivingFeatures
         
     def getMarginalDrivingFeatures(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression,logicalConnective, supp, conf, lift):
         try:

@@ -88,7 +88,7 @@ class ImportData(APIView):
                         elif float(row[41]) > 93000: # latency
                             continue
                         else:
-                            if random() > 0.2:
+                            if random() > 0.1:
                                 continue
 
                     # Import inputs
