@@ -1,35 +1,50 @@
-from channels import Group
-from channels.sessions import channel_session
-from messagebus.message import Message
-import json
 import hashlib
 
-    
-@channel_session
-def ws_message(message):
-    key = message.content['path'].lstrip('api/')
-    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    textMessage = message.content['text']
-    # Deserialize message
-    daphneMessage = Message.deserialize(textMessage)
-    # Broadcast
-    Group(hash_key).send({"text": textMessage})
-    
-    
-@channel_session
-def ws_connect(message):
-    # Accept the connection request
-    message.reply_channel.send({"accept": True})
-    key = message.content['path'].lstrip('api/')          
-    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    # Add to the group
-    Group(hash_key).add(message.reply_channel)
+from django.conf import settings
 
-    
-@channel_session
-def ws_disconnect(message):
-    key = message.content['path'].lstrip('api/')
-    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    # Remove from the group on clean disconnect
-    Group(hash_key).discard(message.reply_channel)
-    
+from channels.generic.websocket import JsonWebsocketConsumer
+
+
+class DaphneConsumer(JsonWebsocketConsumer):
+    """
+    This chat consumer handles websocket connections for chat clients.
+    It uses AsyncJsonWebsocketConsumer, which means all the handling functions
+    must be async functions, and any sync work (like ORM access) has to be
+    behind database_sync_to_async or sync_to_async. For more, read
+    http://channels.readthedocs.io/en/latest/topics/consumers.html
+    """
+
+    ##### WebSocket event handlers
+    def connect(self):
+        """
+        Called when the websocket is handshaking as part of initial connection.
+        """
+        # Accept the connection
+        self.accept()
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        # Add to the group
+        self.channel_layer.group_add(hash_key, self.channel_name)
+
+
+    def receive_json(self, content, **kwargs):
+        """
+        Called when we get a text frame. Channels will JSON-decode the payload
+        for us and pass it as the first argument.
+        """
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        textMessage = content.get('text', None)
+        # Broadcast
+        self.channel_layer.group_send(hash_key, { "text": textMessage })
+
+
+    def disconnect(self, code):
+        """
+        Called when the WebSocket closes for any reason.
+        """
+        # Leave all the rooms we are still in
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        # Remove from the group on clean disconnect
+        self.channel_layer.group_discard(hash_key, self.channel_name)

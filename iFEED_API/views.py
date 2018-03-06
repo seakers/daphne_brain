@@ -11,7 +11,6 @@ import sys,os
 import json
 import csv
 import hashlib
-from channels import Group
 import datetime
 
 from messagebus.message import Message
