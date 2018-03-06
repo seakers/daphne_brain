@@ -1,8 +1,8 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    url(r'^command$', views.Command.as_view(), name='command'),
-    url(r'^commands$', views.CommandList.as_view(), name='question'),
+    path('command', views.Command.as_view(), name='command'),
+    path('commands', views.CommandList.as_view(), name='command_list'),
 ]

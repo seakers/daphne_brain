@@ -1,9 +1,7 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    
-    url(r'criticize-architecture/$', views.CriticizeArchitecture.as_view()),
-
+    path('criticize-architecture', views.CriticizeArchitecture.as_view()),
 ]
