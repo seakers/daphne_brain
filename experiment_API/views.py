@@ -43,17 +43,14 @@ class StartExperiment(APIView):
         request.session['experiment']['id'] = new_id
         request.session['experiment']['stages'] = []
         request.session['experiment']['state'] = {}
-        request.session.modified = True
 
-        return Response(request.session['experiment'])
-
-
-class StartStage(APIView):
-
-    def get(self, request, format=None):
+        # Specific to current experiment
         request.session['experiment']['stages'].append({
-            'start_date': datetime.datetime.utcnow().isoformat(),
-            'type': stage_type(request.session['experiment']['id'], len(request.session['experiment']['stages'])),
+            'type': stage_type(request.session['experiment']['id'], 0),
+            'actions': []
+        })
+        request.session['experiment']['stages'].append({
+            'type': stage_type(request.session['experiment']['id'], 1),
             'actions': []
         })
         request.session.modified = True
@@ -61,20 +58,29 @@ class StartStage(APIView):
         return Response(request.session['experiment'])
 
 
+class StartStage(APIView):
+
+    def get(self, request, stage, format=None):
+        request.session['experiment']['stages'][stage]['start_date'] = datetime.datetime.utcnow().isoformat()
+        request.session.modified = True
+
+        return Response(request.session['experiment'])
+
+
 class FinishStage(APIView):
 
-    def get(self, request, format=None):
-        num_stages = len(request.session['experiment']['stages'])
-        request.session['experiment']['stages'][num_stages-1]['end_date'] = datetime.datetime.utcnow().isoformat()
+    def get(self, request, stage, format=None):
+        request.session['experiment']['stages'][stage]['end_date'] = datetime.datetime.utcnow().isoformat()
         request.session.modified = True
         return Response(request.session['experiment'])
 
 
 class AddAction(APIView):
 
-    def post(self, request, format=None):
-        num_stages = len(request.session['experiment']['stages'])
-        request.session['experiment']['stages'][num_stages-1]['actions'].append(request.data['action'])
+    def post(self, request, stage, format=None):
+        action = json.loads(request.data['action'])
+        action['date'] = datetime.datetime.utcnow().isoformat()
+        request.session['experiment']['stages'][stage]['actions'].append(action)
         request.session.modified = True
         return Response(request.session['experiment'])
 
@@ -82,7 +88,7 @@ class AddAction(APIView):
 class UpdateState(APIView):
 
     def post(self, request, format=None):
-        request.session['experiment']['state'].append(request.data['state'])
+        request.session['experiment']['state'] = json.loads(request.data['state'])
         request.session.modified = True
         return Response(request.session['experiment'])
 
@@ -96,7 +102,7 @@ class ReloadExperiment(APIView):
             return Response({ 'is_running': False })
         
         
-class EndExperiment(APIView):
+class FinishExperiment(APIView):
 
     def get(self, request, format=None):
         # Save experiment results to file
