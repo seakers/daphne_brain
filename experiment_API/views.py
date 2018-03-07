@@ -78,7 +78,7 @@ class FinishStage(APIView):
 class AddAction(APIView):
 
     def post(self, request, stage, format=None):
-        action = request.data['action']
+        action = json.loads(request.data['action'])
         action['date'] = datetime.datetime.utcnow().isoformat()
         request.session['experiment']['stages'][stage]['actions'].append(action)
         request.session.modified = True
@@ -88,7 +88,7 @@ class AddAction(APIView):
 class UpdateState(APIView):
 
     def post(self, request, format=None):
-        request.session['experiment']['state'] = request.data['state']
+        request.session['experiment']['state'] = json.loads(request.data['state'])
         request.session.modified = True
         return Response(request.session['experiment'])
 
