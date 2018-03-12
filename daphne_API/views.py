@@ -27,13 +27,6 @@ class Command(APIView):
                 
         request.session['context']['data'] = request.session['data']    
         request.session['context']['answers'] = []
-
-        request.session['context']['experiment_stage'] = 0
-        if 'experiment' in request.session:
-            if 'start_date2' in request.session['experiment']:
-                request.session['context']['experiment_stage'] = 2
-            else:
-                request.session['context']['experiment_stage'] = 1
         
         # Act based on the types
         for command_type in command_types:
@@ -51,18 +44,6 @@ class Command(APIView):
                     command_processing.historian_command(processed_command, request.session['context']))
 
         response = command_processing.think_response(request.session['context'])
-
-        # save data for experiment
-        if 'experiment' in request.session:
-            if 'start_date2' not in request.session['experiment']:
-                dialog = 'dialog1'
-            else:
-                dialog = 'dialog2'
-            request.session['experiment'][dialog].append({
-                'question': processed_command.text,
-                'answer': response,
-                'time': datetime.datetime.utcnow().isoformat()
-            })
 
         request.session.modified = True
 

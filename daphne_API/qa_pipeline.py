@@ -14,6 +14,7 @@ import daphne_API.historian.models as models
 import daphne_API.data_extractors as extractors
 import daphne_API.data_processors as processors
 import daphne_API.runnable_functions as run_func
+from daphne_API.errors import ParameterMissingError
 
 
 def classify(question, module_name):
@@ -94,20 +95,30 @@ def extract_data(processed_question, params, context):
     number_of_features = {}
     extracted_raw_data = {}
     extracted_data = {}
-    # Count how many params of each type are needed
+    # Count how many non-context params of each type are needed
     for param in params:
-        if param["type"] in number_of_features:
-            number_of_features[param["type"]] += 1
-        else:
-            number_of_features[param["type"]] = 1
+        if not param["from_context"]:
+            if param["type"] in number_of_features:
+                number_of_features[param["type"]] += 1
+            else:
+                number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
     for type, num in number_of_features.items():
         extracted_raw_data[type] = extract_function[type](processed_question, num, context)
-    # For each parameter check if it's needed and apply postprocessing; TODO: Add needed check
+    # For each parameter check if it's needed and apply postprocessing;
     for param in params:
         extracted_param = None
-        if len(extracted_raw_data[param["type"]]) > 0:
-            extracted_param = extracted_raw_data[param["type"]].pop(0)
+        if param["from_context"]:
+            if param["name"] in context:
+                extracted_param = context[param["name"]]
+            elif param["mandatory"]:
+                raise ParameterMissingError(param["type"])
+        else:
+            if len(extracted_raw_data[param["type"]]) > 0:
+                extracted_param = extracted_raw_data[param["type"]].pop(0)
+            elif param["mandatory"]:
+                # If param is needed but not detected return error with type of parameter
+                raise ParameterMissingError(param["type"])
         if extracted_param is not None:
             extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"], context)
     return extracted_data
@@ -131,8 +142,6 @@ def augment_data(data, context):
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-
-    # TODO: Check if everything mandatory is there, if not return NO ANSWER
 
     def print_orbit(orbit):
         text_orbit = ""
@@ -205,8 +214,6 @@ def query(query, data):
 
 
 def run_function(function_info, data):
-    # TODO: Check if everything mandatory is there, if not return NO ANSWER
-
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)

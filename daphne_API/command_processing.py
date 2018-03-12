@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.contrib import learn
 
 from daphne_API import data_helpers, qa_pipeline
+from daphne_API.errors import ParameterMissingError
 
 
 def classify_command(command):
@@ -43,6 +44,14 @@ def classify_command(command):
 
     return prediction[0]
 
+
+def error_answers(missing_param):
+    return {
+        'voice_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.',
+        'visual_answer_type': 'text',
+        'visual_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.'
+    }
+
 def ifeed_command(processed_command, context):
     print("Command classified as iFEED type")
     # Classify the question, obtaining a question type
@@ -51,7 +60,11 @@ def ifeed_command(processed_command, context):
     [params, function, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "iFEED")
     # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
+    try:
+        data = qa_pipeline.extract_data(processed_command, params, context)
+    except ParameterMissingError as error:
+        print(error)
+        return error_answers(error.missing_param)
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
@@ -69,7 +82,11 @@ def vassar_command(processed_command, context):
     [params, function, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "VASSAR")
     # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
+    try:
+        data = qa_pipeline.extract_data(processed_command, params, context)
+    except ParameterMissingError as error:
+        print(error)
+        return error_answers(error.missing_param)
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
@@ -87,7 +104,11 @@ def critic_command(processed_command, context):
     [params, function, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "Critic")
     # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
+    try:
+        data = qa_pipeline.extract_data(processed_command, params, context)
+    except ParameterMissingError as error:
+        print(error)
+        return error_answers(error.missing_param)
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
@@ -105,7 +126,11 @@ def historian_command(processed_command, context):
     [params, query, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "Historian")
     # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
+    try:
+        data = qa_pipeline.extract_data(processed_command, params, context)
+    except ParameterMissingError as error:
+        print(error)
+        return error_answers(error.missing_param)
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
