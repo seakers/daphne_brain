@@ -23,14 +23,16 @@ class Feature(object):
      - name
      - expression
      - metrics
+     - complexity
     """
 
 
-    def __init__(self, id=None, name=None, expression=None, metrics=None,):
+    def __init__(self, id=None, name=None, expression=None, metrics=None, complexity=None,):
         self.id = id
         self.name = name
         self.expression = expression
         self.metrics = metrics
+        self.complexity = complexity
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -66,6 +68,11 @@ class Feature(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.DOUBLE:
+                    self.complexity = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -94,6 +101,10 @@ class Feature(object):
             for iter6 in self.metrics:
                 oprot.writeDouble(iter6)
             oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.complexity is not None:
+            oprot.writeFieldBegin('complexity', TType.DOUBLE, 5)
+            oprot.writeDouble(self.complexity)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -400,6 +411,7 @@ Feature.thrift_spec = (
     (2, TType.STRING, 'name', 'UTF8', None, ),  # 2
     (3, TType.STRING, 'expression', 'UTF8', None, ),  # 3
     (4, TType.LIST, 'metrics', (TType.DOUBLE, None, False), None, ),  # 4
+    (5, TType.DOUBLE, 'complexity', None, None, ),  # 5
 )
 all_structs.append(BinaryInputArchitecture)
 BinaryInputArchitecture.thrift_spec = (

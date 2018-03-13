@@ -71,7 +71,7 @@ class DataMiningClient():
 
         drivingFeatures = []
         for df in drivingFeatures_formatted:
-            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
 
         # except Exception as e:
         #     print("Exc in getDrivingFeatures: " + str(e))
@@ -99,7 +99,7 @@ class DataMiningClient():
 
         drivingFeatures = []
         for df in drivingFeatures_formatted:
-            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
 
         # except Exception as e:
         #     print("Exc in getDrivingFeatures: " + str(e))
@@ -130,9 +130,52 @@ class DataMiningClient():
             drivingFeatures = []
             
             for df in drivingFeatures_formatted:
-                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
                 
         except Exception as e:
             print('Exc in calling getMarginalDrivingFeatures(): '+str(e))
 
         return drivingFeatures
+
+    def convertToDNF(self, expression):
+        try:
+            dnf_expression = self.client.convertToDNF(expression)
+        except Exception as e:
+            print('Exc in calling convertToDNF(): '+str(e))
+
+        return dnf_expression
+
+    def convertToCNF(self, expression):
+        try:
+            cnf_expression = self.client.convertToCNF(expression)
+        except Exception as e:
+            print('Exc in calling convertToCNF(): '+str(e))
+
+        return cnf_expression
+
+    def computeTypicality(self, inputs, expression):
+        try:
+            arch_formatted = BinaryInputArchitecture(0, inputs, [])
+            typicality = self.client.computeAlgebraicTypicality(arch_formatted, expression)
+
+        except Exception as e:
+            print('Exc in calling computeComplexity(): '+str(e))
+
+        return typicality
+
+    def computeComplexity(self, expression):
+        try:
+            complexity = self.client.computeComplexity(expression)
+        except Exception as e:
+            print('Exc in calling computeComplexity(): '+str(e))
+
+        return complexity
+
+    def computeComplexityOfFeatures(self, expressions):
+        try:
+            complexity_values = self.client.computeComplexityOfFeatures(expressions)
+        except Exception as e:
+            print('Exc in calling computeComplexityOfFeatures(): '+str(e))
+
+        return complexity_values
+

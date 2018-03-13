@@ -286,7 +286,139 @@ class GetCluster(APIView):
         except Exception as detail:
             logger.exception('Exception in getting cluster labels: ' + str(detail))
             return Response('')        
+
+class ConvertToDNF(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get the expression
+            expression = request.POST['expression']
+            dnf_expression = self.DataMiningClient.convertToDNF(expression)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(dnf_expression)
         
+        except Exception as detail:
+            logger.exception('Exception in convertingToDNF: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+        
+class ConvertToCNF(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get the expression
+            expression = request.POST['expression']
+            cnf_expression = self.DataMiningClient.convertToCNF(expression)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(cnf_expression)
+        
+        except Exception as detail:
+            logger.exception('Exception in convertingToCNF: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class ComputeTypicality(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+
+            # Get selected arch id's
+            inputString = request.POST['input']
+            inputString = inputString[1:-1]
+            inputSplit = inputString.split(',')
+
+            # Convert strings to ints
+            inputs = []
+            for i in inputSplit:
+                inputs.append(int(i))
+
+            # Get the expression
+            expression = request.POST['expression']
+            typicality = self.DataMiningClient.computeTypicality(inputs, expression)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(typicality)
+        
+        except Exception as detail:
+            logger.exception('Exception in ComputeComplexity: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class ComputeComplexity(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get the expression
+            expression = request.POST['expression']
+            complexity = self.DataMiningClient.computeComplexity(expression)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(complexity)
+        
+        except Exception as detail:
+            logger.exception('Exception in ComputeComplexity: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class ComputeComplexityOfFeatures(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get the expression
+            expressions = request.POST['expressions']
+            expressions = json.loads(expressions)
+
+            complexity = self.DataMiningClient.computeComplexityOfFeatures(expressions)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(complexity)
+        
+        except Exception as detail:
+            logger.exception('Exception in ComputeComplexityOfFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
 def booleanArray2booleanString(booleanArray):
     leng = len(booleanArray)
     boolString = ''

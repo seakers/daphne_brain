@@ -27,12 +27,16 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  void ping()')
     print('   getDrivingFeaturesBinary(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   runAutomatedLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
-    print('   getMarginalDrivingFeaturesConjunctiveBinary(string problem,  behavioral,  non_behavioral,  all_archs, string feature,  archs_with_feature, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression, string logical_connective, double supp, double conf, double lift)')
     print('   getDrivingFeaturesDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   runAutomatedLocalSearchDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
-    print('   getMarginalDrivingFeaturesConjunctiveDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, string feature,  archs_with_feature, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression, string logical_connective, double supp, double conf, double lift)')
+    print('   computeComplexityOfFeatures( expressions)')
+    print('   computeAlgebraicTypicality(BinaryInputArchitecture arch, string feature)')
+    print('  double computeComplexity(string expression)')
+    print('  string convertToCNF(string expression)')
+    print('  string convertToDNF(string expression)')
+    print('   computeAlgebraicTypicalityWithStringInput(string architecture, string feature)')
     print('')
     sys.exit(0)
 
@@ -130,12 +134,6 @@ elif cmd == 'runAutomatedLocalSearchBinary':
         sys.exit(1)
     pp.pprint(client.runAutomatedLocalSearchBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]), eval(args[6]),))
 
-elif cmd == 'getMarginalDrivingFeaturesConjunctiveBinary':
-    if len(args) != 9:
-        print('getMarginalDrivingFeaturesConjunctiveBinary requires 9 args')
-        sys.exit(1)
-    pp.pprint(client.getMarginalDrivingFeaturesConjunctiveBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], eval(args[5]), eval(args[6]), eval(args[7]), eval(args[8]),))
-
 elif cmd == 'getMarginalDrivingFeaturesBinary':
     if len(args) != 9:
         print('getMarginalDrivingFeaturesBinary requires 9 args')
@@ -154,17 +152,47 @@ elif cmd == 'runAutomatedLocalSearchDiscrete':
         sys.exit(1)
     pp.pprint(client.runAutomatedLocalSearchDiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]), eval(args[6]),))
 
-elif cmd == 'getMarginalDrivingFeaturesConjunctiveDiscrete':
-    if len(args) != 9:
-        print('getMarginalDrivingFeaturesConjunctiveDiscrete requires 9 args')
-        sys.exit(1)
-    pp.pprint(client.getMarginalDrivingFeaturesConjunctiveDiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], eval(args[5]), eval(args[6]), eval(args[7]), eval(args[8]),))
-
 elif cmd == 'getMarginalDrivingFeaturesDiscrete':
     if len(args) != 9:
         print('getMarginalDrivingFeaturesDiscrete requires 9 args')
         sys.exit(1)
     pp.pprint(client.getMarginalDrivingFeaturesDiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], args[5], eval(args[6]), eval(args[7]), eval(args[8]),))
+
+elif cmd == 'computeComplexityOfFeatures':
+    if len(args) != 1:
+        print('computeComplexityOfFeatures requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.computeComplexityOfFeatures(eval(args[0]),))
+
+elif cmd == 'computeAlgebraicTypicality':
+    if len(args) != 2:
+        print('computeAlgebraicTypicality requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.computeAlgebraicTypicality(eval(args[0]), args[1],))
+
+elif cmd == 'computeComplexity':
+    if len(args) != 1:
+        print('computeComplexity requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.computeComplexity(args[0],))
+
+elif cmd == 'convertToCNF':
+    if len(args) != 1:
+        print('convertToCNF requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.convertToCNF(args[0],))
+
+elif cmd == 'convertToDNF':
+    if len(args) != 1:
+        print('convertToDNF requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.convertToDNF(args[0],))
+
+elif cmd == 'computeAlgebraicTypicalityWithStringInput':
+    if len(args) != 2:
+        print('computeAlgebraicTypicalityWithStringInput requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.computeAlgebraicTypicalityWithStringInput(args[0], args[1],))
 
 else:
     print('Unrecognized method %s' % cmd)
