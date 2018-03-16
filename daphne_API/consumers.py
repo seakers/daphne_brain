@@ -6,14 +6,6 @@ from channels.generic.websocket import JsonWebsocketConsumer
 
 
 class DaphneConsumer(JsonWebsocketConsumer):
-    """
-    This chat consumer handles websocket connections for chat clients.
-    It uses AsyncJsonWebsocketConsumer, which means all the handling functions
-    must be async functions, and any sync work (like ORM access) has to be
-    behind database_sync_to_async or sync_to_async. For more, read
-    http://channels.readthedocs.io/en/latest/topics/consumers.html
-    """
-
     ##### WebSocket event handlers
     def connect(self):
         """
@@ -34,10 +26,14 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-        textMessage = content.get('text', None)
-        # Broadcast
-        self.channel_layer.group_send(hash_key, { "text": textMessage })
-
+        if content.get('msg_type') == 'context_add':
+            for key, value in content.get('new_context').items():
+                self.scope['session']['context'][key] = value
+        elif content.get('msg_type') == 'text_msg':
+            textMessage = content.get('text', None)
+            # Broadcast
+            self.channel_layer.group_send(hash_key, { "text": textMessage })
+        self.scope['session'].save()
 
     def disconnect(self, code):
         """

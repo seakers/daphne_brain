@@ -128,9 +128,6 @@ def augment_data(data, context):
     data['now'] = datetime.datetime.utcnow()
     data['designs'] = context['data']
 
-    if 'experiment_stage' in context:
-        data['experiment_stage'] = context['experiment_stage']
-    
     if 'behavioral' in context:
         data['behavioral'] = context['behavioral']
     if 'non_behavioral' in context:

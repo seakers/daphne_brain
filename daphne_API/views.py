@@ -59,16 +59,19 @@ class CommandList(APIView):
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
+        restricted_list = None
+        if 'restricted_list' in request.data:
+            restricted_list = request.data['restricted_list']
         if command_list_request == 'general':
-            command_list = command_lists.general_commands
+            command_list = command_lists.general_commands_list(restricted_list)
         elif command_list_request == 'datamining':
-            command_list = command_lists.datamining_commands
+            command_list = command_lists.datamining_commands_list(restricted_list)
         elif command_list_request == 'analyst':
-            command_list = command_lists.analyst_commands
+            command_list = command_lists.analyst_commands_list(restricted_list)
         elif command_list_request == 'critic':
-            command_list = command_lists.critic_commands
+            command_list = command_lists.critic_commands_list(restricted_list)
         elif command_list_request == 'historian':
-            command_list = command_lists.historian_commands
+            command_list = command_lists.historian_commands_list(restricted_list)
         elif command_list_request == 'measurements':
             command_list = command_lists.measurements_list()
         elif command_list_request == 'missions':
