@@ -210,7 +210,7 @@ def query(query, data):
     return result
 
 
-def run_function(function_info, data):
+def run_function(function_info, data, context):
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)
@@ -224,6 +224,10 @@ def run_function(function_info, data):
             for key, value in function_info["result_fields"].items():
                 result_row[key] = eval(value)
             result.append(result_row)
+    elif function_info["result_type"] == "single":
+        result = {}
+        for key, value in function_info["result_fields"].items():
+            result[key] = eval(value)
 
     return result
 

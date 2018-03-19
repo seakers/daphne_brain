@@ -11,7 +11,8 @@ datamining_commands = [
 ]
 
 analyst_commands = [
-    ('2000', 'Why does design ${design_id} have this science benefit?')
+    ('2000', 'Why does design ${design_id} have this science benefit?'),
+    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?')
 ]
 
 critic_commands = [

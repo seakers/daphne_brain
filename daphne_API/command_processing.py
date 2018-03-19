@@ -68,7 +68,7 @@ def ifeed_command(processed_command, context):
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
-    result = qa_pipeline.run_function(function, data)
+    result = qa_pipeline.run_function(function, data, context)
     # Construct the response from the database query and the response format
     answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
 
@@ -90,7 +90,7 @@ def vassar_command(processed_command, context):
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
-    result = qa_pipeline.run_function(function, data)
+    result = qa_pipeline.run_function(function, data, context)
     # Construct the response from the database query and the response format
     answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
 
@@ -112,7 +112,7 @@ def critic_command(processed_command, context):
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
-    result = qa_pipeline.run_function(function, data)
+    result = qa_pipeline.run_function(function, data, context)
     # Construct the response from the database query and the response format
     answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
 

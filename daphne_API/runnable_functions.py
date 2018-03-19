@@ -2,6 +2,7 @@ import logging
 from VASSAR_API.api import VASSARClient
 from data_mining_API.api import DataMiningClient
 from daphne_API.critic.critic import CRITIC
+import pandas
 
 import traceback
 import math
@@ -31,8 +32,6 @@ INSTRUMENT_DATASET = [
     {"alias": "K", "name": "POSTEPS_IRS", "type": "Atmospheric temperature and humidity sounders", "technology": "Medium-resolution IR spectrometer", "geometry": "Cross-track scanning", "wavebands": ["MWIR", "TIR"]},
     {"alias": "L", "name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
 
-
-    
 
 def data_mining_run(designs, behavioral, non_behavioral):
     
@@ -89,6 +88,36 @@ def VASSAR_load_objectives_information(design_id, designs):
         logger.exception('Exception in loading objective information')
         client.endConnection()
         return None
+
+
+def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
+    context["vassar_instrument"] = vassar_instrument
+    context["instrument_parameter"] = instrument_parameter
+    capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric Instrument Capability Definition2.xls',
+                                           sheet_name='CHARACTERISTICS')
+    capability_found = False
+    capability_value = None
+    for row in capabilities_sheet.itertuples(name='Instrument'):
+        if row[0].split()[1] == vassar_instrument:
+            for i in range(1, len(row)):
+                if row[i].split()[0] == instrument_parameter:
+                    capability_found = True
+                    capability_value = row[i].split()[1]
+
+    if capability_found:
+        return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + capability_value
+    else:
+        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric Instrument Capability Definition2.xls',
+                                               sheet_name=vassar_instrument, header=None)
+        for i in range(2, len(instrument_sheet.columns)):
+            if instrument_sheet[i][0].split()[0] == instrument_parameter:
+                capability_found = True
+            if capability_found:
+                return 'I have found different values for this parameter depending on the measurement. ' \
+                       'Please tell me for which measurement you want this parameter: ' \
+                       + ', '.join([measurement[11:-1] for measurement in instrument_sheet[1]])
+            else:
+                return 'I have not found any information for this measurement.'
 
 
 def Critic_general_call(design_id, designs, experiment_stage=0):

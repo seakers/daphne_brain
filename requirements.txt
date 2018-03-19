@@ -5,6 +5,7 @@ Django==2.0.3
 django-filter==1.1.0
 djangorestframework==3.7.7
 numpy==1.14.1
+pandas==0.22.0
 psycopg2-binary==2.7.4
 python-Levenshtein==0.12.0
 redis==2.10.6
@@ -13,3 +14,4 @@ spacy==2.0.9
 SQLAlchemy==1.2.5
 tensorflow-gpu==1.5.0
 thrift==0.11.0
+xlrd==1.1.0
