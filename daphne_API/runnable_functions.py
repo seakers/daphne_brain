@@ -7,7 +7,7 @@ import pandas
 import traceback
 import math
 import numpy as np
-import sys
+import sys, os
 
 logger = logging.getLogger('VASSAR')
 
@@ -93,13 +93,13 @@ def VASSAR_load_objectives_information(design_id, designs):
 def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
     context["vassar_instrument"] = vassar_instrument
     context["instrument_parameter"] = instrument_parameter
-    capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric Instrument Capability Definition2.xls',
+    capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
                                            sheet_name='CHARACTERISTICS')
     capability_found = False
     capability_value = None
     for row in capabilities_sheet.itertuples(name='Instrument'):
-        if row[0].split()[1] == vassar_instrument:
-            for i in range(1, len(row)):
+        if row[1].split()[1] == vassar_instrument:
+            for i in range(2, len(row)):
                 if row[i].split()[0] == instrument_parameter:
                     capability_found = True
                     capability_value = row[i].split()[1]
@@ -107,17 +107,30 @@ def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, con
     if capability_found:
         return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + capability_value
     else:
-        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric Instrument Capability Definition2.xls',
+        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
                                                sheet_name=vassar_instrument, header=None)
         for i in range(2, len(instrument_sheet.columns)):
             if instrument_sheet[i][0].split()[0] == instrument_parameter:
                 capability_found = True
-            if capability_found:
-                return 'I have found different values for this parameter depending on the measurement. ' \
-                       'Please tell me for which measurement you want this parameter: ' \
-                       + ', '.join([measurement[11:-1] for measurement in instrument_sheet[1]])
-            else:
-                return 'I have not found any information for this measurement.'
+        if capability_found:
+            return 'I have found different values for this parameter depending on the measurement. ' \
+                   'Please tell me for which measurement you want this parameter: ' \
+                   + ', '.join([measurement[11:-1] for measurement in instrument_sheet[1]])
+        else:
+            return 'I have not found any information for this measurement.'
+
+
+def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_parameter, instrument_measurement, context):
+    instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                                           sheet_name=vassar_instrument, header=None)
+    capability_value = None
+    for row in instrument_sheet.itertuples(index=True, name='Measurement'):
+        if row[2][11:-1] == instrument_measurement:
+            for i in range(3, len(row)):
+                if row[i].split()[0] == instrument_parameter:
+                    capability_value = row[i].split()[1]
+
+    return 'The ' + instrument_parameter + ' for instrument ' + vassar_instrument + ' and measurement ' + instrument_measurement + ' is ' + capability_value
 
 
 def Critic_general_call(design_id, designs, experiment_stage=0):

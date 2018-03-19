@@ -79,6 +79,9 @@ extract_function["technology"] = extractors.extract_technology
 extract_function["year"] = extractors.extract_date
 extract_function["design_id"] = extractors.extract_design_id
 extract_function["agent"] = extractors.extract_agent
+extract_function["instrument_parameter"] = extractors.extract_instrument_parameter
+extract_function["vassar_instrument"] = extractors.extract_vassar_instrument
+extract_function["vassar_measurement"] = extractors.extract_vassar_measurement
 
 
 process_function = {}
@@ -88,6 +91,9 @@ process_function["technology"] = processors.not_processed
 process_function["year"] = processors.process_date
 process_function["design_id"] = processors.not_processed
 process_function["agent"] = processors.not_processed
+process_function["instrument_parameter"] = processors.not_processed
+process_function["vassar_instrument"] = processors.not_processed
+process_function["vassar_measurement"] = processors.not_processed
 
 
 def extract_data(processed_question, params, context):

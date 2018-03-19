@@ -18,7 +18,7 @@
     "template": "${text_response}"
   },
   "visual_response": {
-    "type": "list",
+    "type": "text",
     "from": "single",
     "template": "${text_response}"
   }
