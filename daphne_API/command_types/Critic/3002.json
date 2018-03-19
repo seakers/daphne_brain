@@ -2,8 +2,8 @@
   "type": "run_function",
   "params":
   [
-    { "name": "agent", "type": "agent", "options": "", "mandatory": true },
-    { "name": "design_id", "type": "design_id", "options": "", "mandatory": true }
+    { "name": "agent", "type": "agent", "options": "", "from_context": false, "mandatory": true },
+    { "name": "design_id", "type": "design_id", "options": "", "from_context": false, "mandatory": true }
   ],
   "function":
   {

@@ -2,9 +2,9 @@
   "type": "db_query",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "mandatory": true },
-    { "name": "year1", "type": "year", "options": "begin", "mandatory": false },
-    { "name": "year2", "type": "year", "options": "end", "mandatory": false }
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    { "name": "year1", "type": "year", "options": "begin", "from_context": false, "mandatory": false },
+    { "name": "year2", "type": "year", "options": "end", "from_context": false, "mandatory": false }
   ],
   "query":
   {

@@ -1,0 +1,25 @@
+## LIST OF CANDIDATE INSTRUMENTS FOR CLIMATE-CENTRIC ARCHITECTURE
+Top-10 instrument types:
+VNIR_SPEC		VNIR hyperspectral imager for ocean color and vegetation measurements							(e.g. HYSPIRI/VNIR, VII, ACE/ORCA)
+SWIR_SOUND 		SWIR imaging sounder for atmospheric chemistry 													(e.g. GACM/SWIR)
+POL 			Polarimeter for ice, clouds, and aerosols														(e.g. PACE, ICI)
+TIR_SPEC 		TIR Hyperspectral imager for land and ocean surface temperature and others 						(e.g. HYSPIRI/TIR, ASTER)
+IR_SOUND 		IR Atmospheric Sounder for temperature and humidity measurements								(e.g. VIIRS)
+ERB 			Broad-band radiometer for SW+LW Radiation budget, including instrument for incoming radiation	(e.g. CLARREO)
+L_SAR 			L-band SAR/radiometer for soil moisture and vegetation											(e.g. SMAP, SMOS)
+ALT 			Radar altimeter for oceanography																(e.g. Jason-2, SWOT)
+X_SAR 			C-band or X-band SAR for snow and river/lake measurements										(e.g. SCLP)
+ICE_LID 		Laser altimeter for ice and vegetation measurements 											(e.g. ICESAT, DESDYNI)
+
+Secondary instrument types:
+VNIR_IMAG 		Hi-res optical imager 																			(e.g. GeoEye)
+UV_SOUND		UV and VNIR sounder for ozone measurements														(e.g. Sentinel-4)
+DIAL 			Differential absorption lidar for atmospheric chemistry											(e.g. GACM/DIAL)
+CPR 			Cloud and precipitation radar																	(e.g. CPR)
+MW_IMAG 		Microwave imager																				(e.g. MWI, CMIS)
+MW_SOUND 		Microwave sounder																				(e.g. MWS, ATMS)
+GPSRO 			GPS Radio Occultation																			(e.g. GPSRO)
+SCAT 			Scatterometer for atmospheric wind measurements													(e.g. XOVWM)
+DOP_LID			Doppler Wind Lidar																				(e.g. 3D-Winds)
+GRAV			Gravity instrument																				(e.g. GRACE-II)
+ 			

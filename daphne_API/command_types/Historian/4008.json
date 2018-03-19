@@ -2,7 +2,7 @@
   "type": "db_query",
   "params":
   [
-    { "name": "mission", "type": "mission", "options": "", "mandatory": true }
+    { "name": "mission", "type": "mission", "options": "", "from_context": false, "mandatory": true }
   ],
   "query":
   {

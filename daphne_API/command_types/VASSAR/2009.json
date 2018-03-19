@@ -1,0 +1,26 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "instrument_parameter", "type": "instrument_parameter", "options": "", "from_context": true, "mandatory": true },
+    { "name": "vassar_instrument", "type": "vassar_instrument", "options": "", "from_context": true, "mandatory": true },
+    { "name": "vassar_measurement", "type": "vassar_measurement", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "run_func.VASSAR_get_instrument_parameter_followup('${vassar_instrument}', '${instrument_parameter}', '${vassar_measurement}', context)",
+    "result_type": "single",
+    "result_fields": {
+      "text_response": "command_result"
+    }
+  },
+  "voice_response": {
+    "type": "single",
+    "template": "${text_response}"
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "single",
+    "template": "${text_response}"
+  }
+}
