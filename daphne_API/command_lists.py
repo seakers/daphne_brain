@@ -3,7 +3,7 @@ import daphne_API.historian.models as models
 from VASSAR_API.api import VASSARClient
 
 general_commands = [
-    'Stop'
+    ('0000', 'Stop')
 ]
 
 datamining_commands = [
@@ -11,11 +11,13 @@ datamining_commands = [
 ]
 
 analyst_commands = [
-    'Why does design ${design_id} have this science benefit?'
+    ('2000', 'Why does design ${design_id} have this science benefit?'),
+    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?')
 ]
 
 critic_commands = [
-    'What do you think of design ${design_id}?',
+    ('3000', 'What do you think of design ${design_id}?'),
+    ('3005', 'What do you think of this design?')
     #'What does agent ${agent} think of design ${design_id}?'
 ]
 
@@ -26,10 +28,37 @@ historian_commands = [
     #'Which instruments do we currently use to measure ${measurement}?',
     #'Which missions have flown ${technology} [between ${year} and ${year}]?',
     #'Which missions are currently flying ${technology}?',
-    'Which orbit is the most typical for ${technology}?',
-    'Which orbit is the most typical for ${measurement}?',
+    ('4006', 'Which orbit is the most typical for ${technology}?'),
+    ('4007', 'Which orbit is the most typical for ${measurement}?'),
     #'When was mission ${mission} launched?'
 ]
+
+
+def commands_list(command_list, restricted_list=None):
+    if restricted_list is not None:
+        return [command[1] for command in command_list if command[0] in restricted_list]
+    else:
+        return [command[1] for command in command_list]
+
+
+def general_commands_list(restricted_list=None):
+    return commands_list(general_commands, restricted_list)
+
+
+def datamining_commands_list(restricted_list=None):
+    return commands_list(datamining_commands, restricted_list)
+
+
+def analyst_commands_list(restricted_list=None):
+    return commands_list(analyst_commands, restricted_list)
+
+
+def critic_commands_list(restricted_list=None):
+    return commands_list(critic_commands, restricted_list)
+
+
+def historian_commands_list(restricted_list=None):
+    return commands_list(historian_commands, restricted_list)
 
 
 def measurements_list():

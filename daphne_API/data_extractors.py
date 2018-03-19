@@ -1,8 +1,19 @@
 import operator
 import Levenshtein as lev
 from sqlalchemy.orm import sessionmaker
+import pandas
 
 import daphne_API.historian.models as models
+
+
+instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
+measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
+param_names = []
+for row in measurements_sheet.itertuples(index=True, name='Measurement'):
+    if row[2] == 'Parameter':
+        for i in range(6, len(row)):
+            param_names.append(row[i])
+
 
 def feature_list_by_ratio(processed_question, feature_list):
     """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
@@ -18,6 +29,8 @@ def feature_list_by_ratio(processed_question, feature_list):
             max_index, max_ratio = max(enumerate(ratios), key=operator.itemgetter(1))
             ratio_ordered.append((feature, max_ratio, max_index))
 
+    # Keep the longest string by default
+    ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -len(ratio_info[0]))
     ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -ratio_info[1])
     ratio_ordered = [ratio_info for ratio_info in ratio_ordered if ratio_info[1] > 0.75]
     return ratio_ordered
@@ -90,3 +103,16 @@ def extract_agent(processed_question, number_of_features, context):
         if word.lower_ in agents:
             extracted_list.append(word.lower_)
     return crop_list(extracted_list, number_of_features)
+
+
+def extract_instrument_parameter(processed_question, number_of_features, context):
+    return sorted_list_of_features_by_index(processed_question, instruments_sheet['Attributes-for-object-Instrument'], number_of_features)
+
+
+def extract_vassar_instrument(processed_question, number_of_features, context):
+    options = ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR","DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN"]
+    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+
+
+def extract_vassar_measurement(processed_question, number_of_features, context):
+    return sorted_list_of_features_by_index(processed_question, param_names, number_of_features)
