@@ -116,3 +116,8 @@ def extract_vassar_instrument(processed_question, number_of_features, context):
 
 def extract_vassar_measurement(processed_question, number_of_features, context):
     return sorted_list_of_features_by_index(processed_question, param_names, number_of_features)
+
+
+def extract_vassar_stakeholder(processed_question, number_of_features, context):
+    options = ["atmospheric","oceanic","terrestrial"]
+    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
