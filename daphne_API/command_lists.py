@@ -12,7 +12,8 @@ datamining_commands = [
 
 analyst_commands = [
     ('2000', 'Why does design ${design_id} have this science benefit?'),
-    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?')
+    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?'),
+    ('2010', 'What is the requirement for ${instrument_parameter} for ${vassar_measurement}?')
 ]
 
 critic_commands = [
@@ -22,7 +23,7 @@ critic_commands = [
 ]
 
 historian_commands = [
-    #'Which missions can measure ${measurement} [between ${year} and ${year}]?',
+    ('4000', 'Which missions can measure ${measurement} [between ${year} and ${year}]?'),
     #'Which missions do we currently use to measure ${measurement}?',
     #'Which instruments can measure ${measurement} [between ${year} and ${year}]?',
     #'Which instruments do we currently use to measure ${measurement}?',

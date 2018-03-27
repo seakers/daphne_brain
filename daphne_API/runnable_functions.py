@@ -133,6 +133,56 @@ def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_param
     return 'The ' + instrument_parameter + ' for instrument ' + vassar_instrument + ' and measurement ' + instrument_measurement + ' is ' + capability_value
 
 
+def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter, context):
+    context["vassar_instrument"] = vassar_measurement
+    context["instrument_parameter"] = instrument_parameter
+    requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
+                                           sheet_name='Attributes')
+    requirement_found = False
+    requirements = []
+    for row in requirements_sheet.itertuples(name='Requirement'):
+        if row[2][1:-1] == vassar_measurement and row[3] == instrument_parameter:
+            requirement_found = True
+            requirements.append({"stakeholder": row[1], "type": row[4], "thresholds": row[5]})
+
+    if requirement_found:
+        if len(requirements) > 1:
+            stakeholders_to_human = {
+                "ATM": "Atmospheric",
+                "OCE": "Oceanic",
+                "TER": "Terrestrial"
+            }
+            return 'I have found different values for this requirement depending on the stakeholder. ' \
+                   'Please tell me for which stakeholder you want this requirement: ' \
+                   + ', '.join([stakeholders_to_human[requirement["stakeholder"][0:3]] for requirement in requirements])
+        else:
+            threshold = requirements[0]["thresholds"][1:-1].split(',')[-1]
+            target_value = requirements[0]["thresholds"][1:-1].split(',')[0]
+            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' is ' \
+                + threshold + ' and its target value is ' + target_value + '.'
+    else:
+        return 'I have not found any information for this requirement.'
+
+
+def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_parameter, stakeholder, context):
+    requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
+                                           sheet_name='Attributes')
+    stakeholders_to_excel = {
+        "atmospheric": "ATM",
+        "oceanic": "OCE",
+        "terrestrial": "TER"
+    }
+    requirement = None
+    for row in requirements_sheet.itertuples(name='Requirement'):
+        if row[1][0:3] == stakeholders_to_excel[stakeholder] and row[2][1:-1] == vassar_measurement and row[3] == instrument_parameter:
+            requirement = {"stakeholder": row[1], "type": row[4], "thresholds": row[5]}
+
+    threshold = requirement["thresholds"][1:-1].split(',')[-1]
+    target_value = requirement["thresholds"][1:-1].split(',')[0]
+    return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' for panel ' + requirement["stakeholder"] + ' is ' \
+           + threshold + ' and its target value is ' + target_value + '.'
+
+
 def Critic_general_call(design_id, designs, experiment_stage=0):
     client = VASSARClient()
     critic = CRITIC()
@@ -637,9 +687,3 @@ def apply_base_filter(filterExpression,design):
         raise ValueError("Exe in applying the base filter: " + str(e))
         
     return out
-                
-
-            
-
-
-
