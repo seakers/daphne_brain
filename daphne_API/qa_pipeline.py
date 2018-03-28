@@ -134,7 +134,9 @@ def extract_data(processed_question, params, context):
 
 def augment_data(data, context):
     data['now'] = datetime.datetime.utcnow()
-    data['designs'] = context['data']
+
+    if 'data' in context:
+        data['designs'] = context['data']
 
     if 'behavioral' in context:
         data['behavioral'] = context['behavioral']
