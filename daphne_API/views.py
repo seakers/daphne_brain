@@ -24,8 +24,10 @@ class Command(APIView):
         # Define context and see if it was already defined for this session
         if 'context' not in request.session:
             request.session['context'] = {}
-                
-        request.session['context']['data'] = request.session['data']    
+        
+        if 'data' in request.session:
+            request.session['context']['data'] = request.session['data']
+
         request.session['context']['answers'] = []
         
         # Act based on the types
