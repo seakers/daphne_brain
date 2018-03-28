@@ -35,6 +35,7 @@ class DaphneConsumer(JsonWebsocketConsumer):
             self.channel_layer.group_send(hash_key, { "text": textMessage })
         self.scope['session'].save()
 
+
     def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
