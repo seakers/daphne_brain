@@ -108,7 +108,6 @@ class EvaluateArchitecture(APIView):
         
         
 class RunLocalSearch(APIView):
-    
     def __init__(self):
         self.VASSARClient = VASSARClient()
     
@@ -150,5 +149,25 @@ class RunLocalSearch(APIView):
         
         except Exception:
             logger.exception('Exception in evaluating an architecture')
+            self.VASSARClient.endConnection()
+            return Response('')
+
+
+class ChangeLoadedFiles(APIView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.VASSARClient = VASSARClient()
+
+    def post(self, request, format=None):
+        try:
+            # Start connection with VASSAR
+            self.VASSARClient.startConnection()
+            param_map = json.loads(request.data['loaded_files'])
+            result = self.VASSARClient.changeLoadedFiles(param_map)
+            self.VASSARClient.endConnection()
+            return Response({ 'result': result })
+
+        except Exception:
+            logger.exception('Exception in changing some parameters')
             self.VASSARClient.endConnection()
             return Response('')
