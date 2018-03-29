@@ -162,7 +162,7 @@ class ChangeLoadedFiles(APIView):
         try:
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
-            param_map = json.loads(request.data['param_map'])
+            param_map = json.loads(request.data['loaded_files'])
             result = self.VASSARClient.changeLoadedFiles(param_map)
             self.VASSARClient.endConnection()
             return Response({ 'result': result })
