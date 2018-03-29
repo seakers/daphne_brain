@@ -7,5 +7,7 @@ urlpatterns = [
     path('get-instrument-list', views.GetInstrumentList.as_view()),
     
     path('evaluate-architecture', views.EvaluateArchitecture.as_view()),
-    path('run-local-search', views.RunLocalSearch.as_view())
+    path('run-local-search', views.RunLocalSearch.as_view()),
+
+    path('change-loaded-files', views.ChangeLoadedFiles.as_view())
 ]

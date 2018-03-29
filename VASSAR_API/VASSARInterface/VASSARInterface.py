@@ -66,6 +66,13 @@ class Iface(object):
         """
         pass
 
+    def changeLoadedFiles(self, params_map):
+        """
+        Parameters:
+         - params_map
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -308,6 +315,37 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getScoreExplanation failed: unknown result")
 
+    def changeLoadedFiles(self, params_map):
+        """
+        Parameters:
+         - params_map
+        """
+        self.send_changeLoadedFiles(params_map)
+        return self.recv_changeLoadedFiles()
+
+    def send_changeLoadedFiles(self, params_map):
+        self._oprot.writeMessageBegin('changeLoadedFiles', TMessageType.CALL, self._seqid)
+        args = changeLoadedFiles_args()
+        args.params_map = params_map
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_changeLoadedFiles(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = changeLoadedFiles_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "changeLoadedFiles failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -321,6 +359,7 @@ class Processor(Iface, TProcessor):
         self._processMap["getObjectiveList"] = Processor.process_getObjectiveList
         self._processMap["getCritique"] = Processor.process_getCritique
         self._processMap["getScoreExplanation"] = Processor.process_getScoreExplanation
+        self._processMap["changeLoadedFiles"] = Processor.process_changeLoadedFiles
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -517,6 +556,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getScoreExplanation", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_changeLoadedFiles(self, seqid, iprot, oprot):
+        args = changeLoadedFiles_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = changeLoadedFiles_result()
+        try:
+            result.success = self._handler.changeLoadedFiles(args.params_map)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("changeLoadedFiles", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -1495,6 +1557,137 @@ class getScoreExplanation_result(object):
 all_structs.append(getScoreExplanation_result)
 getScoreExplanation_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [ObjectiveSatisfaction, None], False), None, ),  # 0
+)
+
+
+class changeLoadedFiles_args(object):
+    """
+    Attributes:
+     - params_map
+    """
+
+
+    def __init__(self, params_map=None,):
+        self.params_map = params_map
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.params_map = {}
+                    (_ktype85, _vtype86, _size84) = iprot.readMapBegin()
+                    for _i88 in range(_size84):
+                        _key89 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val90 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.params_map[_key89] = _val90
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('changeLoadedFiles_args')
+        if self.params_map is not None:
+            oprot.writeFieldBegin('params_map', TType.MAP, 1)
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.params_map))
+            for kiter91, viter92 in self.params_map.items():
+                oprot.writeString(kiter91.encode('utf-8') if sys.version_info[0] == 2 else kiter91)
+                oprot.writeString(viter92.encode('utf-8') if sys.version_info[0] == 2 else viter92)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(changeLoadedFiles_args)
+changeLoadedFiles_args.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'params_map', (TType.STRING, 'UTF8', TType.STRING, 'UTF8', False), None, ),  # 1
+)
+
+
+class changeLoadedFiles_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('changeLoadedFiles_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(changeLoadedFiles_result)
+changeLoadedFiles_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs
