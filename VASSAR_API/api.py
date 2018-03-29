@@ -89,6 +89,8 @@ class VASSARClient():
     def getInstrumentList(self):
         return self.client.getInstrumentList()
 
+    def changeLoadedFiles(self, params_map):
+        return self.client.changeLoadedFiles(params_map)
     
 
 if __name__ == '__main__':
