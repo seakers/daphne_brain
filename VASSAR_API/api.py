@@ -66,6 +66,11 @@ class VASSARClient():
         arch_formatted = self.client.eval(bitString)
         arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
         return arch
+
+    def evaluateSpecialArchitecture(self,bitString):
+        arch_formatted = self.client.evalSpecial(bitString)
+        arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+        return arch
     
     def runLocalSearch(self,bitString, experiment_stage):
         archs_formatted = self.client.runLocalSearch(bitString, experiment_stage)
