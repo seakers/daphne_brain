@@ -67,11 +67,19 @@ class EvaluateArchitecture(APIView):
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
-            inputs = request.POST['inputs']   
-                        
+            inputs = request.data['inputs']
             inputs = json.loads(inputs)
-            
-            architecture = self.VASSARClient.evaluateArchitecture(inputs)    
+
+            if 'special' in request.data:
+                special = request.data['special']
+            else:
+                special = 'False'
+            if special == 'True':
+                architecture = self.VASSARClient.evaluateSpecialArchitecture(inputs)
+            elif special == 'False':
+                architecture = self.VASSARClient.evaluateArchitecture(inputs)
+            else:
+                return Response('Error parsing special field.')
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
@@ -116,10 +124,9 @@ class RunLocalSearch(APIView):
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
-            inputs = request.POST['inputs']   
-                        
+            inputs = request.data['inputs']
             inputs = json.loads(inputs)
-            
+
             architectures = self.VASSARClient.runLocalSearch(inputs)    
 
             # If there is no session data, initialize and create a new dataset
