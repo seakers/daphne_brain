@@ -11,22 +11,17 @@ import json
 import datetime
 
 def stage_type(id, stage_num):
-    if id % 4 <= 1:
-        if stage_num % 2 == 0:
-            return 'no_daphne'
+    if id % 2 == 0:
+        if stage_num == 0:
+            return 'daphne_assistant'
         else:
-            if id % 2 == 0:
-                return 'daphne_assistant'
-            else:
-                return 'daphne_peer'
+            return 'daphne_peer'
     else:
-        if stage_num % 2 == 0:
-            if id % 2 == 0:
-                return 'daphne_assistant'
-            else:
-                return 'daphne_peer'
+        if stage_num == 0:
+            return 'daphne_peer'
         else:
-            return 'no_daphne'
+            return 'daphne_assistant'
+
 
 # Create your views here.
 class StartExperiment(APIView):
