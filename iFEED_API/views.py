@@ -170,6 +170,7 @@ class SetTargetRegion(APIView):
             selected = request.POST['selected']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
+            
             # Convert strings to ints
             behavioral = []
             if selected_arch_ids:
@@ -181,6 +182,7 @@ class SetTargetRegion(APIView):
             non_selected = request.POST['non_selected']
             non_selected = non_selected[1:-1]
             non_selected_arch_ids = non_selected.split(',')
+
             # Convert strings to ints
             non_behavioral = []
             if non_selected_arch_ids:

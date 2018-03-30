@@ -64,9 +64,95 @@ class GetDrivingFeatures(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
+            #########################################
+            #########################################
+            ### Write data file with labels
+
+            # dir_path = "/Users/bang/workspace/featureGA/data/"
+            # with open(os.path.join(dir_path,"data.csv"), "w") as file:
+
+            #     content = []
+
+            #     for i, arch in enumerate(architectures):
+            #         line = []
+
+            #         archID = arch['id']
+            #         label = None
+            #         if archID in behavioral:
+            #             label = "1"
+            #         else:
+            #             label = "0"
+
+            #         inputs = arch['inputs']
+            #         inputString = ""
+            #         for val in inputs:
+            #             if val:
+            #                 inputString += "1"
+            #             else:
+            #                 inputString += "0"
+
+            #         line.append(str(label))
+            #         line.append(inputString)
+            #         content.append(",".join(line))    
+
+            #     file.write("\n".join(content))
+
+            #########################################
+            #########################################
+
             drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
                                                                        architectures, supp, conf, lift)
                 
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class getDrivingFeaturesEpsilonMOEA(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            logger.debug(request.session)
+            architectures = request.session['data']
+
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.getDrivingFeaturesEpsilonMOEA(problem, inputType, behavioral, non_behavioral, architectures)
             output = drivingFeatures
 
             # End the connection before return statement

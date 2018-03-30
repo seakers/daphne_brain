@@ -28,9 +28,11 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getDrivingFeaturesBinary(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   runAutomatedLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression, string logical_connective, double supp, double conf, double lift)')
+    print('   getDrivingFeaturesEpsilonMOEABinary(string problem,  behavioral,  non_behavioral,  all_archs)')
     print('   getDrivingFeaturesDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   runAutomatedLocalSearchDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression, string logical_connective, double supp, double conf, double lift)')
+    print('   getDrivingFeaturesEpsilonMOEADiscrete(string problem,  behavioral,  non_behavioral,  all_archs)')
     print('   computeComplexityOfFeatures( expressions)')
     print('   computeAlgebraicTypicality(BinaryInputArchitecture arch, string feature)')
     print('  double computeComplexity(string expression)')
@@ -140,6 +142,12 @@ elif cmd == 'getMarginalDrivingFeaturesBinary':
         sys.exit(1)
     pp.pprint(client.getMarginalDrivingFeaturesBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], args[5], eval(args[6]), eval(args[7]), eval(args[8]),))
 
+elif cmd == 'getDrivingFeaturesEpsilonMOEABinary':
+    if len(args) != 4:
+        print('getDrivingFeaturesEpsilonMOEABinary requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.getDrivingFeaturesEpsilonMOEABinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
+
 elif cmd == 'getDrivingFeaturesDiscrete':
     if len(args) != 7:
         print('getDrivingFeaturesDiscrete requires 7 args')
@@ -157,6 +165,12 @@ elif cmd == 'getMarginalDrivingFeaturesDiscrete':
         print('getMarginalDrivingFeaturesDiscrete requires 9 args')
         sys.exit(1)
     pp.pprint(client.getMarginalDrivingFeaturesDiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], args[5], eval(args[6]), eval(args[7]), eval(args[8]),))
+
+elif cmd == 'getDrivingFeaturesEpsilonMOEADiscrete':
+    if len(args) != 4:
+        print('getDrivingFeaturesEpsilonMOEADiscrete requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.getDrivingFeaturesEpsilonMOEADiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
 
 elif cmd == 'computeComplexityOfFeatures':
     if len(args) != 1:

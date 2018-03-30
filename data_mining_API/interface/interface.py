@@ -63,6 +63,16 @@ class Iface(object):
         """
         pass
 
+    def getDrivingFeaturesEpsilonMOEABinary(self, problem, behavioral, non_behavioral, all_archs):
+        """
+        Parameters:
+         - problem
+         - behavioral
+         - non_behavioral
+         - all_archs
+        """
+        pass
+
     def getDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, supp, conf, lift):
         """
         Parameters:
@@ -101,6 +111,16 @@ class Iface(object):
          - supp
          - conf
          - lift
+        """
+        pass
+
+    def getDrivingFeaturesEpsilonMOEADiscrete(self, problem, behavioral, non_behavioral, all_archs):
+        """
+        Parameters:
+         - problem
+         - behavioral
+         - non_behavioral
+         - all_archs
         """
         pass
 
@@ -313,6 +333,43 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMarginalDrivingFeaturesBinary failed: unknown result")
 
+    def getDrivingFeaturesEpsilonMOEABinary(self, problem, behavioral, non_behavioral, all_archs):
+        """
+        Parameters:
+         - problem
+         - behavioral
+         - non_behavioral
+         - all_archs
+        """
+        self.send_getDrivingFeaturesEpsilonMOEABinary(problem, behavioral, non_behavioral, all_archs)
+        return self.recv_getDrivingFeaturesEpsilonMOEABinary()
+
+    def send_getDrivingFeaturesEpsilonMOEABinary(self, problem, behavioral, non_behavioral, all_archs):
+        self._oprot.writeMessageBegin('getDrivingFeaturesEpsilonMOEABinary', TMessageType.CALL, self._seqid)
+        args = getDrivingFeaturesEpsilonMOEABinary_args()
+        args.problem = problem
+        args.behavioral = behavioral
+        args.non_behavioral = non_behavioral
+        args.all_archs = all_archs
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getDrivingFeaturesEpsilonMOEABinary(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getDrivingFeaturesEpsilonMOEABinary_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesEpsilonMOEABinary failed: unknown result")
+
     def getDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, supp, conf, lift):
         """
         Parameters:
@@ -445,6 +502,43 @@ class Client(Iface):
         if result.success is not None:
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMarginalDrivingFeaturesDiscrete failed: unknown result")
+
+    def getDrivingFeaturesEpsilonMOEADiscrete(self, problem, behavioral, non_behavioral, all_archs):
+        """
+        Parameters:
+         - problem
+         - behavioral
+         - non_behavioral
+         - all_archs
+        """
+        self.send_getDrivingFeaturesEpsilonMOEADiscrete(problem, behavioral, non_behavioral, all_archs)
+        return self.recv_getDrivingFeaturesEpsilonMOEADiscrete()
+
+    def send_getDrivingFeaturesEpsilonMOEADiscrete(self, problem, behavioral, non_behavioral, all_archs):
+        self._oprot.writeMessageBegin('getDrivingFeaturesEpsilonMOEADiscrete', TMessageType.CALL, self._seqid)
+        args = getDrivingFeaturesEpsilonMOEADiscrete_args()
+        args.problem = problem
+        args.behavioral = behavioral
+        args.non_behavioral = non_behavioral
+        args.all_archs = all_archs
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getDrivingFeaturesEpsilonMOEADiscrete(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getDrivingFeaturesEpsilonMOEADiscrete_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesEpsilonMOEADiscrete failed: unknown result")
 
     def computeComplexityOfFeatures(self, expressions):
         """
@@ -645,9 +739,11 @@ class Processor(Iface, TProcessor):
         self._processMap["getDrivingFeaturesBinary"] = Processor.process_getDrivingFeaturesBinary
         self._processMap["runAutomatedLocalSearchBinary"] = Processor.process_runAutomatedLocalSearchBinary
         self._processMap["getMarginalDrivingFeaturesBinary"] = Processor.process_getMarginalDrivingFeaturesBinary
+        self._processMap["getDrivingFeaturesEpsilonMOEABinary"] = Processor.process_getDrivingFeaturesEpsilonMOEABinary
         self._processMap["getDrivingFeaturesDiscrete"] = Processor.process_getDrivingFeaturesDiscrete
         self._processMap["runAutomatedLocalSearchDiscrete"] = Processor.process_runAutomatedLocalSearchDiscrete
         self._processMap["getMarginalDrivingFeaturesDiscrete"] = Processor.process_getMarginalDrivingFeaturesDiscrete
+        self._processMap["getDrivingFeaturesEpsilonMOEADiscrete"] = Processor.process_getDrivingFeaturesEpsilonMOEADiscrete
         self._processMap["computeComplexityOfFeatures"] = Processor.process_computeComplexityOfFeatures
         self._processMap["computeAlgebraicTypicality"] = Processor.process_computeAlgebraicTypicality
         self._processMap["computeComplexity"] = Processor.process_computeComplexity
@@ -762,6 +858,29 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
+    def process_getDrivingFeaturesEpsilonMOEABinary(self, seqid, iprot, oprot):
+        args = getDrivingFeaturesEpsilonMOEABinary_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getDrivingFeaturesEpsilonMOEABinary_result()
+        try:
+            result.success = self._handler.getDrivingFeaturesEpsilonMOEABinary(args.problem, args.behavioral, args.non_behavioral, args.all_archs)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getDrivingFeaturesEpsilonMOEABinary", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
     def process_getDrivingFeaturesDiscrete(self, seqid, iprot, oprot):
         args = getDrivingFeaturesDiscrete_args()
         args.read(iprot)
@@ -827,6 +946,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getMarginalDrivingFeaturesDiscrete", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_getDrivingFeaturesEpsilonMOEADiscrete(self, seqid, iprot, oprot):
+        args = getDrivingFeaturesEpsilonMOEADiscrete_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getDrivingFeaturesEpsilonMOEADiscrete_result()
+        try:
+            result.success = self._handler.getDrivingFeaturesEpsilonMOEADiscrete(args.problem, args.behavioral, args.non_behavioral, args.all_archs)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getDrivingFeaturesEpsilonMOEADiscrete", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -1763,27 +1905,21 @@ getMarginalDrivingFeaturesBinary_result.thrift_spec = (
 )
 
 
-class getDrivingFeaturesDiscrete_args(object):
+class getDrivingFeaturesEpsilonMOEABinary_args(object):
     """
     Attributes:
      - problem
      - behavioral
      - non_behavioral
      - all_archs
-     - supp
-     - conf
-     - lift
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, supp=None, conf=None, lift=None,):
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
-        self.supp = supp
-        self.conf = conf
-        self.lift = lift
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1824,25 +1960,10 @@ class getDrivingFeaturesDiscrete_args(object):
                     self.all_archs = []
                     (_etype148, _size145) = iprot.readListBegin()
                     for _i149 in range(_size145):
-                        _elem150 = DiscreteInputArchitecture()
+                        _elem150 = BinaryInputArchitecture()
                         _elem150.read(iprot)
                         self.all_archs.append(_elem150)
                     iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 5:
-                if ftype == TType.DOUBLE:
-                    self.supp = iprot.readDouble()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 6:
-                if ftype == TType.DOUBLE:
-                    self.conf = iprot.readDouble()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 7:
-                if ftype == TType.DOUBLE:
-                    self.lift = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             else:
@@ -1854,7 +1975,7 @@ class getDrivingFeaturesDiscrete_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('getDrivingFeaturesDiscrete_args')
+        oprot.writeStructBegin('getDrivingFeaturesEpsilonMOEABinary_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
@@ -1880,18 +2001,6 @@ class getDrivingFeaturesDiscrete_args(object):
                 iter153.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
-        if self.supp is not None:
-            oprot.writeFieldBegin('supp', TType.DOUBLE, 5)
-            oprot.writeDouble(self.supp)
-            oprot.writeFieldEnd()
-        if self.conf is not None:
-            oprot.writeFieldBegin('conf', TType.DOUBLE, 6)
-            oprot.writeDouble(self.conf)
-            oprot.writeFieldEnd()
-        if self.lift is not None:
-            oprot.writeFieldBegin('lift', TType.DOUBLE, 7)
-            oprot.writeDouble(self.lift)
-            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -1908,20 +2017,17 @@ class getDrivingFeaturesDiscrete_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(getDrivingFeaturesDiscrete_args)
-getDrivingFeaturesDiscrete_args.thrift_spec = (
+all_structs.append(getDrivingFeaturesEpsilonMOEABinary_args)
+getDrivingFeaturesEpsilonMOEABinary_args.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
     (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
     (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 4
-    (5, TType.DOUBLE, 'supp', None, None, ),  # 5
-    (6, TType.DOUBLE, 'conf', None, None, ),  # 6
-    (7, TType.DOUBLE, 'lift', None, None, ),  # 7
+    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
 )
 
 
-class getDrivingFeaturesDiscrete_result(object):
+class getDrivingFeaturesEpsilonMOEABinary_result(object):
     """
     Attributes:
      - success
@@ -1960,7 +2066,7 @@ class getDrivingFeaturesDiscrete_result(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('getDrivingFeaturesDiscrete_result')
+        oprot.writeStructBegin('getDrivingFeaturesEpsilonMOEABinary_result')
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
@@ -1984,13 +2090,13 @@ class getDrivingFeaturesDiscrete_result(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(getDrivingFeaturesDiscrete_result)
-getDrivingFeaturesDiscrete_result.thrift_spec = (
+all_structs.append(getDrivingFeaturesEpsilonMOEABinary_result)
+getDrivingFeaturesEpsilonMOEABinary_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
 )
 
 
-class runAutomatedLocalSearchDiscrete_args(object):
+class getDrivingFeaturesDiscrete_args(object):
     """
     Attributes:
      - problem
@@ -2081,7 +2187,7 @@ class runAutomatedLocalSearchDiscrete_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('runAutomatedLocalSearchDiscrete_args')
+        oprot.writeStructBegin('getDrivingFeaturesDiscrete_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
@@ -2105,6 +2211,233 @@ class runAutomatedLocalSearchDiscrete_args(object):
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter181 in self.all_archs:
                 iter181.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.supp is not None:
+            oprot.writeFieldBegin('supp', TType.DOUBLE, 5)
+            oprot.writeDouble(self.supp)
+            oprot.writeFieldEnd()
+        if self.conf is not None:
+            oprot.writeFieldBegin('conf', TType.DOUBLE, 6)
+            oprot.writeDouble(self.conf)
+            oprot.writeFieldEnd()
+        if self.lift is not None:
+            oprot.writeFieldBegin('lift', TType.DOUBLE, 7)
+            oprot.writeDouble(self.lift)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getDrivingFeaturesDiscrete_args)
+getDrivingFeaturesDiscrete_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
+    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 4
+    (5, TType.DOUBLE, 'supp', None, None, ),  # 5
+    (6, TType.DOUBLE, 'conf', None, None, ),  # 6
+    (7, TType.DOUBLE, 'lift', None, None, ),  # 7
+)
+
+
+class getDrivingFeaturesDiscrete_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype185, _size182) = iprot.readListBegin()
+                    for _i186 in range(_size182):
+                        _elem187 = Feature()
+                        _elem187.read(iprot)
+                        self.success.append(_elem187)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getDrivingFeaturesDiscrete_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRUCT, len(self.success))
+            for iter188 in self.success:
+                iter188.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getDrivingFeaturesDiscrete_result)
+getDrivingFeaturesDiscrete_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
+)
+
+
+class runAutomatedLocalSearchDiscrete_args(object):
+    """
+    Attributes:
+     - problem
+     - behavioral
+     - non_behavioral
+     - all_archs
+     - supp
+     - conf
+     - lift
+    """
+
+
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, supp=None, conf=None, lift=None,):
+        self.problem = problem
+        self.behavioral = behavioral
+        self.non_behavioral = non_behavioral
+        self.all_archs = all_archs
+        self.supp = supp
+        self.conf = conf
+        self.lift = lift
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.behavioral = []
+                    (_etype192, _size189) = iprot.readListBegin()
+                    for _i193 in range(_size189):
+                        _elem194 = iprot.readI32()
+                        self.behavioral.append(_elem194)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.non_behavioral = []
+                    (_etype198, _size195) = iprot.readListBegin()
+                    for _i199 in range(_size195):
+                        _elem200 = iprot.readI32()
+                        self.non_behavioral.append(_elem200)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.all_archs = []
+                    (_etype204, _size201) = iprot.readListBegin()
+                    for _i205 in range(_size201):
+                        _elem206 = DiscreteInputArchitecture()
+                        _elem206.read(iprot)
+                        self.all_archs.append(_elem206)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.DOUBLE:
+                    self.supp = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.DOUBLE:
+                    self.conf = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.DOUBLE:
+                    self.lift = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('runAutomatedLocalSearchDiscrete_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.behavioral is not None:
+            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeListBegin(TType.I32, len(self.behavioral))
+            for iter207 in self.behavioral:
+                oprot.writeI32(iter207)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.non_behavioral is not None:
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeListBegin(TType.I32, len(self.non_behavioral))
+            for iter208 in self.non_behavioral:
+                oprot.writeI32(iter208)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.all_archs is not None:
+            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
+            for iter209 in self.all_archs:
+                iter209.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.supp is not None:
@@ -2170,11 +2503,11 @@ class runAutomatedLocalSearchDiscrete_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype185, _size182) = iprot.readListBegin()
-                    for _i186 in range(_size182):
-                        _elem187 = Feature()
-                        _elem187.read(iprot)
-                        self.success.append(_elem187)
+                    (_etype213, _size210) = iprot.readListBegin()
+                    for _i214 in range(_size210):
+                        _elem215 = Feature()
+                        _elem215.read(iprot)
+                        self.success.append(_elem215)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2191,8 +2524,8 @@ class runAutomatedLocalSearchDiscrete_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter188 in self.success:
-                iter188.write(oprot)
+            for iter216 in self.success:
+                iter216.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2260,31 +2593,31 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.behavioral = []
-                    (_etype192, _size189) = iprot.readListBegin()
-                    for _i193 in range(_size189):
-                        _elem194 = iprot.readI32()
-                        self.behavioral.append(_elem194)
+                    (_etype220, _size217) = iprot.readListBegin()
+                    for _i221 in range(_size217):
+                        _elem222 = iprot.readI32()
+                        self.behavioral.append(_elem222)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.non_behavioral = []
-                    (_etype198, _size195) = iprot.readListBegin()
-                    for _i199 in range(_size195):
-                        _elem200 = iprot.readI32()
-                        self.non_behavioral.append(_elem200)
+                    (_etype226, _size223) = iprot.readListBegin()
+                    for _i227 in range(_size223):
+                        _elem228 = iprot.readI32()
+                        self.non_behavioral.append(_elem228)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.LIST:
                     self.all_archs = []
-                    (_etype204, _size201) = iprot.readListBegin()
-                    for _i205 in range(_size201):
-                        _elem206 = DiscreteInputArchitecture()
-                        _elem206.read(iprot)
-                        self.all_archs.append(_elem206)
+                    (_etype232, _size229) = iprot.readListBegin()
+                    for _i233 in range(_size229):
+                        _elem234 = DiscreteInputArchitecture()
+                        _elem234.read(iprot)
+                        self.all_archs.append(_elem234)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2330,22 +2663,22 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
         if self.behavioral is not None:
             oprot.writeFieldBegin('behavioral', TType.LIST, 2)
             oprot.writeListBegin(TType.I32, len(self.behavioral))
-            for iter207 in self.behavioral:
-                oprot.writeI32(iter207)
+            for iter235 in self.behavioral:
+                oprot.writeI32(iter235)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.non_behavioral is not None:
             oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
             oprot.writeListBegin(TType.I32, len(self.non_behavioral))
-            for iter208 in self.non_behavioral:
-                oprot.writeI32(iter208)
+            for iter236 in self.non_behavioral:
+                oprot.writeI32(iter236)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.all_archs is not None:
             oprot.writeFieldBegin('all_archs', TType.LIST, 4)
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
-            for iter209 in self.all_archs:
-                iter209.write(oprot)
+            for iter237 in self.all_archs:
+                iter237.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.featureExpression is not None:
@@ -2421,11 +2754,11 @@ class getMarginalDrivingFeaturesDiscrete_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype213, _size210) = iprot.readListBegin()
-                    for _i214 in range(_size210):
-                        _elem215 = Feature()
-                        _elem215.read(iprot)
-                        self.success.append(_elem215)
+                    (_etype241, _size238) = iprot.readListBegin()
+                    for _i242 in range(_size238):
+                        _elem243 = Feature()
+                        _elem243.read(iprot)
+                        self.success.append(_elem243)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2442,8 +2775,8 @@ class getMarginalDrivingFeaturesDiscrete_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter216 in self.success:
-                iter216.write(oprot)
+            for iter244 in self.success:
+                iter244.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2464,6 +2797,197 @@ class getMarginalDrivingFeaturesDiscrete_result(object):
         return not (self == other)
 all_structs.append(getMarginalDrivingFeaturesDiscrete_result)
 getMarginalDrivingFeaturesDiscrete_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
+)
+
+
+class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
+    """
+    Attributes:
+     - problem
+     - behavioral
+     - non_behavioral
+     - all_archs
+    """
+
+
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+        self.problem = problem
+        self.behavioral = behavioral
+        self.non_behavioral = non_behavioral
+        self.all_archs = all_archs
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.behavioral = []
+                    (_etype248, _size245) = iprot.readListBegin()
+                    for _i249 in range(_size245):
+                        _elem250 = iprot.readI32()
+                        self.behavioral.append(_elem250)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.non_behavioral = []
+                    (_etype254, _size251) = iprot.readListBegin()
+                    for _i255 in range(_size251):
+                        _elem256 = iprot.readI32()
+                        self.non_behavioral.append(_elem256)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.all_archs = []
+                    (_etype260, _size257) = iprot.readListBegin()
+                    for _i261 in range(_size257):
+                        _elem262 = DiscreteInputArchitecture()
+                        _elem262.read(iprot)
+                        self.all_archs.append(_elem262)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getDrivingFeaturesEpsilonMOEADiscrete_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.behavioral is not None:
+            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeListBegin(TType.I32, len(self.behavioral))
+            for iter263 in self.behavioral:
+                oprot.writeI32(iter263)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.non_behavioral is not None:
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeListBegin(TType.I32, len(self.non_behavioral))
+            for iter264 in self.non_behavioral:
+                oprot.writeI32(iter264)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.all_archs is not None:
+            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
+            for iter265 in self.all_archs:
+                iter265.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getDrivingFeaturesEpsilonMOEADiscrete_args)
+getDrivingFeaturesEpsilonMOEADiscrete_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
+    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 4
+)
+
+
+class getDrivingFeaturesEpsilonMOEADiscrete_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype269, _size266) = iprot.readListBegin()
+                    for _i270 in range(_size266):
+                        _elem271 = Feature()
+                        _elem271.read(iprot)
+                        self.success.append(_elem271)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getDrivingFeaturesEpsilonMOEADiscrete_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRUCT, len(self.success))
+            for iter272 in self.success:
+                iter272.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getDrivingFeaturesEpsilonMOEADiscrete_result)
+getDrivingFeaturesEpsilonMOEADiscrete_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
 )
 
@@ -2490,10 +3014,10 @@ class computeComplexityOfFeatures_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.expressions = []
-                    (_etype220, _size217) = iprot.readListBegin()
-                    for _i221 in range(_size217):
-                        _elem222 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.expressions.append(_elem222)
+                    (_etype276, _size273) = iprot.readListBegin()
+                    for _i277 in range(_size273):
+                        _elem278 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.expressions.append(_elem278)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2510,8 +3034,8 @@ class computeComplexityOfFeatures_args(object):
         if self.expressions is not None:
             oprot.writeFieldBegin('expressions', TType.LIST, 1)
             oprot.writeListBegin(TType.STRING, len(self.expressions))
-            for iter223 in self.expressions:
-                oprot.writeString(iter223.encode('utf-8') if sys.version_info[0] == 2 else iter223)
+            for iter279 in self.expressions:
+                oprot.writeString(iter279.encode('utf-8') if sys.version_info[0] == 2 else iter279)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2559,10 +3083,10 @@ class computeComplexityOfFeatures_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype227, _size224) = iprot.readListBegin()
-                    for _i228 in range(_size224):
-                        _elem229 = iprot.readDouble()
-                        self.success.append(_elem229)
+                    (_etype283, _size280) = iprot.readListBegin()
+                    for _i284 in range(_size280):
+                        _elem285 = iprot.readDouble()
+                        self.success.append(_elem285)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2579,8 +3103,8 @@ class computeComplexityOfFeatures_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.DOUBLE, len(self.success))
-            for iter230 in self.success:
-                oprot.writeDouble(iter230)
+            for iter286 in self.success:
+                oprot.writeDouble(iter286)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2701,10 +3225,10 @@ class computeAlgebraicTypicality_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype234, _size231) = iprot.readListBegin()
-                    for _i235 in range(_size231):
-                        _elem236 = iprot.readI32()
-                        self.success.append(_elem236)
+                    (_etype290, _size287) = iprot.readListBegin()
+                    for _i291 in range(_size287):
+                        _elem292 = iprot.readI32()
+                        self.success.append(_elem292)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2721,8 +3245,8 @@ class computeAlgebraicTypicality_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.I32, len(self.success))
-            for iter237 in self.success:
-                oprot.writeI32(iter237)
+            for iter293 in self.success:
+                oprot.writeI32(iter293)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3205,10 +3729,10 @@ class computeAlgebraicTypicalityWithStringInput_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype241, _size238) = iprot.readListBegin()
-                    for _i242 in range(_size238):
-                        _elem243 = iprot.readI32()
-                        self.success.append(_elem243)
+                    (_etype297, _size294) = iprot.readListBegin()
+                    for _i298 in range(_size294):
+                        _elem299 = iprot.readI32()
+                        self.success.append(_elem299)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -3225,8 +3749,8 @@ class computeAlgebraicTypicalityWithStringInput_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.I32, len(self.success))
-            for iter244 in self.success:
-                oprot.writeI32(iter244)
+            for iter300 in self.success:
+                oprot.writeI32(iter300)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
