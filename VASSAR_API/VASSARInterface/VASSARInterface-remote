@@ -26,6 +26,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void ping()')
     print('  BinaryInputArchitecture eval( inputs)')
+    print('  BinaryInputArchitecture evalSpecial( inputs)')
     print('   runLocalSearch( inputs, int experiment_stage)')
     print('   getOrbitList()')
     print('   getInstrumentList()')
@@ -123,6 +124,12 @@ elif cmd == 'eval':
         print('eval requires 1 args')
         sys.exit(1)
     pp.pprint(client.eval(eval(args[0]),))
+
+elif cmd == 'evalSpecial':
+    if len(args) != 1:
+        print('evalSpecial requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.evalSpecial(eval(args[0]),))
 
 elif cmd == 'runLocalSearch':
     if len(args) != 2:
