@@ -20,9 +20,19 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         if content.get('msg_type') == 'add_action':
             action = content['action']
             action['date'] = datetime.datetime.utcnow().isoformat()
+            if 'experiment' not in self.scope['session']:
+                self.scope['session']['experiment'] = {}
+            if 'stages' not in self.scope['session']['experiment']:
+                self.scope['session']['experiment']['stages'] = {}
+            if content['stage'] not in self.scope['session']['experiment']['stages']:
+                self.scope['session']['experiment']['stages'][content['stage']] = {}
+            if 'actions' not in self.scope['session']['experiment']['stages'][content['stage']]:
+                self.scope['session']['experiment']['stages'][content['stage']]['actions'] = []
             self.scope['session']['experiment']['stages'][content['stage']]['actions'].append(action)
             self.send(json.dumps(self.scope['session']['experiment']))
         elif content.get('msg_type') == 'update_state':
+            if 'experiment' not in self.scope['session']:
+                self.scope['session']['experiment'] = {}
             self.scope['session']['experiment']['state'] = content['state']
             self.send(json.dumps(self.scope['session']['experiment']))
         self.scope['session'].save()
