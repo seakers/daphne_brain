@@ -254,11 +254,11 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
             # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
             if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
                 # New solution dominates the original solution
-                advice.append(" to increase science and lower cost.")
+                advice.append(" to increase the science benefit and lower the cost.")
             elif new_outputs[0] > original_outputs[0]:
-                advice.append(" to increase science.")
+                advice.append(" to increase the science benefit (but cost may increase!).")
             elif new_outputs[1] < original_outputs[1]:
-                advice.append(" to lower cost.")
+                advice.append(" to lower the cost (but science may decrease too!).")
             else:
                 continue
                 

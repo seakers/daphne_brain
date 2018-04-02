@@ -92,6 +92,7 @@ class EvaluateArchitecture(APIView):
             
             architecture['id'] = len(request.session['data'])
             request.session['context']['current_design_id'] = architecture['id']
+            print(request.session['context']['current_design_id'])
             request.session['data'].append(architecture)
 
             request.session.modified = True
