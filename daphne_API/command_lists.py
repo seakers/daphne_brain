@@ -1,6 +1,16 @@
 from sqlalchemy.orm import sessionmaker
 import daphne_API.historian.models as models
 from VASSAR_API.api import VASSARClient
+import pandas
+
+instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
+measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
+param_names = []
+for row in measurements_sheet.itertuples(index=True, name='Measurement'):
+    if row[2] == 'Parameter':
+        for i in range(6, len(row)):
+            param_names.append(row[i])
+
 
 general_commands = [
     ('0000', 'Stop')
@@ -91,27 +101,42 @@ def objectives_list():
     VASSAR.endConnection()
     return objectives
 
+def analyst_instrument_parameter_list():
+    return instruments_sheet['Attributes-for-object-Instrument']
 
-orbits_alias = [
-    "1: LEO-600-polar-NA (Inclined, non-sun-synchronous)",
-    "2: SSO-600-SSO-AM (Sun-synchronous Medium Altitude Morning)",
-    "3: SSO-600-SSO-DD (Sun-synchronous Medium Altitude Dawn-Dusk)",
-    "4: SSO-800-SSO-DD (Sun-synchronous High Altitude Dawn-Dusk)",
-    "5: SSO-800-SSO-PM (Sun-synchronous High Altitude Afternoon)"
+
+def analyst_instrument_list():
+    return ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR","DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN"]
+
+
+def analyst_measurement_list():
+    return param_names
+
+
+def analyst_stakeholder_list():
+    return ["Atmospheric","Oceanic","Terrestrial"]
+
+
+orbits_info = [
+    "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
+    "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
+    "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
+    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (600 km), Dawn-Dusk",
+    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (600 km), Afternoon"
 ]
 
 
-instruments_alias = [
-    "A: ACE_ORCA, Ocean colour instruments, Medium-resolution spectro-radiometer",
-    "B: ACE_POL, Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
-    "C: ACE_LID, Lidars, Atmospheric lidar",
-    "D: CLAR_ERB, Hyperspectral imagers, Multi-purpose imaging Vis/IR radiometer",
-    "E: ACE_CPR, Cloud profile and rain radars, Cloud and precipitation radar",
-    "F: DESD_SAR, Imaging microwave radars, Imaging radar (SAR)",
-    "G: DESD_LID, Lidars, Lidar altimeter",
-    "H: GACM_VIS, Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
-    "I: GACM_SWIR, Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
-    "J: HYSP_TIR, Imaging multi-spectral radiometers (vis/IR), Medium-resolution IR spectrometer",
-    "K: POSTEPS_IRS, Atmospheric temperature and humidity sounders, Medium-resolution IR spectrometer",
-    "L: CNES_KaRIN, Radar altimeters, Radar altimeter"
+instruments_info = [
+    "ACE_ORCA: Ocean colour instruments, Medium-resolution spectro-radiometer",
+    "ACE_POL: Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
+    "ACE_LID: Lidars, Atmospheric lidar",
+    "CLAR_ERB: Hyperspectral imagers, Multi-purpose imaging Vis/IR radiometer",
+    "ACE_CPR: Cloud profile and rain radars, Cloud and precipitation radar",
+    "DESD_SAR: Imaging microwave radars, Imaging radar (SAR)",
+    "DESD_LID: Lidars, Lidar altimeter",
+    "GACM_VIS: Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
+    "GACM_SWIR: Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
+    "HYSP_TIR: Imaging multi-spectral radiometers (vis/IR), Medium-resolution IR spectrometer",
+    "POSTEPS_IRS: Atmospheric temperature and humidity sounders, Medium-resolution IR spectrometer",
+    "CNES_KaRIN: Radar altimeters, Radar altimeter"
 ]

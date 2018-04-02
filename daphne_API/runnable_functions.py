@@ -229,8 +229,8 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
                     
                 orbitIndex = i // ninstr # Floor division
                 instrIndex = i % ninstr # Get the remainder                
-                advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['alias']))
-                advice.append("to orbit {}".format(ORBIT_DATASET[orbitIndex]['alias']))
+                advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['name']))
+                advice.append("to orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
                     
                 advice = " ".join(advice)
                 out.append(advice)

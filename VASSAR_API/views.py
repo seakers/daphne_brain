@@ -84,23 +84,15 @@ class EvaluateArchitecture(APIView):
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
                 request.session['data'] = []
-                
-            if 'archID' not in request.session:
-                request.session['archID'] = None
 
-            self.architectures = request.session['data']
-            self.archID = request.session['archID'] 
+            if 'context' not in request.session:
+                request.session['context'] = {}
+            if 'current_design_id' not in request.session['context']:
+                request.session['context']['current_design_id'] = None
             
-            if self.archID is None:
-                self.archID = 0
-            
-            architecture['id'] = self.archID
-            
-            self.archID += 1
-            self.architectures.append(architecture)
-            
-            request.session['archID'] = self.archID            
-            request.session['data'] = self.architectures
+            architecture['id'] = len(request.session['data'])
+            request.session['context']['current_design_id'] = architecture['id']
+            request.session['data'].append(architecture)
 
             request.session.modified = True
             

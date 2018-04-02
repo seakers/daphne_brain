@@ -27,6 +27,8 @@ class DaphneConsumer(JsonWebsocketConsumer):
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         if content.get('msg_type') == 'context_add':
+            if 'context' not in self.scope['session']:
+                self.scope['session']['context'] = {}
             for key, value in content.get('new_context').items():
                 self.scope['session']['context'][key] = value
         elif content.get('msg_type') == 'text_msg':
