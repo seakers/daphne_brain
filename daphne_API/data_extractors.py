@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker
 import pandas
 
 import daphne_API.historian.models as models
+import daphne_API.historian.models as earth_models
+import daphne_API.edl.model as edl_models
 
 
 instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
@@ -121,3 +123,42 @@ def extract_vassar_measurement(processed_question, number_of_features, context):
 def extract_vassar_stakeholder(processed_question, number_of_features, context):
     options = ["atmospheric","oceanic","terrestrial"]
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+
+def extract_edl_mission(processed_question, number_of_features, context):
+    # Get a list of missions
+    engine = edl_models.db_connect()
+    session = sessionmaker(bind=engine)()
+    missions = [missions.name.strip().lower() for missions in session.query(edl_models.Mission).all()]
+    return sorted_list_of_features_by_index(processed_question, missions, number_of_features)
+
+def extract_edl_parameter(processed_question, number_of_features, context):
+    # Get a list of parameters
+    parameters = ["entry mass", "name", "full name", "status", "launch date", "launch vehicle", "applications",
+                  "touchdown mass", "useful landed mass", "landing site elevation", "landing site", "entry strategy",
+                  "entry vehicle","entry interface X","entry interface Y", "entry interface Z", "orbital direction",
+                  "entry velocity", "entry lift control","entry attitude control", "entry guidance",
+                  "entry angle of attack", "ballistic coefficient", "lift to drag ratio", "peak deceleration",
+                  "descent attitude control", "drag coefficient", "deploy mach number", "deploy dynamic pressure",
+                  "wind relative velocity", "altitude parachute deploy", "backshell separation altitude",
+                  "backshell separation velocity", "backshell separation mechanism", "heat shield geometry",
+                  "heat shield diameter", "heat shield TPS", "heat shield thickness",
+                  "heat shield peak heat rate", "heat shield peak stagnation pressure", "horizontal velocity sensing",
+                  "altitude sensing", "horizontal velocity control", "terminal descent decelerator",
+                  "terminal descent velocity control", "vertical descent rate", "fuel burn",
+                  "touchdown vertical velocity", "touchdown horizontal velocity", "touchdown attenuation",
+                  "touchdown rock height capability", "touchdown slope capability", "touchdown sensor",
+                  "touchdown sensing", "simulation"]
+    return sorted_list_of_features_by_index(processed_question, parameters, number_of_features)
+
+
+
+def extract_mat_file(processed_question, number_of_features,context):
+    # TODO: Read folder and get list of possible mat files
+    path = "/Users/ssantini/Code/EDL_Assistant_Brain/daphne_API/mat_files"
+    mat_files = os.listdir(path)
+
+    return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
+
+def extract_mat_parameter(processed_question, number_of_features, context):
+
+    return(processed_question, parameter, context)

@@ -18,18 +18,18 @@ class Command(APIView):
         processed_command = nlp(request.data['command'].strip().lower())
 
         # Classify the command, obtaining a command type
-        command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian']
+        command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian', 'EDL']
         command_types = command_processing.classify_command(processed_command)
 
         # Define context and see if it was already defined for this session
         if 'context' not in request.session:
             request.session['context'] = {}
-        
+
         if 'data' in request.session:
             request.session['context']['data'] = request.session['data']
 
         request.session['context']['answers'] = []
-        
+
         # Act based on the types
         for command_type in command_types:
             if command_options[command_type] == 'iFEED':
@@ -44,6 +44,9 @@ class Command(APIView):
             if command_options[command_type] == 'Historian':
                 request.session['context']['answers'].append(
                     command_processing.historian_command(processed_command, request.session['context']))
+            if command_options[command_type] == 'EDL':
+                request.session['context']['answers'].append(
+                    command_processing.EDL_command(processed_command, request.session['context']))
 
         response = command_processing.think_response(request.session['context'])
 
@@ -51,7 +54,6 @@ class Command(APIView):
 
         # If command is to switch modes, send new mode back, if not
         return Response({'response': response})
-
 
 class CommandList(APIView):
     """
