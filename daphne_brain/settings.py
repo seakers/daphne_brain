@@ -147,7 +147,14 @@ ALCHEMY_DATABASE = {
     'database': 'ceos'
 }
 
-
+EDL_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'localhost',
+    'port': '5432',
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
+    'database': 'edldatabase'
+}
 # Logging
 
 LOGGING = {
