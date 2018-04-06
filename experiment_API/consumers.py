@@ -1,6 +1,11 @@
-import datetime, json
+import datetime
+import json
 from channels.generic.websocket import JsonWebsocketConsumer
+from importlib import import_module
+from django.conf import settings
+from daphne_brain.session_lock import session_lock
 
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 class ExperimentConsumer(JsonWebsocketConsumer):
     ##### WebSocket event handlers
@@ -20,19 +25,16 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         if content.get('msg_type') == 'add_action':
             action = content['action']
             action['date'] = datetime.datetime.utcnow().isoformat()
-            if 'experiment' not in self.scope['session']:
-                self.scope['session']['experiment'] = {}
-            if 'stages' not in self.scope['session']['experiment']:
-                self.scope['session']['experiment']['stages'] = {}
-            if content['stage'] not in self.scope['session']['experiment']['stages']:
-                self.scope['session']['experiment']['stages'][content['stage']] = {}
-            if 'actions' not in self.scope['session']['experiment']['stages'][content['stage']]:
-                self.scope['session']['experiment']['stages'][content['stage']]['actions'] = []
-            self.scope['session']['experiment']['stages'][content['stage']]['actions'].append(action)
-            self.send(json.dumps(self.scope['session']['experiment']))
+            # Lock the threads to modify sessions without problems
+            with session_lock:
+                store = SessionStore(self.scope['session'].session_key)
+                store['experiment']['stages'][content['stage']]['actions'].append(action)
+                store.save()
+            self.send(json.dumps(store['experiment']))
         elif content.get('msg_type') == 'update_state':
-            if 'experiment' not in self.scope['session']:
-                self.scope['session']['experiment'] = {}
-            self.scope['session']['experiment']['state'] = content['state']
-            self.send(json.dumps(self.scope['session']['experiment']))
-        self.scope['session'].save()
+            # Lock the threads to modify sessions without problems
+            with session_lock:
+                store = SessionStore(self.scope['session'].session_key)
+                store['experiment']['state'] = content['state']
+                store.save()
+            self.send(json.dumps(store['experiment']))

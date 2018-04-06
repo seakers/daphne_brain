@@ -1,14 +1,17 @@
 import logging
-
-# Get an instance of a logger
-logger = logging.getLogger('data-mining')
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
 import os
 import json
 import datetime
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from importlib import import_module
+from django.conf import settings
+from daphne_brain.session_lock import session_lock
+
+# Get an instance of a logger
+logger = logging.getLogger('experiment')
+
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 def stage_type(id, stage_num):
     if id % 2 == 0:
@@ -34,6 +37,9 @@ class StartExperiment(APIView):
         open('./experiment_API/results/' + str(new_id) + '.json', 'w')
 
         # Save experiment start info
+        # IMPORTANT: We don't need to lock the session here as there is no chance of
+        # a race condition until after this request is done! This also helps with
+        # creating a session_key which can then be reused by every other request
         request.session['experiment'] = {}
         request.session['experiment']['id'] = new_id
         request.session['experiment']['stages'] = []
@@ -56,36 +62,23 @@ class StartExperiment(APIView):
 class StartStage(APIView):
 
     def get(self, request, stage, format=None):
-        request.session['experiment']['stages'][stage]['start_date'] = datetime.datetime.utcnow().isoformat()
-        request.session.modified = True
+        with session_lock:
+            store = SessionStore(request.session.session_key)
+            store['experiment']['stages'][stage]['start_date'] = datetime.datetime.utcnow().isoformat()
+            store.save()
 
-        return Response(request.session['experiment'])
+        return Response(store['experiment'])
 
 
 class FinishStage(APIView):
 
     def get(self, request, stage, format=None):
-        request.session['experiment']['stages'][stage]['end_date'] = datetime.datetime.utcnow().isoformat()
-        request.session.modified = True
-        return Response(request.session['experiment'])
+        with session_lock:
+            store = SessionStore(request.session.session_key)
+            store['experiment']['stages'][stage]['end_date'] = datetime.datetime.utcnow().isoformat()
+            store.save()
 
-
-class AddAction(APIView):
-
-    def post(self, request, stage, format=None):
-        action = json.loads(request.data['action'])
-        action['date'] = datetime.datetime.utcnow().isoformat()
-        request.session['experiment']['stages'][stage]['actions'].append(action)
-        request.session.modified = True
-        return Response(request.session['experiment'])
-
-
-class UpdateState(APIView):
-
-    def post(self, request, format=None):
-        request.session['experiment']['state'] = json.loads(request.data['state'])
-        request.session.modified = True
-        return Response(request.session['experiment'])
+        return Response(store['experiment'])
 
 
 class ReloadExperiment(APIView):
