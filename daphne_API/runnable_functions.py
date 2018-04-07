@@ -230,7 +230,13 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
                 orbitIndex = i // ninstr # Floor division
                 instrIndex = i % ninstr # Get the remainder                
                 advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['name']))
-                advice.append("to orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
+
+                if diff[i] == 1:
+                    advice.append("to")
+                elif diff[i] == -1:
+                    advice.append("from")
+
+                advice.append("orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
                     
                 advice = " ".join(advice)
                 out.append(advice)
@@ -419,9 +425,9 @@ def base_feature_expression_to_string(feature_expression, isCritique = False):
         numbers = argSplit[2]
 
         if orbitIndices:
-            orbitNames = [ORBIT_DATASET[int(i)]['alias'] for i in orbitIndices.split(",")]
+            orbitNames = [ORBIT_DATASET[int(i)]['name'] for i in orbitIndices.split(",")]
         if instrumentIndices:
-            instrumentNames = [INSTRUMENT_DATASET[int(i)]['alias'] for i in instrumentIndices.split(",")]
+            instrumentNames = [INSTRUMENT_DATASET[int(i)]['name'] for i in instrumentIndices.split(",")]
         if numbers:
             numbers = [int(n) for n in numbers.split(",")]  
         

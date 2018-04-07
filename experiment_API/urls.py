@@ -6,8 +6,6 @@ urlpatterns = [
     path('start-experiment', views.StartExperiment.as_view()),
     path('start-stage/<int:stage>', views.StartStage.as_view()),
     path('finish-stage/<int:stage>', views.FinishStage.as_view()),
-    path('add-action/<int:stage>', views.AddAction.as_view()),
-    path('update-state', views.UpdateState.as_view()),
     path('reload-experiment', views.ReloadExperiment.as_view()),
     path('finish-experiment', views.FinishExperiment.as_view())
 ]
