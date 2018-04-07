@@ -22,8 +22,8 @@ datamining_commands = [
 
 analyst_commands = [
     ('2000', 'Why does design ${design_id} have this science benefit?'),
-    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?'),
-    ('2010', 'What is the requirement for ${instrument_parameter} for ${vassar_measurement}?')
+    ('2008', 'What is the ${analyst_instrument_parameter} of ${analyst_instrument}?'),
+    ('2010', 'What is the requirement for ${analyst_instrument_parameter} for ${analyst_measurement}?')
 ]
 
 critic_commands = [
@@ -118,6 +118,7 @@ def analyst_stakeholder_list():
 
 
 orbits_info = [
+    "<b>Orbit name: Orbit information</b>",
     "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
     "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
     "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
@@ -127,6 +128,7 @@ orbits_info = [
 
 
 instruments_info = [
+    "<b>Instrument name: Instrument technology, Instrument type</b>",
     "ACE_ORCA: Ocean colour instruments, Medium-resolution spectro-radiometer",
     "ACE_POL: Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
     "ACE_LID: Lidars, Atmospheric lidar",
