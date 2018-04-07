@@ -118,7 +118,7 @@ def analyst_stakeholder_list():
 
 
 orbits_info = [
-    "<b>Orbit name: Orbit information",
+    "<b>Orbit name: Orbit information</b>",
     "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
     "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
     "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
