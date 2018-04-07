@@ -189,7 +189,7 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
 
     try:
         this_design = None
-        num_design_id = int(design_id[1:])
+        num_design_id = int(design_id)
                 
         for design in designs:
             if num_design_id == design['id']:
