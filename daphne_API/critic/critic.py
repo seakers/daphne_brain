@@ -292,8 +292,7 @@ class CRITIC:
         for orbit1 in self.orbits_dataset:
             for instruments1 in self.p(self.instruments_dataset):
                 # Get similar missions from the database
-                result = self.missions_similarity(orbit1,
-                'CommandsInformation', instruments1, missionsDatabase)
+                result = self.missions_similarity(orbit1, instruments1, missionsDatabase)
                 # Write results to the output file
                 if result["maxScore"] != -1:
                     f.write(orbit1["alias"]+"\t"+str(sorted([i["alias"] for i in instruments1]))+"\t"+result[1].name+"\t"+str(result[0])+"\n")
