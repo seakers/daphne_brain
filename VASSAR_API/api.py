@@ -62,26 +62,26 @@ class VASSARClient():
         # Close
         self.transport.close()
     
-    def evaluateArchitecture(self,bitString):
+    def evaluateArchitecture(self, bitString):
         arch_formatted = self.client.eval(bitString)
-        arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+        arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
         return arch
 
-    def evaluateSpecialArchitecture(self,bitString):
+    def evaluateSpecialArchitecture(self, bitString):
         arch_formatted = self.client.evalSpecial(bitString)
-        arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+        arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
         return arch
     
-    def runLocalSearch(self,bitString, experiment_stage):
-        archs_formatted = self.client.runLocalSearch(bitString, experiment_stage)
+    def runLocalSearch(self, bitString, use_special):
+        archs_formatted = self.client.runLocalSearch(bitString, use_special)
         archs = []
         for arch_formatted in archs_formatted:
-            arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+            arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
             archs.append(arch)
-        return archs   
+        return archs
         
-    def critiqueArchitecture(self,bitString):
-        return self.client.getCritique(bitString)
+    def critiqueArchitecture(self, bitString, use_special):
+        return self.client.getCritique(bitString, use_special)
         
         
     def ping(self):
