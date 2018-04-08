@@ -71,14 +71,15 @@ def data_mining_run(designs, behavioral, non_behavioral):
         return None
 
 
-def VASSAR_load_objectives_information(design_id, designs):
+def VASSAR_load_objectives_information(design_id, designs, context):
     client = VASSARClient()
 
     try:
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id[1:])
-        list = client.client.getScoreExplanation(designs[num_design_id]['inputs'])
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        list = client.client.getScoreExplanation(designs[num_design_id]['inputs'], use_special)
 
         # End the connection before return statement
         client.endConnection()
@@ -183,7 +184,7 @@ def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_p
            + threshold + ' and its target value is ' + target_value + '.'
 
 
-def Critic_general_call(design_id, designs, experiment_stage=0):
+def Critic_general_call(design_id, designs, context):
     client = VASSARClient()
     critic = CRITIC()
 
@@ -205,7 +206,8 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
         client.startConnection()
         
         # Criticize architecture (based on rules)
-        result1 = client.client.getCritique(this_design['inputs'])
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        result1 = client.critiqueArchitecture(this_design['inputs'], use_special)
         result = []
         for advice in result1:
             result.append({
@@ -248,7 +250,7 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
         original_outputs = this_design['outputs']
         original_inputs = this_design['inputs']
         
-        archs = client.runLocalSearch(this_design['inputs'], experiment_stage)
+        archs = client.runLocalSearch(this_design['inputs'], use_special)
         advices = []
         for arch in archs:
             new_outputs = arch['outputs']
