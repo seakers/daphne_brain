@@ -54,6 +54,9 @@ class StartExperiment(APIView):
             'type': stage_type(request.session['experiment']['id'], 1),
             'actions': []
         })
+
+        request.session['context']['in_experiment'] = True
+
         request.session.modified = True
 
         return Response(request.session['experiment'])
@@ -98,5 +101,6 @@ class FinishExperiment(APIView):
             json.dump(request.session['experiment'], f)
 
         del request.session['experiment']
+        request.session['context']['in_experiment'] = False
 
         return Response('Correct!')

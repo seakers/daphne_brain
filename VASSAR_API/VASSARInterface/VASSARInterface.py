@@ -42,11 +42,11 @@ class Iface(object):
         """
         pass
 
-    def runLocalSearch(self, inputs, experiment_stage):
+    def runLocalSearch(self, inputs, useSpecial):
         """
         Parameters:
          - inputs
-         - experiment_stage
+         - useSpecial
         """
         pass
 
@@ -59,17 +59,19 @@ class Iface(object):
     def getObjectiveList(self):
         pass
 
-    def getCritique(self, inputs):
+    def getCritique(self, inputs, useSpecial):
         """
         Parameters:
          - inputs
+         - useSpecial
         """
         pass
 
-    def getScoreExplanation(self, arch):
+    def getScoreExplanation(self, arch, useSpecial):
         """
         Parameters:
          - arch
+         - useSpecial
         """
         pass
 
@@ -180,20 +182,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "evalSpecial failed: unknown result")
 
-    def runLocalSearch(self, inputs, experiment_stage):
+    def runLocalSearch(self, inputs, useSpecial):
         """
         Parameters:
          - inputs
-         - experiment_stage
+         - useSpecial
         """
-        self.send_runLocalSearch(inputs, experiment_stage)
+        self.send_runLocalSearch(inputs, useSpecial)
         return self.recv_runLocalSearch()
 
-    def send_runLocalSearch(self, inputs, experiment_stage):
+    def send_runLocalSearch(self, inputs, useSpecial):
         self._oprot.writeMessageBegin('runLocalSearch', TMessageType.CALL, self._seqid)
         args = runLocalSearch_args()
         args.inputs = inputs
-        args.experiment_stage = experiment_stage
+        args.useSpecial = useSpecial
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -291,18 +293,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getObjectiveList failed: unknown result")
 
-    def getCritique(self, inputs):
+    def getCritique(self, inputs, useSpecial):
         """
         Parameters:
          - inputs
+         - useSpecial
         """
-        self.send_getCritique(inputs)
+        self.send_getCritique(inputs, useSpecial)
         return self.recv_getCritique()
 
-    def send_getCritique(self, inputs):
+    def send_getCritique(self, inputs, useSpecial):
         self._oprot.writeMessageBegin('getCritique', TMessageType.CALL, self._seqid)
         args = getCritique_args()
         args.inputs = inputs
+        args.useSpecial = useSpecial
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -322,18 +326,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getCritique failed: unknown result")
 
-    def getScoreExplanation(self, arch):
+    def getScoreExplanation(self, arch, useSpecial):
         """
         Parameters:
          - arch
+         - useSpecial
         """
-        self.send_getScoreExplanation(arch)
+        self.send_getScoreExplanation(arch, useSpecial)
         return self.recv_getScoreExplanation()
 
-    def send_getScoreExplanation(self, arch):
+    def send_getScoreExplanation(self, arch, useSpecial):
         self._oprot.writeMessageBegin('getScoreExplanation', TMessageType.CALL, self._seqid)
         args = getScoreExplanation_args()
         args.arch = arch
+        args.useSpecial = useSpecial
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -490,7 +496,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = runLocalSearch_result()
         try:
-            result.success = self._handler.runLocalSearch(args.inputs, args.experiment_stage)
+            result.success = self._handler.runLocalSearch(args.inputs, args.useSpecial)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -582,7 +588,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getCritique_result()
         try:
-            result.success = self._handler.getCritique(args.inputs)
+            result.success = self._handler.getCritique(args.inputs, args.useSpecial)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -605,7 +611,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getScoreExplanation_result()
         try:
-            result.success = self._handler.getScoreExplanation(args.arch)
+            result.success = self._handler.getScoreExplanation(args.arch, args.useSpecial)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -998,13 +1004,13 @@ class runLocalSearch_args(object):
     """
     Attributes:
      - inputs
-     - experiment_stage
+     - useSpecial
     """
 
 
-    def __init__(self, inputs=None, experiment_stage=None,):
+    def __init__(self, inputs=None, useSpecial=None,):
         self.inputs = inputs
-        self.experiment_stage = experiment_stage
+        self.useSpecial = useSpecial
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1026,8 +1032,8 @@ class runLocalSearch_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
-                if ftype == TType.I32:
-                    self.experiment_stage = iprot.readI32()
+                if ftype == TType.BOOL:
+                    self.useSpecial = iprot.readBool()
                 else:
                     iprot.skip(ftype)
             else:
@@ -1047,9 +1053,9 @@ class runLocalSearch_args(object):
                 oprot.writeBool(iter34)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
-        if self.experiment_stage is not None:
-            oprot.writeFieldBegin('experiment_stage', TType.I32, 2)
-            oprot.writeI32(self.experiment_stage)
+        if self.useSpecial is not None:
+            oprot.writeFieldBegin('useSpecial', TType.BOOL, 2)
+            oprot.writeBool(self.useSpecial)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1071,7 +1077,7 @@ all_structs.append(runLocalSearch_args)
 runLocalSearch_args.thrift_spec = (
     None,  # 0
     (1, TType.LIST, 'inputs', (TType.BOOL, None, False), None, ),  # 1
-    (2, TType.I32, 'experiment_stage', None, None, ),  # 2
+    (2, TType.BOOL, 'useSpecial', None, None, ),  # 2
 )
 
 
@@ -1481,11 +1487,13 @@ class getCritique_args(object):
     """
     Attributes:
      - inputs
+     - useSpecial
     """
 
 
-    def __init__(self, inputs=None,):
+    def __init__(self, inputs=None, useSpecial=None,):
         self.inputs = inputs
+        self.useSpecial = useSpecial
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1506,6 +1514,11 @@ class getCritique_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.useSpecial = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1522,6 +1535,10 @@ class getCritique_args(object):
             for iter69 in self.inputs:
                 oprot.writeBool(iter69)
             oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.useSpecial is not None:
+            oprot.writeFieldBegin('useSpecial', TType.BOOL, 2)
+            oprot.writeBool(self.useSpecial)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1543,6 +1560,7 @@ all_structs.append(getCritique_args)
 getCritique_args.thrift_spec = (
     None,  # 0
     (1, TType.LIST, 'inputs', (TType.BOOL, None, False), None, ),  # 1
+    (2, TType.BOOL, 'useSpecial', None, None, ),  # 2
 )
 
 
@@ -1618,11 +1636,13 @@ class getScoreExplanation_args(object):
     """
     Attributes:
      - arch
+     - useSpecial
     """
 
 
-    def __init__(self, arch=None,):
+    def __init__(self, arch=None, useSpecial=None,):
         self.arch = arch
+        self.useSpecial = useSpecial
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -1643,6 +1663,11 @@ class getScoreExplanation_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.useSpecial = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -1659,6 +1684,10 @@ class getScoreExplanation_args(object):
             for iter83 in self.arch:
                 oprot.writeBool(iter83)
             oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.useSpecial is not None:
+            oprot.writeFieldBegin('useSpecial', TType.BOOL, 2)
+            oprot.writeBool(self.useSpecial)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -1680,6 +1709,7 @@ all_structs.append(getScoreExplanation_args)
 getScoreExplanation_args.thrift_spec = (
     None,  # 0
     (1, TType.LIST, 'arch', (TType.BOOL, None, False), None, ),  # 1
+    (2, TType.BOOL, 'useSpecial', None, None, ),  # 2
 )
 
 
