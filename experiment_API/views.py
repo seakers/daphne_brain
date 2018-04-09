@@ -55,6 +55,8 @@ class StartExperiment(APIView):
             'actions': []
         })
 
+        if 'context' not in request.session:
+            request.session['context'] = {}
         request.session['context']['in_experiment'] = True
 
         request.session.modified = True
