@@ -52,10 +52,28 @@ def error_answers(missing_param):
         'visual_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.'
     }
 
+
+def not_allowed_condition(context, command_class, command_type):
+    if 'allowed_commands' not in context:
+        return False
+    if command_type not in context['allowed_commands'][command_class]:
+        return True
+    return False
+
+
+def not_allowed_answers():
+    return {
+        'voice_answer': 'This command is restricted right now.',
+        'visual_answer_type': 'text',
+        'visual_answer': 'This command is restricted right now.'
+    }
+
 def ifeed_command(processed_command, context):
     print("Command classified as iFEED type")
     # Classify the question, obtaining a question type
     question_type = qa_pipeline.classify(processed_command, "iFEED")
+    if not_allowed_condition(context, 'ifeed', str(question_type)):
+        return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type
     [params, function, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "iFEED")
@@ -78,6 +96,8 @@ def ifeed_command(processed_command, context):
 def vassar_command(processed_command, context):
     # Classify the question, obtaining a question type
     question_type = qa_pipeline.classify(processed_command, "VASSAR")
+    if not_allowed_condition(context, 'analyst', str(question_type)):
+        return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type
     [params, function, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "VASSAR")
@@ -100,6 +120,8 @@ def vassar_command(processed_command, context):
 def critic_command(processed_command, context):
     # Classify the question, obtaining a question type
     question_type = qa_pipeline.classify(processed_command, "Critic")
+    if not_allowed_condition(context, 'critic', str(question_type)):
+        return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type
     [params, function, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "Critic")
@@ -122,6 +144,8 @@ def critic_command(processed_command, context):
 def historian_command(processed_command, context):
     # Classify the question, obtaining a question type
     question_type = qa_pipeline.classify(processed_command, "Historian")
+    if not_allowed_condition(context, 'historian', str(question_type)):
+        return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type
     [params, query, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "Historian")
