@@ -77,7 +77,7 @@ def VASSAR_load_objectives_information(design_id, designs, context):
     try:
         # Start connection with VASSAR
         client.startConnection()
-        num_design_id = int(design_id[1:])
+        num_design_id = int(design_id)
         use_special = context['in_experiment'] if 'in_experiment' in context else False
         list = client.client.getScoreExplanation(designs[num_design_id]['inputs'], use_special)
 
