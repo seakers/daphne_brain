@@ -34,8 +34,8 @@ critic_commands = [
 ]
 
 historian_commands = [
-    ('4000', 'Which missions can measure ${measurement} [between ${year} and ${year}]?'),
-    #'Which missions do we currently use to measure ${measurement}?',
+    ('4000', 'Which missions [from ${space_agency}] can measure ${measurement} [between ${year} and ${year}]?'),
+    ('4001', 'Which missions [from ${space_agency}] do we currently use to measure ${measurement}?'),
     #'Which instruments can measure ${measurement} [between ${year} and ${year}]?',
     #'Which instruments do we currently use to measure ${measurement}?',
     #'Which missions have flown ${technology} [between ${year} and ${year}]?',
@@ -93,6 +93,13 @@ def technologies_list():
     technologies = [technology for technology in models.technologies]
     technologies = technologies + [type.name.strip() for type in session.query(models.InstrumentType).all()]
     return technologies
+
+
+def agencies_list():
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    agencies = [agency.name.strip() for agency in session.query(models.Agency).all()]
+    return agencies
 
 
 def objectives_list():

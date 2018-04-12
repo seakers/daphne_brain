@@ -75,6 +75,13 @@ def extract_technology(processed_question, number_of_features, context):
     technologies = technologies + [type.name.strip().lower() for type in session.query(models.InstrumentType).all()]
     return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
 
+def extract_space_agency(processed_question, number_of_features, context):
+    # Get a list of technologies and types
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    agencies = [' ' + agency.name.strip().lower() for agency in session.query(models.Agency).all()]
+    return sorted_list_of_features_by_index(processed_question, agencies, number_of_features)
+
 
 def extract_date(processed_question, number_of_features, context):
     # For now just pick the years
