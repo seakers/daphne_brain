@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import or_
+from sqlalchemy import func
 from tensorflow.contrib import learn
 from daphne_API import data_helpers
 
@@ -76,6 +77,7 @@ extract_function = {}
 extract_function["mission"] = extractors.extract_mission
 extract_function["measurement"] = extractors.extract_measurement
 extract_function["technology"] = extractors.extract_technology
+extract_function["space_agency"] = extractors.extract_space_agency
 extract_function["year"] = extractors.extract_date
 extract_function["design_id"] = extractors.extract_design_id
 extract_function["agent"] = extractors.extract_agent
@@ -89,6 +91,7 @@ process_function = {}
 process_function["mission"] = processors.process_mission
 process_function["measurement"] = processors.not_processed
 process_function["technology"] = processors.not_processed
+process_function["space_agency"] = processors.process_mission
 process_function["year"] = processors.process_date
 process_function["design_id"] = processors.not_processed
 process_function["agent"] = processors.not_processed
