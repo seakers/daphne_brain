@@ -23,6 +23,10 @@ datamining_commands = [
 analyst_commands = [
     ('2000', 'Why does design ${design_id} have this science benefit?'),
     ('2012', 'Why does this design have this science benefit?'),
+    ('2013', 'Explain the stakeholder ${analyst_stakeholder} science benefit for this design.'),
+    ('2014', 'Explain the objective ${analyst_objective} science benefit for this design.'),
+    ('2016', 'Which instruments improve the science score for stakeholder ${analyst_stakeholder}?'),
+    ('2015', 'Which instruments improve the science score for objective ${analyst_objective}?'),
     ('2008', 'What is the ${analyst_instrument_parameter} of ${analyst_instrument}?'),
     ('2010', 'What is the requirement for ${analyst_instrument_parameter} for ${analyst_measurement}?')
 ]
@@ -106,6 +110,8 @@ def objectives_list():
     VASSAR = VASSARClient()
     VASSAR.startConnection()
     objectives = VASSAR.client.getObjectiveList()
+    objectives.sort(key=lambda obj: int(obj[3:]))
+    objectives.sort(key=lambda obj: obj[0:2])
     VASSAR.endConnection()
     return objectives
 
