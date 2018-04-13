@@ -71,7 +71,7 @@ def data_mining_run(designs, behavioral, non_behavioral):
         return None
 
 
-def VASSAR_load_objectives_information(design_id, designs, context):
+def VASSAR_get_architecture_scores(design_id, designs, context):
     client = VASSARClient()
 
     try:
@@ -79,16 +79,105 @@ def VASSAR_load_objectives_information(design_id, designs, context):
         client.startConnection()
         num_design_id = int(design_id)
         use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getScoreExplanation(designs[num_design_id]['inputs'], use_special)
+        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'], use_special)
 
         # End the connection before return statement
         client.endConnection()
         return list
 
     except Exception:
-        logger.exception('Exception in loading objective information')
+        logger.exception('Exception in loading architecture score information')
         client.endConnection()
         return None
+
+
+def VASSAR_get_panel_scores(design_id, designs, panel, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        num_design_id = int(design_id)
+        stakeholders_to_excel = {
+            "atmospheric": "ATM",
+            "oceanic": "OCE",
+            "terrestrial": "TER"
+        }
+        panel_code = stakeholders_to_excel[panel]
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code, use_special)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading panel score information')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_objective_scores(design_id, designs, objective, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        num_design_id = int(design_id)
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective, use_special)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading objective score information')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_instruments_for_objective(objective, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        list = client.client.getInstrumentsForObjective(objective)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading related instruments to an objective')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        stakeholders_to_excel = {
+            "atmospheric": "ATM",
+            "oceanic": "OCE",
+            "terrestrial": "TER"
+        }
+        panel_code = stakeholders_to_excel[stakeholder]
+        list = client.client.getInstrumentsForStakeholder(panel_code)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading related instruments to a panel')
+        client.endConnection()
+        return None
+
 
 
 def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
@@ -159,8 +248,9 @@ def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter,
         else:
             threshold = requirements[0]["thresholds"][1:-1].split(',')[-1]
             target_value = requirements[0]["thresholds"][1:-1].split(',')[0]
-            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' is ' \
-                + threshold + ' and its target value is ' + target_value + '.'
+            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' (subojective ' + \
+                   requirements[0]["stakeholder"] + ') is ' + threshold + ' and its target value is ' + \
+                   target_value + '.'
     else:
         return 'I have not found any information for this requirement.'
 

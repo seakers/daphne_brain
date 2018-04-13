@@ -128,3 +128,10 @@ def extract_vassar_measurement(processed_question, number_of_features, context):
 def extract_vassar_stakeholder(processed_question, number_of_features, context):
     options = ["atmospheric","oceanic","terrestrial"]
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+
+
+def extract_vassar_objective(processed_question, number_of_features, context):
+    options = ["ATM" + str(i) for i in range(1,10)]
+    options.extend(["OCE" + str(i) for i in range(1,10)])
+    options.extend(["TER" + str(i) for i in range(1, 10)])
+    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
