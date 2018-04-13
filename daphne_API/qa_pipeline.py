@@ -85,6 +85,7 @@ extract_function["instrument_parameter"] = extractors.extract_instrument_paramet
 extract_function["vassar_instrument"] = extractors.extract_vassar_instrument
 extract_function["vassar_measurement"] = extractors.extract_vassar_measurement
 extract_function["vassar_stakeholder"] = extractors.extract_vassar_stakeholder
+extract_function["objective"] = extractors.extract_vassar_objective
 
 
 process_function = {}
@@ -99,6 +100,7 @@ process_function["instrument_parameter"] = processors.not_processed
 process_function["vassar_instrument"] = processors.not_processed
 process_function["vassar_measurement"] = processors.not_processed
 process_function["vassar_stakeholder"] = processors.not_processed
+process_function["objective"] = processors.not_processed
 
 
 def extract_data(processed_question, params, context):

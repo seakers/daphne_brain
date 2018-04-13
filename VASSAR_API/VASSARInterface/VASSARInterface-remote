@@ -31,8 +31,12 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getOrbitList()')
     print('   getInstrumentList()')
     print('   getObjectiveList()')
+    print('   getInstrumentsForObjective(string objective)')
+    print('   getInstrumentsForPanel(string panel)')
     print('   getCritique( inputs, bool useSpecial)')
-    print('   getScoreExplanation( arch, bool useSpecial)')
+    print('   getArchitectureScoreExplanation( arch, bool useSpecial)')
+    print('   getPanelScoreExplanation( arch, string panel, bool useSpecial)')
+    print('   getObjectiveScoreExplanation( arch, string objective, bool useSpecial)')
     print('  int changeLoadedFiles( params_map)')
     print('')
     sys.exit(0)
@@ -155,17 +159,41 @@ elif cmd == 'getObjectiveList':
         sys.exit(1)
     pp.pprint(client.getObjectiveList())
 
+elif cmd == 'getInstrumentsForObjective':
+    if len(args) != 1:
+        print('getInstrumentsForObjective requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getInstrumentsForObjective(args[0],))
+
+elif cmd == 'getInstrumentsForPanel':
+    if len(args) != 1:
+        print('getInstrumentsForPanel requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getInstrumentsForPanel(args[0],))
+
 elif cmd == 'getCritique':
     if len(args) != 2:
         print('getCritique requires 2 args')
         sys.exit(1)
     pp.pprint(client.getCritique(eval(args[0]), eval(args[1]),))
 
-elif cmd == 'getScoreExplanation':
+elif cmd == 'getArchitectureScoreExplanation':
     if len(args) != 2:
-        print('getScoreExplanation requires 2 args')
+        print('getArchitectureScoreExplanation requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getScoreExplanation(eval(args[0]), eval(args[1]),))
+    pp.pprint(client.getArchitectureScoreExplanation(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'getPanelScoreExplanation':
+    if len(args) != 3:
+        print('getPanelScoreExplanation requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.getPanelScoreExplanation(eval(args[0]), args[1], eval(args[2]),))
+
+elif cmd == 'getObjectiveScoreExplanation':
+    if len(args) != 3:
+        print('getObjectiveScoreExplanation requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.getObjectiveScoreExplanation(eval(args[0]), args[1], eval(args[2]),))
 
 elif cmd == 'changeLoadedFiles':
     if len(args) != 1:
