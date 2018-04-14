@@ -6,7 +6,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_architecture_scores('${design_id}', data['designs'], context)",
+    "run_template": "run_func.VASSAR_get_architecture_scores('${design_id}'[1:], data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "obj_name": "item.objective_name",
