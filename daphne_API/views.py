@@ -29,6 +29,9 @@ class Command(APIView):
             request.session['context']['data'] = request.session['data']
 
         request.session['context']['answers'] = []
+
+        if 'allowed_commands' in request.data:
+            request.session['context']['allowed_commands'] = json.loads(request.data['allowed_commands'])
         
         # Act based on the types
         for command_type in command_types:
@@ -80,10 +83,20 @@ class CommandList(APIView):
             command_list = command_lists.missions_list()
         elif command_list_request == 'technologies':
             command_list = command_lists.technologies_list()
+        elif command_list_request == 'space_agencies':
+            command_list = command_lists.agencies_list()
         elif command_list_request == 'objectives':
             command_list = command_lists.objectives_list()
-        elif command_list_request == 'orb_alias':
-            command_list = command_lists.orbits_alias
-        elif command_list_request == 'instr_alias':
-            command_list = command_lists.instruments_alias
+        elif command_list_request == 'orb_info':
+            command_list = command_lists.orbits_info
+        elif command_list_request == 'instr_info':
+            command_list = command_lists.instruments_info
+        elif command_list_request == 'analyst_instrument_parameters':
+            command_list = command_lists.analyst_instrument_parameter_list()
+        elif command_list_request == 'analyst_instruments':
+            command_list = command_lists.analyst_instrument_list()
+        elif command_list_request == 'analyst_measurements':
+            command_list = command_lists.analyst_measurement_list()
+        elif command_list_request == 'analyst_stakeholders':
+            command_list = command_lists.analyst_stakeholder_list()
         return Response({'list': command_list})

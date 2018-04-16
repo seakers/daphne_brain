@@ -31,6 +31,12 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'daphne_API',
+    'data_mining_API',
+    'experiment_API',
+    'iFEED_API',
+    'VASSAR_API',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,10 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'channels',
-    'iFEED_API',
-    'data_mining_API',
-    'VASSAR_API'
 ]
 
 MIDDLEWARE = [

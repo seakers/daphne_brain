@@ -75,6 +75,13 @@ def extract_technology(processed_question, number_of_features, context):
     technologies = technologies + [type.name.strip().lower() for type in session.query(models.InstrumentType).all()]
     return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
 
+def extract_space_agency(processed_question, number_of_features, context):
+    # Get a list of technologies and types
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    agencies = [' ' + agency.name.strip().lower() for agency in session.query(models.Agency).all()]
+    return sorted_list_of_features_by_index(processed_question, agencies, number_of_features)
+
 
 def extract_date(processed_question, number_of_features, context):
     # For now just pick the years
@@ -120,4 +127,11 @@ def extract_vassar_measurement(processed_question, number_of_features, context):
 
 def extract_vassar_stakeholder(processed_question, number_of_features, context):
     options = ["atmospheric","oceanic","terrestrial"]
+    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+
+
+def extract_vassar_objective(processed_question, number_of_features, context):
+    options = ["ATM" + str(i) for i in range(1,10)]
+    options.extend(["OCE" + str(i) for i in range(1,10)])
+    options.extend(["TER" + str(i) for i in range(1, 10)])
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)

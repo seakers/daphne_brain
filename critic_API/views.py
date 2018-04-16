@@ -40,7 +40,7 @@ class CriticizeArchitecture(APIView):
             return Response('')
                 
 
-    def get_history_critique(self,inputs):
+    def get_history_critique(self, inputs):
 
         try:
             pass
@@ -56,7 +56,7 @@ class CriticizeArchitecture(APIView):
             raise
 
 
-    def get_expert_critique(self,inputs):
+    def get_expert_critique(self, inputs):
 
         try:
             self.VASSARClient = VASSARClient()
@@ -64,7 +64,7 @@ class CriticizeArchitecture(APIView):
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
 
-            critique = self.VASSARClient.critiqueArchitecture(inputs)            
+            critique = self.VASSARClient.critiqueArchitecture(inputs, False)
 
             # End the connection before return statement
             self.VASSARClient.endConnection()

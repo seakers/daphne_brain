@@ -1,0 +1,26 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "vassar_stakeholder", "type": "vassar_stakeholder", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "run_func.VASSAR_get_instruments_for_stakeholder('${vassar_stakeholder}', context)",
+    "result_type": "list",
+    "result_fields": {
+      "instrument_name": "item"
+    }
+  },
+  "voice_response": {
+    "type": "list",
+    "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
+    "repeat": "${instrument_name}",
+    "end": "."
+  },
+  "visual_response": {
+    "type": "list",
+    "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
+    "item_template": "${instrument_name}"
+  }
+}
