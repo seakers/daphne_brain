@@ -167,7 +167,7 @@ def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
             "terrestrial": "TER"
         }
         panel_code = stakeholders_to_excel[stakeholder]
-        list = client.client.getInstrumentsForStakeholder(panel_code)
+        list = client.client.getInstrumentsForPanel(panel_code)
 
         # End the connection before return statement
         client.endConnection()
