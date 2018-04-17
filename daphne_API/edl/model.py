@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
 
-import settings
+import daphne_brain.settings as settings
 
 # Import pandas
 import pandas
@@ -23,7 +23,7 @@ def db_connect():
     Performs database connection using database settings from settings.py.
     Returns sqlalchemy engine instance
     """
-    return create_engine(URL(**settings.DATABASE))  # connection and configuration is assembled
+    return create_engine(URL(**settings.EDL_DATABASE))  # connection and configuration is assembled
 
 
 def create_tables(engine):

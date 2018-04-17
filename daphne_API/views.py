@@ -32,7 +32,7 @@ class Command(APIView):
 
         if 'allowed_commands' in request.data:
             request.session['context']['allowed_commands'] = json.loads(request.data['allowed_commands'])
-        
+
         # Act based on the types
         for command_type in command_types:
             if command_options[command_type] == 'iFEED':

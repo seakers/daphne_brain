@@ -7,7 +7,7 @@
   ],
   "query":
   {
-    "always": "session.query(models.Mission, models.Entry, models.ParachuteDescent, models.ParachuteDeployConditions, models.BackshellSeparation, models.HeatShield, models.ParachuteDescentSensing, models.PoweredDescent, models.Touchdown).join(models.Entry).join(models.ParachuteDescent).join(models.ParachuteDeployConditions).join(models.BackshellSeparation).join(models.HeatShield).join(models.ParachuteDescentSensing).join(models.PoweredDescent).join(models.Touchdown).filter(models.Mission.name.ilike('%${mission}%'))",
+    "always": "edl_session.query(edl_models.Mission, edl_models.Entry, edl_models.ParachuteDescent, edl_models.ParachuteDeployConditions, edl_models.BackshellSeparation, edl_models.HeatShield, edl_models.ParachuteDescentSensing, edl_models.PoweredDescent, edl_models.Touchdown).join(edl_models.Entry).join(edl_models.ParachuteDescent).join(edl_models.ParachuteDeployConditions).join(edl_models.BackshellSeparation).join(edl_models.HeatShield).join(edl_models.ParachuteDescentSensing).join(edl_models.PoweredDescent).join(edl_models.Touchdown).filter(edl_models.Mission.name.ilike('%${mission}%'))",
     "opt": [],
     "end": "",
     "result_type": "single",

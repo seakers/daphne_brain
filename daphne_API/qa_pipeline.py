@@ -16,7 +16,7 @@ import daphne_API.data_extractors as extractors
 import daphne_API.data_processors as processors
 import daphne_API.runnable_functions as run_func
 from daphne_API.errors import ParameterMissingError
-import daphne_API.edl.model as models
+import daphne_API.edl.model as edl_models
 
 
 def classify(question, module_name):
@@ -161,6 +161,8 @@ def augment_data(data, context):
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
+    edl_engine = edl_models.db_connect()
+    edl_session = sessionmaker(bind=edl_engine)()
 
     def print_orbit(orbit):
         text_orbit = ""
