@@ -81,6 +81,7 @@ class FinishStage(APIView):
         with session_lock:
             store = SessionStore(request.session.session_key)
             store['experiment']['stages'][stage]['end_date'] = datetime.datetime.utcnow().isoformat()
+            store['experiment']['stages'][stage]['end_state'] = store['experiment']['state']
             store.save()
 
         return Response(store['experiment'])
