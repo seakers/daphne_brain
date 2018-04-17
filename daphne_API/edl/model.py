@@ -5,32 +5,34 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
 
-import daphne_brain.settings as settings
+import settings
 
 # Import pandas
-# import pandas
-# import pandas as pd
+import pandas
+import pandas as pd
 
 # https://stackoverflow.com/questions/44395499/joining-pandas-dataframe-with-sql-table-for-efficient-select-statement
 
 
-
 # Define Table
 DeclarativeBase = declarative_base()
+
 
 def db_connect():
     """
     Performs database connection using database settings from settings.py.
     Returns sqlalchemy engine instance
     """
-    return create_engine(URL(**settings.EDL_DATABASE))  # connection and configuration is assembled
-
+    return create_engine(URL(**settings.DATABASE))  # connection and configuration is assembled
 
 
 def create_tables(engine):
     """"""
-    DeclarativeBase.metadata.create_all(engine)
+    DeclarativeBase.metadata.create_all(
+        engine)  # passses in our engine as a source of database connectivity. MetaData emits schema generation commands to the database
 
+
+####################################################################################################################
 
 class Entry(DeclarativeBase):
     """SQLalchemy entry model"""
@@ -48,7 +50,7 @@ class Entry(DeclarativeBase):
     entry_vehicle = Column('entry_vehicle', String,
                            CheckConstraint("entry_vehicle IN ('Capsule', 'Lifting body', 'Aerobot')"))
     entry_velocity = Column('entry_velocity', Float)
-    entry_velocity_unit= Column('entry_velocity_unit', String,
+    entry_velocity_unit = Column('entry_velocity_unit', String,
                                  CheckConstraint("entry_velocity_unit IN ('km/s', 'ft/s')"))
     entry_lift_control = Column('entry_lift_control', String,
                                 CheckConstraint("entry_lift_control IN ('CM offset','No offset')"))
@@ -65,7 +67,6 @@ class Entry(DeclarativeBase):
     peak_deceleration = Column('peak_deceleration', Float)
     peak_deceleration_unit = Column('peak_deceleration_unit', String,
                                     CheckConstraint("peak_deceleration_unit IN ('G', 'km/s^2','ft/s^2')"))
-
     missions = relationship('Mission', back_populates='entry')  # link to mission
 
 
@@ -148,15 +149,16 @@ class HeatShield(DeclarativeBase):
     hs_tps = Column('hs_tps', String, CheckConstraint("hs_tps IN ('SLA-561')"))
     hs_thickness = Column('hs_thickness', Float)
     hs_thickness_unit = Column('hs_thickness_unit', String, CheckConstraint("hs_thickness_unit IN ('in','cm','m')"))
+    hs_total_integrated_heating = Column('hs_total_integrated_heating', Integer)
     hs_total_integrated_heating_unit = Column('hs_total_integrated_heating_unit', String,
                                               CheckConstraint("hs_total_integrated_heating_unit IN ('J/m^2')"))
-    hs_total_integrated_heating = Column('hs_total_integrated_heating', Integer)
     hs_peak_heat_rate = Column('hs_peak_heat_rate', Integer)
     hs_peak_heat_rate_unit = Column('hs_peak_heata_rate_unit', String,
                                     CheckConstraint("hs_peak_heata_rate_unit IN ('W/m^2')"))
     hs_peak_stagnation_pressure = Column('hs_peak_stagnation_pressure', Integer)
     hs_peak_stagnation_pressure_unit = Column('hs_peak_stagnation_pressure_unit', String,
                                               CheckConstraint("hs_peak_stagnation_pressure_unit IN ('Pa','psi')"))
+
 
 class BackshellSeparation(DeclarativeBase):
     __tablename__ = 'backshell_separation'
@@ -167,7 +169,11 @@ class BackshellSeparation(DeclarativeBase):
                                      back_populates='backshell_separation')  # link to parachute descent
 
     bs_separation_altitude = Column('bs_separation_altitude', Float)
+    bs_separation_altitude_unit = Column('bs_separation_altitude_unit', String,
+                                         CheckConstraint("bs_separation_altitude_unit IN ('in','cm','km','m')"))
     bs_separation_velocity = Column('bs_separation_velocity', Float)
+    bs_separation_velocity_unit = Column('bs_separation_velocity_unit', String,
+                                         CheckConstraint("bs_separation_velocity_unit IN ('in/s','cm/s','km/s','m/s')"))
     bs_separation_mechanism = Column('bs_separation_mechanism', String,
                                      CheckConstraint("bs_separation_mechanism IN ('Pyros', 'None')"))
 
@@ -205,13 +211,25 @@ class Touchdown(DeclarativeBase):
     missions = relationship('Mission', back_populates='touchdown')
 
     touchdown_vertical_velocity = Column('touchdown_vertical_velocity', Float)
+    touchdown_vertical_velocity_unit = Column('touchdown_vertical_velocity_unit', String,
+                                              CheckConstraint(
+                                                  "touchdown_vertical_velocity_unit IN ('in/s','cm/s','km/s','m/s')"))
     touchdown_horizontal_velocity = Column('touchdown_horizontal_velocity', Float)
+    touchdown_horizontal_velocity_unit = Column('touchdown_horizontal_velocity_unit', String,
+                                                CheckConstraint(
+                                                    "touchdown_horizontal_velocity_unit IN ('in/s','cm/s','km/s','m/s')"))
     touchdown_attenuation = Column('touchdown_attenuation', String,
                                    CheckConstraint(
                                        "touchdown_attenuation IN ('Crushable legs', '4-pi airbag', 'Wheels')"))
 
     touchdown_rock_height_capability = Column('touchdown_rock_height_capability', Float)
+    touchdown_rock_height_capability_unit = Column('touchdown_rock_height_capability_unit', String,
+                                                   CheckConstraint(
+                                                       "touchdown_rock_height_capability_unit IN ('in','cm','km','m')"))
     touchdown_slope_capability = Column('touchdown_slope_capability', Float)
+    touchdown_slope_capability_unit = Column('touchdown_slope_capability_unit', String,
+                                             CheckConstraint(
+                                                 "touchdown_slope_capability_unit IN ('deg','rad')"))
     touchdown_sensor = Column('touchdown_sensor', String,
                               CheckConstraint(
                                   "touchdown_sensor IN ('None', 'Accelerometer', 'Clock', 'Hall Effect', 'Throttle Down')"))

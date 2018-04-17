@@ -2,8 +2,8 @@
   "type": "db_query",
   "params":
   [
-    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true },
-    { "name": "parameter", "type": "parameter", "options": "", "mandatory": true}
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true,"from_context":false},
+    { "name": "parameter", "type": "parameter", "options": "", "mandatory": true, "from_context":false}
   ],
   "query":
   {

@@ -214,13 +214,13 @@ def query(query, data):
         for row in query_db.all():
             result_row = {}
             for key, value in query["result_fields"].items():
-                result_row[key] = eval(value)
+                result_row[key] = eval(Template(value).substitute(data))
             result.append(result_row)
     elif query["result_type"] == "single":
         row = query_db.first()
         result = {}
         for key, value in query["result_fields"].items():
-            result[key] = eval(value)
+            result[key] = eval(Template(value).substitute(data))
 
     return result
 
@@ -237,12 +237,13 @@ def run_function(function_info, data, context):
         for item in command_result:
             result_row = {}
             for key, value in function_info["result_fields"].items():
-                result_row[key] = eval(value)
+                result_row[key] = eval(Template(value).substitute(data))
             result.append(result_row)
     elif function_info["result_type"] == "single":
         result = {}
         for key, value in function_info["result_fields"].items():
-            result[key] = eval(value)
+            result[key] = eval(Template(value).substitute(data))
+
 
     return result
 
