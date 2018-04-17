@@ -6,7 +6,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.Critic_general_call('${current_design_id}', data['designs'])",
+    "run_template": "run_func.Critic_general_call('${current_design_id}', data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",
@@ -15,13 +15,13 @@
   },
   "voice_response": {
     "type": "list",
-    "begin": "The advice I have for this design is: ",
+    "begin": "The advice I have for the selected design (${current_design_id}) is: ",
     "repeat": "${adv_type}: ${advice}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
-    "begin": "The advice I have for this design is: ",
+    "begin": "The advice I have for the selected design (${current_design_id}) is: ",
     "item_template": "<b>${adv_type}</b>: ${advice}"
   }
 }

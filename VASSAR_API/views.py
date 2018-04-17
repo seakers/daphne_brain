@@ -120,7 +120,7 @@ class RunLocalSearch(APIView):
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
-            architectures = self.VASSARClient.runLocalSearch(inputs)    
+            architectures = self.VASSARClient.runLocalSearch(inputs, False)
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:

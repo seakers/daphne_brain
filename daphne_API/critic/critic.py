@@ -313,10 +313,10 @@ class CRITIC:
             if len(instruments) > 0:
                 if res[0] < 6:
                     result.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
-                                  orbit["alias"])
+                                  orbit["name"])
                 else:
                     result.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
-                                  (orbit["alias"], res[1].name))
+                                  (orbit["name"], res[1].name))
                         # +
                         # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
                         #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')

@@ -71,23 +71,113 @@ def data_mining_run(designs, behavioral, non_behavioral):
         return None
 
 
-def VASSAR_load_objectives_information(design_id, designs):
+def VASSAR_get_architecture_scores(design_id, designs, context):
     client = VASSARClient()
 
     try:
         # Start connection with VASSAR
         client.startConnection()
-        num_design_id = int(design_id[1:])
-        list = client.client.getScoreExplanation(designs[num_design_id]['inputs'])
+        num_design_id = int(design_id)
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'], use_special)
 
         # End the connection before return statement
         client.endConnection()
         return list
 
     except Exception:
-        logger.exception('Exception in loading objective information')
+        logger.exception('Exception in loading architecture score information')
         client.endConnection()
         return None
+
+
+def VASSAR_get_panel_scores(design_id, designs, panel, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        num_design_id = int(design_id)
+        stakeholders_to_excel = {
+            "atmospheric": "ATM",
+            "oceanic": "OCE",
+            "terrestrial": "TER"
+        }
+        panel_code = stakeholders_to_excel[panel]
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code, use_special)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading panel score information')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_objective_scores(design_id, designs, objective, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        num_design_id = int(design_id)
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective, use_special)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading objective score information')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_instruments_for_objective(objective, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        list = client.client.getInstrumentsForObjective(objective)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading related instruments to an objective')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
+    client = VASSARClient()
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        stakeholders_to_excel = {
+            "atmospheric": "ATM",
+            "oceanic": "OCE",
+            "terrestrial": "TER"
+        }
+        panel_code = stakeholders_to_excel[stakeholder]
+        list = client.client.getInstrumentsForPanel(panel_code)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading related instruments to a panel')
+        client.endConnection()
+        return None
+
 
 
 def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
@@ -158,8 +248,9 @@ def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter,
         else:
             threshold = requirements[0]["thresholds"][1:-1].split(',')[-1]
             target_value = requirements[0]["thresholds"][1:-1].split(',')[0]
-            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' is ' \
-                + threshold + ' and its target value is ' + target_value + '.'
+            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' (subojective ' + \
+                   requirements[0]["stakeholder"] + ') is ' + threshold + ' and its target value is ' + \
+                   target_value + '.'
     else:
         return 'I have not found any information for this requirement.'
 
@@ -183,13 +274,13 @@ def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_p
            + threshold + ' and its target value is ' + target_value + '.'
 
 
-def Critic_general_call(design_id, designs, experiment_stage=0):
+def Critic_general_call(design_id, designs, context):
     client = VASSARClient()
     critic = CRITIC()
 
     try:
         this_design = None
-        num_design_id = int(design_id[1:])
+        num_design_id = int(design_id)
                 
         for design in designs:
             if num_design_id == design['id']:
@@ -205,7 +296,8 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
         client.startConnection()
         
         # Criticize architecture (based on rules)
-        result1 = client.client.getCritique(this_design['inputs'])
+        use_special = context['in_experiment'] if 'in_experiment' in context else False
+        result1 = client.critiqueArchitecture(this_design['inputs'], use_special)
         result = []
         for advice in result1:
             result.append({
@@ -230,7 +322,13 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
                 orbitIndex = i // ninstr # Floor division
                 instrIndex = i % ninstr # Get the remainder                
                 advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['name']))
-                advice.append("to orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
+
+                if diff[i] == 1:
+                    advice.append("to")
+                elif diff[i] == -1:
+                    advice.append("from")
+
+                advice.append("orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
                     
                 advice = " ".join(advice)
                 out.append(advice)
@@ -242,7 +340,7 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
         original_outputs = this_design['outputs']
         original_inputs = this_design['inputs']
         
-        archs = client.runLocalSearch(this_design['inputs'], experiment_stage)
+        archs = client.runLocalSearch(this_design['inputs'], use_special)
         advices = []
         for arch in archs:
             new_outputs = arch['outputs']
@@ -419,9 +517,9 @@ def base_feature_expression_to_string(feature_expression, isCritique = False):
         numbers = argSplit[2]
 
         if orbitIndices:
-            orbitNames = [ORBIT_DATASET[int(i)]['alias'] for i in orbitIndices.split(",")]
+            orbitNames = [ORBIT_DATASET[int(i)]['name'] for i in orbitIndices.split(",")]
         if instrumentIndices:
-            instrumentNames = [INSTRUMENT_DATASET[int(i)]['alias'] for i in instrumentIndices.split(",")]
+            instrumentNames = [INSTRUMENT_DATASET[int(i)]['name'] for i in instrumentIndices.split(",")]
         if numbers:
             numbers = [int(n) for n in numbers.split(",")]  
         

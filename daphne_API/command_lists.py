@@ -22,8 +22,13 @@ datamining_commands = [
 
 analyst_commands = [
     ('2000', 'Why does design ${design_id} have this science benefit?'),
-    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?'),
-    ('2010', 'What is the requirement for ${instrument_parameter} for ${vassar_measurement}?')
+    ('2012', 'Why does this design have this science benefit?'),
+    ('2013', 'Explain the stakeholder ${analyst_stakeholder} science benefit for this design.'),
+    ('2014', 'Explain the objective ${analyst_objective} science benefit for this design.'),
+    ('2016', 'Which instruments improve the science score for stakeholder ${analyst_stakeholder}?'),
+    ('2015', 'Which instruments improve the science score for objective ${analyst_objective}?'),
+    ('2008', 'What is the ${analyst_instrument_parameter} of ${analyst_instrument}?'),
+    ('2010', 'What is the requirement for ${analyst_instrument_parameter} for ${analyst_measurement}?')
 ]
 
 critic_commands = [
@@ -33,8 +38,8 @@ critic_commands = [
 ]
 
 historian_commands = [
-    ('4000', 'Which missions can measure ${measurement} [between ${year} and ${year}]?'),
-    #'Which missions do we currently use to measure ${measurement}?',
+    ('4000', 'Which missions [from ${space_agency}] can measure ${measurement} [between ${year} and ${year}]?'),
+    ('4001', 'Which missions [from ${space_agency}] do we currently use to measure ${measurement}?'),
     #'Which instruments can measure ${measurement} [between ${year} and ${year}]?',
     #'Which instruments do we currently use to measure ${measurement}?',
     #'Which missions have flown ${technology} [between ${year} and ${year}]?',
@@ -94,10 +99,19 @@ def technologies_list():
     return technologies
 
 
+def agencies_list():
+    engine = models.db_connect()
+    session = sessionmaker(bind=engine)()
+    agencies = [agency.name.strip() for agency in session.query(models.Agency).all()]
+    return agencies
+
+
 def objectives_list():
     VASSAR = VASSARClient()
     VASSAR.startConnection()
     objectives = VASSAR.client.getObjectiveList()
+    objectives.sort(key=lambda obj: int(obj[3:]))
+    objectives.sort(key=lambda obj: obj[0:2])
     VASSAR.endConnection()
     return objectives
 
@@ -118,6 +132,7 @@ def analyst_stakeholder_list():
 
 
 orbits_info = [
+    "<b>Orbit name: Orbit information</b>",
     "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
     "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
     "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
@@ -127,6 +142,7 @@ orbits_info = [
 
 
 instruments_info = [
+    "<b>Instrument name: Instrument technology, Instrument type</b>",
     "ACE_ORCA: Ocean colour instruments, Medium-resolution spectro-radiometer",
     "ACE_POL: Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
     "ACE_LID: Lidars, Atmospheric lidar",

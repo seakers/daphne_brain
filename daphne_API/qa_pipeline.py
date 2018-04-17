@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import or_
+from sqlalchemy import func
 from tensorflow.contrib import learn
 from daphne_API import data_helpers
 
@@ -52,11 +53,11 @@ def classify(question, module_name):
             result_logits = sess.run(logits, {input_x: x_test, dropout_keep_prob: 1.0})
             prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
-    named_labels = set()
-    for filename in os.listdir("./daphne_API/command_types/" + module_name):
+    named_labels = []
+    for filename in sorted(os.listdir("./daphne_API/command_types/" + module_name)):
         specific_label = int(filename.split('.', 1)[0])
-        named_labels.add(specific_label)
-    return list(named_labels)[prediction[0][0]]
+        named_labels.append(specific_label)
+    return named_labels[prediction[0][0]]
 
 
 def load_type_info(question_type, module_name):
@@ -76,6 +77,7 @@ extract_function = {}
 extract_function["mission"] = extractors.extract_mission
 extract_function["measurement"] = extractors.extract_measurement
 extract_function["technology"] = extractors.extract_technology
+extract_function["space_agency"] = extractors.extract_space_agency
 extract_function["year"] = extractors.extract_date
 extract_function["design_id"] = extractors.extract_design_id
 extract_function["agent"] = extractors.extract_agent
@@ -83,6 +85,7 @@ extract_function["instrument_parameter"] = extractors.extract_instrument_paramet
 extract_function["vassar_instrument"] = extractors.extract_vassar_instrument
 extract_function["vassar_measurement"] = extractors.extract_vassar_measurement
 extract_function["vassar_stakeholder"] = extractors.extract_vassar_stakeholder
+extract_function["objective"] = extractors.extract_vassar_objective
 
 extract_function["name"] = extractors.extract_edl_mission
 extract_function["edl_mission"] = extractors.extract_edl_mission
@@ -92,6 +95,7 @@ process_function = {}
 process_function["mission"] = processors.process_mission
 process_function["measurement"] = processors.not_processed
 process_function["technology"] = processors.not_processed
+process_function["space_agency"] = processors.process_mission
 process_function["year"] = processors.process_date
 process_function["design_id"] = processors.not_processed
 process_function["agent"] = processors.not_processed
@@ -99,9 +103,12 @@ process_function["instrument_parameter"] = processors.not_processed
 process_function["vassar_instrument"] = processors.not_processed
 process_function["vassar_measurement"] = processors.not_processed
 process_function["vassar_stakeholder"] = processors.not_processed
+process_function["objective"] = processors.not_processed
+
 process_function["parameter"] = processors.process_parameter
 process_function["edl_mission"] = processors.not_processed
 process_function["name"] = processors.not_processed
+
 
 
 def extract_data(processed_question, params, context):

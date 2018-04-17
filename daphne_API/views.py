@@ -30,6 +30,9 @@ class Command(APIView):
 
         request.session['context']['answers'] = []
 
+        if 'allowed_commands' in request.data:
+            request.session['context']['allowed_commands'] = json.loads(request.data['allowed_commands'])
+        
         # Act based on the types
         for command_type in command_types:
             if command_options[command_type] == 'iFEED':
@@ -82,6 +85,8 @@ class CommandList(APIView):
             command_list = command_lists.missions_list()
         elif command_list_request == 'technologies':
             command_list = command_lists.technologies_list()
+        elif command_list_request == 'space_agencies':
+            command_list = command_lists.agencies_list()
         elif command_list_request == 'objectives':
             command_list = command_lists.objectives_list()
         elif command_list_request == 'orb_info':

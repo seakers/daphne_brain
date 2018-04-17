@@ -1,22 +1,18 @@
 import logging
 
-from django.shortcuts import render
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
-import numpy as np
-import sys,os
-import json
+import os
 import csv
-import hashlib
-import datetime
 
-from messagebus.message import Message
+from importlib import import_module
+from django.conf import settings
+from daphne_brain.session_lock import session_lock
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
-#from util.log import getLogger
+
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 # Get an instance of a logger
 logger = logging.getLogger('iFEED')
@@ -41,16 +37,15 @@ class ImportData(APIView):
             # Set the path of the file containing data
             file_path = os.path.dirname(os.path.abspath(__file__)) + '/data/' + request.POST['filename']
             
-            self.archID = 0
+            archID = 0
             
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
                 read = csv.reader(csvfile, delimiter=',')
-                self.architectures = []
+                architectures = []
                 bit_strings = set()
                 # For each row, store the information
-                id = 0
                 for ind, row in enumerate(read):
                     # Change boolean string to boolean array
                     inputs = self.booleanString2booleanArray(row[0])
@@ -59,40 +54,18 @@ class ImportData(APIView):
                     outputs = [science, cost]
                                         
                     if row[0] not in bit_strings:
-                        self.architectures.append({'id':self.archID, 'inputs':inputs, 'outputs':outputs})
+                        architectures.append({ 'id': archID, 'inputs': inputs, 'outputs': outputs })
                         bit_strings.add(row[0])
-                        self.archID+=1
-
-#            # If experiment is running, change architectures for those of experiment
-#            if 'experiment' in request.session:
-#                if 'start_date2' not in request.session['experiment']:
-#                    architectures_name = 'architectures1'
-#                else:
-#                    architectures_name = 'architectures2'
-#
-#                if request.session['experiment']['new_data']:
-#                    # Save initial archs into experiment
-#                    for arch in self.architectures:
-#                        request.session['experiment'][architectures_name].append({
-#                            'arch': arch,
-#                            'time': datetime.datetime.utcnow().isoformat()
-#                        })
-#                    request.session['experiment']['new_data'] = False
-#                else:
-#                    # Recover archs when reloading
-#                    self.architectures = []
-#                    for arch in request.session['experiment'][architectures_name]:
-#                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
-
+                        archID += 1
 
             # Define context and see if it was already defined for this session
-            if 'data' not in request.session:
-                request.session['data'] = []
-
-            request.session['data'] = self.architectures
-            request.session['archID'] = self.archID
+            with session_lock:
+                store = SessionStore(request.session.session_key)
+                store['data'] = architectures
+                store['archID'] = archID
+                store.save()
                         
-            return Response(self.architectures)
+            return Response(architectures)
         
         except Exception:
             logger.exception('Exception in importing data for iFEED')
