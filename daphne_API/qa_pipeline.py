@@ -63,14 +63,15 @@ def classify(question, module_name):
 def load_type_info(question_type, module_name):
     with open('./daphne_API/command_types/' + module_name + '/' + str(question_type) + '.json', 'r') as file:
         type_info = json.load(file)
-    information = []
-    information.append(type_info["params"])
+    information = {}
+    information["type"] = type_info["type"]
+    information["params"] = type_info["params"]
     if type_info["type"] == "db_query":
-        information.append(type_info["query"])
+        information["query"] = type_info["query"]
     elif type_info["type"] == "run_function":
-        information.append(type_info["function"])
-    information.append(type_info["voice_response"])
-    information.append(type_info["visual_response"])
+        information["function"] = type_info["function"]
+    information["voice_response"] = type_info["voice_response"]
+    information["visual_response"] = type_info["visual_response"]
     return information
 
 extract_function = {}
