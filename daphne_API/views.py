@@ -7,6 +7,12 @@ from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
 import json
 import datetime
+from importlib import import_module
+from django.conf import settings
+from daphne_brain.session_lock import session_lock
+from VASSAR_API.api import VASSARClient
+
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 class Command(APIView):
     """
@@ -27,6 +33,9 @@ class Command(APIView):
 
         if 'data' in request.session:
             request.session['context']['data'] = request.session['data']
+
+        if 'vassar_port' in request.session:
+            request.session['context']['vassar_port'] = request.session['vassar_port']
 
         request.session['context']['answers'] = []
 
@@ -63,6 +72,9 @@ class CommandList(APIView):
     Get a list of commands, either for all the system or for a single subsystem
     """
     def post(self, request, format=None):
+        store = SessionStore(request.session.session_key)
+        port = store['vassar_port'] if 'vassar_port' in store else 9090
+        vassar_client = VASSARClient(port)
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
@@ -88,7 +100,7 @@ class CommandList(APIView):
         elif command_list_request == 'space_agencies':
             command_list = command_lists.agencies_list()
         elif command_list_request == 'objectives':
-            command_list = command_lists.objectives_list()
+            command_list = command_lists.objectives_list(vassar_client)
         elif command_list_request == 'orb_info':
             command_list = command_lists.orbits_info
         elif command_list_request == 'instr_info':
