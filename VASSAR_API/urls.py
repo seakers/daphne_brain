@@ -9,5 +9,5 @@ urlpatterns = [
     path('evaluate-architecture', views.EvaluateArchitecture.as_view()),
     path('run-local-search', views.RunLocalSearch.as_view()),
 
-    path('change-loaded-files', views.ChangeLoadedFiles.as_view())
+    path('change-port', views.ChangePort.as_view())
 ]

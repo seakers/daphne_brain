@@ -73,14 +73,14 @@ def data_mining_run(designs, behavioral, non_behavioral):
 
 
 def VASSAR_get_architecture_scores(design_id, designs, context):
-    client = VASSARClient()
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
 
     try:
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'], use_special)
+        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'])
 
         # End the connection before return statement
         client.endConnection()
@@ -93,7 +93,8 @@ def VASSAR_get_architecture_scores(design_id, designs, context):
 
 
 def VASSAR_get_panel_scores(design_id, designs, panel, context):
-    client = VASSARClient()
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
 
     try:
         # Start connection with VASSAR
@@ -105,8 +106,7 @@ def VASSAR_get_panel_scores(design_id, designs, panel, context):
             "terrestrial": "TER"
         }
         panel_code = stakeholders_to_excel[panel]
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code, use_special)
+        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code)
 
         # End the connection before return statement
         client.endConnection()
@@ -119,14 +119,14 @@ def VASSAR_get_panel_scores(design_id, designs, panel, context):
 
 
 def VASSAR_get_objective_scores(design_id, designs, objective, context):
-    client = VASSARClient()
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
 
     try:
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective, use_special)
+        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective)
 
         # End the connection before return statement
         client.endConnection()
@@ -139,7 +139,8 @@ def VASSAR_get_objective_scores(design_id, designs, objective, context):
 
 
 def VASSAR_get_instruments_for_objective(objective, context):
-    client = VASSARClient()
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
 
     try:
         # Start connection with VASSAR
@@ -157,7 +158,8 @@ def VASSAR_get_instruments_for_objective(objective, context):
 
 
 def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
-    client = VASSARClient()
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
 
     try:
         # Start connection with VASSAR
@@ -276,7 +278,8 @@ def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_p
 
 
 def Critic_general_call(design_id, designs, context):
-    client = VASSARClient()
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
     critic = CRITIC()
 
     try:
@@ -297,8 +300,7 @@ def Critic_general_call(design_id, designs, context):
         client.startConnection()
         
         # Criticize architecture (based on rules)
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        result1 = client.critiqueArchitecture(this_design['inputs'], use_special)
+        result1 = client.critiqueArchitecture(this_design['inputs'])
         result = []
         for advice in result1:
             result.append({
@@ -341,7 +343,7 @@ def Critic_general_call(design_id, designs, context):
         original_outputs = this_design['outputs']
         original_inputs = this_design['inputs']
         
-        archs = client.runLocalSearch(this_design['inputs'], use_special)
+        archs = client.runLocalSearch(this_design['inputs'])
         advices = []
         for arch in archs:
             new_outputs = arch['outputs']
