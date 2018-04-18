@@ -6,6 +6,10 @@ import pandas
 import daphne_API.historian.models as models
 import daphne_API.historian.models as earth_models
 import daphne_API.edl.model as edl_models
+import os
+import os, sys
+import scipy.io
+import fnmatch
 
 
 instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
@@ -165,13 +169,16 @@ def extract_edl_parameter(processed_question, number_of_features, context):
 
 
 
-def extract_mat_file(processed_question, number_of_features,context):
+def extract_edl_mat_file(processed_question, number_of_features,context):
     # TODO: Read folder and get list of possible mat files
-    path = "/Users/ssantini/Code/EDL_Assistant_Brain/daphne_API/mat_files"
-    mat_files = os.listdir(path)
-
+    base_dir = '/Users/ssantini/Code/ExtractDataMatlab/mat_files/'
+    all_subdirs = [d for d in os.listdir(base_dir) if os.path.isdir(base_dir + d)]
+    mat_files = []
+    for name in all_subdirs:
+        dir = os.path.join('/Users/ssantini/Code/ExtractDataMatlab/mat_files', name)
+        mat_files.extend(os.listdir(dir))
     return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
 
-def extract_mat_parameter(processed_question, number_of_features, context):
-
-    return(processed_question, parameter, context)
+def extract_edl_mat_parameter(processed_question, number_of_features, context):
+    # TODO: extract a specific parameter from mat files
+    return(processed_question, mat_parameter, context)

@@ -8,6 +8,7 @@ import traceback
 import math
 import numpy as np
 import sys, os
+import scipy.io
 
 logger = logging.getLogger('VASSAR')
 
@@ -785,3 +786,13 @@ def apply_base_filter(filterExpression,design):
         raise ValueError("Exe in applying the base filter: " + str(e))
         
     return out
+
+def EDL_load_mat_files(mission_name, mat_file, context):
+    file_path = os.path.join('/Users/ssantini/Code/ExtractDataMatlab/mat_files', mission_name, mat_file)
+    mat_dict = scipy.io.loadmat(file_path)
+    context["current_mat_file"] = mat_dict
+    return 'file loaded correctly'
+
+def EDL_load_mat_param(mat_parameter,context):
+
+    return context["mat_dict"][param_name]

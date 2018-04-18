@@ -167,8 +167,7 @@ def historian_command(processed_command, context):
 
 def EDL_command(processed_command, context):
     # Classify the question, obtaining a question type
-    #question_type = qa_pipeline.classify(processed_command, "EDL")
-    question_type = "5000"
+    question_type = qa_pipeline.classify(processed_command, "EDL")
     # Load list of required and optional parameters from question, query and response format for question type
     [params, query, voice_response_template, visual_response_template] = \
         qa_pipeline.load_type_info(question_type, "EDL")
