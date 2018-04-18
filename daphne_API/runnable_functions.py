@@ -79,8 +79,7 @@ def VASSAR_get_architecture_scores(design_id, designs, context):
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'], use_special)
+        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'])
 
         # End the connection before return statement
         client.endConnection()
@@ -106,8 +105,7 @@ def VASSAR_get_panel_scores(design_id, designs, panel, context):
             "terrestrial": "TER"
         }
         panel_code = stakeholders_to_excel[panel]
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code, use_special)
+        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code)
 
         # End the connection before return statement
         client.endConnection()
@@ -127,8 +125,7 @@ def VASSAR_get_objective_scores(design_id, designs, objective, context):
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
-        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective, use_special)
+        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective)
 
         # End the connection before return statement
         client.endConnection()
@@ -302,7 +299,6 @@ def Critic_general_call(design_id, designs, context):
         client.startConnection()
         
         # Criticize architecture (based on rules)
-        use_special = context['in_experiment'] if 'in_experiment' in context else False
         result1 = client.critiqueArchitecture(this_design['inputs'])
         result = []
         for advice in result1:
