@@ -16,6 +16,7 @@ import daphne_API.data_extractors as extractors
 import daphne_API.data_processors as processors
 import daphne_API.runnable_functions as run_func
 from daphne_API.errors import ParameterMissingError
+import daphne_API.edl.model as edl_models
 
 
 def classify(question, module_name):
@@ -72,7 +73,6 @@ def load_type_info(question_type, module_name):
     information.append(type_info["visual_response"])
     return information
 
-
 extract_function = {}
 extract_function["mission"] = extractors.extract_mission
 extract_function["measurement"] = extractors.extract_measurement
@@ -87,6 +87,9 @@ extract_function["vassar_measurement"] = extractors.extract_vassar_measurement
 extract_function["vassar_stakeholder"] = extractors.extract_vassar_stakeholder
 extract_function["objective"] = extractors.extract_vassar_objective
 
+extract_function["name"] = extractors.extract_edl_mission
+extract_function["edl_mission"] = extractors.extract_edl_mission
+extract_function["parameter"] = extractors.extract_edl_parameter
 
 process_function = {}
 process_function["mission"] = processors.process_mission
@@ -101,6 +104,11 @@ process_function["vassar_instrument"] = processors.not_processed
 process_function["vassar_measurement"] = processors.not_processed
 process_function["vassar_stakeholder"] = processors.not_processed
 process_function["objective"] = processors.not_processed
+
+process_function["parameter"] = processors.process_parameter
+process_function["edl_mission"] = processors.not_processed
+process_function["name"] = processors.not_processed
+
 
 
 def extract_data(processed_question, params, context):
@@ -142,7 +150,6 @@ def augment_data(data, context):
 
     if 'data' in context:
         data['designs'] = context['data']
-
     if 'behavioral' in context:
         data['behavioral'] = context['behavioral']
     if 'non_behavioral' in context:
@@ -154,6 +161,8 @@ def augment_data(data, context):
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
+    edl_engine = edl_models.db_connect()
+    edl_session = sessionmaker(bind=edl_engine)()
 
     def print_orbit(orbit):
         text_orbit = ""
@@ -214,13 +223,13 @@ def query(query, data):
         for row in query_db.all():
             result_row = {}
             for key, value in query["result_fields"].items():
-                result_row[key] = eval(value)
+                result_row[key] = eval(Template(value).substitute(data))
             result.append(result_row)
     elif query["result_type"] == "single":
         row = query_db.first()
         result = {}
         for key, value in query["result_fields"].items():
-            result[key] = eval(value)
+            result[key] = eval(Template(value).substitute(data))
 
     return result
 
@@ -237,12 +246,13 @@ def run_function(function_info, data, context):
         for item in command_result:
             result_row = {}
             for key, value in function_info["result_fields"].items():
-                result_row[key] = eval(value)
+                result_row[key] = eval(Template(value).substitute(data))
             result.append(result_row)
     elif function_info["result_type"] == "single":
         result = {}
         for key, value in function_info["result_fields"].items():
-            result[key] = eval(value)
+            result[key] = eval(Template(value).substitute(data))
+
 
     return result
 

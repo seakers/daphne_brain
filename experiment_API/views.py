@@ -105,5 +105,8 @@ class FinishExperiment(APIView):
 
         del request.session['experiment']
         request.session['context']['in_experiment'] = False
+        request.session['vassar_port'] = 9090
+
+        request.session.modified = True
 
         return Response('Correct!')

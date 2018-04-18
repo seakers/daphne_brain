@@ -1,6 +1,5 @@
 from sqlalchemy.orm import sessionmaker
 import daphne_API.historian.models as models
-from VASSAR_API.api import VASSARClient
 import pandas
 
 instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
@@ -106,13 +105,12 @@ def agencies_list():
     return agencies
 
 
-def objectives_list():
-    VASSAR = VASSARClient()
-    VASSAR.startConnection()
-    objectives = VASSAR.client.getObjectiveList()
+def objectives_list(vassar_client):
+    vassar_client.startConnection()
+    objectives = vassar_client.client.getObjectiveList()
     objectives.sort(key=lambda obj: int(obj[3:]))
     objectives.sort(key=lambda obj: obj[0:2])
-    VASSAR.endConnection()
+    vassar_client.endConnection()
     return objectives
 
 def analyst_instrument_parameter_list():
