@@ -81,6 +81,7 @@ class FinishStage(APIView):
         with session_lock:
             store = SessionStore(request.session.session_key)
             store['experiment']['stages'][stage]['end_date'] = datetime.datetime.utcnow().isoformat()
+            store['experiment']['stages'][stage]['end_state'] = store['experiment']['state']
             store.save()
 
         return Response(store['experiment'])
@@ -104,5 +105,8 @@ class FinishExperiment(APIView):
 
         del request.session['experiment']
         request.session['context']['in_experiment'] = False
+        request.session['vassar_port'] = 9090
+
+        request.session.modified = True
 
         return Response('Correct!')

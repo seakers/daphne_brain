@@ -1,30 +1,27 @@
 import logging
 
-from django.shortcuts import render
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-
-import numpy as np
-import sys,os
 import json
-import csv
-import datetime
-
+from importlib import import_module
+from django.conf import settings
+from daphne_brain.session_lock import session_lock
 from VASSAR_API.api import VASSARClient
 
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
 
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
+
 
 class GetOrbitList(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
     
     def get(self, request, format=None):
         try:
             # Start connection with VASSAR
+            store = SessionStore(request.session.session_key)
+            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getOrbitList()
             
@@ -39,11 +36,12 @@ class GetOrbitList(APIView):
 
 
 class GetInstrumentList(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
-    
+
     def get(self, request, format=None):
         try:
+            store = SessionStore(request.session.session_key)
+            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getInstrumentList()
@@ -59,44 +57,47 @@ class GetInstrumentList(APIView):
 
 
 class EvaluateArchitecture(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
     
     def post(self, request, format=None):
         try:
+            store = SessionStore(request.session.session_key)
+            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
-            if 'special' in request.data:
-                special = request.data['special']
-            else:
-                special = 'False'
-            if special == 'True':
-                architecture = self.VASSARClient.evaluateSpecialArchitecture(inputs)
-            elif special == 'False':
-                architecture = self.VASSARClient.evaluateArchitecture(inputs)
-            else:
-                return Response('Error parsing special field.')
+            architecture = self.VASSARClient.evaluateArchitecture(inputs)
 
             # If there is no session data, initialize and create a new dataset
-            if 'data' not in request.session:
-                request.session['data'] = []
+            with session_lock:
+                store = SessionStore(request.session.session_key)
+                if 'data' not in store:
+                    store['data'] = []
+                if 'context' not in store:
+                    store['context'] = {}
+                if 'current_design_id' not in store['context']:
+                    store['context']['current_design_id'] = None
 
-            if 'context' not in request.session:
-                request.session['context'] = {}
-            if 'current_design_id' not in request.session['context']:
-                request.session['context']['current_design_id'] = None
-            
-            architecture['id'] = len(request.session['data'])
-            request.session['context']['current_design_id'] = architecture['id']
-            print(request.session['context']['current_design_id'])
-            request.session['data'].append(architecture)
+                is_same = True
+                for old_arch in store['data']:
+                    is_same = True
+                    for i in range(len(old_arch['outputs'])):
+                        if old_arch['outputs'][i] != architecture['outputs'][i]:
+                            is_same = False
+                    if is_same:
+                        break
 
-            request.session.modified = True
-            
+                if not is_same:
+                    architecture['id'] = len(store['data'])
+                    store['context']['current_design_id'] = architecture['id']
+                    print(store['context']['current_design_id'])
+                    store['data'].append(architecture)
+
+                store.save()
+
             # End the connection before return statement
             self.VASSARClient.endConnection()
             return Response(architecture)
@@ -109,18 +110,19 @@ class EvaluateArchitecture(APIView):
         
         
 class RunLocalSearch(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
-    
+
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
+            store = SessionStore(request.session.session_key)
+            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
                         
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
-            architectures = self.VASSARClient.runLocalSearch(inputs, False)
+            architectures = self.VASSARClient.runLocalSearch(inputs)
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
@@ -153,21 +155,12 @@ class RunLocalSearch(APIView):
             return Response('')
 
 
-class ChangeLoadedFiles(APIView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.VASSARClient = VASSARClient()
+class ChangePort(APIView):
 
     def post(self, request, format=None):
-        try:
-            # Start connection with VASSAR
-            self.VASSARClient.startConnection()
-            param_map = json.loads(request.data['loaded_files'])
-            result = self.VASSARClient.changeLoadedFiles(param_map)
-            self.VASSARClient.endConnection()
-            return Response({ 'result': result })
-
-        except Exception:
-            logger.exception('Exception in changing some parameters')
-            self.VASSARClient.endConnection()
-            return Response('')
+        new_port = request.data['port']
+        with session_lock:
+            store = SessionStore(request.session.session_key)
+            store['vassar_port'] = new_port
+            store.save()
+        return Response('')
