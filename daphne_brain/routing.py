@@ -20,7 +20,7 @@ application = ProtocolTypeRouter({
         URLRouter([
             # URLRouter just takes standard Django path() or url() entries.
             path('api/daphne', DaphneConsumer),
-            path('api/AD/SARIMAX', SARIMAX_AD)
+            path('api/anomaly/SARIMAX_AD', SARIMAX_AD)
         ]),
     ),
 
