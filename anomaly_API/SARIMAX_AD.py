@@ -18,11 +18,20 @@ class SARIMAX_AD(JsonWebsocketConsumer):
         # Accept the connection
         self.accept()
 
+
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload
         for us and pass it as the first argument.
         """
+
+        if 'data' in content:
+            data = pd.read_json(content.data['data'], orient='records').set_index('timestamp')
+        else:
+            # Loads The data
+            data = pd.read_csv('anomaly_API/Data/sample.csv',
+                               parse_dates=True,
+                               index_col='timestamp')
 
         # Defines the confidence interval accepted
         ci_alpha = 0.01
@@ -31,11 +40,6 @@ class SARIMAX_AD(JsonWebsocketConsumer):
                 ci_alpha = content['ci_alpha']
             else:
                 self.send_json({"error": "ci_alpha must be in range (0,1)"})
-
-        # Loads The data
-        data = pd.read_csv('anomaly_API/Data/sample.csv',
-                           parse_dates=True,
-                           index_col='timestamp')
 
         # Selects the variable we focus the anomaly detection on
         if 'variable' in content:
@@ -47,7 +51,7 @@ class SARIMAX_AD(JsonWebsocketConsumer):
             var_chosen = data.columns[0]
 
         # Preprocess the data with a Moving Average
-        if 'preprocess' in content and content['preprocess']:
+        if 'preprocess' in content and content['preprocess']: # TODO: Move this to an outer backend python script
             one_var = ma_preprocess(data[var_chosen], 4).rename(columns={0: var_chosen})
         else:
             one_var = data[var_chosen]
@@ -105,5 +109,6 @@ class SARIMAX_AD(JsonWebsocketConsumer):
         results = pd.concat([results, pred_ci], axis=1)
         results['Flag_Anomaly'] = (results[var_chosen] > results['upper ' + var_chosen]) | \
                                   (results[var_chosen] < results['lower ' + var_chosen])
+        results['timestamp'] = results.index
 
-        self.send_json(results[results.Flag_Anomaly][var_chosen].to_json(date_format='iso'))
+        self.send_json(results[results.Flag_Anomaly][['timestamp', var_chosen]].to_json(date_format='iso', orient='records'))
