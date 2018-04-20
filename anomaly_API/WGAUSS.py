@@ -41,7 +41,13 @@ class ADWindowedStats(APIView):
             data = pd.read_csv('anomaly_API/Time series example/sample.csv', parse_dates=True,
                                index_col='timestamp')
 
-        one_var = data[data.columns[0]]
+        # If there is an specified variable choose this one. Chooses the first variable on the dataset by default
+        if 'variable' in request.data:
+            variable = request.data['variable']
+        else:
+            variable = data.colums[0]
+
+        one_var = data[variable]
 
         data['Flag_Anomaly'] = False
 
@@ -58,6 +64,6 @@ class ADWindowedStats(APIView):
         # plt.plot(data[data.Anomaly_val_Norm != 0]['Anomaly_val_Norm'], 'ro')
 
         data['timestamp'] = data.index
-        out = data[data.Flag_Anomaly][['timestamp', data.columns[0]]].to_json(orient='records', date_format='iso')
+        out = data[data.Flag_Anomaly][['timestamp', variable]].to_json(orient='records', date_format='iso')
 
         return Response(out)

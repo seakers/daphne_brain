@@ -26,7 +26,7 @@ class SARIMAX_AD(JsonWebsocketConsumer):
         """
 
         if 'data' in content:
-            data = pd.read_json(content.data['data'], orient='records').set_index('timestamp')
+            data = pd.read_json(content['data'], orient='records').set_index('timestamp')
         else:
             # Loads The data
             data = pd.read_csv('anomaly_API/Data/sample.csv',
