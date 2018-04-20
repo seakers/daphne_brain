@@ -45,7 +45,9 @@ historian_commands = [
     #'Which missions are currently flying ${technology}?',
     ('4006', 'Which orbit is the most typical for ${technology}?'),
     ('4007', 'Which orbit is the most typical for ${measurement}?'),
-    #'When was mission ${mission} launched?'
+    ('4008', 'When was mission ${mission} launched?'),
+    ('4009', 'Which missions have been designed by ${space_agency}?'),
+    ('4010', 'Show me a timeline of missions [from ${space_agency}] which measure ${measurement}')
 ]
 
 

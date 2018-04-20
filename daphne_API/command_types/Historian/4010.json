@@ -21,8 +21,10 @@
     }
   },
   "voice_response": {
-    "type": "single",
-    "template": "The timeline for ${measurement} can be seen at the Daphne Answer space."
+    "type": "list",
+    "begin": "The timeline for ${measurement} can be seen at the Daphne Answer space.",
+    "repeat": "",
+    "end": "."
   },
   "visual_response": {
     "type": "timeline_plot",
