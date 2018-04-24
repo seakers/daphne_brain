@@ -44,3 +44,18 @@ class ImportData(APIView):
         }
         return Response(return_value)
 
+
+class ReadUploadedData(APIView):
+
+    def post(self, request, format=None):
+
+        data = pd.read_csv(request.data['file'], parse_dates=True, index_col='timestamp')
+        data['timestamp'] = data.index
+        out = data.to_json(orient='records', date_format='iso')
+        columns = data.columns
+        return_value = {
+            "data": json.loads(out),
+            "variables": columns
+        }
+        return Response(return_value)
+

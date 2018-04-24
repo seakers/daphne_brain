@@ -53,7 +53,7 @@ class ADWindowedStats(APIView):
 
         for x in range(len(one_var)):
 
-            if x > w / 2:
+            if x > 5:
                 window = one_var[max(0, x - w):x - 1]
                 mean = np.mean(window)
                 std = np.std(window)

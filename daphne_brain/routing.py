@@ -6,6 +6,7 @@ from channels.sessions import SessionMiddlewareStack
 
 from daphne_API.consumers import DaphneConsumer
 from anomaly_API.SARIMAX_AD import SARIMAX_AD
+from anomaly_API.KNN import adaptiveKNN
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties
@@ -20,7 +21,8 @@ application = ProtocolTypeRouter({
         URLRouter([
             # URLRouter just takes standard Django path() or url() entries.
             path('api/daphne', DaphneConsumer),
-            path('api/anomaly/SARIMAX_AD', SARIMAX_AD)
+            path('api/anomaly/SARIMAX_AD', SARIMAX_AD),
+            path('api/anomaly/adaptiveKNN', adaptiveKNN)
         ]),
     ),
 
