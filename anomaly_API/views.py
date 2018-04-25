@@ -35,9 +35,9 @@ class ImportData(APIView):
         file_path = 'anomaly_API/Data/' + request.data['filename']
 
         data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
+        columns = data.columns
         data['timestamp'] = data.index
         out = data.to_json(orient='records', date_format='iso')
-        columns = data.columns
         return_value = {
             "data": json.loads(out),
             "variables": columns
@@ -50,9 +50,9 @@ class ReadUploadedData(APIView):
     def post(self, request, format=None):
 
         data = pd.read_csv(request.data['file'], parse_dates=True, index_col='timestamp')
+        columns = data.columns
         data['timestamp'] = data.index
         out = data.to_json(orient='records', date_format='iso')
-        columns = data.columns
         return_value = {
             "data": json.loads(out),
             "variables": columns
