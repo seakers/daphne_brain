@@ -18,7 +18,6 @@ class SARIMAX_AD(JsonWebsocketConsumer):
         # Accept the connection
         self.accept()
 
-
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload

@@ -17,13 +17,11 @@ class adaptiveKNN(JsonWebsocketConsumer):
         # Accept the connection
         self.accept()
 
-    def recieve_json(self, content, **kwargs):
+    def receive_json(self, content, **kwargs):
 
         # Reads the data if available in content
         if 'data' in content:
             data = pd.read_json(content['data'], orient='records').set_index('timestamp')
-            timestamp = data['timestamp']
-            data = data.drop(['timestamp'], axis=1)  # Drops the time column to avoid considering it a variable
         else:
             # Read Sample CSV
             data = pd.read_csv('anomaly_API/Data/sample_3.csv')
@@ -48,14 +46,12 @@ class adaptiveKNN(JsonWebsocketConsumer):
         else:
             sp = 1
 
-        # TODO add functionality to allow random sampling of the data to obtain
-
         # Transfer data to matrix
         x = np.asmatrix(data.values)
 
         # This parameters must be entered
         n = len(x)
-        m = int(n*sp)
+        m = int(n*sp)   # Random samples a percentage of the data: training data
 
         # Set the training data
         x_train = x[np.random.choice(x.shape[0], m, replace=False)]
@@ -106,8 +102,7 @@ class adaptiveKNN(JsonWebsocketConsumer):
         # it might be interesting to normalize it or to be able to compare it with different outlier scores
 
         data['anomalyScore'] = localOutlierScore
+        data['timestamp'] = data.index
 
-        results = pd.DataFrame(data['anomalyScore'])
-        results['timestamp'] = data.index
-
-        return results
+        self.send_json(
+            data.to_json(date_format='iso', orient='records'))
