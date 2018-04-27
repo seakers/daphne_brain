@@ -17,6 +17,32 @@ import datetime
 
 # Get an instance of a logger
 
+
+def obtain_features(data):
+    """
+    Obtains features of the data:
+        Seasonality
+        Correlation
+    :param Data:
+    :return:
+    """
+    correlation = data.corr()
+    correlation['Variable'] = correlation.index
+    correlation_json = correlation.to_json(orient='records')
+
+    columns = data.columns
+    data['timestamp'] = data.index
+    out = data.to_json(orient='records', date_format='iso')
+    return_value = {
+        "data": json.loads(out),
+        "variables": columns,
+        "correlation": json.loads(correlation_json )
+    }
+
+    return return_value
+
+
+
 class ImportData(APIView):
     """ Imports data from a csv file. To be deprecated in the future.
 
@@ -35,14 +61,8 @@ class ImportData(APIView):
         file_path = 'anomaly_API/Data/' + request.data['filename']
 
         data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
-        columns = data.columns
-        data['timestamp'] = data.index
-        out = data.to_json(orient='records', date_format='iso')
-        return_value = {
-            "data": json.loads(out),
-            "variables": columns
-        }
-        return Response(return_value)
+
+        return Response(obtain_features(data))
 
 
 class ReadUploadedData(APIView):
@@ -50,12 +70,6 @@ class ReadUploadedData(APIView):
     def post(self, request, format=None):
 
         data = pd.read_csv(request.data['file'], parse_dates=True, index_col='timestamp')
-        columns = data.columns
-        data['timestamp'] = data.index
-        out = data.to_json(orient='records', date_format='iso')
-        return_value = {
-            "data": json.loads(out),
-            "variables": columns
-        }
-        return Response(return_value)
+
+        return Response(obtain_features(data))
 
