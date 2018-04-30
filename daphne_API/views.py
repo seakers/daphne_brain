@@ -25,6 +25,7 @@ class Command(APIView):
 
         # Classify the command, obtaining a command type
         command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian', 'EDL']
+        condition_names = ['ifeed', 'analyst', 'critic', 'historian', 'edl']
         command_types = command_processing.classify_command(processed_command)
 
         # Define context and see if it was already defined for this session
@@ -44,21 +45,10 @@ class Command(APIView):
 
         # Act based on the types
         for command_type in command_types:
-            if command_options[command_type] == 'iFEED':
-                request.session['context']['answers'].append(
-                    command_processing.ifeed_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'VASSAR':
-                request.session['context']['answers'].append(
-                    command_processing.vassar_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'Critic':
-                request.session['context']['answers'].append(
-                    command_processing.critic_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'Historian':
-                request.session['context']['answers'].append(
-                    command_processing.historian_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'EDL':
-                request.session['context']['answers'].append(
-                    command_processing.EDL_command(processed_command, request.session['context']))
+            command_class = command_options[command_type]
+            condition_name = condition_names[command_type]
+            request.session['context']['answers'].append(
+                command_processing.command(processed_command, command_class, condition_name, request.session['context']))
 
         response = command_processing.think_response(request.session['context'])
 

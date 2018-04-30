@@ -45,7 +45,9 @@ historian_commands = [
     #'Which missions are currently flying ${technology}?',
     ('4006', 'Which orbit is the most typical for ${technology}?'),
     ('4007', 'Which orbit is the most typical for ${measurement}?'),
-    #'When was mission ${mission} launched?'
+    ('4008', 'When was mission ${mission} launched?'),
+    ('4009', 'Which missions have been designed by ${space_agency}?'),
+    ('4010', 'Show me a timeline of missions [from ${space_agency}] which measure ${measurement}')
 ]
 
 
@@ -134,8 +136,8 @@ orbits_info = [
     "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
     "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
     "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (600 km), Afternoon"
+    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk",
+    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (800 km), Afternoon"
 ]
 
 
