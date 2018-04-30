@@ -136,8 +136,8 @@ orbits_info = [
     "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
     "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
     "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (600 km), Afternoon"
+    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk",
+    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (800 km), Afternoon"
 ]
 
 
