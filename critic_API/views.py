@@ -1,14 +1,9 @@
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
 import logging
 import json
 
-from importlib import import_module
-from django.conf import settings
-from daphne_brain.session_lock import session_lock
 from VASSAR_API.api import VASSARClient
 
 #from critic_API.historian_critic import Critic
@@ -16,7 +11,6 @@ from VASSAR_API.api import VASSARClient
 
 # Get an instance of a logger
 logger = logging.getLogger('critic')
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
         
 class CriticizeArchitecture(APIView):
@@ -24,8 +18,7 @@ class CriticizeArchitecture(APIView):
     
     def post(self, request, format=None):
         try:
-            store = SessionStore(request.session.session_key)
-            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             
             inputs = request.POST['inputs']   
                         

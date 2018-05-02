@@ -3,15 +3,10 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
-from importlib import import_module
-from django.conf import settings
-from daphne_brain.session_lock import session_lock
 from VASSAR_API.api import VASSARClient
 
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
-
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 
 class GetOrbitList(APIView):
@@ -19,8 +14,7 @@ class GetOrbitList(APIView):
     def get(self, request, format=None):
         try:
             # Start connection with VASSAR
-            store = SessionStore(request.session.session_key)
-            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getOrbitList()
@@ -39,8 +33,7 @@ class GetInstrumentList(APIView):
 
     def get(self, request, format=None):
         try:
-            store = SessionStore(request.session.session_key)
-            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -60,8 +53,7 @@ class EvaluateArchitecture(APIView):
     
     def post(self, request, format=None):
         try:
-            store = SessionStore(request.session.session_key)
-            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -72,31 +64,29 @@ class EvaluateArchitecture(APIView):
             architecture = self.VASSARClient.evaluateArchitecture(inputs)
 
             # If there is no session data, initialize and create a new dataset
-            with session_lock:
-                store = SessionStore(request.session.session_key)
-                if 'data' not in store:
-                    store['data'] = []
-                if 'context' not in store:
-                    store['context'] = {}
-                if 'current_design_id' not in store['context']:
-                    store['context']['current_design_id'] = None
+            if 'data' not in request.session:
+                request.session['data'] = []
+            if 'context' not in request.session:
+                request.session['context'] = {}
+            if 'current_design_id' not in request.session['context']:
+                request.session['context']['current_design_id'] = None
 
+            is_same = True
+            for old_arch in request.session['data']:
                 is_same = True
-                for old_arch in store['data']:
-                    is_same = True
-                    for i in range(len(old_arch['outputs'])):
-                        if old_arch['outputs'][i] != architecture['outputs'][i]:
-                            is_same = False
-                    if is_same:
-                        break
+                for i in range(len(old_arch['outputs'])):
+                    if old_arch['outputs'][i] != architecture['outputs'][i]:
+                        is_same = False
+                if is_same:
+                    break
 
-                if not is_same:
-                    architecture['id'] = len(store['data'])
-                    store['context']['current_design_id'] = architecture['id']
-                    print(store['context']['current_design_id'])
-                    store['data'].append(architecture)
+            if not is_same:
+                architecture['id'] = len(request.session['data'])
+                request.session['context']['current_design_id'] = architecture['id']
+                print(request.session['context']['current_design_id'])
+                request.session['data'].append(architecture)
 
-                store.save()
+            request.session.modified = True
 
             # End the connection before return statement
             self.VASSARClient.endConnection()
@@ -114,8 +104,7 @@ class RunLocalSearch(APIView):
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
-            store = SessionStore(request.session.session_key)
-            port = store['vassar_port'] if 'vassar_port' in store else 9090
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
                         
@@ -159,8 +148,6 @@ class ChangePort(APIView):
 
     def post(self, request, format=None):
         new_port = request.data['port']
-        with session_lock:
-            store = SessionStore(request.session.session_key)
-            store['vassar_port'] = new_port
-            store.save()
+        request.session['vassar_port'] = new_port
+        request.session.modified = True
         return Response('')
