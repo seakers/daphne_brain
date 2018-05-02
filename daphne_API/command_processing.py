@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow.contrib import learn
 
 from daphne_API import data_helpers, qa_pipeline
+from daphne_API.errors import ParameterMissingError
 
 
 def classify_command(command):
@@ -43,75 +44,55 @@ def classify_command(command):
 
     return prediction[0]
 
-def ifeed_command(processed_command, context):
-    print("Command classified as iFEED type")
+
+def error_answers(missing_param):
+    return {
+        'voice_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.',
+        'visual_answer_type': 'text',
+        'visual_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.'
+    }
+
+
+def not_allowed_condition(context, command_class, command_type):
+    if 'allowed_commands' not in context:
+        return False
+    if command_type not in context['allowed_commands'][command_class]:
+        return True
+    return False
+
+
+def not_allowed_answers():
+    return {
+        'voice_answer': 'This command is restricted right now.',
+        'visual_answer_type': 'text',
+        'visual_answer': 'This command is restricted right now.'
+    }
+
+
+def command(processed_command, command_class, condition_name, context):
     # Classify the question, obtaining a question type
-    question_type = qa_pipeline.classify(processed_command, "iFEED")
+    question_type = qa_pipeline.classify(processed_command, command_class)
+    if not_allowed_condition(context, condition_name, str(question_type)):
+        return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type
-    [params, function, voice_response_template, visual_response_template] = \
-        qa_pipeline.load_type_info(question_type, "iFEED")
+    information = qa_pipeline.load_type_info(question_type, command_class)
     # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
+    try:
+        data = qa_pipeline.extract_data(processed_command, information["params"], context)
+    except ParameterMissingError as error:
+        print(error)
+        return error_answers(error.missing_param)
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, context)
     # Query the database
-    result = qa_pipeline.run_function(function, data)
+    if information["type"] == "db_query":
+        result = qa_pipeline.query(information["query"], data)
+    elif information["type"] == "run_function":
+        result = qa_pipeline.run_function(information["function"], data, context)
+    else:
+        result = None
     # Construct the response from the database query and the response format
-    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
-
-    # Return the answer to the client
-    return answers
-
-def vassar_command(processed_command, context):
-    # Classify the question, obtaining a question type
-    question_type = qa_pipeline.classify(processed_command, "VASSAR")
-    # Load list of required and optional parameters from question, query and response format for question type
-    [params, function, voice_response_template, visual_response_template] = \
-        qa_pipeline.load_type_info(question_type, "VASSAR")
-    # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
-    # Add extra parameters to data
-    data = qa_pipeline.augment_data(data, context)
-    # Query the database
-    result = qa_pipeline.run_function(function, data)
-    # Construct the response from the database query and the response format
-    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
-
-    # Return the answer to the client
-    return answers
-
-def critic_command(processed_command, context):
-    # Classify the question, obtaining a question type
-    question_type = qa_pipeline.classify(processed_command, "Critic")
-    # Load list of required and optional parameters from question, query and response format for question type
-    [params, function, voice_response_template, visual_response_template] = \
-        qa_pipeline.load_type_info(question_type, "Critic")
-    # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
-    # Add extra parameters to data
-    data = qa_pipeline.augment_data(data, context)
-    # Query the database
-    result = qa_pipeline.run_function(function, data)
-    # Construct the response from the database query and the response format
-    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
-
-    # Return the answer to the client
-    return answers
-
-def historian_command(processed_command, context):
-    # Classify the question, obtaining a question type
-    question_type = qa_pipeline.classify(processed_command, "Historian")
-    # Load list of required and optional parameters from question, query and response format for question type
-    [params, query, voice_response_template, visual_response_template] = \
-        qa_pipeline.load_type_info(question_type, "Historian")
-    # Extract required and optional parameters
-    data = qa_pipeline.extract_data(processed_command, params, context)
-    # Add extra parameters to data
-    data = qa_pipeline.augment_data(data, context)
-    # Query the database
-    result = qa_pipeline.query(query, data)
-    # Construct the response from the database query and the response format
-    answers = qa_pipeline.build_answers(voice_response_template, visual_response_template, result, data)
+    answers = qa_pipeline.build_answers(information["voice_response"], information["visual_response"], result, data)
 
     # Return the answer to the client
     return answers

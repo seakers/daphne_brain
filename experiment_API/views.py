@@ -1,20 +1,24 @@
 import logging
-
-# Get an instance of a logger
-logger = logging.getLogger('data-mining')
-
-
-from django.shortcuts import render
-from django.http import Http404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-import numpy as np
-import sys,os
+import os
 import json
 import datetime
-import csv
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+# Get an instance of a logger
+logger = logging.getLogger('experiment')
+
+def stage_type(id, stage_num):
+    if id % 2 == 0:
+        if stage_num == 0:
+            return 'daphne_assistant'
+        else:
+            return 'daphne_peer'
+    else:
+        if stage_num == 0:
+            return 'daphne_peer'
+        else:
+            return 'daphne_assistant'
 
 
 # Create your views here.
@@ -30,14 +34,32 @@ class StartExperiment(APIView):
         # Save experiment start info
         request.session['experiment'] = {}
         request.session['experiment']['id'] = new_id
-        request.session['experiment']['new_data'] = True
-        request.session['experiment']['start_date1'] = datetime.datetime.utcnow().isoformat()
-        request.session['experiment']['stage1'] = 'with_ca' if new_id % 2 == 0 else 'without_ca'
-        request.session['experiment']['stage2'] = 'without_ca' if new_id % 2 == 0 else 'with_ca'
-        request.session['experiment']['dialog1'] = []
-        request.session['experiment']['dialog2'] = []
-        request.session['experiment']['architectures1'] = []
-        request.session['experiment']['architectures2'] = []
+        request.session['experiment']['stages'] = []
+        request.session['experiment']['state'] = {}
+
+        # Specific to current experiment
+        request.session['experiment']['stages'].append({
+            'type': stage_type(request.session['experiment']['id'], 0),
+            'actions': []
+        })
+        request.session['experiment']['stages'].append({
+            'type': stage_type(request.session['experiment']['id'], 1),
+            'actions': []
+        })
+
+        if 'context' not in request.session:
+            request.session['context'] = {}
+        request.session['context']['in_experiment'] = True
+
+        request.session.modified = True
+
+        return Response(request.session['experiment'])
+
+
+class StartStage(APIView):
+
+    def get(self, request, stage, format=None):
+        request.session['experiment']['stages'][stage]['start_date'] = datetime.datetime.utcnow().isoformat()
         request.session.modified = True
 
         return Response(request.session['experiment'])
@@ -45,18 +67,11 @@ class StartExperiment(APIView):
 
 class FinishStage(APIView):
 
-    def get(self, request, format=None):
-        request.session['experiment']['end_date1'] = datetime.datetime.utcnow().isoformat()
+    def get(self, request, stage, format=None):
+        request.session['experiment']['stages'][stage]['end_date'] = datetime.datetime.utcnow().isoformat()
+        request.session['experiment']['stages'][stage]['end_state'] = request.session['experiment']['state']
         request.session.modified = True
-        return Response(request.session['experiment'])
 
-
-class StartStage(APIView):
-
-    def get(self, request, format=None):
-        request.session['experiment']['start_date2'] = datetime.datetime.utcnow().isoformat()
-        request.session['experiment']['new_data'] = True
-        request.session.modified = True
         return Response(request.session['experiment'])
 
 
@@ -64,20 +79,22 @@ class ReloadExperiment(APIView):
 
     def get(self, request, format=None):
         if 'experiment' in request.session:
-            return Response(request.session['experiment'])
+            return Response({ 'is_running': True, 'experiment_data': request.session['experiment'] })
         else:
-            return Response({"error": "Experiment not started!"})
+            return Response({ 'is_running': False })
         
         
-class EndExperiment(APIView):
+class FinishExperiment(APIView):
 
     def get(self, request, format=None):
-        request.session['experiment']['end_date2'] = datetime.datetime.utcnow().isoformat()
-        request.session.modified = True
         # Save experiment results to file
         with open('./experiment_API/results/' + str(request.session['experiment']['id']) + '.json', 'w') as f:
             json.dump(request.session['experiment'], f)
 
         del request.session['experiment']
+        request.session['context']['in_experiment'] = False
+        request.session['vassar_port'] = 9090
 
-        return Response("Correct!")
+        request.session.modified = True
+
+        return Response('Correct!')

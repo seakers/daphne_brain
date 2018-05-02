@@ -2,7 +2,7 @@
   "type": "db_query",
   "params":
   [
-    { "name": "technology", "type": "technology", "options": "", "mandatory": true }
+    { "name": "technology", "type": "technology", "options": "", "from_context": false, "mandatory": true }
   ],
   "query":
   {

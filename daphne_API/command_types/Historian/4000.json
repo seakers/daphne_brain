@@ -2,9 +2,10 @@
   "type": "db_query",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "mandatory": true },
-    { "name": "year1", "type": "year", "options": "begin", "mandatory": false },
-    { "name": "year2", "type": "year", "options": "end", "mandatory": false }
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    { "name": "year1", "type": "year", "options": "begin", "from_context": false, "mandatory": false },
+    { "name": "year2", "type": "year", "options": "end", "from_context": false, "mandatory": false },
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
   ],
   "query":
   {
@@ -12,7 +13,8 @@
     "opt":
     [
       { "cond": "year1", "query_part": ".filter(models.Mission.eol_date > data['year1'])" },
-      { "cond": "year2", "query_part": ".filter(models.Mission.launch_date < data['year2'])" }
+      { "cond": "year2", "query_part": ".filter(models.Mission.launch_date < data['year2'])" },
+      { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
     ],
     "end": ".order_by(models.Mission.launch_date)",
     "result_type": "list",

@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = 'aaaaa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -31,6 +31,12 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'daphne_API',
+    'data_mining_API',
+    'experiment_API',
+    'iFEED_API',
+    'VASSAR_API',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,10 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'channels',
-    'iFEED_API',
-    'data_mining_API',
-    'VASSAR_API'
+    'merge_session'
 ]
 
 MIDDLEWARE = [
@@ -128,14 +131,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG":{
             "hosts":[("localhost",6379)],
-        },
-        "ROUTING": "daphne_brain.routing.channel_routing",
+        }
     },
 }
 
+# ASGI_APPLICATION should be set to your outermost router
+ASGI_APPLICATION = 'daphne_brain.routing.application'
+
+# Databases for Daphne
 ALCHEMY_DATABASE = {
     'drivername': 'postgres',
     'host': 'localhost',
@@ -144,6 +150,19 @@ ALCHEMY_DATABASE = {
     'password': os.environ['PASSWORD'],
     'database': 'ceos'
 }
+
+EDL_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'localhost',
+    'port': '5432',
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
+    'database': 'edldatabase'
+}
+
+
+# Session configuration
+SESSION_ENGINE = "merge_session.merge_db"
 
 
 # Logging

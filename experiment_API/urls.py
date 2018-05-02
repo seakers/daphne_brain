@@ -1,12 +1,11 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    url(r'start-experiment$', views.StartExperiment.as_view()),
-    url(r'finish-stage1$', views.FinishStage.as_view()),
-    url(r'start-stage2$', views.StartStage.as_view()),
-    url(r'reload-experiment$', views.ReloadExperiment.as_view()),
-    url(r'stop-experiment$', views.EndExperiment.as_view())
-    
+    path('start-experiment', views.StartExperiment.as_view()),
+    path('start-stage/<int:stage>', views.StartStage.as_view()),
+    path('finish-stage/<int:stage>', views.FinishStage.as_view()),
+    path('reload-experiment', views.ReloadExperiment.as_view()),
+    path('finish-experiment', views.FinishExperiment.as_view())
 ]

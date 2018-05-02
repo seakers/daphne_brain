@@ -1,17 +1,8 @@
 import logging
 
-from django.shortcuts import render
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-
-import numpy as np
-import sys,os
 import json
-import csv
-import datetime
-
 from VASSAR_API.api import VASSARClient
 
 # Get an instance of a logger
@@ -19,12 +10,12 @@ logger = logging.getLogger('VASSAR')
 
 
 class GetOrbitList(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
     
     def get(self, request, format=None):
         try:
             # Start connection with VASSAR
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getOrbitList()
             
@@ -39,11 +30,11 @@ class GetOrbitList(APIView):
 
 
 class GetInstrumentList(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
-    
+
     def get(self, request, format=None):
         try:
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getInstrumentList()
@@ -59,54 +50,44 @@ class GetInstrumentList(APIView):
 
 
 class EvaluateArchitecture(APIView):
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
     
     def post(self, request, format=None):
         try:
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
                         
-            inputs = request.POST['inputs']   
-                        
+            inputs = request.data['inputs']
             inputs = json.loads(inputs)
-            
-            architecture = self.VASSARClient.evaluateArchitecture(inputs)    
+
+            architecture = self.VASSARClient.evaluateArchitecture(inputs)
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
                 request.session['data'] = []
-                
-            if 'archID' not in request.session:
-                request.session['archID'] = None
+            if 'context' not in request.session:
+                request.session['context'] = {}
+            if 'current_design_id' not in request.session['context']:
+                request.session['context']['current_design_id'] = None
 
-            self.architectures = request.session['data']
-            self.archID = request.session['archID'] 
-            
-            if self.archID is None:
-                self.archID = 0
-            
-            architecture['id'] = self.archID
-            
-            self.archID += 1
-            self.architectures.append(architecture)
-            
-            request.session['archID'] = self.archID            
-            request.session['data'] = self.architectures
+            is_same = True
+            for old_arch in request.session['data']:
+                is_same = True
+                for i in range(len(old_arch['outputs'])):
+                    if old_arch['outputs'][i] != architecture['outputs'][i]:
+                        is_same = False
+                if is_same:
+                    break
 
-            # save data for experiment
-            if 'experiment' in request.session:
-                if 'start_date2' not in request.session['experiment']:
-                    architectures_name = 'architectures1'
-                else:
-                    architectures_name = 'architectures2'
-                request.session['experiment'][architectures_name].append({
-                    'arch': architecture,
-                    'time': datetime.datetime.utcnow().isoformat()
-                })
+            if not is_same:
+                architecture['id'] = len(request.session['data'])
+                request.session['context']['current_design_id'] = architecture['id']
+                print(request.session['context']['current_design_id'])
+                request.session['data'].append(architecture)
 
             request.session.modified = True
-            
+
             # End the connection before return statement
             self.VASSARClient.endConnection()
             return Response(architecture)
@@ -119,20 +100,18 @@ class EvaluateArchitecture(APIView):
         
         
 class RunLocalSearch(APIView):
-    
-    def __init__(self):
-        self.VASSARClient = VASSARClient()
-    
+
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
                         
-            inputs = request.POST['inputs']   
-                        
+            inputs = request.data['inputs']
             inputs = json.loads(inputs)
-            
-            architectures = self.VASSARClient.runLocalSearch(inputs)    
+
+            architectures = self.VASSARClient.runLocalSearch(inputs)
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
@@ -163,3 +142,12 @@ class RunLocalSearch(APIView):
             logger.exception('Exception in evaluating an architecture')
             self.VASSARClient.endConnection()
             return Response('')
+
+
+class ChangePort(APIView):
+
+    def post(self, request, format=None):
+        new_port = request.data['port']
+        request.session['vassar_port'] = new_port
+        request.session.modified = True
+        return Response('')

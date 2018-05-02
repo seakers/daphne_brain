@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import or_
+from sqlalchemy import func
 from tensorflow.contrib import learn
 from daphne_API import data_helpers
 
@@ -14,6 +15,8 @@ import daphne_API.historian.models as models
 import daphne_API.data_extractors as extractors
 import daphne_API.data_processors as processors
 import daphne_API.runnable_functions as run_func
+from daphne_API.errors import ParameterMissingError
+import daphne_API.edl.model as edl_models
 
 
 def classify(question, module_name):
@@ -50,43 +53,63 @@ def classify(question, module_name):
             result_logits = sess.run(logits, {input_x: x_test, dropout_keep_prob: 1.0})
             prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
-    named_labels = set()
-    for filename in os.listdir("./daphne_API/command_types/" + module_name):
+    named_labels = []
+    for filename in sorted(os.listdir("./daphne_API/command_types/" + module_name)):
         specific_label = int(filename.split('.', 1)[0])
-        named_labels.add(specific_label)
-    return list(named_labels)[prediction[0][0]]
+        named_labels.append(specific_label)
+    return named_labels[prediction[0][0]]
 
 
 def load_type_info(question_type, module_name):
     with open('./daphne_API/command_types/' + module_name + '/' + str(question_type) + '.json', 'r') as file:
         type_info = json.load(file)
-    information = []
-    information.append(type_info["params"])
+    information = {}
+    information["type"] = type_info["type"]
+    information["params"] = type_info["params"]
     if type_info["type"] == "db_query":
-        information.append(type_info["query"])
+        information["query"] = type_info["query"]
     elif type_info["type"] == "run_function":
-        information.append(type_info["function"])
-    information.append(type_info["voice_response"])
-    information.append(type_info["visual_response"])
+        information["function"] = type_info["function"]
+    information["voice_response"] = type_info["voice_response"]
+    information["visual_response"] = type_info["visual_response"]
     return information
-
 
 extract_function = {}
 extract_function["mission"] = extractors.extract_mission
 extract_function["measurement"] = extractors.extract_measurement
 extract_function["technology"] = extractors.extract_technology
+extract_function["space_agency"] = extractors.extract_space_agency
 extract_function["year"] = extractors.extract_date
 extract_function["design_id"] = extractors.extract_design_id
 extract_function["agent"] = extractors.extract_agent
+extract_function["instrument_parameter"] = extractors.extract_instrument_parameter
+extract_function["vassar_instrument"] = extractors.extract_vassar_instrument
+extract_function["vassar_measurement"] = extractors.extract_vassar_measurement
+extract_function["vassar_stakeholder"] = extractors.extract_vassar_stakeholder
+extract_function["objective"] = extractors.extract_vassar_objective
 
+extract_function["name"] = extractors.extract_edl_mission
+extract_function["edl_mission"] = extractors.extract_edl_mission
+extract_function["parameter"] = extractors.extract_edl_parameter
 
 process_function = {}
 process_function["mission"] = processors.process_mission
 process_function["measurement"] = processors.not_processed
 process_function["technology"] = processors.not_processed
+process_function["space_agency"] = processors.process_mission
 process_function["year"] = processors.process_date
 process_function["design_id"] = processors.not_processed
 process_function["agent"] = processors.not_processed
+process_function["instrument_parameter"] = processors.not_processed
+process_function["vassar_instrument"] = processors.not_processed
+process_function["vassar_measurement"] = processors.not_processed
+process_function["vassar_stakeholder"] = processors.not_processed
+process_function["objective"] = processors.not_processed
+
+process_function["parameter"] = processors.process_parameter
+process_function["edl_mission"] = processors.not_processed
+process_function["name"] = processors.not_processed
+
 
 
 def extract_data(processed_question, params, context):
@@ -94,20 +117,30 @@ def extract_data(processed_question, params, context):
     number_of_features = {}
     extracted_raw_data = {}
     extracted_data = {}
-    # Count how many params of each type are needed
+    # Count how many non-context params of each type are needed
     for param in params:
-        if param["type"] in number_of_features:
-            number_of_features[param["type"]] += 1
-        else:
-            number_of_features[param["type"]] = 1
+        if not param["from_context"]:
+            if param["type"] in number_of_features:
+                number_of_features[param["type"]] += 1
+            else:
+                number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
     for type, num in number_of_features.items():
         extracted_raw_data[type] = extract_function[type](processed_question, num, context)
-    # For each parameter check if it's needed and apply postprocessing; TODO: Add needed check
+    # For each parameter check if it's needed and apply postprocessing;
     for param in params:
         extracted_param = None
-        if len(extracted_raw_data[param["type"]]) > 0:
-            extracted_param = extracted_raw_data[param["type"]].pop(0)
+        if param["from_context"]:
+            if param["name"] in context:
+                extracted_param = context[param["name"]]
+            elif param["mandatory"]:
+                raise ParameterMissingError(param["type"])
+        else:
+            if len(extracted_raw_data[param["type"]]) > 0:
+                extracted_param = extracted_raw_data[param["type"]].pop(0)
+            elif param["mandatory"]:
+                # If param is needed but not detected return error with type of parameter
+                raise ParameterMissingError(param["type"])
         if extracted_param is not None:
             extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"], context)
     return extracted_data
@@ -115,11 +148,9 @@ def extract_data(processed_question, params, context):
 
 def augment_data(data, context):
     data['now'] = datetime.datetime.utcnow()
-    data['designs'] = context['data']
 
-    if 'experiment_stage' in context:
-        data['experiment_stage'] = context['experiment_stage']
-    
+    if 'data' in context:
+        data['designs'] = context['data']
     if 'behavioral' in context:
         data['behavioral'] = context['behavioral']
     if 'non_behavioral' in context:
@@ -131,8 +162,8 @@ def augment_data(data, context):
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-
-    # TODO: Check if everything mandatory is there, if not return NO ANSWER
+    edl_engine = edl_models.db_connect()
+    edl_session = sessionmaker(bind=edl_engine)()
 
     def print_orbit(orbit):
         text_orbit = ""
@@ -193,20 +224,18 @@ def query(query, data):
         for row in query_db.all():
             result_row = {}
             for key, value in query["result_fields"].items():
-                result_row[key] = eval(value)
+                result_row[key] = eval(Template(value).substitute(data))
             result.append(result_row)
     elif query["result_type"] == "single":
         row = query_db.first()
         result = {}
         for key, value in query["result_fields"].items():
-            result[key] = eval(value)
+            result[key] = eval(Template(value).substitute(data))
 
     return result
 
 
-def run_function(function_info, data):
-    # TODO: Check if everything mandatory is there, if not return NO ANSWER
-
+def run_function(function_info, data, context):
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)
@@ -218,8 +247,13 @@ def run_function(function_info, data):
         for item in command_result:
             result_row = {}
             for key, value in function_info["result_fields"].items():
-                result_row[key] = eval(value)
+                result_row[key] = eval(Template(value).substitute(data))
             result.append(result_row)
+    elif function_info["result_type"] == "single":
+        result = {}
+        for key, value in function_info["result_fields"].items():
+            result[key] = eval(Template(value).substitute(data))
+
 
     return result
 
@@ -279,6 +313,24 @@ def build_answers(voice_response_template, visual_response_template, result, dat
         item_template = Template(visual_response_template["item_template"])
         for item in complete_data["result"]:
             visual_answer["list"].append(item_template.substitute(item))
+        answers["visual_answer"] = visual_answer
+    elif visual_response_template["type"] == "timeline_plot":
+        answers["visual_answer_type"] = "timeline_plot"
+        visual_answer = {}
+        title_template = Template(visual_response_template["title"])
+        visual_answer["title"] = title_template.substitute(complete_data)
+        visual_answer["plot_data"] = []
+        for item in complete_data["result"]:
+            category_template = Template(visual_response_template["item"]["category"])
+            id_template = Template(visual_response_template["item"]["id"])
+            start_template = Template(visual_response_template["item"]["start"])
+            end_template = Template(visual_response_template["item"]["end"])
+            visual_answer["plot_data"].append({
+                "category": category_template.substitute(item),
+                "id": id_template.substitute(item),
+                "start": start_template.substitute(item),
+                "end": end_template.substitute(item)
+            })
         answers["visual_answer"] = visual_answer
 
     return answers

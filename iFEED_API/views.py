@@ -1,7 +1,7 @@
 import logging
+import os
+import csv
 
-from django.shortcuts import render
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,10 +15,10 @@ from channels import Group
 import datetime
 from random import *
 
-from messagebus.message import Message
+
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
-#from util.log import getLogger
+
 
 # Get an instance of a logger
 logger = logging.getLogger('iFEED')
@@ -57,10 +57,12 @@ class ImportData(APIView):
             problem = request.POST['problem']
 
             self.archID = 0
+
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
                 read = csv.reader(csvfile, delimiter=',')
+
                 self.architectures = []
 
                 inputs_unique_set = set()
@@ -143,13 +145,11 @@ class ImportData(APIView):
 #                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
 
             # Define context and see if it was already defined for this session
-            if 'data' not in request.session:
-                request.session['data'] = []
+            request.session['data'] = architectures
+            request.session['archID'] = archID
+            request.session.modified = True
 
-            request.session['data'] = self.architectures
-            request.session['archID'] = self.archID
-                        
-            return Response(self.architectures)
+            return Response(architectures)
         
         except Exception:
             logger.exception('Exception in importing data for iFEED')

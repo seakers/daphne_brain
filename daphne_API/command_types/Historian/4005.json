@@ -2,12 +2,15 @@
   "type": "db_query",
   "params":
   [
-    { "name": "technology", "type": "technology", "options": "", "mandatory": true }
+    { "name": "technology", "type": "technology", "options": "", "from_context": false, "mandatory": true },
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
   ],
   "query":
   {
     "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(or_(models.Instrument.technology.ilike('%${technology}%'), models.Instrument.types.any(models.InstrumentType.name.ilike('%${technology}%')))).filter(models.Mission.launch_date < data['now']).filter(models.Mission.eol_date > data['now'])",
-    "opt": [],
+    "opt": [
+      { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
+    ],
     "end": ".order_by(models.Mission.launch_date)",
     "result_type": "list",
     "result_fields": {

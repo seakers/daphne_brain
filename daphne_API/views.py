@@ -1,12 +1,10 @@
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
 import json
-import datetime
+from VASSAR_API.api import VASSARClient
 
 class Command(APIView):
     """
@@ -18,86 +16,82 @@ class Command(APIView):
         processed_command = nlp(request.data['command'].strip().lower())
 
         # Classify the command, obtaining a command type
-        command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian']
+        command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian', 'EDL']
+        condition_names = ['ifeed', 'analyst', 'critic', 'historian', 'edl']
         command_types = command_processing.classify_command(processed_command)
 
         # Define context and see if it was already defined for this session
         if 'context' not in request.session:
             request.session['context'] = {}
-                
-        request.session['context']['data'] = request.session['data']    
+
+        if 'data' in request.session:
+            request.session['context']['data'] = request.session['data']
+
+        if 'vassar_port' in request.session:
+            request.session['context']['vassar_port'] = request.session['vassar_port']
+
         request.session['context']['answers'] = []
 
-        request.session['context']['experiment_stage'] = 0
-        if 'experiment' in request.session:
-            if 'start_date2' in request.session['experiment']:
-                request.session['context']['experiment_stage'] = 2
-            else:
-                request.session['context']['experiment_stage'] = 1
-        
+        if 'allowed_commands' in request.data:
+            request.session['context']['allowed_commands'] = json.loads(request.data['allowed_commands'])
+
         # Act based on the types
         for command_type in command_types:
-            if command_options[command_type] == 'iFEED':
-                request.session['context']['answers'].append(
-                    command_processing.ifeed_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'VASSAR':
-                request.session['context']['answers'].append(
-                    command_processing.vassar_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'Critic':
-                request.session['context']['answers'].append(
-                    command_processing.critic_command(processed_command, request.session['context']))
-            if command_options[command_type] == 'Historian':
-                request.session['context']['answers'].append(
-                    command_processing.historian_command(processed_command, request.session['context']))
+            command_class = command_options[command_type]
+            condition_name = condition_names[command_type]
+            request.session['context']['answers'].append(
+                command_processing.command(processed_command, command_class, condition_name, request.session['context']))
 
         response = command_processing.think_response(request.session['context'])
-
-        # save data for experiment
-        if 'experiment' in request.session:
-            if 'start_date2' not in request.session['experiment']:
-                dialog = 'dialog1'
-            else:
-                dialog = 'dialog2'
-            request.session['experiment'][dialog].append({
-                'question': processed_command.text,
-                'answer': response,
-                'time': datetime.datetime.utcnow().isoformat()
-            })
 
         request.session.modified = True
 
         # If command is to switch modes, send new mode back, if not
         return Response({'response': response})
 
-
 class CommandList(APIView):
     """
     Get a list of commands, either for all the system or for a single subsystem
     """
     def post(self, request, format=None):
+        port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+        vassar_client = VASSARClient(port)
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
+        restricted_list = None
+        if 'restricted_list' in request.data:
+            restricted_list = request.data['restricted_list']
         if command_list_request == 'general':
-            command_list = command_lists.general_commands
+            command_list = command_lists.general_commands_list(restricted_list)
         elif command_list_request == 'datamining':
-            command_list = command_lists.datamining_commands
+            command_list = command_lists.datamining_commands_list(restricted_list)
         elif command_list_request == 'analyst':
-            command_list = command_lists.analyst_commands
+            command_list = command_lists.analyst_commands_list(restricted_list)
         elif command_list_request == 'critic':
-            command_list = command_lists.critic_commands
+            command_list = command_lists.critic_commands_list(restricted_list)
         elif command_list_request == 'historian':
-            command_list = command_lists.historian_commands
+            command_list = command_lists.historian_commands_list(restricted_list)
         elif command_list_request == 'measurements':
             command_list = command_lists.measurements_list()
         elif command_list_request == 'missions':
             command_list = command_lists.missions_list()
         elif command_list_request == 'technologies':
             command_list = command_lists.technologies_list()
+        elif command_list_request == 'space_agencies':
+            command_list = command_lists.agencies_list()
         elif command_list_request == 'objectives':
-            command_list = command_lists.objectives_list()
-        elif command_list_request == 'orb_alias':
-            command_list = command_lists.orbits_alias
-        elif command_list_request == 'instr_alias':
-            command_list = command_lists.instruments_alias
+            command_list = command_lists.objectives_list(vassar_client)
+        elif command_list_request == 'orb_info':
+            command_list = command_lists.orbits_info
+        elif command_list_request == 'instr_info':
+            command_list = command_lists.instruments_info
+        elif command_list_request == 'analyst_instrument_parameters':
+            command_list = command_lists.analyst_instrument_parameter_list()
+        elif command_list_request == 'analyst_instruments':
+            command_list = command_lists.analyst_instrument_list()
+        elif command_list_request == 'analyst_measurements':
+            command_list = command_lists.analyst_measurement_list()
+        elif command_list_request == 'analyst_stakeholders':
+            command_list = command_lists.analyst_stakeholder_list()
         return Response({'list': command_list})

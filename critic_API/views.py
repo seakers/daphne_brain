@@ -1,7 +1,5 @@
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
 import logging
 import json
@@ -14,13 +12,13 @@ from VASSAR_API.api import VASSARClient
 # Get an instance of a logger
 logger = logging.getLogger('critic')
 
-
         
 class CriticizeArchitecture(APIView):
     
     
     def post(self, request, format=None):
         try:
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             
             inputs = request.POST['inputs']   
                         
@@ -28,7 +26,7 @@ class CriticizeArchitecture(APIView):
             
             critique = self.get_history_critique(inputs)
             
-            critique += self.get_expert_critique(inputs)
+            critique += self.get_expert_critique(inputs, port)
             
             critiques = json.dumps(critique)
                                 
@@ -40,7 +38,7 @@ class CriticizeArchitecture(APIView):
             return Response('')
                 
 
-    def get_history_critique(self,inputs):
+    def get_history_critique(self, inputs):
 
         try:
             pass
@@ -56,15 +54,15 @@ class CriticizeArchitecture(APIView):
             raise
 
 
-    def get_expert_critique(self,inputs):
+    def get_expert_critique(self, inputs, port):
 
         try:
-            self.VASSARClient = VASSARClient()
+            self.VASSARClient = VASSARClient(port)
 
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
 
-            critique = self.VASSARClient.critiqueArchitecture(inputs)            
+            critique = self.VASSARClient.critiqueArchitecture(inputs, False)
 
             # End the connection before return statement
             self.VASSARClient.endConnection()

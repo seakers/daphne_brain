@@ -38,11 +38,9 @@ config = ConfigurationLoader().load()
 
 class VASSARClient():
     
-    def __init__(self):
-        port = config['vassar']['port']
-        
+    def __init__(self, port=9090):
         # Make socket
-        self.transport = TSocket.TSocket('localhost',port)
+        self.transport = TSocket.TSocket('localhost', port)
     
         # Buffering is critical. Raw sockets are very slow
         self.transport = TTransport.TBufferedTransport(self.transport)
@@ -62,20 +60,20 @@ class VASSARClient():
         # Close
         self.transport.close()
     
-    def evaluateArchitecture(self,bitString):
+    def evaluateArchitecture(self, bitString):
         arch_formatted = self.client.eval(bitString)
-        arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+        arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
         return arch
     
-    def runLocalSearch(self,bitString, experiment_stage):
-        archs_formatted = self.client.runLocalSearch(bitString, experiment_stage)
+    def runLocalSearch(self, bitString):
+        archs_formatted = self.client.runLocalSearch(bitString)
         archs = []
         for arch_formatted in archs_formatted:
-            arch = {'id':arch_formatted.id,'inputs':arch_formatted.inputs,'outputs':arch_formatted.outputs}
+            arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
             archs.append(arch)
-        return archs   
+        return archs
         
-    def critiqueArchitecture(self,bitString):
+    def critiqueArchitecture(self, bitString):
         return self.client.getCritique(bitString)
         
         
@@ -88,7 +86,6 @@ class VASSARClient():
     
     def getInstrumentList(self):
         return self.client.getInstrumentList()
-
     
 
 if __name__ == '__main__':

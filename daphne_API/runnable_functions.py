@@ -2,37 +2,36 @@ import logging
 from VASSAR_API.api import VASSARClient
 from data_mining_API.api import DataMiningClient
 from daphne_API.critic.critic import CRITIC
+import pandas
 
 import traceback
 import math
 import numpy as np
-import sys
+import sys, os
 
 logger = logging.getLogger('VASSAR')
 
 ORBIT_DATASET = [
-    {"alias":"1", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
-    {"alias":"2", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
-    {"alias":"3", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
-    {"alias":"4", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
-    {"alias":"5", "name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
+    {"alias": "1", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
+    {"alias": "2", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
+    {"alias": "3", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
+    {"alias": "4", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
+    {"alias": "5", "name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
 
 INSTRUMENT_DATASET = [
-    {"alias":"A", "name": "ACE_ORCA", "type": "Ocean colour instruments", "technology": "Medium-resolution spectro-radiometer", "geometry": "Cross-track scanning", "wavebands": ["UV","VIS","NIR","SWIR"]},
-    {"alias":"B", "name": "ACE_POL", "type": "Multiple direction/polarisation radiometers", "technology": "Multi-channel/direction/polarisation radiometer", "geometry": "ANY", "wavebands": ["VIS","NIR","SWIR"]},
-    {"alias":"C", "name": "ACE_LID", "type": "Lidars", "technology": "Atmospheric lidar", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR"]},
-    {"alias":"D", "name": "CLAR_ERB", "type": "Hyperspectral imagers", "technology": "Multi-purpose imaging Vis/IR radiometer", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR","SWIR","TIR","FIR"]},
-    {"alias":"E", "name": "ACE_CPR", "type": "Cloud profile and rain radars", "technology": "Cloud and precipitation radar", "geometry": "Nadir-viewing", "wavebands": ["MW"]},
-    {"alias":"F", "name": "DESD_SAR", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)", "geometry": "Side-looking", "wavebands": ["MW","L-Band","S-Band"]},
-    {"alias":"G", "name": "DESD_LID", "type": "Lidars", "technology": "Lidar altimeter", "geometry": "ANY", "wavebands": ["NIR"]},
-    {"alias":"H", "name": "GACM_VIS", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["UV","VIS"]},
-    {"alias":"I", "name": "GACM_SWIR", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["SWIR"]},
-    {"alias":"J", "name": "HYSP_TIR", "type": "Imaging multi-spectral radiometers (vis/IR)", "technology": "Medium-resolution IR spectrometer", "geometry": "Whisk-broom scanning", "wavebands": ["MWIR", "TIR"]},
-    {"alias":"K", "name": "POSTEPS_IRS", "type": "Atmospheric temperature and humidity sounders", "technology": "Medium-resolution IR spectrometer", "geometry": "Cross-track scanning", "wavebands": ["MWIR", "TIR"]},
-    {"alias":"L", "name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
+    {"alias": "A", "name": "ACE_ORCA", "type": "Ocean colour instruments", "technology": "Medium-resolution spectro-radiometer", "geometry": "Cross-track scanning", "wavebands": ["UV","VIS","NIR","SWIR"]},
+    {"alias": "B", "name": "ACE_POL", "type": "Multiple direction/polarisation radiometers", "technology": "Multi-channel/direction/polarisation radiometer", "geometry": "ANY", "wavebands": ["VIS","NIR","SWIR"]},
+    {"alias": "C", "name": "ACE_LID", "type": "Lidars", "technology": "Atmospheric lidar", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR"]},
+    {"alias": "D", "name": "CLAR_ERB", "type": "Hyperspectral imagers", "technology": "Multi-purpose imaging Vis/IR radiometer", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR","SWIR","TIR","FIR"]},
+    {"alias": "E", "name": "ACE_CPR", "type": "Cloud profile and rain radars", "technology": "Cloud and precipitation radar", "geometry": "Nadir-viewing", "wavebands": ["MW"]},
+    {"alias": "F", "name": "DESD_SAR", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)", "geometry": "Side-looking", "wavebands": ["MW","L-Band","S-Band"]},
+    {"alias": "G", "name": "DESD_LID", "type": "Lidars", "technology": "Lidar altimeter", "geometry": "ANY", "wavebands": ["NIR"]},
+    {"alias": "H", "name": "GACM_VIS", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["UV","VIS"]},
+    {"alias": "I", "name": "GACM_SWIR", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["SWIR"]},
+    {"alias": "J", "name": "HYSP_TIR", "type": "Imaging multi-spectral radiometers (vis/IR)", "technology": "Medium-resolution IR spectrometer", "geometry": "Whisk-broom scanning", "wavebands": ["MWIR", "TIR"]},
+    {"alias": "K", "name": "POSTEPS_IRS", "type": "Atmospheric temperature and humidity sounders", "technology": "Medium-resolution IR spectrometer", "geometry": "Cross-track scanning", "wavebands": ["MWIR", "TIR"]},
+    {"alias": "L", "name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
 
-
-    
 
 def data_mining_run(designs, behavioral, non_behavioral):
     
@@ -71,32 +70,220 @@ def data_mining_run(designs, behavioral, non_behavioral):
         client.endConnection()
         return None
 
-def VASSAR_load_objectives_information(design_id, designs):
-    client = VASSARClient()
+
+def VASSAR_get_architecture_scores(design_id, designs, context):
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
 
     try:
         # Start connection with VASSAR
         client.startConnection()
-        num_design_id = int(design_id[1:])
-        list = client.client.getScoreExplanation(designs[num_design_id]['inputs'])
+        num_design_id = int(design_id)
+        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'])
 
         # End the connection before return statement
         client.endConnection()
         return list
 
     except Exception:
-        logger.exception('Exception in loading objective information')
+        logger.exception('Exception in loading architecture score information')
         client.endConnection()
         return None
 
 
-def Critic_general_call(design_id, designs, experiment_stage=0):
-    client = VASSARClient()
+def VASSAR_get_panel_scores(design_id, designs, panel, context):
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        num_design_id = int(design_id)
+        stakeholders_to_excel = {
+            "atmospheric": "ATM",
+            "oceanic": "OCE",
+            "terrestrial": "TER"
+        }
+        panel_code = stakeholders_to_excel[panel]
+        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading panel score information')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_objective_scores(design_id, designs, objective, context):
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        num_design_id = int(design_id)
+        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading objective score information')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_instruments_for_objective(objective, context):
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        list = client.client.getInstrumentsForObjective(objective)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading related instruments to an objective')
+        client.endConnection()
+        return None
+
+
+def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
+
+    try:
+        # Start connection with VASSAR
+        client.startConnection()
+        stakeholders_to_excel = {
+            "atmospheric": "ATM",
+            "oceanic": "OCE",
+            "terrestrial": "TER"
+        }
+        panel_code = stakeholders_to_excel[stakeholder]
+        list = client.client.getInstrumentsForPanel(panel_code)
+
+        # End the connection before return statement
+        client.endConnection()
+        return list
+
+    except Exception:
+        logger.exception('Exception in loading related instruments to a panel')
+        client.endConnection()
+        return None
+
+
+
+def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
+    context["vassar_instrument"] = vassar_instrument
+    context["instrument_parameter"] = instrument_parameter
+    capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                                           sheet_name='CHARACTERISTICS')
+    capability_found = False
+    capability_value = None
+    for row in capabilities_sheet.itertuples(name='Instrument'):
+        if row[1].split()[1] == vassar_instrument:
+            for i in range(2, len(row)):
+                if row[i].split()[0] == instrument_parameter:
+                    capability_found = True
+                    capability_value = row[i].split()[1]
+
+    if capability_found:
+        return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + capability_value
+    else:
+        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                                               sheet_name=vassar_instrument, header=None)
+        for i in range(2, len(instrument_sheet.columns)):
+            if instrument_sheet[i][0].split()[0] == instrument_parameter:
+                capability_found = True
+        if capability_found:
+            return 'I have found different values for this parameter depending on the measurement. ' \
+                   'Please tell me for which measurement you want this parameter: ' \
+                   + ', '.join([measurement[11:-1] for measurement in instrument_sheet[1]])
+        else:
+            return 'I have not found any information for this measurement.'
+
+
+def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_parameter, instrument_measurement, context):
+    instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                                           sheet_name=vassar_instrument, header=None)
+    capability_value = None
+    for row in instrument_sheet.itertuples(index=True, name='Measurement'):
+        if row[2][11:-1] == instrument_measurement:
+            for i in range(3, len(row)):
+                if row[i].split()[0] == instrument_parameter:
+                    capability_value = row[i].split()[1]
+
+    return 'The ' + instrument_parameter + ' for instrument ' + vassar_instrument + ' and measurement ' + instrument_measurement + ' is ' + capability_value
+
+
+def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter, context):
+    context["vassar_instrument"] = vassar_measurement
+    context["instrument_parameter"] = instrument_parameter
+    requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
+                                           sheet_name='Attributes')
+    requirement_found = False
+    requirements = []
+    for row in requirements_sheet.itertuples(name='Requirement'):
+        if row[2][1:-1] == vassar_measurement and row[3] == instrument_parameter:
+            requirement_found = True
+            requirements.append({"stakeholder": row[1], "type": row[4], "thresholds": row[5]})
+
+    if requirement_found:
+        if len(requirements) > 1:
+            stakeholders_to_human = {
+                "ATM": "Atmospheric",
+                "OCE": "Oceanic",
+                "TER": "Terrestrial"
+            }
+            return 'I have found different values for this requirement depending on the stakeholder. ' \
+                   'Please tell me for which stakeholder you want this requirement: ' \
+                   + ', '.join([stakeholders_to_human[requirement["stakeholder"][0:3]] for requirement in requirements])
+        else:
+            threshold = requirements[0]["thresholds"][1:-1].split(',')[-1]
+            target_value = requirements[0]["thresholds"][1:-1].split(',')[0]
+            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' (subojective ' + \
+                   requirements[0]["stakeholder"] + ') is ' + threshold + ' and its target value is ' + \
+                   target_value + '.'
+    else:
+        return 'I have not found any information for this requirement.'
+
+
+def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_parameter, stakeholder, context):
+    requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
+                                           sheet_name='Attributes')
+    stakeholders_to_excel = {
+        "atmospheric": "ATM",
+        "oceanic": "OCE",
+        "terrestrial": "TER"
+    }
+    requirement = None
+    for row in requirements_sheet.itertuples(name='Requirement'):
+        if row[1][0:3] == stakeholders_to_excel[stakeholder] and row[2][1:-1] == vassar_measurement and row[3] == instrument_parameter:
+            requirement = {"stakeholder": row[1], "type": row[4], "thresholds": row[5]}
+
+    threshold = requirement["thresholds"][1:-1].split(',')[-1]
+    target_value = requirement["thresholds"][1:-1].split(',')[0]
+    return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' for panel ' + requirement["stakeholder"] + ' is ' \
+           + threshold + ' and its target value is ' + target_value + '.'
+
+
+def Critic_general_call(design_id, designs, context):
+    port = context['vassar_port'] if 'vassar_port' in context else 9090
+    client = VASSARClient(port)
     critic = CRITIC()
 
     try:
         this_design = None
-        num_design_id = int(design_id[1:])
+        num_design_id = int(design_id)
                 
         for design in designs:
             if num_design_id == design['id']:
@@ -112,7 +299,7 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
         client.startConnection()
         
         # Criticize architecture (based on rules)
-        result1 = client.client.getCritique(this_design['inputs'])
+        result1 = client.critiqueArchitecture(this_design['inputs'])
         result = []
         for advice in result1:
             result.append({
@@ -136,8 +323,14 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
                     
                 orbitIndex = i // ninstr # Floor division
                 instrIndex = i % ninstr # Get the remainder                
-                advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['alias']))
-                advice.append("to orbit {}".format(ORBIT_DATASET[orbitIndex]['alias']))
+                advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['name']))
+
+                if diff[i] == 1:
+                    advice.append("to")
+                elif diff[i] == -1:
+                    advice.append("from")
+
+                advice.append("orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
                     
                 advice = " ".join(advice)
                 out.append(advice)
@@ -149,7 +342,7 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
         original_outputs = this_design['outputs']
         original_inputs = this_design['inputs']
         
-        archs = client.runLocalSearch(this_design['inputs'], experiment_stage)
+        archs = client.runLocalSearch(this_design['inputs'])
         advices = []
         for arch in archs:
             new_outputs = arch['outputs']
@@ -161,11 +354,11 @@ def Critic_general_call(design_id, designs, experiment_stage=0):
             # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
             if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
                 # New solution dominates the original solution
-                advice.append(" to increase science and lower cost.")
+                advice.append(" to increase the science benefit and lower the cost.")
             elif new_outputs[0] > original_outputs[0]:
-                advice.append(" to increase science.")
+                advice.append(" to increase the science benefit (but cost may increase!).")
             elif new_outputs[1] < original_outputs[1]:
-                advice.append(" to lower cost.")
+                advice.append(" to lower the cost (but science may decrease too!).")
             else:
                 continue
                 
@@ -326,9 +519,9 @@ def base_feature_expression_to_string(feature_expression, isCritique = False):
         numbers = argSplit[2]
 
         if orbitIndices:
-            orbitNames = [ORBIT_DATASET[int(i)]['alias'] for i in orbitIndices.split(",")]
+            orbitNames = [ORBIT_DATASET[int(i)]['name'] for i in orbitIndices.split(",")]
         if instrumentIndices:
-            instrumentNames = [INSTRUMENT_DATASET[int(i)]['alias'] for i in instrumentIndices.split(",")]
+            instrumentNames = [INSTRUMENT_DATASET[int(i)]['name'] for i in instrumentIndices.split(",")]
         if numbers:
             numbers = [int(n) for n in numbers.split(",")]  
         
@@ -594,9 +787,3 @@ def apply_base_filter(filterExpression,design):
         raise ValueError("Exe in applying the base filter: " + str(e))
         
     return out
-                
-
-            
-
-
-

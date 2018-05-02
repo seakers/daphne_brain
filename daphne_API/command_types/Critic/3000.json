@@ -2,11 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "design_id", "type": "design_id", "options": "", "mandatory": true }
+    { "name": "design_id", "type": "design_id", "options": "", "from_context": false, "mandatory": true }
   ],
   "function":
   {
-    "run_template": "run_func.Critic_general_call('${design_id}', data['designs'], data['experiment_stage'])",
+    "run_template": "run_func.Critic_general_call('${design_id}', data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",

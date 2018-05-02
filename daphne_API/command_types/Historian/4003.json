@@ -2,14 +2,17 @@
   "type": "db_query",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "mandatory": true },
-    { "name": "year1", "type": "year", "options": "begin", "mandatory": false },
-    { "name": "year2", "type": "year", "options": "end", "mandatory": false }
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    { "name": "year1", "type": "year", "options": "begin", "from_context": false, "mandatory": false },
+    { "name": "year2", "type": "year", "options": "end", "from_context": false, "mandatory": false },
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
   ],
   "query":
   {
     "always": "session.query(models.Instrument.name).join(models.Mission, models.Instrument.missions).group_by(models.Instrument.name).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%'))).having(func.min(models.Mission.launch_date) < data['now']).having(func.max(models.Mission.eol_date) > data['now'])",
-    "opt": [],
+    "opt": [
+      { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
+    ],
     "end": ".order_by(func.min(models.Mission.launch_date))",
     "result_type": "list",
     "result_fields": {

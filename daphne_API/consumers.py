@@ -1,35 +1,46 @@
-from channels import Group
-from channels.sessions import channel_session
-from messagebus.message import Message
-import json
 import hashlib
+from channels.generic.websocket import JsonWebsocketConsumer
 
-    
-@channel_session
-def ws_message(message):
-    key = message.content['path'].lstrip('api/')
-    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    textMessage = message.content['text']
-    # Deserialize message
-    daphneMessage = Message.deserialize(textMessage)
-    # Broadcast
-    Group(hash_key).send({"text": textMessage})
-    
-    
-@channel_session
-def ws_connect(message):
-    # Accept the connection request
-    message.reply_channel.send({"accept": True})
-    key = message.content['path'].lstrip('api/')          
-    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    # Add to the group
-    Group(hash_key).add(message.reply_channel)
 
-    
-@channel_session
-def ws_disconnect(message):
-    key = message.content['path'].lstrip('api/')
-    hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    # Remove from the group on clean disconnect
-    Group(hash_key).discard(message.reply_channel)
-    
+class DaphneConsumer(JsonWebsocketConsumer):
+    ##### WebSocket event handlers
+    def connect(self):
+        """
+        Called when the websocket is handshaking as part of initial connection.
+        """
+        # Accept the connection
+        self.accept()
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        # Add to the group
+        self.channel_layer.group_add(hash_key, self.channel_name)
+
+
+    def receive_json(self, content, **kwargs):
+        """
+        Called when we get a text frame. Channels will JSON-decode the payload
+        for us and pass it as the first argument.
+        """
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        if content.get('msg_type') == 'context_add':
+            if 'context' not in self.scope['session']:
+                self.scope['session']['context'] = {}
+            for key, value in content.get('new_context').items():
+                self.scope['session']['context'][key] = value
+            self.scope['session'].save()
+        elif content.get('msg_type') == 'text_msg':
+            textMessage = content.get('text', None)
+            # Broadcast
+            self.channel_layer.group_send(hash_key, { "text": textMessage })
+
+
+    def disconnect(self, code):
+        """
+        Called when the WebSocket closes for any reason.
+        """
+        # Leave all the rooms we are still in
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+        # Remove from the group on clean disconnect
+        self.channel_layer.group_discard(hash_key, self.channel_name)
