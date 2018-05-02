@@ -11,7 +11,6 @@ import sys,os
 import json
 import csv
 import hashlib
-from channels import Group
 import datetime
 from random import *
 
@@ -145,11 +144,11 @@ class ImportData(APIView):
 #                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
 
             # Define context and see if it was already defined for this session
-            request.session['data'] = architectures
-            request.session['archID'] = archID
+            request.session['data'] = self.architectures
+            request.session['archID'] = self.archID
             request.session.modified = True
 
-            return Response(architectures)
+            return Response(self.architectures)
         
         except Exception:
             logger.exception('Exception in importing data for iFEED')
