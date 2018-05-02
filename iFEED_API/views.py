@@ -4,6 +4,16 @@ import csv
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
+
+import numpy as np
+import sys,os
+import json
+import csv
+import hashlib
+import datetime
+from random import *
+
 
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
@@ -14,6 +24,12 @@ logger = logging.getLogger('iFEED')
 
 config = ConfigurationLoader().load()
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 class ImportData(APIView):
     
@@ -31,35 +47,108 @@ class ImportData(APIView):
             logger.debug('iFEED import data HTTP request')
 
             # Set the path of the file containing data
-            file_path = os.path.dirname(os.path.abspath(__file__)) + '/data/' + request.POST['filename']
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', request.POST['file_path'])
             
-            archID = 0
-            
+            inputType = request.POST['input_type']
+            inputNum = int(request.POST['input_num'])
+            outputNum = int(request.POST['output_num'])
+
+            problem = request.POST['problem']
+
+            self.archID = 0
+
             # Open the file
             with open(file_path) as csvfile:
                 # Read the file as a csv file
                 read = csv.reader(csvfile, delimiter=',')
-                architectures = []
-                bit_strings = set()
+
+                self.architectures = []
+
+                inputs_unique_set = set()
                 # For each row, store the information
                 for ind, row in enumerate(read):
-                    # Change boolean string to boolean array
-                    inputs = self.booleanString2booleanArray(row[0])
-                    science = float(row[1])
-                    cost = float(row[2])
-                    outputs = [science, cost]
-                                        
-                    if row[0] not in bit_strings:
-                        architectures.append({ 'id': archID, 'inputs': inputs, 'outputs': outputs })
-                        bit_strings.add(row[0])
-                        archID += 1
+                    if ind == 0: # Check if the first line is a header
+                        header = False
+                        for cell in row:
+                            if not is_number(cell) and cell != "": 
+                                # If one of the entries is not a number or an empty string
+                                # First line is a header
+                                header = True
+                                break
+                        if header:
+                            continue
+
+                    inputs = []
+                    outputs = []
+
+                    if problem == "constellation":
+                        # Filter out outliers
+                         
+                        if float(row[40]) > 22000: # mean_resp
+                            continue
+                        elif float(row[41]) > 93000: # latency
+                            continue
+                        else:
+                            if random() > 0.1:
+                                continue
+
+                    # Import inputs
+                    for i in range(inputNum):
+                        if inputType == "binary": 
+                            # Assumes that there is only one column for the inputs
+                            inputs = self.booleanString2booleanArray(row[i])
+                        else:
+                            inp = row[i]
+                            if inp == "":
+                                inp = -1
+                            else:
+                                inp = float(inp)
+                            inputs.append(inp)
+
+                    for i in range(outputNum):
+                        out = row[i + inputNum]
+                        if out == "":
+                            out = 0
+                        else:
+                            out = float(out)
+                        outputs.append(out)
+
+                    hashedInput = hash(tuple(inputs))
+                    if hashedInput not in inputs_unique_set:
+                        self.architectures.append({'id':self.archID, 'inputs':inputs, 'outputs':outputs})
+                        self.archID += 1
+                        inputs_unique_set.add(hashedInput)
+                    else:
+                        #print(hashedInput)
+                        pass
+
+#            # If experiment is running, change architectures for those of experiment
+#            if 'experiment' in request.session:
+#                if 'start_date2' not in request.session['experiment']:
+#                    architectures_name = 'architectures1'
+#                else:
+#                    architectures_name = 'architectures2'
+#
+#                if request.session['experiment']['new_data']:
+#                    # Save initial archs into experiment
+#                    for arch in self.architectures:
+#                        request.session['experiment'][architectures_name].append({
+#                            'arch': arch,
+#                            'time': datetime.datetime.utcnow().isoformat()
+#                        })
+#                    request.session['experiment']['new_data'] = False
+#                else:
+#                    # Recover archs when reloading
+#                    self.architectures = []
+#                    for arch in request.session['experiment'][architectures_name]:
+#                        self.architectures.append({'id': arch['arch']['id'], 'inputs': arch['arch']['inputs'], 'outputs': arch['arch']['outputs']})
 
             # Define context and see if it was already defined for this session
-            request.session['data'] = architectures
-            request.session['archID'] = archID
+            request.session['data'] = self.architectures
+            request.session['archID'] = self.archID
             request.session.modified = True
 
-            return Response(architectures)
+            return Response(self.architectures)
         
         except Exception:
             logger.exception('Exception in importing data for iFEED')
@@ -80,6 +169,7 @@ class SetTargetRegion(APIView):
             selected = request.POST['selected']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
+            
             # Convert strings to ints
             behavioral = []
             if selected_arch_ids:
@@ -91,6 +181,7 @@ class SetTargetRegion(APIView):
             non_selected = request.POST['non_selected']
             non_selected = non_selected[1:-1]
             non_selected_arch_ids = non_selected.split(',')
+
             # Convert strings to ints
             non_behavioral = []
             if non_selected_arch_ids:
