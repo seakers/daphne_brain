@@ -1,10 +1,6 @@
 import hashlib
 from channels.generic.websocket import JsonWebsocketConsumer
-from importlib import import_module
-from django.conf import settings
-from daphne_brain.session_lock import session_lock
 
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 class DaphneConsumer(JsonWebsocketConsumer):
     ##### WebSocket event handlers
@@ -28,13 +24,11 @@ class DaphneConsumer(JsonWebsocketConsumer):
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         if content.get('msg_type') == 'context_add':
-            with session_lock:
-                store = SessionStore(self.scope['session'].session_key)
-                if 'context' not in store:
-                    store['context'] = {}
-                for key, value in content.get('new_context').items():
-                    store['context'][key] = value
-                store.save()
+            if 'context' not in self.scope['session']:
+                self.scope['session']['context'] = {}
+            for key, value in content.get('new_context').items():
+                self.scope['session']['context'][key] = value
+            self.scope['session'].save()
         elif content.get('msg_type') == 'text_msg':
             textMessage = content.get('text', None)
             # Broadcast

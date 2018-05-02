@@ -1,18 +1,10 @@
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
 import json
-import datetime
-from importlib import import_module
-from django.conf import settings
-from daphne_brain.session_lock import session_lock
 from VASSAR_API.api import VASSARClient
-
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 class Command(APIView):
     """
@@ -62,8 +54,7 @@ class CommandList(APIView):
     Get a list of commands, either for all the system or for a single subsystem
     """
     def post(self, request, format=None):
-        store = SessionStore(request.session.session_key)
-        port = store['vassar_port'] if 'vassar_port' in store else 9090
+        port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
         vassar_client = VASSARClient(port)
         # List of commands for a single subsystem
         command_list = []

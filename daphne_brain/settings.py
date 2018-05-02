@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'merge_session'
 ]
 
 MIDDLEWARE = [
@@ -140,6 +141,7 @@ CHANNEL_LAYERS = {
 # ASGI_APPLICATION should be set to your outermost router
 ASGI_APPLICATION = 'daphne_brain.routing.application'
 
+# Databases for Daphne
 ALCHEMY_DATABASE = {
     'drivername': 'postgres',
     'host': 'localhost',
@@ -157,6 +159,12 @@ EDL_DATABASE = {
     'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
 }
+
+
+# Session configuration
+SESSION_ENGINE = "merge_session.merge_db"
+
+
 # Logging
 
 LOGGING = {

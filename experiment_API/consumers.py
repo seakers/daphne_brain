@@ -1,11 +1,7 @@
 import datetime
 import json
 from channels.generic.websocket import JsonWebsocketConsumer
-from importlib import import_module
-from django.conf import settings
-from daphne_brain.session_lock import session_lock
 
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 class ExperimentConsumer(JsonWebsocketConsumer):
     ##### WebSocket event handlers
@@ -16,7 +12,6 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         # Accept the connection
         self.accept()
 
-
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload
@@ -25,16 +20,10 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         if content.get('msg_type') == 'add_action':
             action = content['action']
             action['date'] = datetime.datetime.utcnow().isoformat()
-            # Lock the threads to modify sessions without problems
-            with session_lock:
-                store = SessionStore(self.scope['session'].session_key)
-                store['experiment']['stages'][content['stage']]['actions'].append(action)
-                store.save()
-            self.send(json.dumps(store['experiment']))
+            self.scope['session']['experiment']['stages'][content['stage']]['actions'].append(action)
+            self.scope['session'].save()
+            self.send(json.dumps(self.scope['session']['experiment']))
         elif content.get('msg_type') == 'update_state':
-            # Lock the threads to modify sessions without problems
-            with session_lock:
-                store = SessionStore(self.scope['session'].session_key)
-                store['experiment']['state'] = content['state']
-                store.save()
-            self.send(json.dumps(store['experiment']))
+            self.scope['session']['experiment']['state'] = content['state']
+            self.scope['session'].save()
+            self.send(json.dumps(self.scope['session']['experiment']))

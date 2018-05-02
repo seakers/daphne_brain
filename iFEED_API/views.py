@@ -1,23 +1,19 @@
 import logging
+import os
+import csv
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-import os
-import csv
-
-from importlib import import_module
-from django.conf import settings
-from daphne_brain.session_lock import session_lock
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 # Get an instance of a logger
 logger = logging.getLogger('iFEED')
 
 config = ConfigurationLoader().load()
+
 
 class ImportData(APIView):
     
@@ -59,12 +55,10 @@ class ImportData(APIView):
                         archID += 1
 
             # Define context and see if it was already defined for this session
-            with session_lock:
-                store = SessionStore(request.session.session_key)
-                store['data'] = architectures
-                store['archID'] = archID
-                store.save()
-                        
+            request.session['data'] = architectures
+            request.session['archID'] = archID
+            request.session.modified = True
+
             return Response(architectures)
         
         except Exception:
