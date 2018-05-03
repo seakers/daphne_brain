@@ -1,1 +1,2 @@
-PASSWORD="" SECRET_KEY="iufdifd" daphne -b 127.0.0.1 -p 8001 daphne_brain.asgi:channel_layer
+#!/bin/bash
+PASSWORD="" SECRET_KEY="iufdifd87142p7t39h397nggn8jpiewongi12345hflds,.-po" daphne -b 127.0.0.1 -p 8001 daphne_brain.asgi:channel_layer
