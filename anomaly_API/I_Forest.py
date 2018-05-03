@@ -135,9 +135,10 @@ class iForest(JsonWebsocketConsumer):
 
         minPL = np.min(meanPathLength)
         maxPL = np.max(meanPathLength)
-        data["anomalyScore"] = 1 + ((meanPathLength - minPL) / (minPL - maxPL))
-        data['timestamp'] = data.index
+        out = pd.DataFrame()
+        out["anomalyScore"] = 1 + ((meanPathLength - minPL) / (minPL - maxPL))
+        out['timestamp'] = data.index
 
-        self.send_json(data.to_json(date_format='iso', orient='records'))
+        self.send_json(out.to_json(date_format='iso', orient='records'))
 
 

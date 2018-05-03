@@ -101,8 +101,9 @@ class adaptiveKNN(JsonWebsocketConsumer):
         localOutlierScore = np.log(np.divide(np.mean(ro[k_near]), ro))  # Returns the local outlier score,
         # it might be interesting to normalize it or to be able to compare it with different outlier scores
 
-        data['anomalyScore'] = localOutlierScore
-        data['timestamp'] = data.index
+        out = pd.DataFrame()
+        out['anomalyScore'] = localOutlierScore
+        out['timestamp'] = data.index
 
         self.send_json(
-            data.to_json(date_format='iso', orient='records'))
+            out.to_json(date_format='iso', orient='records'))
