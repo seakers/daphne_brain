@@ -4,6 +4,8 @@ import daphne_API.command_processing as command_processing
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_lists as command_lists
 import json
+import os
+import csv
 from VASSAR_API.api import VASSARClient
 
 class Command(APIView):
@@ -95,3 +97,79 @@ class CommandList(APIView):
         elif command_list_request == 'analyst_stakeholders':
             command_list = command_lists.analyst_stakeholder_list()
         return Response({'list': command_list})
+
+
+class ImportData(APIView):
+    """ Imports data from a csv file.
+
+    Request Args:
+        path: Relative path to a csv file residing inside Daphne project folder
+
+    Returns:
+        architectures: a list of python dict containing the basic architecture information.
+
+    """
+
+    def booleanString2booleanArray(self, booleanString):
+        return [b == "1" for b in booleanString]
+
+    def post(self, request, format=None):
+        try:
+            # Set the path of the file containing data
+            user_path = request.user.username if request.data['load_user_files'] == 'true' != '' else 'default'
+            problem = request.data['problem']
+            filename = request.data['filename']
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', user_path, problem, filename)
+
+            input_num = int(request.data['input_num'])
+            output_num = int(request.data['output_num'])
+
+            archID = 0
+
+            # Open the file
+            with open(file_path) as csvfile:
+                architectures = []
+
+                inputs_unique_set = set()
+                # For each row, store the information
+                has_header = csv.Sniffer().has_header(csvfile.read(1024))
+                csvfile.seek(0)
+
+                # Read the file as a csv file
+                reader = csv.reader(csvfile, delimiter=',')
+
+                for row in reader:
+                    if has_header:
+                        has_header = False
+                        continue
+
+                    inputs = []
+                    outputs = []
+
+                    # Import inputs
+                    for i in range(input_num):
+                        # Assumes that there is only one column for the inputs
+                        inputs = self.booleanString2booleanArray(row[i])
+
+                    for i in range(output_num):
+                        out = row[i + input_num]
+                        if out == "":
+                            out = 0
+                        else:
+                            out = float(out)
+                        outputs.append(out)
+
+                    hashed_input = hash(tuple(inputs))
+                    if hashed_input not in inputs_unique_set:
+                        architectures.append({'id': archID, 'inputs': inputs, 'outputs': outputs})
+                        archID += 1
+                        inputs_unique_set.add(hashed_input)
+
+            # Define context and see if it was already defined for this session
+            request.session['data'] = architectures
+            request.session['archID'] = archID
+            request.session.modified = True
+
+            return Response(architectures)
+        except Exception:
+            return Response('Error importing the data')
