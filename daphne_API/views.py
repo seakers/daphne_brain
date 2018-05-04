@@ -173,3 +173,36 @@ class ImportData(APIView):
             return Response(architectures)
         except Exception:
             return Response('Error importing the data')
+
+
+class DatasetList(APIView):
+    """ Returns a list of problem files.
+
+    Request Args:
+        problem: Name of the problem for the list
+
+    Returns:
+        dataset_list: a python dict with two lists: one for default datasets and another for user datasets
+
+    """
+
+    def post(self, request, format=None):
+        default_datasets = []
+        user_datasets = []
+
+        # Set the path of the file containing data
+        problem = request.data['problem']
+        default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'default', problem)
+        default_datasets.extend(os.listdir(default_path))
+
+        if request.user.is_authenticated:
+            username = request.user.username
+            user_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', username, problem)
+            user_datasets.extend(os.listdir(user_path))
+
+        response_data = {
+            'default': default_datasets,
+            'user': user_datasets
+        }
+
+        return Response(response_data)
