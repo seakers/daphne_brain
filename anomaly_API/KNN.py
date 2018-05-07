@@ -83,8 +83,8 @@ class adaptiveKNN(JsonWebsocketConsumer):
 
         # dist_k is an ordered vector
         dk_mean = np.mean(dist_k, axis=1)
-        dk_max = dist_k[:, -1]
-        dk_min = dist_k[:, 0]
+        dk_max = np.max(dk_mean)
+        dk_min = np.min(dk_mean)
 
         ri = c * (eps + dk_min + dk_max - dk_mean)  # Computes the kernel radius
         # Note that we are only using the k nearest neighbors to compute the kernel radius

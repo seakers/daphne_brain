@@ -5,6 +5,7 @@ from . import WGAUSS
 from . import views
 from .analysis import seasonality
 from .analysis import detectMultivariateAnomalies
+from .analysis import AnomalyDetectionAgreements
 
 urlpatterns = [
     path('SARIMA', SARIMA.AD_SARIMA.as_view(), name='SARIMA'),
@@ -17,5 +18,6 @@ urlpatterns = [
     path('analysis/detectThreshold', detectMultivariateAnomalies.DetectMultivariateAnomaliesThreshold.as_view(),
          name='detectThreshold'),
     path('analysis/detectNumber', detectMultivariateAnomalies.DetectMultivariateAnomaliesNumber.as_view(),
-         name='detectNumber')
+         name='detectNumber'),
+    path('analysis/MethodsAgreement', AnomalyDetectionAgreements.AgreementMethods.as_view(), name='MethodsAgreement')
 ]

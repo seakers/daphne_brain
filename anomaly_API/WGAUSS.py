@@ -45,7 +45,7 @@ class ADWindowedStats(APIView):
         if 'variable' in request.data:
             variable = request.data['variable']
         else:
-            variable = data.colums[0]
+            variable = data.columns[0]
 
         one_var = data[variable]
 
