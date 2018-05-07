@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 INSTALLED_APPS = [
     'channels',
+    'auth_API',
     'daphne_API',
     'data_mining_API',
     'experiment_API',
