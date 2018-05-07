@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
+from daphne_API.daphne_fields import daphne_fields
+
 
 class Login(APIView):
     """
@@ -14,8 +16,19 @@ class Login(APIView):
         username = request.data['username']
         password = request.data['password']
         user = authenticate(request, username=username, password=password)
+
         if user is not None:
+            # Save interesting parts of session
+            saved_session = {}
+            for field in daphne_fields:
+                if field in request.session:
+                    saved_session[field] = request.session[field]
+            # Log the user in
             login(request, user)
+            # Restore the session
+            for field in saved_session:
+                request.session[field] = saved_session[field]
+            # Return the login response
             return Response({
                 'status': 'logged_in',
                 'username': username,
@@ -34,7 +47,17 @@ class Logout(APIView):
     Logout a user
     """
     def post(self, request, format=None):
+        # Save interesting parts of session
+        saved_session = {}
+        for field in daphne_fields:
+            if field in request.session:
+                saved_session[field] = request.session[field]
+        # Log the user out
         logout(request)
+        # Restore the session
+        for field in saved_session:
+            request.session[field] = saved_session[field]
+        # Return the logout response
         return Response({
             'message': 'User logged out.'
         })
@@ -62,15 +85,22 @@ class CheckStatus(APIView):
     Check if a user is logged in
     """
     def get(self, request, format=None):
-        if request.user.is_authenticated:
-            return Response({
-                'is_logged_in': True,
-                'username': request.user.username,
-                'permissions': []
-            })
+        if 'problem' in request.session:
+            problem = request.session['problem']
         else:
-            return Response({
-                'is_logged_in': False,
-                'username': request.user.username,
-                'permissions': []
-            })
+            problem = ''
+        if 'dataset' in request.session:
+            dataset = request.session['dataset']
+        else:
+            dataset = ''
+        response = {
+            'username': request.user.username,
+            'permissions': [],
+            'problem': problem,
+            'dataset': dataset
+        }
+        if request.user.is_authenticated:
+            response['is_logged_in'] = True
+        else:
+            response['is_logged_in'] = False
+        return Response(response)

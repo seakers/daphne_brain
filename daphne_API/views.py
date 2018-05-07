@@ -168,6 +168,8 @@ class ImportData(APIView):
             # Define context and see if it was already defined for this session
             request.session['data'] = architectures
             request.session['archID'] = archID
+            request.session['problem'] = problem
+            request.session['dataset'] = filename
             request.session.modified = True
 
             return Response(architectures)
@@ -206,3 +208,25 @@ class DatasetList(APIView):
         }
 
         return Response(response_data)
+
+
+class ClearSession(APIView):
+    """ Clears the Daphne Session.
+
+    Request Args:
+        problem: Name of the problem for the list
+
+    Returns:
+        dataset_list: a python dict with two lists: one for default datasets and another for user datasets
+
+    """
+
+    def post(self, request, format=None):
+        from . daphne_fields import daphne_fields
+
+        # Remove all fields from session if they exist
+        for field in daphne_fields:
+            if field in request.session:
+                del request.session[field]
+
+        return Response({})
