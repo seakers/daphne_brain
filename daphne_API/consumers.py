@@ -10,6 +10,7 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         # Accept the connection
         self.accept()
+        self.scope['session']['channel_name'] = self.channel_name
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Add to the group

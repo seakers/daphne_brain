@@ -95,6 +95,14 @@ class Iface(object):
         """
         pass
 
+    def startGA(self, dataset, username):
+        """
+        Parameters:
+         - dataset
+         - username
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -463,6 +471,23 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getObjectiveScoreExplanation failed: unknown result")
 
+    def startGA(self, dataset, username):
+        """
+        Parameters:
+         - dataset
+         - username
+        """
+        self.send_startGA(dataset, username)
+
+    def send_startGA(self, dataset, username):
+        self._oprot.writeMessageBegin('startGA', TMessageType.ONEWAY, self._seqid)
+        args = startGA_args()
+        args.dataset = dataset
+        args.username = username
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -480,6 +505,7 @@ class Processor(Iface, TProcessor):
         self._processMap["getArchitectureScoreExplanation"] = Processor.process_getArchitectureScoreExplanation
         self._processMap["getPanelScoreExplanation"] = Processor.process_getPanelScoreExplanation
         self._processMap["getObjectiveScoreExplanation"] = Processor.process_getObjectiveScoreExplanation
+        self._processMap["startGA"] = Processor.process_startGA
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -771,6 +797,17 @@ class Processor(Iface, TProcessor):
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
+
+    def process_startGA(self, seqid, iprot, oprot):
+        args = startGA_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        try:
+            self._handler.startGA(args.dataset, args.username)
+        except TTransport.TTransportException:
+            raise
+        except Exception:
+            logging.exception('Exception in oneway handler')
 
 # HELPER FUNCTIONS AND STRUCTURES
 
@@ -2292,6 +2329,88 @@ class getObjectiveScoreExplanation_result(object):
 all_structs.append(getObjectiveScoreExplanation_result)
 getObjectiveScoreExplanation_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [ObjectiveSatisfaction, None], False), None, ),  # 0
+)
+
+
+class startGA_args(object):
+    """
+    Attributes:
+     - dataset
+     - username
+    """
+
+
+    def __init__(self, dataset=None, username=None,):
+        self.dataset = dataset
+        self.username = username
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.dataset = []
+                    (_etype129, _size126) = iprot.readListBegin()
+                    for _i130 in range(_size126):
+                        _elem131 = BinaryInputArchitecture()
+                        _elem131.read(iprot)
+                        self.dataset.append(_elem131)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.username = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('startGA_args')
+        if self.dataset is not None:
+            oprot.writeFieldBegin('dataset', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.dataset))
+            for iter132 in self.dataset:
+                iter132.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.username is not None:
+            oprot.writeFieldBegin('username', TType.STRING, 2)
+            oprot.writeString(self.username.encode('utf-8') if sys.version_info[0] == 2 else self.username)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(startGA_args)
+startGA_args.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'dataset', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 1
+    (2, TType.STRING, 'username', 'UTF8', None, ),  # 2
 )
 fix_spec(all_structs)
 del all_structs
