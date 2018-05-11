@@ -169,8 +169,11 @@ class StartGA(APIView):
 
                 # Convert the architecture list
                 thrift_list = []
+                inputs_unique_set = set()
                 for arch in request.session['data']:
                     thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                    hashed_input = hash(tuple(arch['inputs']))
+                    inputs_unique_set.add(hashed_input)
 
                 client.client.startGA(thrift_list, request.user.username)
 
@@ -182,13 +185,35 @@ class StartGA(APIView):
                 p = r.pubsub()
 
                 def my_handler(message):
-                    arch_info = json.loads(r.lrange(request.user.username, -1, -1)[0])
-                    channel_layer = get_channel_layer()
-                    async_to_sync(channel_layer.send)(request.session['channel_name'],
-                                                      {
-                                                          'type': 'ga.new_arch',
-                                                          'arch': arch_info
-                                                      })
+                    if message['data'] == 'new_arch':
+                        print('Processing some new archs!')
+                        nonlocal inputs_unique_set
+                        nonlocal request
+                        # Archs are added in pairs
+                        new_archs = r.lrange(request.user.username, -2, -1)
+                        send_back = []
+                        # Add archs to the context data before sending back to user
+                        for arch in new_archs:
+                            arch = json.loads(arch)
+                            hashed_input = hash(tuple(arch['inputs']))
+                            if hashed_input not in inputs_unique_set:
+                                full_arch = {'id': request.session['archID'], 'inputs': arch['inputs'], 'outputs': arch['outputs']}
+                                request.session['data'].append(full_arch)
+                                request.session['archID'] += 1
+                                send_back.append(full_arch)
+                                inputs_unique_set.add(hashed_input)
+                                request.session.save()
+
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                                                          {
+                                                              'type': 'ga.new_archs',
+                                                              'archs': send_back
+                                                          })
+                    if message['data'] == 'ga_done':
+                        print('Ending the thread!')
+                        thread.stop()
 
 
                 p.subscribe(**{request.user.username: my_handler})
