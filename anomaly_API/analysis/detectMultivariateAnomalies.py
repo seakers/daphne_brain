@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 import pandas as pd
+import numpy as np
 import json
 import matplotlib.pyplot as plt
 
@@ -18,6 +19,15 @@ class DetectMultivariateAnomaliesThreshold (APIView):
         method = request.data['selectedMultiVarAlgorithm']
 
         anomalyScore = pd.read_json(json.dumps(request.data['anomalyScore'][method]), orient='records')
+
+        if (request.data['useSelectedData']):
+            selectedData = pd.read_json(json.dumps(request.data['selectedData']), orient='records')
+            anomalyScore['selectedData'] = selectedData
+
+            if np.sum(anomalyScore['selectedData']) == 0:
+                return Response({'writtenResponse': [{'introduction': 'ERROR: NO SELECTED DATA', 'bulletPoints': []}]})
+
+            anomalyScore = anomalyScore[anomalyScore['selectedData']]
 
         threshold = request.data['threshold']
 
@@ -51,6 +61,15 @@ class DetectMultivariateAnomaliesNumber(APIView):
         method = request.data['selectedMultiVarAlgorithm']
 
         anomalyScore = pd.read_json(json.dumps(request.data['anomalyScore'][method]), orient='records')
+
+        if request.data['useSelectedData']:
+            selectedData = pd.read_json(json.dumps(request.data['selectedData']), orient='records')
+            anomalyScore['selectedData'] = selectedData
+
+            if np.sum(anomalyScore['selectedData']) == 0:
+                return Response({'writtenResponse': [{'introduction': 'ERROR: NO SELECTED DATA', 'bulletPoints': []}]})
+
+            anomalyScore = anomalyScore[anomalyScore['selectedData']]
 
         n = request.data['n']
 

@@ -36,7 +36,6 @@ class AgreementMethods(APIView):
         t = request.data['radius']  # The threshold imposed to consider related anomalies
 
         data = pd.read_json(request.data['data'], orient='records').set_index('timestamp')
-        n = data.shape[0]
 
         if typeOne == 'UniVariate':
             anomaliesOne = pd.read_json(json.dumps(request.data['detectedOneVarAnomalies'][variable][methodOne]), orient='records')
@@ -57,6 +56,18 @@ class AgreementMethods(APIView):
         # correspond with an anomaly
         result = pd.concat([data, anomaliesOne['FlagAnomalyOne'], anomaliesTwo['FlagAnomalyTwo']], axis=1)
         x = result.fillna(0)
+
+        # Compares only the selected Data
+        if request.data['useSelectedData']:
+            selectedData = pd.read_json(json.dumps(request.data['selectedData']), orient='records')
+            x['selectedData'] = selectedData.values
+
+            if np.sum(x['selectedData']) == 0:
+                return Response({'writtenResponse': [{'introduction': 'ERROR: NO SELECTED DATA', 'bulletPoints': []}]})
+
+            x = x[x['selectedData']]
+
+        n = x.shape[0]
         x['FlagNeighborOne'] = fill_neighbors(x['FlagAnomalyOne'], t)
         x['FlagNeighborTwo'] = fill_neighbors(x['FlagAnomalyTwo'], t)
         x['Coincidence'] = x['FlagAnomalyOne'] * x['FlagAnomalyTwo']
@@ -86,9 +97,9 @@ class AgreementMethods(APIView):
                             + ' to anomalies detected with' + methodTwo,
             'bulletPoints': [
                 'Total number of anomalies detected by ' + methodOne + ' is ' + str(sumFlagOne),
-                'The ' + str(sum(x['Coincidence']) / sumFlagOne) + '% coincide with anomalies detected with method ' + methodTwo,
-                'The ' + str(sum(x['RelatedOne']) / sumFlagOne) + '%  are related to anomalies detected with method ' + methodTwo,
-            ]
+                'The ' + str(100 * sum(x['Coincidence']) / sumFlagOne) + '% coincide with anomalies detected with method ' + methodTwo,
+                'The ' + str(100 * sum(x['RelatedOne']) / sumFlagOne) + '%  are related to anomalies detected with method ' + methodTwo,
+                ]
         }
 
         writtenResponseTwo = {
@@ -96,9 +107,9 @@ class AgreementMethods(APIView):
                             + ' to anomalies detected with' + methodOne,
             'bulletPoints': [
                 'Total number of anomalies detected by ' + methodTwo + ' is ' + str(sumFlagTwo),
-                'The ' + str(sum(x['Coincidence']) / sumFlagTwo) + '% coincide with anomalies detected with method ' + methodOne,
-                'The ' + str(sum(x['RelatedTwo']) / sumFlagTwo) + '%  are related to anomalies detected with method ' + methodOne,
-            ]
+                'The ' + str(100 * sum(x['Coincidence']) / sumFlagTwo) + '% coincide with anomalies detected with method ' + methodOne,
+                'The ' + str(100 * sum(x['RelatedTwo']) / sumFlagTwo) + '%  are related to anomalies detected with method ' + methodOne,
+                ]
         }
 
         outJson = {

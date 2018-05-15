@@ -51,9 +51,11 @@ class ADWindowedStats(APIView):
 
         data['Flag_Anomaly'] = False
 
+        trainLimit = int(w/4)
+
         for x in range(len(one_var)):
 
-            if x > 5:
+            if x > trainLimit:
                 window = one_var[max(0, x - w):x - 1]
                 mean = np.mean(window)
                 std = np.std(window)

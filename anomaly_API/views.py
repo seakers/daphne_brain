@@ -73,3 +73,18 @@ class ReadUploadedData(APIView):
 
         return Response(obtain_features(data))
 
+
+# Removes selected variables from the analysis
+class RemoveVariables(APIView):
+
+    def post(self, request, format=None):
+
+        data = pd.read_json(request.data['data'], orient='records').set_index('timestamp')
+
+        variables = request.data['listSelectedVariables']
+
+        dataOut = data.drop(columns=variables)
+
+        return Response({"data": obtain_features(dataOut),
+                         'writtenResponse': [{'introduction': 'The following variables were removed:',
+                                              'bulletPoints': variables}]})

@@ -97,7 +97,7 @@ class SARIMAX_AD(JsonWebsocketConsumer):
                         enforce_invertibility=False)
 
         # fit SARIMAX model
-        results = model.fit(maxiter=200)
+        results = model.fit(maxiter=20)
 
         # Predicts the variable values and the confidence intervals
         pred = results.get_prediction(start=seasonality * D + p + q, dynamic=False)

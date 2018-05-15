@@ -39,7 +39,7 @@ class Correlation(APIView):
             correlationsArray = correlationsAbs[variable].values
             orderedCorrelationIndexes = np.argsort(correlationsArray)[::-1][1:]
 
-        introduction = 'The mean absolute correlation of the variables is ' + str(np.mean(correlationsArray))
+        introduction = 'The mean absolute correlation of the variables is ' + str(np.mean(correlationsArray[~np.isnan(correlationsArray)]))
 
         introductionMostCorrelated = 'The ' + str(nc) + ' most correlated variables are:'
         bulletPointsMostCorrelated = []
@@ -53,7 +53,7 @@ class Correlation(APIView):
             column1 = correlations.columns[index1]
             column2 = correlations.columns[index2]
             bulletPointsMostCorrelated.append('Variables ' + column1 + ' and ' + column2 + ' with a ' +
-                                              correlations.iloc[index1, index2] + ' correlation')
+                                              str(correlations.iloc[index1, index2]) + ' correlation')
 
         writtenResponse1 = {
             'introduction':  introduction,
