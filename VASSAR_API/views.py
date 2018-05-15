@@ -247,6 +247,7 @@ class GetArchDetails(APIView):
                     break
 
             score_explanation = client.client.getArchScienceInformation(this_arch)
+            mission_cost_explanation = client.client.getArchMissionCostInformation(this_arch)
 
             # End the connection before return statement
             client.endConnection()
@@ -265,8 +266,21 @@ class GetArchDetails(APIView):
                     json_list.append(json_exp)
                 return json_list
 
+            def budgets_to_json(explanation):
+                json_list = []
+                for exp in explanation:
+                    json_exp = {
+                        'orbit_name': exp.orbit_name,
+                        'launch_vehicle': exp.launch_vehicle,
+                        'mass_budget': exp.mass_budget,
+                        'power_budget': exp.power_budget
+                    }
+                    json_list.append(json_exp)
+                return json_list
+
             return Response({
-                'score': score_to_json(score_explanation)
+                'score': score_to_json(score_explanation),
+                'budgets': budgets_to_json(mission_cost_explanation)
             })
 
         except Exception:

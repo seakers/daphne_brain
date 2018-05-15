@@ -38,6 +38,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getObjectiveScoreExplanation( arch, string objective)')
     print('  void startGA( dataset, string username)')
     print('   getArchScienceInformation(BinaryInputArchitecture arch)')
+    print('   getArchMissionCostInformation(BinaryInputArchitecture arch)')
     print('')
     sys.exit(0)
 
@@ -200,6 +201,12 @@ elif cmd == 'getArchScienceInformation':
         print('getArchScienceInformation requires 1 args')
         sys.exit(1)
     pp.pprint(client.getArchScienceInformation(eval(args[0]),))
+
+elif cmd == 'getArchMissionCostInformation':
+    if len(args) != 1:
+        print('getArchMissionCostInformation requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getArchMissionCostInformation(eval(args[0]),))
 
 else:
     print('Unrecognized method %s' % cmd)

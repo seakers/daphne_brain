@@ -303,6 +303,115 @@ class SubscoreInformation(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class MissionCostInformation(object):
+    """
+    Attributes:
+     - orbit_name
+     - launch_vehicle
+     - mass_budget
+     - power_budget
+    """
+
+
+    def __init__(self, orbit_name=None, launch_vehicle=None, mass_budget=None, power_budget=None,):
+        self.orbit_name = orbit_name
+        self.launch_vehicle = launch_vehicle
+        self.mass_budget = mass_budget
+        self.power_budget = power_budget
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.orbit_name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.launch_vehicle = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.MAP:
+                    self.mass_budget = {}
+                    (_ktype22, _vtype23, _size21) = iprot.readMapBegin()
+                    for _i25 in range(_size21):
+                        _key26 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val27 = iprot.readDouble()
+                        self.mass_budget[_key26] = _val27
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.MAP:
+                    self.power_budget = {}
+                    (_ktype29, _vtype30, _size28) = iprot.readMapBegin()
+                    for _i32 in range(_size28):
+                        _key33 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val34 = iprot.readDouble()
+                        self.power_budget[_key33] = _val34
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('MissionCostInformation')
+        if self.orbit_name is not None:
+            oprot.writeFieldBegin('orbit_name', TType.STRING, 1)
+            oprot.writeString(self.orbit_name.encode('utf-8') if sys.version_info[0] == 2 else self.orbit_name)
+            oprot.writeFieldEnd()
+        if self.launch_vehicle is not None:
+            oprot.writeFieldBegin('launch_vehicle', TType.STRING, 2)
+            oprot.writeString(self.launch_vehicle.encode('utf-8') if sys.version_info[0] == 2 else self.launch_vehicle)
+            oprot.writeFieldEnd()
+        if self.mass_budget is not None:
+            oprot.writeFieldBegin('mass_budget', TType.MAP, 3)
+            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.mass_budget))
+            for kiter35, viter36 in self.mass_budget.items():
+                oprot.writeString(kiter35.encode('utf-8') if sys.version_info[0] == 2 else kiter35)
+                oprot.writeDouble(viter36)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.power_budget is not None:
+            oprot.writeFieldBegin('power_budget', TType.MAP, 4)
+            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.power_budget))
+            for kiter37, viter38 in self.power_budget.items():
+                oprot.writeString(kiter37.encode('utf-8') if sys.version_info[0] == 2 else kiter37)
+                oprot.writeDouble(viter38)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(BinaryInputArchitecture)
 BinaryInputArchitecture.thrift_spec = (
     None,  # 0
@@ -325,6 +434,14 @@ SubscoreInformation.thrift_spec = (
     (3, TType.DOUBLE, 'value', None, None, ),  # 3
     (4, TType.DOUBLE, 'weight', None, None, ),  # 4
     (5, TType.LIST, 'subscores', (TType.STRUCT, [SubscoreInformation, None], False), None, ),  # 5
+)
+all_structs.append(MissionCostInformation)
+MissionCostInformation.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'orbit_name', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'launch_vehicle', 'UTF8', None, ),  # 2
+    (3, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 3
+    (4, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 4
 )
 fix_spec(all_structs)
 del all_structs
