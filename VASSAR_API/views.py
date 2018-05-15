@@ -227,3 +227,49 @@ class StartGA(APIView):
 
         else:
             return Response('This is only available to registered users!')
+
+
+class GetArchDetails(APIView):
+
+    def post(self, request, format=None):
+        try:
+            # Start connection with VASSAR
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            client = VASSARClient(port)
+            client.startConnection()
+
+            # Get the correct architecture
+            this_arch = None
+            arch_id = int(request.data['arch_id'])
+            for arch in request.session['data']:
+                if arch['id'] == arch_id:
+                    this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    break
+
+            score_explanation = client.client.getArchScienceInformation(this_arch)
+
+            # End the connection before return statement
+            client.endConnection()
+
+            def score_to_json(explanation):
+                json_list = []
+                for exp in explanation:
+                    json_exp = {
+                        'name': exp.name,
+                        'description': exp.description,
+                        'value': exp.value,
+                        'weight': exp.weight
+                    }
+                    if exp.subscores is not None:
+                        json_exp['subscores'] = score_to_json(exp.subscores)
+                    json_list.append(json_exp)
+                return json_list
+
+            return Response({
+                'score': score_to_json(score_explanation)
+            })
+
+        except Exception:
+            logger.exception('Exception when retrieving information from the current architecture!')
+            client.endConnection()
+            return Response('')

@@ -37,6 +37,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getPanelScoreExplanation( arch, string panel)')
     print('   getObjectiveScoreExplanation( arch, string objective)')
     print('  void startGA( dataset, string username)')
+    print('   getArchScienceInformation(BinaryInputArchitecture arch)')
     print('')
     sys.exit(0)
 
@@ -193,6 +194,12 @@ elif cmd == 'startGA':
         print('startGA requires 2 args')
         sys.exit(1)
     pp.pprint(client.startGA(eval(args[0]), args[1],))
+
+elif cmd == 'getArchScienceInformation':
+    if len(args) != 1:
+        print('getArchScienceInformation requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getArchScienceInformation(eval(args[0]),))
 
 else:
     print('Unrecognized method %s' % cmd)
