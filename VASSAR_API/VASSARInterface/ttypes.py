@@ -312,14 +312,16 @@ class MissionCostInformation(object):
      - launch_vehicle
      - mass_budget
      - power_budget
+     - cost_budget
     """
 
 
-    def __init__(self, orbit_name=None, launch_vehicle=None, mass_budget=None, power_budget=None,):
+    def __init__(self, orbit_name=None, launch_vehicle=None, mass_budget=None, power_budget=None, cost_budget=None,):
         self.orbit_name = orbit_name
         self.launch_vehicle = launch_vehicle
         self.mass_budget = mass_budget
         self.power_budget = power_budget
+        self.cost_budget = cost_budget
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -362,6 +364,17 @@ class MissionCostInformation(object):
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.MAP:
+                    self.cost_budget = {}
+                    (_ktype36, _vtype37, _size35) = iprot.readMapBegin()
+                    for _i39 in range(_size35):
+                        _key40 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val41 = iprot.readDouble()
+                        self.cost_budget[_key40] = _val41
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -383,17 +396,25 @@ class MissionCostInformation(object):
         if self.mass_budget is not None:
             oprot.writeFieldBegin('mass_budget', TType.MAP, 3)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.mass_budget))
-            for kiter35, viter36 in self.mass_budget.items():
-                oprot.writeString(kiter35.encode('utf-8') if sys.version_info[0] == 2 else kiter35)
-                oprot.writeDouble(viter36)
+            for kiter42, viter43 in self.mass_budget.items():
+                oprot.writeString(kiter42.encode('utf-8') if sys.version_info[0] == 2 else kiter42)
+                oprot.writeDouble(viter43)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.power_budget is not None:
             oprot.writeFieldBegin('power_budget', TType.MAP, 4)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.power_budget))
-            for kiter37, viter38 in self.power_budget.items():
-                oprot.writeString(kiter37.encode('utf-8') if sys.version_info[0] == 2 else kiter37)
-                oprot.writeDouble(viter38)
+            for kiter44, viter45 in self.power_budget.items():
+                oprot.writeString(kiter44.encode('utf-8') if sys.version_info[0] == 2 else kiter44)
+                oprot.writeDouble(viter45)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.cost_budget is not None:
+            oprot.writeFieldBegin('cost_budget', TType.MAP, 5)
+            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.cost_budget))
+            for kiter46, viter47 in self.cost_budget.items():
+                oprot.writeString(kiter46.encode('utf-8') if sys.version_info[0] == 2 else kiter46)
+                oprot.writeDouble(viter47)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -442,6 +463,7 @@ MissionCostInformation.thrift_spec = (
     (2, TType.STRING, 'launch_vehicle', 'UTF8', None, ),  # 2
     (3, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 3
     (4, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 4
+    (5, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 5
 )
 fix_spec(all_structs)
 del all_structs
