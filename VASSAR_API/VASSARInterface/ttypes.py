@@ -433,6 +433,173 @@ class MissionCostInformation(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class SubobjectiveDetails(object):
+    """
+    Attributes:
+     - param
+     - attr_names
+     - attr_values
+     - scores
+     - taken_by
+     - justifications
+    """
+
+
+    def __init__(self, param=None, attr_names=None, attr_values=None, scores=None, taken_by=None, justifications=None,):
+        self.param = param
+        self.attr_names = attr_names
+        self.attr_values = attr_values
+        self.scores = scores
+        self.taken_by = taken_by
+        self.justifications = justifications
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.param = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.attr_names = []
+                    (_etype51, _size48) = iprot.readListBegin()
+                    for _i52 in range(_size48):
+                        _elem53 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.attr_names.append(_elem53)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.attr_values = []
+                    (_etype57, _size54) = iprot.readListBegin()
+                    for _i58 in range(_size54):
+                        _elem59 = []
+                        (_etype63, _size60) = iprot.readListBegin()
+                        for _i64 in range(_size60):
+                            _elem65 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem59.append(_elem65)
+                        iprot.readListEnd()
+                        self.attr_values.append(_elem59)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.scores = []
+                    (_etype69, _size66) = iprot.readListBegin()
+                    for _i70 in range(_size66):
+                        _elem71 = iprot.readDouble()
+                        self.scores.append(_elem71)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.LIST:
+                    self.taken_by = []
+                    (_etype75, _size72) = iprot.readListBegin()
+                    for _i76 in range(_size72):
+                        _elem77 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.taken_by.append(_elem77)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.LIST:
+                    self.justifications = []
+                    (_etype81, _size78) = iprot.readListBegin()
+                    for _i82 in range(_size78):
+                        _elem83 = []
+                        (_etype87, _size84) = iprot.readListBegin()
+                        for _i88 in range(_size84):
+                            _elem89 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem83.append(_elem89)
+                        iprot.readListEnd()
+                        self.justifications.append(_elem83)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SubobjectiveDetails')
+        if self.param is not None:
+            oprot.writeFieldBegin('param', TType.STRING, 1)
+            oprot.writeString(self.param.encode('utf-8') if sys.version_info[0] == 2 else self.param)
+            oprot.writeFieldEnd()
+        if self.attr_names is not None:
+            oprot.writeFieldBegin('attr_names', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.attr_names))
+            for iter90 in self.attr_names:
+                oprot.writeString(iter90.encode('utf-8') if sys.version_info[0] == 2 else iter90)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.attr_values is not None:
+            oprot.writeFieldBegin('attr_values', TType.LIST, 3)
+            oprot.writeListBegin(TType.LIST, len(self.attr_values))
+            for iter91 in self.attr_values:
+                oprot.writeListBegin(TType.STRING, len(iter91))
+                for iter92 in iter91:
+                    oprot.writeString(iter92.encode('utf-8') if sys.version_info[0] == 2 else iter92)
+                oprot.writeListEnd()
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.scores is not None:
+            oprot.writeFieldBegin('scores', TType.LIST, 4)
+            oprot.writeListBegin(TType.DOUBLE, len(self.scores))
+            for iter93 in self.scores:
+                oprot.writeDouble(iter93)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.taken_by is not None:
+            oprot.writeFieldBegin('taken_by', TType.LIST, 5)
+            oprot.writeListBegin(TType.STRING, len(self.taken_by))
+            for iter94 in self.taken_by:
+                oprot.writeString(iter94.encode('utf-8') if sys.version_info[0] == 2 else iter94)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.justifications is not None:
+            oprot.writeFieldBegin('justifications', TType.LIST, 6)
+            oprot.writeListBegin(TType.LIST, len(self.justifications))
+            for iter95 in self.justifications:
+                oprot.writeListBegin(TType.STRING, len(iter95))
+                for iter96 in iter95:
+                    oprot.writeString(iter96.encode('utf-8') if sys.version_info[0] == 2 else iter96)
+                oprot.writeListEnd()
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(BinaryInputArchitecture)
 BinaryInputArchitecture.thrift_spec = (
     None,  # 0
@@ -464,6 +631,16 @@ MissionCostInformation.thrift_spec = (
     (3, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 3
     (4, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 4
     (5, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 5
+)
+all_structs.append(SubobjectiveDetails)
+SubobjectiveDetails.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'param', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'attr_names', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.LIST, 'attr_values', (TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 3
+    (4, TType.LIST, 'scores', (TType.DOUBLE, None, False), None, ),  # 4
+    (5, TType.LIST, 'taken_by', (TType.STRING, 'UTF8', False), None, ),  # 5
+    (6, TType.LIST, 'justifications', (TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 6
 )
 fix_spec(all_structs)
 del all_structs

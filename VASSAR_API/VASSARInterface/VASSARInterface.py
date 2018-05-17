@@ -117,6 +117,14 @@ class Iface(object):
         """
         pass
 
+    def getSubscoreDetails(self, arch, subobj):
+        """
+        Parameters:
+         - arch
+         - subobj
+        """
+        pass
+
 
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
@@ -564,6 +572,39 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getArchCostInformation failed: unknown result")
 
+    def getSubscoreDetails(self, arch, subobj):
+        """
+        Parameters:
+         - arch
+         - subobj
+        """
+        self.send_getSubscoreDetails(arch, subobj)
+        return self.recv_getSubscoreDetails()
+
+    def send_getSubscoreDetails(self, arch, subobj):
+        self._oprot.writeMessageBegin('getSubscoreDetails', TMessageType.CALL, self._seqid)
+        args = getSubscoreDetails_args()
+        args.arch = arch
+        args.subobj = subobj
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_getSubscoreDetails(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = getSubscoreDetails_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getSubscoreDetails failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -584,6 +625,7 @@ class Processor(Iface, TProcessor):
         self._processMap["startGA"] = Processor.process_startGA
         self._processMap["getArchScienceInformation"] = Processor.process_getArchScienceInformation
         self._processMap["getArchCostInformation"] = Processor.process_getArchCostInformation
+        self._processMap["getSubscoreDetails"] = Processor.process_getSubscoreDetails
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -933,6 +975,29 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
+    def process_getSubscoreDetails(self, seqid, iprot, oprot):
+        args = getSubscoreDetails_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = getSubscoreDetails_result()
+        try:
+            result.success = self._handler.getSubscoreDetails(args.arch, args.subobj)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("getSubscoreDetails", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
 # HELPER FUNCTIONS AND STRUCTURES
 
 
@@ -1044,10 +1109,10 @@ class eval_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.inputs = []
-                    (_etype51, _size48) = iprot.readListBegin()
-                    for _i52 in range(_size48):
-                        _elem53 = iprot.readBool()
-                        self.inputs.append(_elem53)
+                    (_etype100, _size97) = iprot.readListBegin()
+                    for _i101 in range(_size97):
+                        _elem102 = iprot.readBool()
+                        self.inputs.append(_elem102)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1064,8 +1129,8 @@ class eval_args(object):
         if self.inputs is not None:
             oprot.writeFieldBegin('inputs', TType.LIST, 1)
             oprot.writeListBegin(TType.BOOL, len(self.inputs))
-            for iter54 in self.inputs:
-                oprot.writeBool(iter54)
+            for iter103 in self.inputs:
+                oprot.writeBool(iter103)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1174,10 +1239,10 @@ class runLocalSearch_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.inputs = []
-                    (_etype58, _size55) = iprot.readListBegin()
-                    for _i59 in range(_size55):
-                        _elem60 = iprot.readBool()
-                        self.inputs.append(_elem60)
+                    (_etype107, _size104) = iprot.readListBegin()
+                    for _i108 in range(_size104):
+                        _elem109 = iprot.readBool()
+                        self.inputs.append(_elem109)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1194,8 +1259,8 @@ class runLocalSearch_args(object):
         if self.inputs is not None:
             oprot.writeFieldBegin('inputs', TType.LIST, 1)
             oprot.writeListBegin(TType.BOOL, len(self.inputs))
-            for iter61 in self.inputs:
-                oprot.writeBool(iter61)
+            for iter110 in self.inputs:
+                oprot.writeBool(iter110)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1243,11 +1308,11 @@ class runLocalSearch_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype65, _size62) = iprot.readListBegin()
-                    for _i66 in range(_size62):
-                        _elem67 = BinaryInputArchitecture()
-                        _elem67.read(iprot)
-                        self.success.append(_elem67)
+                    (_etype114, _size111) = iprot.readListBegin()
+                    for _i115 in range(_size111):
+                        _elem116 = BinaryInputArchitecture()
+                        _elem116.read(iprot)
+                        self.success.append(_elem116)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1264,8 +1329,8 @@ class runLocalSearch_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter68 in self.success:
-                iter68.write(oprot)
+            for iter117 in self.success:
+                iter117.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1355,10 +1420,10 @@ class getOrbitList_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype72, _size69) = iprot.readListBegin()
-                    for _i73 in range(_size69):
-                        _elem74 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem74)
+                    (_etype121, _size118) = iprot.readListBegin()
+                    for _i122 in range(_size118):
+                        _elem123 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem123)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1375,8 +1440,8 @@ class getOrbitList_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter75 in self.success:
-                oprot.writeString(iter75.encode('utf-8') if sys.version_info[0] == 2 else iter75)
+            for iter124 in self.success:
+                oprot.writeString(iter124.encode('utf-8') if sys.version_info[0] == 2 else iter124)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1466,10 +1531,10 @@ class getInstrumentList_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype79, _size76) = iprot.readListBegin()
-                    for _i80 in range(_size76):
-                        _elem81 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem81)
+                    (_etype128, _size125) = iprot.readListBegin()
+                    for _i129 in range(_size125):
+                        _elem130 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem130)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1486,8 +1551,8 @@ class getInstrumentList_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter82 in self.success:
-                oprot.writeString(iter82.encode('utf-8') if sys.version_info[0] == 2 else iter82)
+            for iter131 in self.success:
+                oprot.writeString(iter131.encode('utf-8') if sys.version_info[0] == 2 else iter131)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1577,10 +1642,10 @@ class getObjectiveList_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype86, _size83) = iprot.readListBegin()
-                    for _i87 in range(_size83):
-                        _elem88 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem88)
+                    (_etype135, _size132) = iprot.readListBegin()
+                    for _i136 in range(_size132):
+                        _elem137 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem137)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1597,8 +1662,8 @@ class getObjectiveList_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter89 in self.success:
-                oprot.writeString(iter89.encode('utf-8') if sys.version_info[0] == 2 else iter89)
+            for iter138 in self.success:
+                oprot.writeString(iter138.encode('utf-8') if sys.version_info[0] == 2 else iter138)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1706,10 +1771,10 @@ class getInstrumentsForObjective_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype93, _size90) = iprot.readListBegin()
-                    for _i94 in range(_size90):
-                        _elem95 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem95)
+                    (_etype142, _size139) = iprot.readListBegin()
+                    for _i143 in range(_size139):
+                        _elem144 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem144)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1726,8 +1791,8 @@ class getInstrumentsForObjective_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter96 in self.success:
-                oprot.writeString(iter96.encode('utf-8') if sys.version_info[0] == 2 else iter96)
+            for iter145 in self.success:
+                oprot.writeString(iter145.encode('utf-8') if sys.version_info[0] == 2 else iter145)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1835,10 +1900,10 @@ class getInstrumentsForPanel_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype100, _size97) = iprot.readListBegin()
-                    for _i101 in range(_size97):
-                        _elem102 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem102)
+                    (_etype149, _size146) = iprot.readListBegin()
+                    for _i150 in range(_size146):
+                        _elem151 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem151)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1855,8 +1920,8 @@ class getInstrumentsForPanel_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter103 in self.success:
-                oprot.writeString(iter103.encode('utf-8') if sys.version_info[0] == 2 else iter103)
+            for iter152 in self.success:
+                oprot.writeString(iter152.encode('utf-8') if sys.version_info[0] == 2 else iter152)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1903,10 +1968,10 @@ class getCritique_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.inputs = []
-                    (_etype107, _size104) = iprot.readListBegin()
-                    for _i108 in range(_size104):
-                        _elem109 = iprot.readBool()
-                        self.inputs.append(_elem109)
+                    (_etype156, _size153) = iprot.readListBegin()
+                    for _i157 in range(_size153):
+                        _elem158 = iprot.readBool()
+                        self.inputs.append(_elem158)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1923,8 +1988,8 @@ class getCritique_args(object):
         if self.inputs is not None:
             oprot.writeFieldBegin('inputs', TType.LIST, 1)
             oprot.writeListBegin(TType.BOOL, len(self.inputs))
-            for iter110 in self.inputs:
-                oprot.writeBool(iter110)
+            for iter159 in self.inputs:
+                oprot.writeBool(iter159)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -1972,10 +2037,10 @@ class getCritique_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype114, _size111) = iprot.readListBegin()
-                    for _i115 in range(_size111):
-                        _elem116 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.success.append(_elem116)
+                    (_etype163, _size160) = iprot.readListBegin()
+                    for _i164 in range(_size160):
+                        _elem165 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.success.append(_elem165)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -1992,8 +2057,8 @@ class getCritique_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRING, len(self.success))
-            for iter117 in self.success:
-                oprot.writeString(iter117.encode('utf-8') if sys.version_info[0] == 2 else iter117)
+            for iter166 in self.success:
+                oprot.writeString(iter166.encode('utf-8') if sys.version_info[0] == 2 else iter166)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2040,10 +2105,10 @@ class getArchitectureScoreExplanation_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.arch = []
-                    (_etype121, _size118) = iprot.readListBegin()
-                    for _i122 in range(_size118):
-                        _elem123 = iprot.readBool()
-                        self.arch.append(_elem123)
+                    (_etype170, _size167) = iprot.readListBegin()
+                    for _i171 in range(_size167):
+                        _elem172 = iprot.readBool()
+                        self.arch.append(_elem172)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2060,8 +2125,8 @@ class getArchitectureScoreExplanation_args(object):
         if self.arch is not None:
             oprot.writeFieldBegin('arch', TType.LIST, 1)
             oprot.writeListBegin(TType.BOOL, len(self.arch))
-            for iter124 in self.arch:
-                oprot.writeBool(iter124)
+            for iter173 in self.arch:
+                oprot.writeBool(iter173)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2109,11 +2174,11 @@ class getArchitectureScoreExplanation_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype128, _size125) = iprot.readListBegin()
-                    for _i129 in range(_size125):
-                        _elem130 = ObjectiveSatisfaction()
-                        _elem130.read(iprot)
-                        self.success.append(_elem130)
+                    (_etype177, _size174) = iprot.readListBegin()
+                    for _i178 in range(_size174):
+                        _elem179 = ObjectiveSatisfaction()
+                        _elem179.read(iprot)
+                        self.success.append(_elem179)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2130,8 +2195,8 @@ class getArchitectureScoreExplanation_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter131 in self.success:
-                iter131.write(oprot)
+            for iter180 in self.success:
+                iter180.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2180,10 +2245,10 @@ class getPanelScoreExplanation_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.arch = []
-                    (_etype135, _size132) = iprot.readListBegin()
-                    for _i136 in range(_size132):
-                        _elem137 = iprot.readBool()
-                        self.arch.append(_elem137)
+                    (_etype184, _size181) = iprot.readListBegin()
+                    for _i185 in range(_size181):
+                        _elem186 = iprot.readBool()
+                        self.arch.append(_elem186)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2205,8 +2270,8 @@ class getPanelScoreExplanation_args(object):
         if self.arch is not None:
             oprot.writeFieldBegin('arch', TType.LIST, 1)
             oprot.writeListBegin(TType.BOOL, len(self.arch))
-            for iter138 in self.arch:
-                oprot.writeBool(iter138)
+            for iter187 in self.arch:
+                oprot.writeBool(iter187)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.panel is not None:
@@ -2259,11 +2324,11 @@ class getPanelScoreExplanation_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype142, _size139) = iprot.readListBegin()
-                    for _i143 in range(_size139):
-                        _elem144 = ObjectiveSatisfaction()
-                        _elem144.read(iprot)
-                        self.success.append(_elem144)
+                    (_etype191, _size188) = iprot.readListBegin()
+                    for _i192 in range(_size188):
+                        _elem193 = ObjectiveSatisfaction()
+                        _elem193.read(iprot)
+                        self.success.append(_elem193)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2280,8 +2345,8 @@ class getPanelScoreExplanation_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter145 in self.success:
-                iter145.write(oprot)
+            for iter194 in self.success:
+                iter194.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2330,10 +2395,10 @@ class getObjectiveScoreExplanation_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.arch = []
-                    (_etype149, _size146) = iprot.readListBegin()
-                    for _i150 in range(_size146):
-                        _elem151 = iprot.readBool()
-                        self.arch.append(_elem151)
+                    (_etype198, _size195) = iprot.readListBegin()
+                    for _i199 in range(_size195):
+                        _elem200 = iprot.readBool()
+                        self.arch.append(_elem200)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2355,8 +2420,8 @@ class getObjectiveScoreExplanation_args(object):
         if self.arch is not None:
             oprot.writeFieldBegin('arch', TType.LIST, 1)
             oprot.writeListBegin(TType.BOOL, len(self.arch))
-            for iter152 in self.arch:
-                oprot.writeBool(iter152)
+            for iter201 in self.arch:
+                oprot.writeBool(iter201)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.objective is not None:
@@ -2409,11 +2474,11 @@ class getObjectiveScoreExplanation_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype156, _size153) = iprot.readListBegin()
-                    for _i157 in range(_size153):
-                        _elem158 = ObjectiveSatisfaction()
-                        _elem158.read(iprot)
-                        self.success.append(_elem158)
+                    (_etype205, _size202) = iprot.readListBegin()
+                    for _i206 in range(_size202):
+                        _elem207 = ObjectiveSatisfaction()
+                        _elem207.read(iprot)
+                        self.success.append(_elem207)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2430,8 +2495,8 @@ class getObjectiveScoreExplanation_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter159 in self.success:
-                iter159.write(oprot)
+            for iter208 in self.success:
+                iter208.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2480,11 +2545,11 @@ class startGA_args(object):
             if fid == 1:
                 if ftype == TType.LIST:
                     self.dataset = []
-                    (_etype163, _size160) = iprot.readListBegin()
-                    for _i164 in range(_size160):
-                        _elem165 = BinaryInputArchitecture()
-                        _elem165.read(iprot)
-                        self.dataset.append(_elem165)
+                    (_etype212, _size209) = iprot.readListBegin()
+                    for _i213 in range(_size209):
+                        _elem214 = BinaryInputArchitecture()
+                        _elem214.read(iprot)
+                        self.dataset.append(_elem214)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2506,8 +2571,8 @@ class startGA_args(object):
         if self.dataset is not None:
             oprot.writeFieldBegin('dataset', TType.LIST, 1)
             oprot.writeListBegin(TType.STRUCT, len(self.dataset))
-            for iter166 in self.dataset:
-                iter166.write(oprot)
+            for iter215 in self.dataset:
+                iter215.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.username is not None:
@@ -2622,11 +2687,11 @@ class getArchScienceInformation_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype170, _size167) = iprot.readListBegin()
-                    for _i171 in range(_size167):
-                        _elem172 = SubscoreInformation()
-                        _elem172.read(iprot)
-                        self.success.append(_elem172)
+                    (_etype219, _size216) = iprot.readListBegin()
+                    for _i220 in range(_size216):
+                        _elem221 = SubscoreInformation()
+                        _elem221.read(iprot)
+                        self.success.append(_elem221)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2643,8 +2708,8 @@ class getArchScienceInformation_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter173 in self.success:
-                iter173.write(oprot)
+            for iter222 in self.success:
+                iter222.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2753,11 +2818,11 @@ class getArchCostInformation_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype177, _size174) = iprot.readListBegin()
-                    for _i178 in range(_size174):
-                        _elem179 = MissionCostInformation()
-                        _elem179.read(iprot)
-                        self.success.append(_elem179)
+                    (_etype226, _size223) = iprot.readListBegin()
+                    for _i227 in range(_size223):
+                        _elem228 = MissionCostInformation()
+                        _elem228.read(iprot)
+                        self.success.append(_elem228)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -2774,8 +2839,8 @@ class getArchCostInformation_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter180 in self.success:
-                iter180.write(oprot)
+            for iter229 in self.success:
+                iter229.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -2797,6 +2862,141 @@ class getArchCostInformation_result(object):
 all_structs.append(getArchCostInformation_result)
 getArchCostInformation_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [MissionCostInformation, None], False), None, ),  # 0
+)
+
+
+class getSubscoreDetails_args(object):
+    """
+    Attributes:
+     - arch
+     - subobj
+    """
+
+
+    def __init__(self, arch=None, subobj=None,):
+        self.arch = arch
+        self.subobj = subobj
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.arch = BinaryInputArchitecture()
+                    self.arch.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.subobj = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getSubscoreDetails_args')
+        if self.arch is not None:
+            oprot.writeFieldBegin('arch', TType.STRUCT, 1)
+            self.arch.write(oprot)
+            oprot.writeFieldEnd()
+        if self.subobj is not None:
+            oprot.writeFieldBegin('subobj', TType.STRING, 2)
+            oprot.writeString(self.subobj.encode('utf-8') if sys.version_info[0] == 2 else self.subobj)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getSubscoreDetails_args)
+getSubscoreDetails_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'arch', [BinaryInputArchitecture, None], None, ),  # 1
+    (2, TType.STRING, 'subobj', 'UTF8', None, ),  # 2
+)
+
+
+class getSubscoreDetails_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRUCT:
+                    self.success = SubobjectiveDetails()
+                    self.success.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getSubscoreDetails_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(getSubscoreDetails_result)
+getSubscoreDetails_result.thrift_spec = (
+    (0, TType.STRUCT, 'success', [SubobjectiveDetails, None], None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

@@ -13,5 +13,6 @@ urlpatterns = [
 
     path('start-ga', views.StartGA.as_view()),
 
-    path('get-arch-details', views.GetArchDetails.as_view())
+    path('get-arch-details', views.GetArchDetails.as_view()),
+    path('get-subobjective-details', views.GetSubobjectiveDetails.as_view())
 ]

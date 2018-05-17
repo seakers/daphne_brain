@@ -288,3 +288,47 @@ class GetArchDetails(APIView):
             logger.exception('Exception when retrieving information from the current architecture!')
             client.endConnection()
             return Response('')
+
+
+class GetSubobjectiveDetails(APIView):
+
+    def post(self, request, format=None):
+        try:
+            # Start connection with VASSAR
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            client = VASSARClient(port)
+            client.startConnection()
+
+            # Get the correct architecture
+            this_arch = None
+            arch_id = int(request.data['arch_id'])
+            for arch in request.session['data']:
+                if arch['id'] == arch_id:
+                    this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    break
+
+            subobjective_explanation = client.client.getSubscoreDetails(this_arch, request.data['subobjective'])
+
+            # End the connection before return statement
+            client.endConnection()
+
+            def explanation_to_json(explanation):
+                json_exp = {
+                    'param': explanation.param,
+                    'attr_names': explanation.attr_names,
+                    'attr_values': explanation.attr_values,
+                    'scores': explanation.scores,
+                    'taken_by': explanation.taken_by,
+                    'justifications': explanation.justifications
+                }
+                return json_exp
+
+
+            return Response({
+                'subobjective': explanation_to_json(subobjective_explanation)
+            })
+
+        except Exception:
+            logger.exception('Exception when retrieving information from the current architecture!')
+            client.endConnection()
+            return Response('')
