@@ -74,6 +74,32 @@ class ReadUploadedData(APIView):
         return Response(obtain_features(data))
 
 
+# Import sample database
+class ImportDatabase(APIView):
+
+    def post(self, request, format=None):
+
+        filePath = 'anomaly_API/Databases/' + request.data['filename']
+
+        data = pd.read_csv(filePath, parse_dates=True)
+
+        out = data.to_json(orient='records', date_format='iso')
+
+        return Response(json.loads(out))
+
+
+# Import database from File
+class ImportDatabaseFromFile(APIView):
+
+    def post(self, request, format=None):
+
+        data = pd.read_csv(request.data['file'], parse_dates=True)
+
+        out = data.to_json(orient='records', date_format='iso')
+
+        return Response(json.loads(out))
+
+
 # Removes selected variables from the analysis
 class RemoveVariables(APIView):
 
