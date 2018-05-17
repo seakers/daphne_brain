@@ -1,9 +1,13 @@
 import logging
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
+import redis
+
+from VASSAR_API.VASSARInterface.ttypes import BinaryInputArchitecture
 from VASSAR_API.api import VASSARClient
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
@@ -151,3 +155,180 @@ class ChangePort(APIView):
         request.session['vassar_port'] = new_port
         request.session.modified = True
         return Response('')
+
+
+class StartGA(APIView):
+
+    def post(self, request, format=None):
+        if request.user.is_authenticated:
+            try:
+                # Start connection with VASSAR
+                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                client = VASSARClient(port)
+                client.startConnection()
+
+                # Convert the architecture list
+                thrift_list = []
+                inputs_unique_set = set()
+                for arch in request.session['data']:
+                    thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                    hashed_input = hash(tuple(arch['inputs']))
+                    inputs_unique_set.add(hashed_input)
+
+                client.client.startGA(thrift_list, request.user.username)
+
+                # End the connection before return statement
+                client.endConnection()
+
+                # Start listening for redis inputs to share through websockets
+                r = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+                p = r.pubsub()
+
+                def my_handler(message):
+                    if message['data'] == 'new_arch':
+                        print('Processing some new archs!')
+                        nonlocal inputs_unique_set
+                        nonlocal request
+                        # Archs are added in pairs
+                        new_archs = r.lrange(request.user.username, -2, -1)
+                        send_back = []
+                        # Add archs to the context data before sending back to user
+                        for arch in new_archs:
+                            arch = json.loads(arch)
+                            hashed_input = hash(tuple(arch['inputs']))
+                            if hashed_input not in inputs_unique_set:
+                                full_arch = {'id': request.session['archID'], 'inputs': arch['inputs'], 'outputs': arch['outputs']}
+                                request.session['data'].append(full_arch)
+                                request.session['archID'] += 1
+                                send_back.append(full_arch)
+                                inputs_unique_set.add(hashed_input)
+                                request.session.save()
+
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                                                          {
+                                                              'type': 'ga.new_archs',
+                                                              'archs': send_back
+                                                          })
+                    if message['data'] == 'ga_done':
+                        print('Ending the thread!')
+                        thread.stop()
+
+
+                p.subscribe(**{request.user.username: my_handler})
+                thread = p.run_in_thread(sleep_time=0.001)
+                return Response('GA started correctly!')
+
+            except Exception:
+                logger.exception('Exception in starting the GA!')
+                client.endConnection()
+                return Response('')
+
+        else:
+            return Response('This is only available to registered users!')
+
+
+class GetArchDetails(APIView):
+
+    def post(self, request, format=None):
+        try:
+            # Start connection with VASSAR
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            client = VASSARClient(port)
+            client.startConnection()
+
+            # Get the correct architecture
+            this_arch = None
+            arch_id = int(request.data['arch_id'])
+            for arch in request.session['data']:
+                if arch['id'] == arch_id:
+                    this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    break
+
+            score_explanation = client.client.getArchScienceInformation(this_arch)
+            cost_explanation = client.client.getArchCostInformation(this_arch)
+
+            # End the connection before return statement
+            client.endConnection()
+
+            def score_to_json(explanation):
+                json_list = []
+                for exp in explanation:
+                    json_exp = {
+                        'name': exp.name,
+                        'description': exp.description,
+                        'value': exp.value,
+                        'weight': exp.weight
+                    }
+                    if exp.subscores is not None:
+                        json_exp['subscores'] = score_to_json(exp.subscores)
+                    json_list.append(json_exp)
+                return json_list
+
+            def budgets_to_json(explanation):
+                json_list = []
+                for exp in explanation:
+                    json_exp = {
+                        'orbit_name': exp.orbit_name,
+                        'launch_vehicle': exp.launch_vehicle,
+                        'mass_budget': exp.mass_budget,
+                        'power_budget': exp.power_budget,
+                        'cost_budget': exp.cost_budget
+                    }
+                    json_list.append(json_exp)
+                return json_list
+
+            return Response({
+                'score': score_to_json(score_explanation),
+                'budgets': budgets_to_json(cost_explanation)
+            })
+
+        except Exception:
+            logger.exception('Exception when retrieving information from the current architecture!')
+            client.endConnection()
+            return Response('')
+
+
+class GetSubobjectiveDetails(APIView):
+
+    def post(self, request, format=None):
+        try:
+            # Start connection with VASSAR
+            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            client = VASSARClient(port)
+            client.startConnection()
+
+            # Get the correct architecture
+            this_arch = None
+            arch_id = int(request.data['arch_id'])
+            for arch in request.session['data']:
+                if arch['id'] == arch_id:
+                    this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    break
+
+            subobjective_explanation = client.client.getSubscoreDetails(this_arch, request.data['subobjective'])
+
+            # End the connection before return statement
+            client.endConnection()
+
+            def explanation_to_json(explanation):
+                json_exp = {
+                    'param': explanation.param,
+                    'attr_names': explanation.attr_names,
+                    'attr_values': explanation.attr_values,
+                    'scores': explanation.scores,
+                    'taken_by': explanation.taken_by,
+                    'justifications': explanation.justifications
+                }
+                return json_exp
+
+
+            return Response({
+                'subobjective': explanation_to_json(subobjective_explanation)
+            })
+
+        except Exception:
+            logger.exception('Exception when retrieving information from the current architecture!')
+            client.endConnection()
+            return Response('')

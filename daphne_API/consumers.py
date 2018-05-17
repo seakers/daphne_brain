@@ -1,4 +1,5 @@
 import hashlib
+import json
 from channels.generic.websocket import JsonWebsocketConsumer
 
 
@@ -10,11 +11,11 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         # Accept the connection
         self.accept()
+        self.scope['session']['channel_name'] = self.channel_name
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Add to the group
         self.channel_layer.group_add(hash_key, self.channel_name)
-
 
     def receive_json(self, content, **kwargs):
         """
@@ -34,6 +35,8 @@ class DaphneConsumer(JsonWebsocketConsumer):
             # Broadcast
             self.channel_layer.group_send(hash_key, { "text": textMessage })
 
+    def ga_new_archs(self, event):
+        self.send(json.dumps(event))
 
     def disconnect(self, code):
         """
