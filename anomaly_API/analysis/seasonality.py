@@ -35,6 +35,7 @@ class CheckSeasonality(APIView):
         m = int(n/2)  # margin
 
         probability_threshold = 0.5
+        probability_threshold2 = 0.8
 
         series = data[variable]
         acfOut = acf(series, nlags=(n+m))
@@ -64,14 +65,15 @@ class CheckSeasonality(APIView):
 
         out = season[season.probability > probability_threshold]
 
-        dataOut = out.to_json(orient='records')
-
         # Generates the written response
         outL = out.shape[0]
         introduction = 'Analysis have found ' + str(outL) + ' significant Seasonalities'
         bulletPoints = []
         for i in range(outL):
-            bulletPoints.append('Lag ' + str(out['index'][i]) + ' with probability: ' + str(out['probability'][i]))
+            if out['probability'][i] > probability_threshold2:
+                bulletPoints.append('Lag ' + str(out['index'][i]) + ' with high probability')
+            else:
+                bulletPoints.append('Lag ' + str(out['index'][i]))
         postData = "Note that Multiple seasonalities must be ignored, they reinforce the first value"
 
         writtenResponse = {
@@ -82,8 +84,7 @@ class CheckSeasonality(APIView):
 
         # Final output JSON
         outJson = {
-            'writtenResponse': [writtenResponse],
-            'data': dataOut
+            'writtenResponse': [writtenResponse]
         }
 
         return Response(outJson)

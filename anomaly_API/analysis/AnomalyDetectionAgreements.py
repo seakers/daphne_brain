@@ -98,7 +98,7 @@ class AgreementMethods(APIView):
             'bulletPoints': [
                 'Total number of anomalies detected by ' + methodOne + ' is ' + str(sumFlagOne),
                 'The ' + str(100 * sum(x['Coincidence']) / sumFlagOne) + '% coincide with anomalies detected with method ' + methodTwo,
-                'The ' + str(100 * sum(x['RelatedOne']) / sumFlagOne) + '%  are related to anomalies detected with method ' + methodTwo,
+                'The ' + str(100 * sum(x['RelatedOne']) / sumFlagOne) + '%  are near to anomalies detected with method ' + methodTwo,
                 ]
         }
 
@@ -108,7 +108,7 @@ class AgreementMethods(APIView):
             'bulletPoints': [
                 'Total number of anomalies detected by ' + methodTwo + ' is ' + str(sumFlagTwo),
                 'The ' + str(100 * sum(x['Coincidence']) / sumFlagTwo) + '% coincide with anomalies detected with method ' + methodOne,
-                'The ' + str(100 * sum(x['RelatedTwo']) / sumFlagTwo) + '%  are related to anomalies detected with method ' + methodOne,
+                'The ' + str(100 * sum(x['RelatedTwo']) / sumFlagTwo) + '%  are near to anomalies detected with method ' + methodOne,
                 ]
         }
 

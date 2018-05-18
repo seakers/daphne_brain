@@ -30,13 +30,18 @@ def obtain_features(data):
     correlation['Variable'] = correlation.index
     correlation_json = correlation.to_json(orient='records')
 
+    correlation_spearman = data.corr(method='spearman')
+    correlation_spearman['Variable'] = correlation_spearman.index
+    correlation_spearman_json = correlation.to_json(orient='records')
+
     columns = data.columns
     data['timestamp'] = data.index
     out = data.to_json(orient='records', date_format='iso')
     return_value = {
         "data": json.loads(out),
         "variables": columns,
-        "correlation": json.loads(correlation_json )
+        "correlation": json.loads(correlation_json),
+        "correlationSpearman": json.loads(correlation_spearman_json)
     }
 
     return return_value

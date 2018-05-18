@@ -21,7 +21,10 @@ class Correlation(APIView):
 
         analyzeAllVariables = request.data['analyzeAllVariables']
 
-        correlations = pd.read_json(json.dumps(request.data['correlation'])).set_index('Variable')
+        if request.data['Spearman']:
+            correlations = pd.read_json(json.dumps(request.data['correlationSpearman'])).set_index('Variable')
+        else:
+            correlations = pd.read_json(json.dumps(request.data['correlation'])).set_index('Variable')
 
         correlationsAbs = np.abs(correlations)
 
