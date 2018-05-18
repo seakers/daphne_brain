@@ -1,7 +1,8 @@
 import hashlib
 import json
 from channels.generic.websocket import JsonWebsocketConsumer
-
+from django.conf import settings
+from importlib import import_module
 
 class DaphneConsumer(JsonWebsocketConsumer):
     ##### WebSocket event handlers
@@ -24,6 +25,11 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+
+        # Get an updated session store
+        session_key = self.scope["cookies"].get(settings.SESSION_COOKIE_NAME)
+        self.scope["session"] = import_module(settings.SESSION_ENGINE).SessionStore(session_key)
+
         if content.get('msg_type') == 'context_add':
             if 'context' not in self.scope['session']:
                 self.scope['session']['context'] = {}

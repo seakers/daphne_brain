@@ -1,6 +1,8 @@
 import datetime
 import json
 from channels.generic.websocket import JsonWebsocketConsumer
+from django.conf import settings
+from importlib import import_module
 
 
 class ExperimentConsumer(JsonWebsocketConsumer):
@@ -17,6 +19,11 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         Called when we get a text frame. Channels will JSON-decode the payload
         for us and pass it as the first argument.
         """
+
+        # Get an updated session store
+        session_key = self.scope["cookies"].get(settings.SESSION_COOKIE_NAME)
+        self.scope["session"] = import_module(settings.SESSION_ENGINE).SessionStore(session_key)
+
         if content.get('msg_type') == 'add_action':
             action = content['action']
             action['date'] = datetime.datetime.utcnow().isoformat()
