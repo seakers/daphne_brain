@@ -85,10 +85,11 @@ class EvaluateArchitecture(APIView):
                     break
 
             if not is_same:
-                architecture['id'] = len(request.session['data'])
+                architecture['id'] = request.session['archID']
                 request.session['context']['current_design_id'] = architecture['id']
                 print(request.session['context']['current_design_id'])
                 request.session['data'].append(architecture)
+                request.session['archID'] += 1
 
             request.session.modified = True
 
