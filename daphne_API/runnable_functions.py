@@ -51,13 +51,13 @@ def data_mining_run(designs, behavioral, non_behavioral):
         client.endConnection()
         
         result = []
-        maxFeatures = 3
+        max_features = 3
         if len(features) > 3:
             pass
         else:
-            maxFeatures = len(features)
+            max_features = len(features)
 
-        for i in range(maxFeatures): # Generate answers for the first 3 features
+        for i in range(max_features): # Generate answers for the first 3 features
             advice = feature_expression_to_string(features[i]['name'])
             result.append({
                 "type": "Analyzer",
@@ -131,11 +131,11 @@ def VASSAR_get_objective_scores(design_id, designs, objective, context):
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective)
+        objective_list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective)
 
         # End the connection before return statement
         client.endConnection()
-        return list
+        return objective_list
 
     except Exception:
         logger.exception('Exception in loading objective score information')
@@ -419,8 +419,8 @@ def Critic_general_call(design_id, designs, context):
             
             
         # Criticize architecture (based on database)
-        result3 = critic.criticize_arch(this_design['inputs'])
-        result.extend(result3)
+        # result3 = critic.criticize_arch(this_design['inputs'])
+        # result.extend(result3)
         
         
         # Criticize architecture (based on data mining)
