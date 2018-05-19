@@ -32,6 +32,9 @@ class Command(APIView):
         if 'vassar_port' in request.session:
             request.session['context']['vassar_port'] = request.session['vassar_port']
 
+        if 'problem' in request.session:
+            request.session['context']['problem'] = request.session['problem']
+
         request.session['context']['answers'] = []
 
         if 'allowed_commands' in request.data:
@@ -58,6 +61,7 @@ class CommandList(APIView):
     def post(self, request, format=None):
         port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
         vassar_client = VASSARClient(port)
+        problem = request.session["problem"]
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
@@ -89,13 +93,13 @@ class CommandList(APIView):
         elif command_list_request == 'instr_info':
             command_list = command_lists.instruments_info
         elif command_list_request == 'analyst_instrument_parameters':
-            command_list = command_lists.analyst_instrument_parameter_list()
+            command_list = command_lists.analyst_instrument_parameter_list(problem)
         elif command_list_request == 'analyst_instruments':
-            command_list = command_lists.analyst_instrument_list()
+            command_list = command_lists.analyst_instrument_list(problem)
         elif command_list_request == 'analyst_measurements':
             command_list = command_lists.analyst_measurement_list()
         elif command_list_request == 'analyst_stakeholders':
-            command_list = command_lists.analyst_stakeholder_list()
+            command_list = command_lists.analyst_stakeholder_list(problem)
         return Response({'list': command_list})
 
 

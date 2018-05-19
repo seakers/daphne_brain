@@ -12,25 +12,25 @@ import sys, os
 logger = logging.getLogger('VASSAR')
 
 ORBIT_DATASET = [
-    {"alias": "1", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
-    {"alias": "2", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
-    {"alias": "3", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
-    {"alias": "4", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
-    {"alias": "5", "name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
+    {"name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
+    {"name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
+    {"name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
+    {"name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
+    {"name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
 
 INSTRUMENT_DATASET = [
-    {"alias": "A", "name": "ACE_ORCA", "type": "Ocean colour instruments", "technology": "Medium-resolution spectro-radiometer", "geometry": "Cross-track scanning", "wavebands": ["UV","VIS","NIR","SWIR"]},
-    {"alias": "B", "name": "ACE_POL", "type": "Multiple direction/polarisation radiometers", "technology": "Multi-channel/direction/polarisation radiometer", "geometry": "ANY", "wavebands": ["VIS","NIR","SWIR"]},
-    {"alias": "C", "name": "ACE_LID", "type": "Lidars", "technology": "Atmospheric lidar", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR"]},
-    {"alias": "D", "name": "CLAR_ERB", "type": "Hyperspectral imagers", "technology": "Multi-purpose imaging Vis/IR radiometer", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR","SWIR","TIR","FIR"]},
-    {"alias": "E", "name": "ACE_CPR", "type": "Cloud profile and rain radars", "technology": "Cloud and precipitation radar", "geometry": "Nadir-viewing", "wavebands": ["MW"]},
-    {"alias": "F", "name": "DESD_SAR", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)", "geometry": "Side-looking", "wavebands": ["MW","L-Band","S-Band"]},
-    {"alias": "G", "name": "DESD_LID", "type": "Lidars", "technology": "Lidar altimeter", "geometry": "ANY", "wavebands": ["NIR"]},
-    {"alias": "H", "name": "GACM_VIS", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["UV","VIS"]},
-    {"alias": "I", "name": "GACM_SWIR", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["SWIR"]},
-    {"alias": "J", "name": "HYSP_TIR", "type": "Imaging multi-spectral radiometers (vis/IR)", "technology": "Medium-resolution IR spectrometer", "geometry": "Whisk-broom scanning", "wavebands": ["MWIR", "TIR"]},
-    {"alias": "K", "name": "POSTEPS_IRS", "type": "Atmospheric temperature and humidity sounders", "technology": "Medium-resolution IR spectrometer", "geometry": "Cross-track scanning", "wavebands": ["MWIR", "TIR"]},
-    {"alias": "L", "name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
+    {"name": "ACE_ORCA", "type": "Ocean colour instruments", "technology": "Medium-resolution spectro-radiometer", "geometry": "Cross-track scanning", "wavebands": ["UV","VIS","NIR","SWIR"]},
+    {"name": "ACE_POL", "type": "Multiple direction/polarisation radiometers", "technology": "Multi-channel/direction/polarisation radiometer", "geometry": "ANY", "wavebands": ["VIS","NIR","SWIR"]},
+    {"name": "ACE_LID", "type": "Lidars", "technology": "Atmospheric lidar", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR"]},
+    {"name": "CLAR_ERB", "type": "Hyperspectral imagers", "technology": "Multi-purpose imaging Vis/IR radiometer", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR","SWIR","TIR","FIR"]},
+    {"name": "ACE_CPR", "type": "Cloud profile and rain radars", "technology": "Cloud and precipitation radar", "geometry": "Nadir-viewing", "wavebands": ["MW"]},
+    {"name": "DESD_SAR", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)", "geometry": "Side-looking", "wavebands": ["MW","L-Band","S-Band"]},
+    {"name": "DESD_LID", "type": "Lidars", "technology": "Lidar altimeter", "geometry": "ANY", "wavebands": ["NIR"]},
+    {"name": "GACM_VIS", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["UV","VIS"]},
+    {"name": "GACM_SWIR", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["SWIR"]},
+    {"name": "HYSP_TIR", "type": "Imaging multi-spectral radiometers (vis/IR)", "technology": "Medium-resolution IR spectrometer", "geometry": "Whisk-broom scanning", "wavebands": ["MWIR", "TIR"]},
+    {"name": "POSTEPS_IRS", "type": "Atmospheric temperature and humidity sounders", "technology": "Medium-resolution IR spectrometer", "geometry": "Cross-track scanning", "wavebands": ["MWIR", "TIR"]},
+    {"name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
 
 
 def data_mining_run(designs, behavioral, non_behavioral):
@@ -102,8 +102,14 @@ def VASSAR_get_panel_scores(design_id, designs, panel, context):
         stakeholders_to_excel = {
             "atmospheric": "ATM",
             "oceanic": "OCE",
-            "terrestrial": "TER"
+            "terrestrial": "TER",
+            "weather": "WEA",
+            "climate": "CLI",
+            "land and ecosystems": "ECO",
+            "water": "WAT",
+            "human health": "HEA"
         }
+
         panel_code = stakeholders_to_excel[panel]
         list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code)
 
@@ -166,7 +172,12 @@ def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
         stakeholders_to_excel = {
             "atmospheric": "ATM",
             "oceanic": "OCE",
-            "terrestrial": "TER"
+            "terrestrial": "TER",
+            "weather": "WEA",
+            "climate": "CLI",
+            "land and ecosystems": "ECO",
+            "water": "WAT",
+            "human health": "HEA"
         }
         panel_code = stakeholders_to_excel[stakeholder]
         list = client.client.getInstrumentsForPanel(panel_code)
@@ -185,7 +196,11 @@ def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
 def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
     context["vassar_instrument"] = vassar_instrument
     context["instrument_parameter"] = instrument_parameter
-    capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+    if context["problem"] == "EOSS":
+        capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                                           sheet_name='CHARACTERISTICS')
+    if context["problem"] == "SMAP":
+        capabilities_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Instrument Capability Definition.xls',
                                            sheet_name='CHARACTERISTICS')
     capability_found = False
     capability_value = None
@@ -199,8 +214,13 @@ def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, con
     if capability_found:
         return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + capability_value
     else:
-        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
-                                               sheet_name=vassar_instrument, header=None)
+        if context["problem"] == "EOSS":
+            instrument_sheet = pandas.read_excel(
+                './daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                sheet_name=vassar_instrument, header=None)
+        if context["problem"] == "SMAP":
+            instrument_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Instrument Capability Definition.xls',
+                                                 sheet_name=vassar_instrument, header=None)
         for i in range(2, len(instrument_sheet.columns)):
             if instrument_sheet[i][0].split()[0] == instrument_parameter:
                 capability_found = True
@@ -213,8 +233,12 @@ def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, con
 
 
 def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_parameter, instrument_measurement, context):
-    instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
-                                           sheet_name=vassar_instrument, header=None)
+    if context["problem"] == "EOSS":
+        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
+                                             sheet_name=vassar_instrument, header=None)
+    if context["problem"] == "SMAP":
+        instrument_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Instrument Capability Definition.xls',
+                                             sheet_name=vassar_instrument, header=None)
     capability_value = None
     for row in instrument_sheet.itertuples(index=True, name='Measurement'):
         if row[2][11:-1] == instrument_measurement:
@@ -226,10 +250,15 @@ def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_param
 
 
 def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter, context):
-    context["vassar_instrument"] = vassar_measurement
+    context["vassar_measurement"] = vassar_measurement
     context["instrument_parameter"] = instrument_parameter
-    requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
-                                           sheet_name='Attributes')
+    if context["problem"] == "EOSS":
+        requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
+                                               sheet_name='Attributes')
+    if context["problem"] == "SMAP":
+        requirements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Requirement Rules.xls',
+                                               sheet_name='Attributes')
+
     requirement_found = False
     requirements = []
     for row in requirements_sheet.itertuples(name='Requirement'):
@@ -242,7 +271,12 @@ def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter,
             stakeholders_to_human = {
                 "ATM": "Atmospheric",
                 "OCE": "Oceanic",
-                "TER": "Terrestrial"
+                "TER": "Terrestrial",
+                "WEA": "weather",
+                "CLI": "climate",
+                "ECO": "land and ecosystems",
+                "WAT": "water",
+                "HEA": "human health"
             }
             return 'I have found different values for this requirement depending on the stakeholder. ' \
                    'Please tell me for which stakeholder you want this requirement: ' \
@@ -258,12 +292,21 @@ def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter,
 
 
 def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_parameter, stakeholder, context):
-    requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
-                                           sheet_name='Attributes')
+    if context["problem"] == "EOSS":
+        requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
+                                               sheet_name='Attributes')
+    if context["problem"] == "SMAP":
+        requirements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Requirement Rules.xls',
+                                               sheet_name='Attributes')
     stakeholders_to_excel = {
         "atmospheric": "ATM",
         "oceanic": "OCE",
-        "terrestrial": "TER"
+        "terrestrial": "TER",
+        "weather": "WEA",
+        "climate": "CLI",
+        "land and ecosystems": "ECO",
+        "water": "WAT",
+        "human health": "HEA"
     }
     requirement = None
     for row in requirements_sheet.itertuples(name='Requirement'):
