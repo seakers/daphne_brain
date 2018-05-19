@@ -2,13 +2,22 @@ from sqlalchemy.orm import sessionmaker
 import daphne_API.historian.models as models
 import pandas
 
-instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
-measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
-param_names = []
-for row in measurements_sheet.itertuples(index=True, name='Measurement'):
+cc_instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
+cc_measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
+cc_param_names = []
+for row in cc_measurements_sheet.itertuples(index=True, name='Measurement'):
     if row[2] == 'Parameter':
         for i in range(6, len(row)):
-            param_names.append(row[i])
+            cc_param_names.append(row[i])
+
+
+smap_instruments_sheet = pandas.read_excel('./daphne_API/xls/SMAP/AttributeSet.xls', sheet_name='Instrument')
+smap_measurements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/AttributeSet.xls', sheet_name='Measurement')
+smap_param_names = []
+for row in smap_measurements_sheet.itertuples(index=True, name='Measurement'):
+    if row[2] == 'Parameter':
+        for i in range(6, len(row)):
+            smap_param_names.append(row[i])
 
 
 general_commands = [
@@ -115,20 +124,31 @@ def objectives_list(vassar_client):
     vassar_client.endConnection()
     return objectives
 
-def analyst_instrument_parameter_list():
-    return instruments_sheet['Attributes-for-object-Instrument']
+def analyst_instrument_parameter_list(problem):
+    if problem == "EOSS":
+        return cc_instruments_sheet['Attributes-for-object-Instrument']
+    if problem == "SMAP":
+        return smap_instruments_sheet['Attributes-for-object-Instrument']
 
 
-def analyst_instrument_list():
-    return ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR","DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN"]
+def analyst_instrument_list(problem):
+    if problem == "EOSS":
+        return ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR","DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN"]
+    if problem == "SMAP":
+        return ["BIOMASS","SMAP_RAD","SMAP_MWR","CMIS","VIIRS"]
+
+def analyst_measurement_list(problem):
+    if problem == "EOSS":
+        return cc_param_names
+    if problem == "SMAP":
+        return smap_param_names
 
 
-def analyst_measurement_list():
-    return param_names
-
-
-def analyst_stakeholder_list():
-    return ["Atmospheric","Oceanic","Terrestrial"]
+def analyst_stakeholder_list(problem):
+    if problem == "EOSS":
+        return ["Atmospheric", "Oceanic", "Terrestrial"]
+    if problem == "SMAP":
+        return ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
 
 
 orbits_info = [
