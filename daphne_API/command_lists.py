@@ -1,23 +1,6 @@
 from sqlalchemy.orm import sessionmaker
 import daphne_API.historian.models as models
-import pandas
-
-cc_instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
-cc_measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
-cc_param_names = []
-for row in cc_measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            cc_param_names.append(row[i])
-
-
-smap_instruments_sheet = pandas.read_excel('./daphne_API/xls/SMAP/AttributeSet.xls', sheet_name='Instrument')
-smap_measurements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/AttributeSet.xls', sheet_name='Measurement')
-smap_param_names = []
-for row in smap_measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            smap_param_names.append(row[i])
+import daphne_API.problem_specific as problem_specific
 
 
 general_commands = [
@@ -125,54 +108,24 @@ def objectives_list(vassar_client):
     return objectives
 
 def analyst_instrument_parameter_list(problem):
-    if problem == "EOSS":
-        return cc_instruments_sheet['Attributes-for-object-Instrument']
-    if problem == "SMAP":
-        return smap_instruments_sheet['Attributes-for-object-Instrument']
+    return problem_specific.get_instruments_sheet(problem)['Attributes-for-object-Instrument']
 
 
 def analyst_instrument_list(problem):
-    if problem == "EOSS":
-        return ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR","DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN"]
-    if problem == "SMAP":
-        return ["BIOMASS","SMAP_RAD","SMAP_MWR","CMIS","VIIRS"]
+    return [instr["name"] for instr in problem_specific.get_instrument_dataset(problem)]
+
 
 def analyst_measurement_list(problem):
-    if problem == "EOSS":
-        return cc_param_names
-    if problem == "SMAP":
-        return smap_param_names
+    return problem_specific.get_param_names(problem)
 
 
 def analyst_stakeholder_list(problem):
-    if problem == "EOSS":
-        return ["Atmospheric", "Oceanic", "Terrestrial"]
-    if problem == "SMAP":
-        return ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
+    return problem_specific.get_stakeholders_list(problem)
 
 
-orbits_info = [
-    "<b>Orbit name: Orbit information</b>",
-    "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
-    "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
-    "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk",
-    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (800 km), Afternoon"
-]
+def orbits_info(problem):
+    return problem_specific.get_orbits_info(problem)
 
 
-instruments_info = [
-    "<b>Instrument name: Instrument technology, Instrument type</b>",
-    "ACE_ORCA: Ocean colour instruments, Medium-resolution spectro-radiometer",
-    "ACE_POL: Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
-    "ACE_LID: Lidars, Atmospheric lidar",
-    "CLAR_ERB: Hyperspectral imagers, Multi-purpose imaging Vis/IR radiometer",
-    "ACE_CPR: Cloud profile and rain radars, Cloud and precipitation radar",
-    "DESD_SAR: Imaging microwave radars, Imaging radar (SAR)",
-    "DESD_LID: Lidars, Lidar altimeter",
-    "GACM_VIS: Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
-    "GACM_SWIR: Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
-    "HYSP_TIR: Imaging multi-spectral radiometers (vis/IR), Medium-resolution IR spectrometer",
-    "POSTEPS_IRS: Atmospheric temperature and humidity sounders, Medium-resolution IR spectrometer",
-    "CNES_KaRIN: Radar altimeters, Radar altimeter"
-]
+def instruments_info(problem):
+    return problem_specific.get_instruments_info(problem)

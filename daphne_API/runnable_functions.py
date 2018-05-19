@@ -2,38 +2,17 @@ import logging
 from VASSAR_API.api import VASSARClient
 from data_mining_API.api import DataMiningClient
 from daphne_API.critic.critic import CRITIC
+import daphne_API.problem_specific as problem_specific
 import pandas
 
 import traceback
 import math
-import numpy as np
-import sys, os
+import sys
 
 logger = logging.getLogger('VASSAR')
 
-ORBIT_DATASET = [
-    {"name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
-    {"name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
-    {"name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
-    {"name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
-    {"name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"}]
 
-INSTRUMENT_DATASET = [
-    {"name": "ACE_ORCA", "type": "Ocean colour instruments", "technology": "Medium-resolution spectro-radiometer", "geometry": "Cross-track scanning", "wavebands": ["UV","VIS","NIR","SWIR"]},
-    {"name": "ACE_POL", "type": "Multiple direction/polarisation radiometers", "technology": "Multi-channel/direction/polarisation radiometer", "geometry": "ANY", "wavebands": ["VIS","NIR","SWIR"]},
-    {"name": "ACE_LID", "type": "Lidars", "technology": "Atmospheric lidar", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR"]},
-    {"name": "CLAR_ERB", "type": "Hyperspectral imagers", "technology": "Multi-purpose imaging Vis/IR radiometer", "geometry": "Nadir-viewing", "wavebands": ["VIS","NIR","SWIR","TIR","FIR"]},
-    {"name": "ACE_CPR", "type": "Cloud profile and rain radars", "technology": "Cloud and precipitation radar", "geometry": "Nadir-viewing", "wavebands": ["MW"]},
-    {"name": "DESD_SAR", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)", "geometry": "Side-looking", "wavebands": ["MW","L-Band","S-Band"]},
-    {"name": "DESD_LID", "type": "Lidars", "technology": "Lidar altimeter", "geometry": "ANY", "wavebands": ["NIR"]},
-    {"name": "GACM_VIS", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["UV","VIS"]},
-    {"name": "GACM_SWIR", "type": "Atmospheric chemistry", "technology": "High-resolution nadir-scanning IR spectrometer", "geometry": "Nadir-viewing", "wavebands": ["SWIR"]},
-    {"name": "HYSP_TIR", "type": "Imaging multi-spectral radiometers (vis/IR)", "technology": "Medium-resolution IR spectrometer", "geometry": "Whisk-broom scanning", "wavebands": ["MWIR", "TIR"]},
-    {"name": "POSTEPS_IRS", "type": "Atmospheric temperature and humidity sounders", "technology": "Medium-resolution IR spectrometer", "geometry": "Cross-track scanning", "wavebands": ["MWIR", "TIR"]},
-    {"name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
-
-
-def data_mining_run(designs, behavioral, non_behavioral):
+def data_mining_run(designs, behavioral, non_behavioral, context):
     
     client = DataMiningClient()
     try:
@@ -58,7 +37,7 @@ def data_mining_run(designs, behavioral, non_behavioral):
             max_features = len(features)
 
         for i in range(max_features): # Generate answers for the first 3 features
-            advice = feature_expression_to_string(features[i]['name'])
+            advice = feature_expression_to_string(features[i]['name'], context)
             result.append({
                 "type": "Analyzer",
                 "advice": advice
@@ -196,12 +175,7 @@ def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
 def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, context):
     context["vassar_instrument"] = vassar_instrument
     context["instrument_parameter"] = instrument_parameter
-    if context["problem"] == "EOSS":
-        capabilities_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
-                                           sheet_name='CHARACTERISTICS')
-    if context["problem"] == "SMAP":
-        capabilities_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Instrument Capability Definition.xls',
-                                           sheet_name='CHARACTERISTICS')
+    capabilities_sheet = problem_specific.get_capabilities_sheet(context["problem"])
     capability_found = False
     capability_value = None
     for row in capabilities_sheet.itertuples(name='Instrument'):
@@ -214,13 +188,8 @@ def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, con
     if capability_found:
         return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + capability_value
     else:
-        if context["problem"] == "EOSS":
-            instrument_sheet = pandas.read_excel(
-                './daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
-                sheet_name=vassar_instrument, header=None)
-        if context["problem"] == "SMAP":
-            instrument_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Instrument Capability Definition.xls',
-                                                 sheet_name=vassar_instrument, header=None)
+        instrument_sheet = problem_specific.get_instrument_sheet(context["problem"], vassar_instrument)
+
         for i in range(2, len(instrument_sheet.columns)):
             if instrument_sheet[i][0].split()[0] == instrument_parameter:
                 capability_found = True
@@ -233,12 +202,8 @@ def VASSAR_get_instrument_parameter(vassar_instrument, instrument_parameter, con
 
 
 def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_parameter, instrument_measurement, context):
-    if context["problem"] == "EOSS":
-        instrument_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Instrument Capability Definition2.xls',
-                                             sheet_name=vassar_instrument, header=None)
-    if context["problem"] == "SMAP":
-        instrument_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Instrument Capability Definition.xls',
-                                             sheet_name=vassar_instrument, header=None)
+    instrument_sheet = problem_specific.get_instrument_sheet(context["problem"], vassar_instrument)
+
     capability_value = None
     for row in instrument_sheet.itertuples(index=True, name='Measurement'):
         if row[2][11:-1] == instrument_measurement:
@@ -252,13 +217,7 @@ def VASSAR_get_instrument_parameter_followup(vassar_instrument, instrument_param
 def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter, context):
     context["vassar_measurement"] = vassar_measurement
     context["instrument_parameter"] = instrument_parameter
-    if context["problem"] == "EOSS":
-        requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
-                                               sheet_name='Attributes')
-    if context["problem"] == "SMAP":
-        requirements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Requirement Rules.xls',
-                                               sheet_name='Attributes')
-
+    requirements_sheet = problem_specific.get_requirements_sheet(context["problem"])
     requirement_found = False
     requirements = []
     for row in requirements_sheet.itertuples(name='Requirement'):
@@ -292,12 +251,7 @@ def VASSAR_get_measurement_requirement(vassar_measurement, instrument_parameter,
 
 
 def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_parameter, stakeholder, context):
-    if context["problem"] == "EOSS":
-        requirements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric Requirement Rules.xls',
-                                               sheet_name='Attributes')
-    if context["problem"] == "SMAP":
-        requirements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/SMAP Requirement Rules.xls',
-                                               sheet_name='Attributes')
+    requirements_sheet = problem_specific.get_requirements_sheet(context["problem"])
     stakeholders_to_excel = {
         "atmospheric": "ATM",
         "oceanic": "OCE",
@@ -322,7 +276,7 @@ def VASSAR_get_measurement_requirement_followup(vassar_measurement, instrument_p
 def Critic_general_call(design_id, designs, context):
     port = context['vassar_port'] if 'vassar_port' in context else 9090
     client = VASSARClient(port)
-    critic = CRITIC()
+    critic = CRITIC(context["problem"])
 
     try:
         this_design = None
@@ -349,11 +303,14 @@ def Critic_general_call(design_id, designs, context):
                 "type": "Expert",
                 "advice": advice
             })
+
+        orbit_dataset = problem_specific.get_orbit_dataset(context["problem"])
+        instrument_dataset = problem_specific.get_instrument_dataset(context["problem"])
             
         # Criticize architecture (based on explorer)
         def getAdvicesFromBitStringDiff(diff):
             out = []
-            ninstr = len(INSTRUMENT_DATASET)
+            ninstr = len(instrument_dataset)
                         
             for i in range(len(diff)):
                 advice = []
@@ -366,14 +323,14 @@ def Critic_general_call(design_id, designs, context):
                     
                 orbitIndex = i // ninstr # Floor division
                 instrIndex = i % ninstr # Get the remainder                
-                advice.append("instrument {}".format(INSTRUMENT_DATASET[instrIndex]['name']))
+                advice.append("instrument {}".format(instrument_dataset[instrIndex]['name']))
 
                 if diff[i] == 1:
                     advice.append("to")
                 elif diff[i] == -1:
                     advice.append("from")
 
-                advice.append("orbit {}".format(ORBIT_DATASET[orbitIndex]['name']))
+                advice.append("orbit {}".format(orbit_dataset[orbitIndex]['name']))
                     
                 advice = " ".join(advice)
                 out.append(advice)
@@ -419,8 +376,8 @@ def Critic_general_call(design_id, designs, context):
             
             
         # Criticize architecture (based on database)
-        # result3 = critic.criticize_arch(this_design['inputs'])
-        # result.extend(result3)
+        result3 = critic.criticize_arch(this_design['inputs'])
+        result.extend(result3)
         
         
         # Criticize architecture (based on data mining)
@@ -466,8 +423,8 @@ def Critic_general_call(design_id, designs, context):
             if not len(features) == 0:
                                 
                 # Compare features to the current design
-                unsatisfied = get_feature_unsatisfied(features[0]['name'], this_design)
-                satisfied = get_feature_satisfied(features[0]['name'], this_design)
+                unsatisfied = get_feature_unsatisfied(features[0]['name'], this_design, context)
+                satisfied = get_feature_satisfied(features[0]['name'], this_design, context)
                                 
                 if type(unsatisfied) is not list:
                     unsatisfied = [unsatisfied]
@@ -478,17 +435,17 @@ def Critic_general_call(design_id, designs, context):
                 for exp in unsatisfied:
                     if exp == "":
                         continue
-                    advices.append("Based on the data mining result, I advise you to make the following change: " + feature_expression_to_string(exp, isCritique=True))
+                    advices.append("Based on the data mining result, I advise you to make the following change: " + feature_expression_to_string(exp, isCritique=True, context=context))
                 
                 for exp in satisfied:
                     if exp == "":
                         continue
-                    advices.append("Based on the data mining result, these are the good features. Consider keeping them: " + feature_expression_to_string(exp, isCritique=False))                    
+                    advices.append("Based on the data mining result, these are the good features. Consider keeping them: " + feature_expression_to_string(exp, isCritique=False, context=context))
             
             # End the connection before return statement
             client.endConnection()
             
-            for i in range(len(advices)): # Generate answers for the first 5 features
+            for i in range(len(advices)):  # Generate answers for the first 5 features
                 advice = advices[i]
                 result4.append({
                     "type": "Analyst",
@@ -512,8 +469,8 @@ def Critic_general_call(design_id, designs, context):
         return None
 
 
-def Critic_specific_call(design_id, agent, designs):
-    critic = CRITIC()
+def Critic_specific_call(design_id, agent, designs, context):
+    critic = CRITIC(context["problem"])
     client = VASSARClient()
     try:
         result = []
@@ -545,69 +502,73 @@ def Critic_specific_call(design_id, agent, designs):
         return None
     
 
-def base_feature_expression_to_string(feature_expression, isCritique = False):    
+def base_feature_expression_to_string(feature_expression, isCritique = False, context=None):
     
-    try:    
-    
+    try:
         e = feature_expression[1:-1]
         out = None
 
-        featureType = e.split("[")[0]
+        feature_type = e.split("[")[0]
         arguments = e.split("[")[1][:-1]
 
-        argSplit = arguments.split(";")
+        arg_split = arguments.split(";")
 
-        orbitIndices = argSplit[0]
-        instrumentIndices = argSplit[1]
-        numbers = argSplit[2]
+        orbit_indices = arg_split[0]
+        instrument_indices = arg_split[1]
+        numbers = arg_split[2]
 
-        if orbitIndices:
-            orbitNames = [ORBIT_DATASET[int(i)]['name'] for i in orbitIndices.split(",")]
-        if instrumentIndices:
-            instrumentNames = [INSTRUMENT_DATASET[int(i)]['name'] for i in instrumentIndices.split(",")]
+        orbit_dataset = problem_specific.get_orbit_dataset(context["problem"])
+        instrument_dataset = problem_specific.get_instrument_dataset(context["problem"])
+
+        orbit_names = []
+        if orbit_indices:
+            orbit_names = [orbit_dataset[int(i)]['name'] for i in orbit_indices.split(",")]
+        instrument_names = []
+        if instrument_indices:
+            instrument_names = [instrument_dataset[int(i)]['name'] for i in instrument_indices.split(",")]
         if numbers:
             numbers = [int(n) for n in numbers.split(",")]  
         
-        if featureType == "present":
+        if feature_type == "present":
             if isCritique:
-                out = "add {}".format(instrumentNames[0])
+                out = "add {}".format(instrument_names[0])
             else:
-                out = "{} is used".format(instrumentNames[0])
-        elif featureType == "absent":
+                out = "{} is used".format(instrument_names[0])
+        elif feature_type == "absent":
             if isCritique:
-                out = "remove {}".format(instrumentNames[0])
+                out = "remove {}".format(instrument_names[0])
             else:            
-                out = "{} is not used in any orbit".format(instrumentNames[0])
-        elif featureType == "inOrbit":
+                out = "{} is not used in any orbit".format(instrument_names[0])
+        elif feature_type == "inOrbit":
             if isCritique:
-                out = ["assign instruments", ", ".join(instrumentNames),"to orbit",orbitNames[0]]
+                out = ["assign instruments", ", ".join(instrument_names), "to orbit", orbit_names[0]]
             else:               
-                out = ["instruments", ", ".join(instrumentNames),"are assigned to orbit",orbitNames[0]]
+                out = ["instruments", ", ".join(instrument_names), "are assigned to orbit", orbit_names[0]]
             out = " ".join(out)
             
-        elif featureType == "notInOrbit":
+        elif feature_type == "notInOrbit":
             if isCritique:
-                out = ["remove instruments", ", ".join(instrumentNames),"in orbit",orbitNames[0]]
+                out = ["remove instruments", ", ".join(instrument_names),"in orbit",orbit_names[0]]
             else:               
-                out = ["instruments", ", ".join(instrumentNames),"are not assigned to orbit",orbitNames[0]]
+                out = ["instruments", ", ".join(instrument_names),"are not assigned to orbit",orbit_names[0]]
             out = " ".join(out)
-        elif featureType == "together":
+        elif feature_type == "together":
             if isCritique:
-                out = "assign instruments {} to the same orbit".format(", ".join(instrumentNames))
+                out = "assign instruments {} to the same orbit".format(", ".join(instrument_names))
             else:    
-                out = "instruments {} are assigned to the same orbit".format(", ".join(instrumentNames))
-        elif featureType == "separate":
+                out = "instruments {} are assigned to the same orbit".format(", ".join(instrument_names))
+        elif feature_type == "separate":
             if isCritique:
-                out = "do not assign instruments {} to the same orbit".format(", ".join(instrumentNames))        
+                out = "do not assign instruments {} to the same orbit".format(", ".join(instrument_names))
             else:    
-                out = "instruments {} are never assigned to the same orbit".format(", ".join(instrumentNames))        
-        elif featureType == "emptyOrbit":
+                out = "instruments {} are never assigned to the same orbit".format(", ".join(instrument_names))
+        elif feature_type == "emptyOrbit":
             if isCritique:
-                out = "no spacecraft should fly in orbit {}".format(orbitNames[0])
+                out = "no spacecraft should fly in orbit {}".format(orbit_names[0])
             else:              
-                out = "no spacecraft flies in orbit {}".format(orbitNames[0])
+                out = "no spacecraft flies in orbit {}".format(orbit_names[0])
         else:
-            raise ValueError('Uncrecognized feature name: {}'.format(featureType))
+            raise ValueError('Unrecognized feature name: {}'.format(feature_type))
         return out
     
     except Exception as e:
@@ -617,7 +578,7 @@ def base_feature_expression_to_string(feature_expression, isCritique = False):
         logger.error(msg)  
         
     
-def feature_expression_to_string(feature_expression, isCritique = False):
+def feature_expression_to_string(feature_expression, isCritique = False, context = None):
     out = []
     # TODO: Generalize the feature expression parsing. 
     # Currently assumes that the feature only contains conjunctions but no disjunction
@@ -626,12 +587,12 @@ def feature_expression_to_string(feature_expression, isCritique = False):
         for feat in individual_features:
             if feat == "":
                 continue
-            out.append(base_feature_expression_to_string(feat, isCritique))
+            out.append(base_feature_expression_to_string(feat, isCritique, context))
     elif "||" in feature_expression:
         pass
     else:
         if not feature_expression == "":
-            out.append(base_feature_expression_to_string(feature_expression, isCritique))
+            out.append(base_feature_expression_to_string(feature_expression, isCritique, context))
     
     out = " AND ".join(out)
     out = out[0].upper() + out[1:]
@@ -639,14 +600,14 @@ def feature_expression_to_string(feature_expression, isCritique = False):
     return out
 
 
-def get_feature_satisfied(expression, design):
+def get_feature_satisfied(expression, design, context):
     
     out = []
     
     if type(expression) is list:
         # Multiple features passed
         for exp in expression:
-            out.append(get_feature_unsatisfied(exp,design))
+            out.append(get_feature_unsatisfied(exp, design, context))
         return out
     
     else:
@@ -658,20 +619,20 @@ def get_feature_satisfied(expression, design):
             individual_features = [expression]
             
         for feat in individual_features:  
-            satisfied = apply_base_filter(feat,design)
+            satisfied = apply_base_filter(feat, design, context)
             if satisfied:
                 out.append(feat)        
         return "&&".join(out)
 
 
-def get_feature_unsatisfied(expression, design):
+def get_feature_unsatisfied(expression, design, context):
     
     out = []
     
     if type(expression) is list:
         # Multiple features passed
         for exp in expression:
-            out.append(get_feature_unsatisfied(exp,design))
+            out.append(get_feature_unsatisfied(exp, design, context))
         return out
     
     else:
@@ -683,22 +644,24 @@ def get_feature_unsatisfied(expression, design):
             individual_features = [expression]
             
         for feat in individual_features:  
-            satisfied = apply_base_filter(feat,design)
+            satisfied = apply_base_filter(feat, design, context)
             if not satisfied:
                 out.append(feat)
         return "&&".join(out)
     
         
-def apply_base_filter(filterExpression,design):
+def apply_base_filter(filter_expression, design, context):
 
-    expression = filterExpression
+    expression = filter_expression
     
     # Preset filter: {presetName[orbits;instruments;numbers]} 
     if expression[0] == "{" and expression[-1] == "}":
         expression = expression[1:-1]
-    
-    norb = len(ORBIT_DATASET)
-    ninstr = len(INSTRUMENT_DATASET)
+
+    orbit_dataset = problem_specific.get_orbit_dataset(context["problem"])
+    instrument_dataset = problem_specific.get_instrument_dataset(context["problem"])
+    norb = len(orbit_dataset)
+    ninstr = len(instrument_dataset)
     featureType = expression.split("[")[0]
     arguments = expression.split("[")[1]
     arguments = arguments[:-1]
@@ -713,7 +676,7 @@ def apply_base_filter(filterExpression,design):
     try:
         out = None
         if featureType == "present":
-            if len(instr)==0:
+            if len(instr) == 0:
                 return False
             out = False
             instr = int(instr)
@@ -723,7 +686,7 @@ def apply_base_filter(filterExpression,design):
                     break
 
         elif featureType == "absent":
-            if len(instr)==0:
+            if len(instr) == 0:
                 return False
             out = True
             instr = int(instr)

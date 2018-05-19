@@ -5,24 +5,7 @@ import pandas
 import os
 import daphne_API.historian.models as earth_models
 import daphne_API.edl.model as edl_models
-
-
-cc_instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
-cc_measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
-cc_param_names = []
-for row in cc_measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            cc_param_names.append(row[i])
-
-
-smap_instruments_sheet = pandas.read_excel('./daphne_API/xls/SMAP/AttributeSet.xls', sheet_name='Instrument')
-smap_measurements_sheet = pandas.read_excel('./daphne_API/xls/SMAP/AttributeSet.xls', sheet_name='Measurement')
-smap_param_names = []
-for row in smap_measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            smap_param_names.append(row[i])
+from daphne_API import problem_specific
 
 
 def feature_list_by_ratio(processed_question, feature_list):
@@ -123,32 +106,22 @@ def extract_agent(processed_question, number_of_features, context):
 
 
 def extract_instrument_parameter(processed_question, number_of_features, context):
-    instrument_parameters = []
-    if context["problem"] == "EOSS":
-        instrument_parameters = cc_instruments_sheet['Attributes-for-object-Instrument']
-    if context["problem"] == "SMAP":
-        instrument_parameters = smap_instruments_sheet['Attributes-for-object-Instrument']
+    instrument_parameters = problem_specific.get_instruments_sheet(context["problem"])['Attributes-for-object-Instrument']
     return sorted_list_of_features_by_index(processed_question, instrument_parameters, number_of_features)
 
 
 def extract_vassar_instrument(processed_question, number_of_features, context):
-    options = ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR",
-               "DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN",
-               "BIOMASS","SMAP_RAD","SMAP_MWR","CMIS","VIIRS"]
+    options = [instr["name"] for instr in problem_specific.get_instrument_dataset(context["problem"])]
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
 
 def extract_vassar_measurement(processed_question, number_of_features, context):
-    param_names = []
-    if context["problem"] == "EOSS":
-        param_names = cc_param_names
-    if context["problem"] == "SMAP":
-        param_names = smap_param_names
+    param_names = problem_specific.get_param_names(context["problem"])
     return sorted_list_of_features_by_index(processed_question, param_names, number_of_features)
 
 
 def extract_vassar_stakeholder(processed_question, number_of_features, context):
-    options = ["atmospheric","oceanic","terrestrial","weather","climate","land and ecosystems","water","human health"]
+    options = problem_specific.get_stakeholders_list(context["problem"])
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
 def extract_vassar_objective(processed_question, number_of_features, context):
