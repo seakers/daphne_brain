@@ -273,6 +273,9 @@ class GetArchDetails(APIView):
                     json_exp = {
                         'orbit_name': exp.orbit_name,
                         'launch_vehicle': exp.launch_vehicle,
+                        'total_mass': exp.total_mass,
+                        'total_power': exp.total_power,
+                        'total_cost': exp.total_cost,
                         'mass_budget': exp.mass_budget,
                         'power_budget': exp.power_budget,
                         'cost_budget': exp.cost_budget

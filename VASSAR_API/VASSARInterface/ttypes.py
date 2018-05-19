@@ -310,15 +310,21 @@ class MissionCostInformation(object):
     Attributes:
      - orbit_name
      - launch_vehicle
+     - total_mass
+     - total_power
+     - total_cost
      - mass_budget
      - power_budget
      - cost_budget
     """
 
 
-    def __init__(self, orbit_name=None, launch_vehicle=None, mass_budget=None, power_budget=None, cost_budget=None,):
+    def __init__(self, orbit_name=None, launch_vehicle=None, total_mass=None, total_power=None, total_cost=None, mass_budget=None, power_budget=None, cost_budget=None,):
         self.orbit_name = orbit_name
         self.launch_vehicle = launch_vehicle
+        self.total_mass = total_mass
+        self.total_power = total_power
+        self.total_cost = total_cost
         self.mass_budget = mass_budget
         self.power_budget = power_budget
         self.cost_budget = cost_budget
@@ -343,6 +349,21 @@ class MissionCostInformation(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
+                if ftype == TType.DOUBLE:
+                    self.total_mass = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.DOUBLE:
+                    self.total_power = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.DOUBLE:
+                    self.total_cost = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
                 if ftype == TType.MAP:
                     self.mass_budget = {}
                     (_ktype22, _vtype23, _size21) = iprot.readMapBegin()
@@ -353,7 +374,7 @@ class MissionCostInformation(object):
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 7:
                 if ftype == TType.MAP:
                     self.power_budget = {}
                     (_ktype29, _vtype30, _size28) = iprot.readMapBegin()
@@ -364,7 +385,7 @@ class MissionCostInformation(object):
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 5:
+            elif fid == 8:
                 if ftype == TType.MAP:
                     self.cost_budget = {}
                     (_ktype36, _vtype37, _size35) = iprot.readMapBegin()
@@ -393,8 +414,20 @@ class MissionCostInformation(object):
             oprot.writeFieldBegin('launch_vehicle', TType.STRING, 2)
             oprot.writeString(self.launch_vehicle.encode('utf-8') if sys.version_info[0] == 2 else self.launch_vehicle)
             oprot.writeFieldEnd()
+        if self.total_mass is not None:
+            oprot.writeFieldBegin('total_mass', TType.DOUBLE, 3)
+            oprot.writeDouble(self.total_mass)
+            oprot.writeFieldEnd()
+        if self.total_power is not None:
+            oprot.writeFieldBegin('total_power', TType.DOUBLE, 4)
+            oprot.writeDouble(self.total_power)
+            oprot.writeFieldEnd()
+        if self.total_cost is not None:
+            oprot.writeFieldBegin('total_cost', TType.DOUBLE, 5)
+            oprot.writeDouble(self.total_cost)
+            oprot.writeFieldEnd()
         if self.mass_budget is not None:
-            oprot.writeFieldBegin('mass_budget', TType.MAP, 3)
+            oprot.writeFieldBegin('mass_budget', TType.MAP, 6)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.mass_budget))
             for kiter42, viter43 in self.mass_budget.items():
                 oprot.writeString(kiter42.encode('utf-8') if sys.version_info[0] == 2 else kiter42)
@@ -402,7 +435,7 @@ class MissionCostInformation(object):
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.power_budget is not None:
-            oprot.writeFieldBegin('power_budget', TType.MAP, 4)
+            oprot.writeFieldBegin('power_budget', TType.MAP, 7)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.power_budget))
             for kiter44, viter45 in self.power_budget.items():
                 oprot.writeString(kiter44.encode('utf-8') if sys.version_info[0] == 2 else kiter44)
@@ -410,7 +443,7 @@ class MissionCostInformation(object):
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.cost_budget is not None:
-            oprot.writeFieldBegin('cost_budget', TType.MAP, 5)
+            oprot.writeFieldBegin('cost_budget', TType.MAP, 8)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.cost_budget))
             for kiter46, viter47 in self.cost_budget.items():
                 oprot.writeString(kiter46.encode('utf-8') if sys.version_info[0] == 2 else kiter46)
@@ -628,9 +661,12 @@ MissionCostInformation.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'orbit_name', 'UTF8', None, ),  # 1
     (2, TType.STRING, 'launch_vehicle', 'UTF8', None, ),  # 2
-    (3, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 3
-    (4, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 4
-    (5, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 5
+    (3, TType.DOUBLE, 'total_mass', None, None, ),  # 3
+    (4, TType.DOUBLE, 'total_power', None, None, ),  # 4
+    (5, TType.DOUBLE, 'total_cost', None, None, ),  # 5
+    (6, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 6
+    (7, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 7
+    (8, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 8
 )
 all_structs.append(SubobjectiveDetails)
 SubobjectiveDetails.thrift_spec = (
