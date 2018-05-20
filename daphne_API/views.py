@@ -89,15 +89,15 @@ class CommandList(APIView):
         elif command_list_request == 'objectives':
             command_list = command_lists.objectives_list(vassar_client)
         elif command_list_request == 'orb_info':
-            command_list = command_lists.orbits_info
+            command_list = command_lists.orbits_info(problem)
         elif command_list_request == 'instr_info':
-            command_list = command_lists.instruments_info
+            command_list = command_lists.instruments_info(problem)
         elif command_list_request == 'analyst_instrument_parameters':
             command_list = command_lists.analyst_instrument_parameter_list(problem)
         elif command_list_request == 'analyst_instruments':
             command_list = command_lists.analyst_instrument_list(problem)
         elif command_list_request == 'analyst_measurements':
-            command_list = command_lists.analyst_measurement_list()
+            command_list = command_lists.analyst_measurement_list(problem)
         elif command_list_request == 'analyst_stakeholders':
             command_list = command_lists.analyst_stakeholder_list(problem)
         return Response({'list': command_list})
