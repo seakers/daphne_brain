@@ -131,7 +131,7 @@ def get_orbit_dataset(problem):
     if problem == "EOSS":
         return CC_ORBIT_DATASET
     if problem == "SMAP":
-        return SMAP_INSTRUMENT_DATASET
+        return SMAP_ORBIT_DATASET
 
 
 def get_instrument_dataset(problem):
