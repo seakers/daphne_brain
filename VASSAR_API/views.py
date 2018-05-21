@@ -272,6 +272,7 @@ class GetArchDetails(APIView):
                 for exp in explanation:
                     json_exp = {
                         'orbit_name': exp.orbit_name,
+                        'payload': exp.payload,
                         'launch_vehicle': exp.launch_vehicle,
                         'total_mass': exp.total_mass,
                         'total_power': exp.total_power,
@@ -318,6 +319,7 @@ class GetSubobjectiveDetails(APIView):
 
             def explanation_to_json(explanation):
                 json_exp = {
+                    'subobjective': request.data['subobjective'],
                     'param': explanation.param,
                     'attr_names': explanation.attr_names,
                     'attr_values': explanation.attr_values,

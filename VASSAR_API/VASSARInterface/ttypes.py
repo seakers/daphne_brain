@@ -309,6 +309,7 @@ class MissionCostInformation(object):
     """
     Attributes:
      - orbit_name
+     - payload
      - launch_vehicle
      - total_mass
      - total_power
@@ -319,8 +320,9 @@ class MissionCostInformation(object):
     """
 
 
-    def __init__(self, orbit_name=None, launch_vehicle=None, total_mass=None, total_power=None, total_cost=None, mass_budget=None, power_budget=None, cost_budget=None,):
+    def __init__(self, orbit_name=None, payload=None, launch_vehicle=None, total_mass=None, total_power=None, total_cost=None, mass_budget=None, power_budget=None, cost_budget=None,):
         self.orbit_name = orbit_name
+        self.payload = payload
         self.launch_vehicle = launch_vehicle
         self.total_mass = total_mass
         self.total_power = total_power
@@ -344,55 +346,65 @@ class MissionCostInformation(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.LIST:
+                    self.payload = []
+                    (_etype24, _size21) = iprot.readListBegin()
+                    for _i25 in range(_size21):
+                        _elem26 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.payload.append(_elem26)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.STRING:
                     self.launch_vehicle = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 4:
                 if ftype == TType.DOUBLE:
                     self.total_mass = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 5:
                 if ftype == TType.DOUBLE:
                     self.total_power = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
-            elif fid == 5:
+            elif fid == 6:
                 if ftype == TType.DOUBLE:
                     self.total_cost = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
-            elif fid == 6:
-                if ftype == TType.MAP:
-                    self.mass_budget = {}
-                    (_ktype22, _vtype23, _size21) = iprot.readMapBegin()
-                    for _i25 in range(_size21):
-                        _key26 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val27 = iprot.readDouble()
-                        self.mass_budget[_key26] = _val27
-                    iprot.readMapEnd()
-                else:
-                    iprot.skip(ftype)
             elif fid == 7:
                 if ftype == TType.MAP:
-                    self.power_budget = {}
-                    (_ktype29, _vtype30, _size28) = iprot.readMapBegin()
-                    for _i32 in range(_size28):
-                        _key33 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val34 = iprot.readDouble()
-                        self.power_budget[_key33] = _val34
+                    self.mass_budget = {}
+                    (_ktype28, _vtype29, _size27) = iprot.readMapBegin()
+                    for _i31 in range(_size27):
+                        _key32 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val33 = iprot.readDouble()
+                        self.mass_budget[_key32] = _val33
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 8:
                 if ftype == TType.MAP:
+                    self.power_budget = {}
+                    (_ktype35, _vtype36, _size34) = iprot.readMapBegin()
+                    for _i38 in range(_size34):
+                        _key39 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val40 = iprot.readDouble()
+                        self.power_budget[_key39] = _val40
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.MAP:
                     self.cost_budget = {}
-                    (_ktype36, _vtype37, _size35) = iprot.readMapBegin()
-                    for _i39 in range(_size35):
-                        _key40 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val41 = iprot.readDouble()
-                        self.cost_budget[_key40] = _val41
+                    (_ktype42, _vtype43, _size41) = iprot.readMapBegin()
+                    for _i45 in range(_size41):
+                        _key46 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val47 = iprot.readDouble()
+                        self.cost_budget[_key46] = _val47
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -410,44 +422,51 @@ class MissionCostInformation(object):
             oprot.writeFieldBegin('orbit_name', TType.STRING, 1)
             oprot.writeString(self.orbit_name.encode('utf-8') if sys.version_info[0] == 2 else self.orbit_name)
             oprot.writeFieldEnd()
+        if self.payload is not None:
+            oprot.writeFieldBegin('payload', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.payload))
+            for iter48 in self.payload:
+                oprot.writeString(iter48.encode('utf-8') if sys.version_info[0] == 2 else iter48)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
         if self.launch_vehicle is not None:
-            oprot.writeFieldBegin('launch_vehicle', TType.STRING, 2)
+            oprot.writeFieldBegin('launch_vehicle', TType.STRING, 3)
             oprot.writeString(self.launch_vehicle.encode('utf-8') if sys.version_info[0] == 2 else self.launch_vehicle)
             oprot.writeFieldEnd()
         if self.total_mass is not None:
-            oprot.writeFieldBegin('total_mass', TType.DOUBLE, 3)
+            oprot.writeFieldBegin('total_mass', TType.DOUBLE, 4)
             oprot.writeDouble(self.total_mass)
             oprot.writeFieldEnd()
         if self.total_power is not None:
-            oprot.writeFieldBegin('total_power', TType.DOUBLE, 4)
+            oprot.writeFieldBegin('total_power', TType.DOUBLE, 5)
             oprot.writeDouble(self.total_power)
             oprot.writeFieldEnd()
         if self.total_cost is not None:
-            oprot.writeFieldBegin('total_cost', TType.DOUBLE, 5)
+            oprot.writeFieldBegin('total_cost', TType.DOUBLE, 6)
             oprot.writeDouble(self.total_cost)
             oprot.writeFieldEnd()
         if self.mass_budget is not None:
-            oprot.writeFieldBegin('mass_budget', TType.MAP, 6)
+            oprot.writeFieldBegin('mass_budget', TType.MAP, 7)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.mass_budget))
-            for kiter42, viter43 in self.mass_budget.items():
-                oprot.writeString(kiter42.encode('utf-8') if sys.version_info[0] == 2 else kiter42)
-                oprot.writeDouble(viter43)
+            for kiter49, viter50 in self.mass_budget.items():
+                oprot.writeString(kiter49.encode('utf-8') if sys.version_info[0] == 2 else kiter49)
+                oprot.writeDouble(viter50)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.power_budget is not None:
-            oprot.writeFieldBegin('power_budget', TType.MAP, 7)
+            oprot.writeFieldBegin('power_budget', TType.MAP, 8)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.power_budget))
-            for kiter44, viter45 in self.power_budget.items():
-                oprot.writeString(kiter44.encode('utf-8') if sys.version_info[0] == 2 else kiter44)
-                oprot.writeDouble(viter45)
+            for kiter51, viter52 in self.power_budget.items():
+                oprot.writeString(kiter51.encode('utf-8') if sys.version_info[0] == 2 else kiter51)
+                oprot.writeDouble(viter52)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.cost_budget is not None:
-            oprot.writeFieldBegin('cost_budget', TType.MAP, 8)
+            oprot.writeFieldBegin('cost_budget', TType.MAP, 9)
             oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.cost_budget))
-            for kiter46, viter47 in self.cost_budget.items():
-                oprot.writeString(kiter46.encode('utf-8') if sys.version_info[0] == 2 else kiter46)
-                oprot.writeDouble(viter47)
+            for kiter53, viter54 in self.cost_budget.items():
+                oprot.writeString(kiter53.encode('utf-8') if sys.version_info[0] == 2 else kiter53)
+                oprot.writeDouble(viter54)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -505,60 +524,60 @@ class SubobjectiveDetails(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.attr_names = []
-                    (_etype51, _size48) = iprot.readListBegin()
-                    for _i52 in range(_size48):
-                        _elem53 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.attr_names.append(_elem53)
+                    (_etype58, _size55) = iprot.readListBegin()
+                    for _i59 in range(_size55):
+                        _elem60 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.attr_names.append(_elem60)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.attr_values = []
-                    (_etype57, _size54) = iprot.readListBegin()
-                    for _i58 in range(_size54):
-                        _elem59 = []
-                        (_etype63, _size60) = iprot.readListBegin()
-                        for _i64 in range(_size60):
-                            _elem65 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _elem59.append(_elem65)
+                    (_etype64, _size61) = iprot.readListBegin()
+                    for _i65 in range(_size61):
+                        _elem66 = []
+                        (_etype70, _size67) = iprot.readListBegin()
+                        for _i71 in range(_size67):
+                            _elem72 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem66.append(_elem72)
                         iprot.readListEnd()
-                        self.attr_values.append(_elem59)
+                        self.attr_values.append(_elem66)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.LIST:
                     self.scores = []
-                    (_etype69, _size66) = iprot.readListBegin()
-                    for _i70 in range(_size66):
-                        _elem71 = iprot.readDouble()
-                        self.scores.append(_elem71)
+                    (_etype76, _size73) = iprot.readListBegin()
+                    for _i77 in range(_size73):
+                        _elem78 = iprot.readDouble()
+                        self.scores.append(_elem78)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
                 if ftype == TType.LIST:
                     self.taken_by = []
-                    (_etype75, _size72) = iprot.readListBegin()
-                    for _i76 in range(_size72):
-                        _elem77 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.taken_by.append(_elem77)
+                    (_etype82, _size79) = iprot.readListBegin()
+                    for _i83 in range(_size79):
+                        _elem84 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.taken_by.append(_elem84)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 6:
                 if ftype == TType.LIST:
                     self.justifications = []
-                    (_etype81, _size78) = iprot.readListBegin()
-                    for _i82 in range(_size78):
-                        _elem83 = []
-                        (_etype87, _size84) = iprot.readListBegin()
-                        for _i88 in range(_size84):
-                            _elem89 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _elem83.append(_elem89)
+                    (_etype88, _size85) = iprot.readListBegin()
+                    for _i89 in range(_size85):
+                        _elem90 = []
+                        (_etype94, _size91) = iprot.readListBegin()
+                        for _i95 in range(_size91):
+                            _elem96 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem90.append(_elem96)
                         iprot.readListEnd()
-                        self.justifications.append(_elem83)
+                        self.justifications.append(_elem90)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -579,41 +598,41 @@ class SubobjectiveDetails(object):
         if self.attr_names is not None:
             oprot.writeFieldBegin('attr_names', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.attr_names))
-            for iter90 in self.attr_names:
-                oprot.writeString(iter90.encode('utf-8') if sys.version_info[0] == 2 else iter90)
+            for iter97 in self.attr_names:
+                oprot.writeString(iter97.encode('utf-8') if sys.version_info[0] == 2 else iter97)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.attr_values is not None:
             oprot.writeFieldBegin('attr_values', TType.LIST, 3)
             oprot.writeListBegin(TType.LIST, len(self.attr_values))
-            for iter91 in self.attr_values:
-                oprot.writeListBegin(TType.STRING, len(iter91))
-                for iter92 in iter91:
-                    oprot.writeString(iter92.encode('utf-8') if sys.version_info[0] == 2 else iter92)
+            for iter98 in self.attr_values:
+                oprot.writeListBegin(TType.STRING, len(iter98))
+                for iter99 in iter98:
+                    oprot.writeString(iter99.encode('utf-8') if sys.version_info[0] == 2 else iter99)
                 oprot.writeListEnd()
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.scores is not None:
             oprot.writeFieldBegin('scores', TType.LIST, 4)
             oprot.writeListBegin(TType.DOUBLE, len(self.scores))
-            for iter93 in self.scores:
-                oprot.writeDouble(iter93)
+            for iter100 in self.scores:
+                oprot.writeDouble(iter100)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.taken_by is not None:
             oprot.writeFieldBegin('taken_by', TType.LIST, 5)
             oprot.writeListBegin(TType.STRING, len(self.taken_by))
-            for iter94 in self.taken_by:
-                oprot.writeString(iter94.encode('utf-8') if sys.version_info[0] == 2 else iter94)
+            for iter101 in self.taken_by:
+                oprot.writeString(iter101.encode('utf-8') if sys.version_info[0] == 2 else iter101)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.justifications is not None:
             oprot.writeFieldBegin('justifications', TType.LIST, 6)
             oprot.writeListBegin(TType.LIST, len(self.justifications))
-            for iter95 in self.justifications:
-                oprot.writeListBegin(TType.STRING, len(iter95))
-                for iter96 in iter95:
-                    oprot.writeString(iter96.encode('utf-8') if sys.version_info[0] == 2 else iter96)
+            for iter102 in self.justifications:
+                oprot.writeListBegin(TType.STRING, len(iter102))
+                for iter103 in iter102:
+                    oprot.writeString(iter103.encode('utf-8') if sys.version_info[0] == 2 else iter103)
                 oprot.writeListEnd()
             oprot.writeListEnd()
             oprot.writeFieldEnd()
@@ -660,13 +679,14 @@ all_structs.append(MissionCostInformation)
 MissionCostInformation.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'orbit_name', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'launch_vehicle', 'UTF8', None, ),  # 2
-    (3, TType.DOUBLE, 'total_mass', None, None, ),  # 3
-    (4, TType.DOUBLE, 'total_power', None, None, ),  # 4
-    (5, TType.DOUBLE, 'total_cost', None, None, ),  # 5
-    (6, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 6
-    (7, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 7
-    (8, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 8
+    (2, TType.LIST, 'payload', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.STRING, 'launch_vehicle', 'UTF8', None, ),  # 3
+    (4, TType.DOUBLE, 'total_mass', None, None, ),  # 4
+    (5, TType.DOUBLE, 'total_power', None, None, ),  # 5
+    (6, TType.DOUBLE, 'total_cost', None, None, ),  # 6
+    (7, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 7
+    (8, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 8
+    (9, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 9
 )
 all_structs.append(SubobjectiveDetails)
 SubobjectiveDetails.thrift_spec = (
