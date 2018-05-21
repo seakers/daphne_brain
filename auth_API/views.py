@@ -93,14 +93,22 @@ class CheckStatus(APIView):
             dataset = request.session['dataset']
         else:
             dataset = ''
+
         response = {
             'username': request.user.username,
             'permissions': [],
             'problem': problem,
             'dataset': dataset
         }
+
         if request.user.is_authenticated:
             response['is_logged_in'] = True
+            if 'data' in request.session:
+                response['data'] = request.session['data']
+                response['modified_dataset'] = True
+            else:
+                response['data'] = []
+                response['modified_dataset'] = False
         else:
             response['is_logged_in'] = False
         return Response(response)

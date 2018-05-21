@@ -216,13 +216,6 @@ class DatasetList(APIView):
 
 class ClearSession(APIView):
     """ Clears the Daphne Session.
-
-    Request Args:
-        problem: Name of the problem for the list
-
-    Returns:
-        dataset_list: a python dict with two lists: one for default datasets and another for user datasets
-
     """
 
     def post(self, request, format=None):
