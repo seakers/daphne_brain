@@ -1,14 +1,6 @@
 from sqlalchemy.orm import sessionmaker
 import daphne_API.historian.models as models
-import pandas
-
-instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
-measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
-param_names = []
-for row in measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            param_names.append(row[i])
+import daphne_API.problem_specific as problem_specific
 
 
 general_commands = [
@@ -45,7 +37,9 @@ historian_commands = [
     #'Which missions are currently flying ${technology}?',
     ('4006', 'Which orbit is the most typical for ${technology}?'),
     ('4007', 'Which orbit is the most typical for ${measurement}?'),
-    #'When was mission ${mission} launched?'
+    ('4008', 'When was mission ${mission} launched?'),
+    ('4009', 'Which missions have been designed by ${space_agency}?'),
+    ('4010', 'Show me a timeline of missions [from ${space_agency}] which measure ${measurement}')
 ]
 
 
@@ -113,44 +107,25 @@ def objectives_list(vassar_client):
     vassar_client.endConnection()
     return objectives
 
-def analyst_instrument_parameter_list():
-    return instruments_sheet['Attributes-for-object-Instrument']
+def analyst_instrument_parameter_list(problem):
+    return problem_specific.get_instruments_sheet(problem)['Attributes-for-object-Instrument']
 
 
-def analyst_instrument_list():
-    return ["ACE_ORCA","ACE_POL","ACE_LID","CLAR_ERB","ACE_CPR","DESD_SAR","DESD_LID","GACM_VIS","GACM_SWIR","HYSP_TIR","POSTEPS_IRS","CNES_KaRIN"]
+def analyst_instrument_list(problem):
+    return [instr["name"] for instr in problem_specific.get_instrument_dataset(problem)]
 
 
-def analyst_measurement_list():
-    return param_names
+def analyst_measurement_list(problem):
+    return problem_specific.get_param_names(problem)
 
 
-def analyst_stakeholder_list():
-    return ["Atmospheric","Oceanic","Terrestrial"]
+def analyst_stakeholder_list(problem):
+    return problem_specific.get_stakeholders_list(problem)
 
 
-orbits_info = [
-    "<b>Orbit name: Orbit information</b>",
-    "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
-    "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
-    "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (600 km), Afternoon"
-]
+def orbits_info(problem):
+    return problem_specific.get_orbits_info(problem)
 
 
-instruments_info = [
-    "<b>Instrument name: Instrument technology, Instrument type</b>",
-    "ACE_ORCA: Ocean colour instruments, Medium-resolution spectro-radiometer",
-    "ACE_POL: Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
-    "ACE_LID: Lidars, Atmospheric lidar",
-    "CLAR_ERB: Hyperspectral imagers, Multi-purpose imaging Vis/IR radiometer",
-    "ACE_CPR: Cloud profile and rain radars, Cloud and precipitation radar",
-    "DESD_SAR: Imaging microwave radars, Imaging radar (SAR)",
-    "DESD_LID: Lidars, Lidar altimeter",
-    "GACM_VIS: Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
-    "GACM_SWIR: Atmospheric chemistry, High-resolution nadir-scanning IR spectrometer",
-    "HYSP_TIR: Imaging multi-spectral radiometers (vis/IR), Medium-resolution IR spectrometer",
-    "POSTEPS_IRS: Atmospheric temperature and humidity sounders, Medium-resolution IR spectrometer",
-    "CNES_KaRIN: Radar altimeters, Radar altimeter"
-]
+def instruments_info(problem):
+    return problem_specific.get_instruments_info(problem)

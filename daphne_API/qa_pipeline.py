@@ -314,5 +314,23 @@ def build_answers(voice_response_template, visual_response_template, result, dat
         for item in complete_data["result"]:
             visual_answer["list"].append(item_template.substitute(item))
         answers["visual_answer"] = visual_answer
+    elif visual_response_template["type"] == "timeline_plot":
+        answers["visual_answer_type"] = "timeline_plot"
+        visual_answer = {}
+        title_template = Template(visual_response_template["title"])
+        visual_answer["title"] = title_template.substitute(complete_data)
+        visual_answer["plot_data"] = []
+        for item in complete_data["result"]:
+            category_template = Template(visual_response_template["item"]["category"])
+            id_template = Template(visual_response_template["item"]["id"])
+            start_template = Template(visual_response_template["item"]["start"])
+            end_template = Template(visual_response_template["item"]["end"])
+            visual_answer["plot_data"].append({
+                "category": category_template.substitute(item),
+                "id": id_template.substitute(item),
+                "start": start_template.substitute(item),
+                "end": end_template.substitute(item)
+            })
+        answers["visual_answer"] = visual_answer
 
     return answers

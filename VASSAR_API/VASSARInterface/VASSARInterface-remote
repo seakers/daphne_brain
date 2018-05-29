@@ -36,6 +36,10 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getArchitectureScoreExplanation( arch)')
     print('   getPanelScoreExplanation( arch, string panel)')
     print('   getObjectiveScoreExplanation( arch, string objective)')
+    print('  void startGA( dataset, string username)')
+    print('   getArchScienceInformation(BinaryInputArchitecture arch)')
+    print('   getArchCostInformation(BinaryInputArchitecture arch)')
+    print('  SubobjectiveDetails getSubscoreDetails(BinaryInputArchitecture arch, string subobj)')
     print('')
     sys.exit(0)
 
@@ -186,6 +190,30 @@ elif cmd == 'getObjectiveScoreExplanation':
         print('getObjectiveScoreExplanation requires 2 args')
         sys.exit(1)
     pp.pprint(client.getObjectiveScoreExplanation(eval(args[0]), args[1],))
+
+elif cmd == 'startGA':
+    if len(args) != 2:
+        print('startGA requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.startGA(eval(args[0]), args[1],))
+
+elif cmd == 'getArchScienceInformation':
+    if len(args) != 1:
+        print('getArchScienceInformation requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getArchScienceInformation(eval(args[0]),))
+
+elif cmd == 'getArchCostInformation':
+    if len(args) != 1:
+        print('getArchCostInformation requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getArchCostInformation(eval(args[0]),))
+
+elif cmd == 'getSubscoreDetails':
+    if len(args) != 2:
+        print('getSubscoreDetails requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getSubscoreDetails(eval(args[0]), args[1],))
 
 else:
     print('Unrecognized method %s' % cmd)
