@@ -12,7 +12,6 @@ from asgiref.sync import async_to_sync
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
 
-
 class GetOrbitList(APIView):
     
     def get(self, request, format=None):
