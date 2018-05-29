@@ -89,12 +89,19 @@ class SARIMAX_AD(JsonWebsocketConsumer):
         if seasonality != 0:
             [P, D, Q] = find_pdq(one_var.diff(seasonality).dropna(), range_pq=range_pq)
 
-        model = SARIMAX(endog=one_var,
-                        # exog=data.drop(columns=var_chosen)[correl_var],
-                        order=(p, d, q),
-                        seasonal_order=(P, D, Q, seasonality),
-                        enforce_stationarity=False,
-                        enforce_invertibility=False)
+        if len(correl_var) > 0:
+            model = SARIMAX(endog=one_var,
+                            exog=data.drop(columns=var_chosen)[correl_var],
+                            order=(p, d, q),
+                            seasonal_order=(P, D, Q, seasonality),
+                            enforce_stationarity=False,
+                            enforce_invertibility=False)
+        else:
+            model = SARIMAX(endog=one_var,
+                            order=(p, d, q),
+                            seasonal_order=(P, D, Q, seasonality),
+                            enforce_stationarity=False,
+                            enforce_invertibility=False)
 
         # fit SARIMAX model
         results = model.fit(maxiter=20)

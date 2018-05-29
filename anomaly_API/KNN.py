@@ -34,7 +34,7 @@ class adaptiveKNN(JsonWebsocketConsumer):
         if 'c' in content:  # Overall smoothing parameter
             c = content['c']
         else:
-            c = 10
+            c = 0.7
 
         if 'eps' in content:  # Epsilon to avoid per zero division
             eps = content['eps']
@@ -97,6 +97,8 @@ class adaptiveKNN(JsonWebsocketConsumer):
             aux[i] = d_all[i] / ri[i]
 
         ro = np.mean(np.exp(-(aux ** 2)), axis=1)  # Computes the density
+
+        ro = np.max([ro, np.ones(n)*eps], axis=0)  # to avoid density = 0
 
         localOutlierScore = np.log(np.divide(np.mean(ro[k_near]), ro))  # Returns the local outlier score,
         # it might be interesting to normalize it or to be able to compare it with different outlier scores

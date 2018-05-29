@@ -42,7 +42,12 @@ class Correlation(APIView):
             correlationsArray = correlationsAbs[variable].values
             orderedCorrelationIndexes = np.argsort(correlationsArray)[::-1][1:]
 
-        introduction = 'The mean absolute correlation of the variables is ' + str(np.mean(correlationsArray[~np.isnan(correlationsArray)]))
+        if request.data['Spearman']:
+            introduction = "The mean absolute Spearmans's correlation of the variables is " + str(
+                np.mean(correlationsArray[~np.isnan(correlationsArray)]))
+        else:
+            introduction = "The mean absolute Pearson's correlation of the variables is " + str(
+                np.mean(correlationsArray[~np.isnan(correlationsArray)]))
 
         introductionMostCorrelated = 'The ' + str(nc) + ' most correlated variables are:'
         bulletPointsMostCorrelated = []

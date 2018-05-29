@@ -51,7 +51,7 @@ class ADWindowedStats(APIView):
 
         data['Flag_Anomaly'] = False
 
-        trainLimit = int(w/4)
+        trainLimit = int(w)
 
         for x in range(len(one_var)):
 

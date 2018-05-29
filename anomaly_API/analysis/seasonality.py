@@ -38,7 +38,7 @@ class CheckSeasonality(APIView):
         probability_threshold2 = 0.8
 
         series = data[variable]
-        acfOut = acf(series, nlags=(n+m))
+        acfOut = np.abs(acf(series, nlags=(n+m)))
 
         # to asses the probability
         seasonality_probability = np.zeros(n)
@@ -57,7 +57,7 @@ class CheckSeasonality(APIView):
                         xki = acfOut[i - k - 1]
                         xik = acfOut[i + k + 1]
                         local_max = (x > xki and x > xik)
-                seasonality_probability[i] = min(np.sqrt(2 * k / i), 1)
+                seasonality_probability[i] = min(2*k/i, 1)
 
         season = pd.DataFrame()
         season['probability'] = -np.sort(-seasonality_probability)
