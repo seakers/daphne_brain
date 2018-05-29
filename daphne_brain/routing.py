@@ -5,14 +5,14 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.sessions import SessionMiddlewareStack
 
 from daphne_API.consumers import DaphneConsumer
-from experiment_API.consumers import ExperimentConsumer
-
+from anomaly_API.SARIMAX_AD import SARIMAX_AD
+from anomaly_API.KNN import adaptiveKNN
+from anomaly_API.I_Forest import iForest
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties
 # of the connection's scope (like URLRouter, which looks at scope["path"])
 # For more, see http://channels.readthedocs.io/en/latest/topics/routing.html
-
 application = ProtocolTypeRouter({
     # Route all WebSocket requests to our custom chat handler.
     # We actually don't need the URLRouter here, but we've put it in for
@@ -22,7 +22,10 @@ application = ProtocolTypeRouter({
         URLRouter([
             # URLRouter just takes standard Django path() or url() entries.
             path('api/daphne', DaphneConsumer),
-            path('api/experiment', ExperimentConsumer)
+            path('api/anomaly/SARIMAX_AD', SARIMAX_AD),
+            path('api/anomaly/adaptiveKNN', adaptiveKNN),
+            path('api/anomaly/iForest', iForest)
         ]),
     ),
+
 })
