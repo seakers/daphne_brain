@@ -12,9 +12,6 @@ from asgiref.sync import async_to_sync
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
 
-SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
-
-
 class GetOrbitList(APIView):
     
     def get(self, request, format=None):
