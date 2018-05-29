@@ -1,16 +1,9 @@
-import logging
-
-from django.shortcuts import render
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
 import numpy as np
 import pandas as pd
-import json
 from statsmodels.tsa.stattools import acf
-import matplotlib.pyplot as plt
 
 
 class CheckSeasonality(APIView):
