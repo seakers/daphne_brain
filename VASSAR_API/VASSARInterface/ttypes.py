@@ -194,6 +194,464 @@ class ObjectiveSatisfaction(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class SubscoreInformation(object):
+    """
+    Attributes:
+     - name
+     - description
+     - value
+     - weight
+     - subscores
+    """
+
+
+    def __init__(self, name=None, description=None, value=None, weight=None, subscores=None,):
+        self.name = name
+        self.description = description
+        self.value = value
+        self.weight = weight
+        self.subscores = subscores
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.description = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.DOUBLE:
+                    self.value = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.DOUBLE:
+                    self.weight = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.LIST:
+                    self.subscores = []
+                    (_etype17, _size14) = iprot.readListBegin()
+                    for _i18 in range(_size14):
+                        _elem19 = SubscoreInformation()
+                        _elem19.read(iprot)
+                        self.subscores.append(_elem19)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SubscoreInformation')
+        if self.name is not None:
+            oprot.writeFieldBegin('name', TType.STRING, 1)
+            oprot.writeString(self.name.encode('utf-8') if sys.version_info[0] == 2 else self.name)
+            oprot.writeFieldEnd()
+        if self.description is not None:
+            oprot.writeFieldBegin('description', TType.STRING, 2)
+            oprot.writeString(self.description.encode('utf-8') if sys.version_info[0] == 2 else self.description)
+            oprot.writeFieldEnd()
+        if self.value is not None:
+            oprot.writeFieldBegin('value', TType.DOUBLE, 3)
+            oprot.writeDouble(self.value)
+            oprot.writeFieldEnd()
+        if self.weight is not None:
+            oprot.writeFieldBegin('weight', TType.DOUBLE, 4)
+            oprot.writeDouble(self.weight)
+            oprot.writeFieldEnd()
+        if self.subscores is not None:
+            oprot.writeFieldBegin('subscores', TType.LIST, 5)
+            oprot.writeListBegin(TType.STRUCT, len(self.subscores))
+            for iter20 in self.subscores:
+                iter20.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class MissionCostInformation(object):
+    """
+    Attributes:
+     - orbit_name
+     - payload
+     - launch_vehicle
+     - total_mass
+     - total_power
+     - total_cost
+     - mass_budget
+     - power_budget
+     - cost_budget
+    """
+
+
+    def __init__(self, orbit_name=None, payload=None, launch_vehicle=None, total_mass=None, total_power=None, total_cost=None, mass_budget=None, power_budget=None, cost_budget=None,):
+        self.orbit_name = orbit_name
+        self.payload = payload
+        self.launch_vehicle = launch_vehicle
+        self.total_mass = total_mass
+        self.total_power = total_power
+        self.total_cost = total_cost
+        self.mass_budget = mass_budget
+        self.power_budget = power_budget
+        self.cost_budget = cost_budget
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.orbit_name = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.payload = []
+                    (_etype24, _size21) = iprot.readListBegin()
+                    for _i25 in range(_size21):
+                        _elem26 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.payload.append(_elem26)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.launch_vehicle = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.DOUBLE:
+                    self.total_mass = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.DOUBLE:
+                    self.total_power = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.DOUBLE:
+                    self.total_cost = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.MAP:
+                    self.mass_budget = {}
+                    (_ktype28, _vtype29, _size27) = iprot.readMapBegin()
+                    for _i31 in range(_size27):
+                        _key32 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val33 = iprot.readDouble()
+                        self.mass_budget[_key32] = _val33
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.MAP:
+                    self.power_budget = {}
+                    (_ktype35, _vtype36, _size34) = iprot.readMapBegin()
+                    for _i38 in range(_size34):
+                        _key39 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val40 = iprot.readDouble()
+                        self.power_budget[_key39] = _val40
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.MAP:
+                    self.cost_budget = {}
+                    (_ktype42, _vtype43, _size41) = iprot.readMapBegin()
+                    for _i45 in range(_size41):
+                        _key46 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val47 = iprot.readDouble()
+                        self.cost_budget[_key46] = _val47
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('MissionCostInformation')
+        if self.orbit_name is not None:
+            oprot.writeFieldBegin('orbit_name', TType.STRING, 1)
+            oprot.writeString(self.orbit_name.encode('utf-8') if sys.version_info[0] == 2 else self.orbit_name)
+            oprot.writeFieldEnd()
+        if self.payload is not None:
+            oprot.writeFieldBegin('payload', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.payload))
+            for iter48 in self.payload:
+                oprot.writeString(iter48.encode('utf-8') if sys.version_info[0] == 2 else iter48)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.launch_vehicle is not None:
+            oprot.writeFieldBegin('launch_vehicle', TType.STRING, 3)
+            oprot.writeString(self.launch_vehicle.encode('utf-8') if sys.version_info[0] == 2 else self.launch_vehicle)
+            oprot.writeFieldEnd()
+        if self.total_mass is not None:
+            oprot.writeFieldBegin('total_mass', TType.DOUBLE, 4)
+            oprot.writeDouble(self.total_mass)
+            oprot.writeFieldEnd()
+        if self.total_power is not None:
+            oprot.writeFieldBegin('total_power', TType.DOUBLE, 5)
+            oprot.writeDouble(self.total_power)
+            oprot.writeFieldEnd()
+        if self.total_cost is not None:
+            oprot.writeFieldBegin('total_cost', TType.DOUBLE, 6)
+            oprot.writeDouble(self.total_cost)
+            oprot.writeFieldEnd()
+        if self.mass_budget is not None:
+            oprot.writeFieldBegin('mass_budget', TType.MAP, 7)
+            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.mass_budget))
+            for kiter49, viter50 in self.mass_budget.items():
+                oprot.writeString(kiter49.encode('utf-8') if sys.version_info[0] == 2 else kiter49)
+                oprot.writeDouble(viter50)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.power_budget is not None:
+            oprot.writeFieldBegin('power_budget', TType.MAP, 8)
+            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.power_budget))
+            for kiter51, viter52 in self.power_budget.items():
+                oprot.writeString(kiter51.encode('utf-8') if sys.version_info[0] == 2 else kiter51)
+                oprot.writeDouble(viter52)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.cost_budget is not None:
+            oprot.writeFieldBegin('cost_budget', TType.MAP, 9)
+            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.cost_budget))
+            for kiter53, viter54 in self.cost_budget.items():
+                oprot.writeString(kiter53.encode('utf-8') if sys.version_info[0] == 2 else kiter53)
+                oprot.writeDouble(viter54)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SubobjectiveDetails(object):
+    """
+    Attributes:
+     - param
+     - attr_names
+     - attr_values
+     - scores
+     - taken_by
+     - justifications
+    """
+
+
+    def __init__(self, param=None, attr_names=None, attr_values=None, scores=None, taken_by=None, justifications=None,):
+        self.param = param
+        self.attr_names = attr_names
+        self.attr_values = attr_values
+        self.scores = scores
+        self.taken_by = taken_by
+        self.justifications = justifications
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.param = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.attr_names = []
+                    (_etype58, _size55) = iprot.readListBegin()
+                    for _i59 in range(_size55):
+                        _elem60 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.attr_names.append(_elem60)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.attr_values = []
+                    (_etype64, _size61) = iprot.readListBegin()
+                    for _i65 in range(_size61):
+                        _elem66 = []
+                        (_etype70, _size67) = iprot.readListBegin()
+                        for _i71 in range(_size67):
+                            _elem72 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem66.append(_elem72)
+                        iprot.readListEnd()
+                        self.attr_values.append(_elem66)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.scores = []
+                    (_etype76, _size73) = iprot.readListBegin()
+                    for _i77 in range(_size73):
+                        _elem78 = iprot.readDouble()
+                        self.scores.append(_elem78)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.LIST:
+                    self.taken_by = []
+                    (_etype82, _size79) = iprot.readListBegin()
+                    for _i83 in range(_size79):
+                        _elem84 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        self.taken_by.append(_elem84)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.LIST:
+                    self.justifications = []
+                    (_etype88, _size85) = iprot.readListBegin()
+                    for _i89 in range(_size85):
+                        _elem90 = []
+                        (_etype94, _size91) = iprot.readListBegin()
+                        for _i95 in range(_size91):
+                            _elem96 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _elem90.append(_elem96)
+                        iprot.readListEnd()
+                        self.justifications.append(_elem90)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SubobjectiveDetails')
+        if self.param is not None:
+            oprot.writeFieldBegin('param', TType.STRING, 1)
+            oprot.writeString(self.param.encode('utf-8') if sys.version_info[0] == 2 else self.param)
+            oprot.writeFieldEnd()
+        if self.attr_names is not None:
+            oprot.writeFieldBegin('attr_names', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.attr_names))
+            for iter97 in self.attr_names:
+                oprot.writeString(iter97.encode('utf-8') if sys.version_info[0] == 2 else iter97)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.attr_values is not None:
+            oprot.writeFieldBegin('attr_values', TType.LIST, 3)
+            oprot.writeListBegin(TType.LIST, len(self.attr_values))
+            for iter98 in self.attr_values:
+                oprot.writeListBegin(TType.STRING, len(iter98))
+                for iter99 in iter98:
+                    oprot.writeString(iter99.encode('utf-8') if sys.version_info[0] == 2 else iter99)
+                oprot.writeListEnd()
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.scores is not None:
+            oprot.writeFieldBegin('scores', TType.LIST, 4)
+            oprot.writeListBegin(TType.DOUBLE, len(self.scores))
+            for iter100 in self.scores:
+                oprot.writeDouble(iter100)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.taken_by is not None:
+            oprot.writeFieldBegin('taken_by', TType.LIST, 5)
+            oprot.writeListBegin(TType.STRING, len(self.taken_by))
+            for iter101 in self.taken_by:
+                oprot.writeString(iter101.encode('utf-8') if sys.version_info[0] == 2 else iter101)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.justifications is not None:
+            oprot.writeFieldBegin('justifications', TType.LIST, 6)
+            oprot.writeListBegin(TType.LIST, len(self.justifications))
+            for iter102 in self.justifications:
+                oprot.writeListBegin(TType.STRING, len(iter102))
+                for iter103 in iter102:
+                    oprot.writeString(iter103.encode('utf-8') if sys.version_info[0] == 2 else iter103)
+                oprot.writeListEnd()
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(BinaryInputArchitecture)
 BinaryInputArchitecture.thrift_spec = (
     None,  # 0
@@ -207,6 +665,38 @@ ObjectiveSatisfaction.thrift_spec = (
     (1, TType.STRING, 'objective_name', 'UTF8', None, ),  # 1
     (2, TType.DOUBLE, 'satisfaction', None, None, ),  # 2
     (3, TType.DOUBLE, 'weight', None, None, ),  # 3
+)
+all_structs.append(SubscoreInformation)
+SubscoreInformation.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'name', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'description', 'UTF8', None, ),  # 2
+    (3, TType.DOUBLE, 'value', None, None, ),  # 3
+    (4, TType.DOUBLE, 'weight', None, None, ),  # 4
+    (5, TType.LIST, 'subscores', (TType.STRUCT, [SubscoreInformation, None], False), None, ),  # 5
+)
+all_structs.append(MissionCostInformation)
+MissionCostInformation.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'orbit_name', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'payload', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.STRING, 'launch_vehicle', 'UTF8', None, ),  # 3
+    (4, TType.DOUBLE, 'total_mass', None, None, ),  # 4
+    (5, TType.DOUBLE, 'total_power', None, None, ),  # 5
+    (6, TType.DOUBLE, 'total_cost', None, None, ),  # 6
+    (7, TType.MAP, 'mass_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 7
+    (8, TType.MAP, 'power_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 8
+    (9, TType.MAP, 'cost_budget', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 9
+)
+all_structs.append(SubobjectiveDetails)
+SubobjectiveDetails.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'param', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'attr_names', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.LIST, 'attr_values', (TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 3
+    (4, TType.LIST, 'scores', (TType.DOUBLE, None, False), None, ),  # 4
+    (5, TType.LIST, 'taken_by', (TType.STRING, 'UTF8', False), None, ),  # 5
+    (6, TType.LIST, 'justifications', (TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 6
 )
 fix_spec(all_structs)
 del all_structs

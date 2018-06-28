@@ -9,5 +9,10 @@ urlpatterns = [
     path('evaluate-architecture', views.EvaluateArchitecture.as_view()),
     path('run-local-search', views.RunLocalSearch.as_view()),
 
-    path('change-port', views.ChangePort.as_view())
+    path('change-port', views.ChangePort.as_view()),
+
+    path('start-ga', views.StartGA.as_view()),
+
+    path('get-arch-details', views.GetArchDetails.as_view()),
+    path('get-subobjective-details', views.GetSubobjectiveDetails.as_view())
 ]
