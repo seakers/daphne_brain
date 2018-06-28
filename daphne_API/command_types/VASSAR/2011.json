@@ -8,7 +8,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_measurement_requirement('${vassar_measurement}', '${instrument_parameter}', '${vassar_stakeholder}', context)",
+    "run_template": "run_func.VASSAR_get_measurement_requirement_followup('${vassar_measurement}', '${instrument_parameter}', '${vassar_stakeholder}', context)",
     "result_type": "single",
     "result_fields": {
       "text_response": "command_result"
