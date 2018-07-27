@@ -20,7 +20,7 @@ class GetOrbitList(APIView):
             port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
-            list = self.VASSARClient.getOrbitList()
+            list = self.VASSARClient.getOrbitList(request.session['problem'])
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
@@ -40,7 +40,7 @@ class GetInstrumentList(APIView):
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
-            list = self.VASSARClient.getInstrumentList()
+            list = self.VASSARClient.getInstrumentList(request.session['problem'])
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
