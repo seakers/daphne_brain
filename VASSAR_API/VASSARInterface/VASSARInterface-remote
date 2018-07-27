@@ -25,21 +25,28 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('')
     print('Functions:')
     print('  void ping()')
-    print('  BinaryInputArchitecture eval( inputs)')
-    print('   runLocalSearch( inputs)')
-    print('   getOrbitList()')
-    print('   getInstrumentList()')
-    print('   getObjectiveList()')
-    print('   getInstrumentsForObjective(string objective)')
-    print('   getInstrumentsForPanel(string panel)')
-    print('   getCritique( inputs)')
-    print('   getArchitectureScoreExplanation( arch)')
-    print('   getPanelScoreExplanation( arch, string panel)')
-    print('   getObjectiveScoreExplanation( arch, string objective)')
-    print('  void startGA( dataset, string username)')
-    print('   getArchScienceInformation(BinaryInputArchitecture arch)')
-    print('   getArchCostInformation(BinaryInputArchitecture arch)')
-    print('  SubobjectiveDetails getSubscoreDetails(BinaryInputArchitecture arch, string subobj)')
+    print('  BinaryInputArchitecture evalBinaryInputArch(string problem,  inputs)')
+    print('  DiscreteInputArchitecture evalDiscreteInputArch(string problem,  inputs)')
+    print('   runLocalSearchBinaryInput(string problem,  inputs)')
+    print('   runLocalSearchDiscreteInput(string problem,  inputs)')
+    print('   getOrbitList(string problem)')
+    print('   getInstrumentList(string problem)')
+    print('   getObjectiveList(string problem)')
+    print('   getInstrumentsForObjective(string problem, string objective)')
+    print('   getInstrumentsForPanel(string problem, string panel)')
+    print('   getCritiqueBinaryInputArch(string problem,  inputs)')
+    print('   getCritiqueDiscreteInputArch(string problem,  inputs)')
+    print('   getArchitectureScoreExplanation(string problem,  arch)')
+    print('   getPanelScoreExplanation(string problem,  arch, string panel)')
+    print('   getObjectiveScoreExplanation(string problem,  arch, string objective)')
+    print('  void startGABinaryInput(string problem,  dataset, string username)')
+    print('   getArchScienceInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
+    print('   getArchCostInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
+    print('  SubobjectiveDetails getSubscoreDetailsBinaryInput(string problem, BinaryInputArchitecture arch, string subobj)')
+    print('  void startGADiscreteInput(string problem,  dataset, string username)')
+    print('   getArchScienceInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
+    print('   getArchCostInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
+    print('  SubobjectiveDetails getSubscoreDetailsDiscreteInput(string problem, DiscreteInputArchitecture arch, string subobj)')
     print('')
     sys.exit(0)
 
@@ -125,95 +132,137 @@ if cmd == 'ping':
         sys.exit(1)
     pp.pprint(client.ping())
 
-elif cmd == 'eval':
-    if len(args) != 1:
-        print('eval requires 1 args')
+elif cmd == 'evalBinaryInputArch':
+    if len(args) != 2:
+        print('evalBinaryInputArch requires 2 args')
         sys.exit(1)
-    pp.pprint(client.eval(eval(args[0]),))
+    pp.pprint(client.evalBinaryInputArch(args[0], eval(args[1]),))
 
-elif cmd == 'runLocalSearch':
-    if len(args) != 1:
-        print('runLocalSearch requires 1 args')
+elif cmd == 'evalDiscreteInputArch':
+    if len(args) != 2:
+        print('evalDiscreteInputArch requires 2 args')
         sys.exit(1)
-    pp.pprint(client.runLocalSearch(eval(args[0]),))
+    pp.pprint(client.evalDiscreteInputArch(args[0], eval(args[1]),))
+
+elif cmd == 'runLocalSearchBinaryInput':
+    if len(args) != 2:
+        print('runLocalSearchBinaryInput requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.runLocalSearchBinaryInput(args[0], eval(args[1]),))
+
+elif cmd == 'runLocalSearchDiscreteInput':
+    if len(args) != 2:
+        print('runLocalSearchDiscreteInput requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.runLocalSearchDiscreteInput(args[0], eval(args[1]),))
 
 elif cmd == 'getOrbitList':
-    if len(args) != 0:
-        print('getOrbitList requires 0 args')
+    if len(args) != 1:
+        print('getOrbitList requires 1 args')
         sys.exit(1)
-    pp.pprint(client.getOrbitList())
+    pp.pprint(client.getOrbitList(args[0],))
 
 elif cmd == 'getInstrumentList':
-    if len(args) != 0:
-        print('getInstrumentList requires 0 args')
+    if len(args) != 1:
+        print('getInstrumentList requires 1 args')
         sys.exit(1)
-    pp.pprint(client.getInstrumentList())
+    pp.pprint(client.getInstrumentList(args[0],))
 
 elif cmd == 'getObjectiveList':
-    if len(args) != 0:
-        print('getObjectiveList requires 0 args')
+    if len(args) != 1:
+        print('getObjectiveList requires 1 args')
         sys.exit(1)
-    pp.pprint(client.getObjectiveList())
+    pp.pprint(client.getObjectiveList(args[0],))
 
 elif cmd == 'getInstrumentsForObjective':
-    if len(args) != 1:
-        print('getInstrumentsForObjective requires 1 args')
+    if len(args) != 2:
+        print('getInstrumentsForObjective requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getInstrumentsForObjective(args[0],))
+    pp.pprint(client.getInstrumentsForObjective(args[0], args[1],))
 
 elif cmd == 'getInstrumentsForPanel':
-    if len(args) != 1:
-        print('getInstrumentsForPanel requires 1 args')
+    if len(args) != 2:
+        print('getInstrumentsForPanel requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getInstrumentsForPanel(args[0],))
+    pp.pprint(client.getInstrumentsForPanel(args[0], args[1],))
 
-elif cmd == 'getCritique':
-    if len(args) != 1:
-        print('getCritique requires 1 args')
+elif cmd == 'getCritiqueBinaryInputArch':
+    if len(args) != 2:
+        print('getCritiqueBinaryInputArch requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getCritique(eval(args[0]),))
+    pp.pprint(client.getCritiqueBinaryInputArch(args[0], eval(args[1]),))
+
+elif cmd == 'getCritiqueDiscreteInputArch':
+    if len(args) != 2:
+        print('getCritiqueDiscreteInputArch requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getCritiqueDiscreteInputArch(args[0], eval(args[1]),))
 
 elif cmd == 'getArchitectureScoreExplanation':
-    if len(args) != 1:
-        print('getArchitectureScoreExplanation requires 1 args')
+    if len(args) != 2:
+        print('getArchitectureScoreExplanation requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getArchitectureScoreExplanation(eval(args[0]),))
+    pp.pprint(client.getArchitectureScoreExplanation(args[0], eval(args[1]),))
 
 elif cmd == 'getPanelScoreExplanation':
-    if len(args) != 2:
-        print('getPanelScoreExplanation requires 2 args')
+    if len(args) != 3:
+        print('getPanelScoreExplanation requires 3 args')
         sys.exit(1)
-    pp.pprint(client.getPanelScoreExplanation(eval(args[0]), args[1],))
+    pp.pprint(client.getPanelScoreExplanation(args[0], eval(args[1]), args[2],))
 
 elif cmd == 'getObjectiveScoreExplanation':
+    if len(args) != 3:
+        print('getObjectiveScoreExplanation requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.getObjectiveScoreExplanation(args[0], eval(args[1]), args[2],))
+
+elif cmd == 'startGABinaryInput':
+    if len(args) != 3:
+        print('startGABinaryInput requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.startGABinaryInput(args[0], eval(args[1]), args[2],))
+
+elif cmd == 'getArchScienceInformationBinaryInput':
     if len(args) != 2:
-        print('getObjectiveScoreExplanation requires 2 args')
+        print('getArchScienceInformationBinaryInput requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getObjectiveScoreExplanation(eval(args[0]), args[1],))
+    pp.pprint(client.getArchScienceInformationBinaryInput(args[0], eval(args[1]),))
 
-elif cmd == 'startGA':
+elif cmd == 'getArchCostInformationBinaryInput':
     if len(args) != 2:
-        print('startGA requires 2 args')
+        print('getArchCostInformationBinaryInput requires 2 args')
         sys.exit(1)
-    pp.pprint(client.startGA(eval(args[0]), args[1],))
+    pp.pprint(client.getArchCostInformationBinaryInput(args[0], eval(args[1]),))
 
-elif cmd == 'getArchScienceInformation':
-    if len(args) != 1:
-        print('getArchScienceInformation requires 1 args')
+elif cmd == 'getSubscoreDetailsBinaryInput':
+    if len(args) != 3:
+        print('getSubscoreDetailsBinaryInput requires 3 args')
         sys.exit(1)
-    pp.pprint(client.getArchScienceInformation(eval(args[0]),))
+    pp.pprint(client.getSubscoreDetailsBinaryInput(args[0], eval(args[1]), args[2],))
 
-elif cmd == 'getArchCostInformation':
-    if len(args) != 1:
-        print('getArchCostInformation requires 1 args')
+elif cmd == 'startGADiscreteInput':
+    if len(args) != 3:
+        print('startGADiscreteInput requires 3 args')
         sys.exit(1)
-    pp.pprint(client.getArchCostInformation(eval(args[0]),))
+    pp.pprint(client.startGADiscreteInput(args[0], eval(args[1]), args[2],))
 
-elif cmd == 'getSubscoreDetails':
+elif cmd == 'getArchScienceInformationDiscreteInput':
     if len(args) != 2:
-        print('getSubscoreDetails requires 2 args')
+        print('getArchScienceInformationDiscreteInput requires 2 args')
         sys.exit(1)
-    pp.pprint(client.getSubscoreDetails(eval(args[0]), args[1],))
+    pp.pprint(client.getArchScienceInformationDiscreteInput(args[0], eval(args[1]),))
+
+elif cmd == 'getArchCostInformationDiscreteInput':
+    if len(args) != 2:
+        print('getArchCostInformationDiscreteInput requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getArchCostInformationDiscreteInput(args[0], eval(args[1]),))
+
+elif cmd == 'getSubscoreDetailsDiscreteInput':
+    if len(args) != 3:
+        print('getSubscoreDetailsDiscreteInput requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.getSubscoreDetailsDiscreteInput(args[0], eval(args[1]), args[2],))
 
 else:
     print('Unrecognized method %s' % cmd)

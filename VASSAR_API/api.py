@@ -81,11 +81,11 @@ class VASSARClient():
         self.client.ping()
         print('ping()')
         
-    def getOrbitList(self):
-        return self.client.getOrbitList()
+    def getOrbitList(self, problem):
+        return self.client.getOrbitList(problem)
     
-    def getInstrumentList(self):
-        return self.client.getInstrumentList()
+    def getInstrumentList(self, problem):
+        return self.client.getInstrumentList(problem)
     
 
 if __name__ == '__main__':
