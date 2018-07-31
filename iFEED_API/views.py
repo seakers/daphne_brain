@@ -53,7 +53,6 @@ class ImportData(APIView):
             inputType = request.POST['input_type']
             inputNum = int(request.POST['input_num'])
             outputNum = int(request.POST['output_num'])
-
             problem = request.POST['problem']
 
             self.archID = 0
@@ -98,6 +97,10 @@ class ImportData(APIView):
                         if inputType == "binary": 
                             # Assumes that there is only one column for the inputs
                             inputs = self.booleanString2booleanArray(row[i])
+                        elif inputType == "discrete":
+                            inp = row[i]
+                            inp = int(inp)
+                            inputs.append(inp)
                         else:
                             inp = row[i]
                             if inp == "":
