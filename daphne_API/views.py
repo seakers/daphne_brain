@@ -236,3 +236,15 @@ class ClearSession(APIView):
                 del request.session[field]
 
         return Response({})
+
+
+class SetProblem(APIView):
+    """ Sets the name of the problem
+    """
+
+    def post(self, request, format=None):
+        from . daphne_fields import daphne_fields
+
+        problem = request.data['problem']
+        request.session['problem'] = problem
+        return Response({})
