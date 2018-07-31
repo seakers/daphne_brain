@@ -126,6 +126,7 @@ class ImportData(APIView):
             file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', user_path, problem, filename)
 
             input_num = int(request.data['input_num'])
+            input_type = request.data['input_type']
             output_num = int(request.data['output_num'])
 
             archID = 0
@@ -152,8 +153,16 @@ class ImportData(APIView):
 
                     # Import inputs
                     for i in range(input_num):
-                        # Assumes that there is only one column for the inputs
-                        inputs = self.booleanString2booleanArray(row[i])
+                        if input_type == 'binary':
+                            # Assumes that there is only one column for the inputs
+                            inputs = self.booleanString2booleanArray(row[i])
+
+                        elif input_type == 'discrete':
+                            inputs.append(int(row[i]))
+
+                        else:
+                            raise ValueError('Unknown input type: {0}'.format(input_type))
+
 
                     for i in range(output_num):
                         out = row[i + input_num]
