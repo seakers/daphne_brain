@@ -31,7 +31,6 @@ class GetOrbitList(APIView):
             self.VASSARClient.endConnection()
             return Response('')
 
-
 class GetInstrumentList(APIView):
 
     def get(self, request, format=None):
