@@ -60,8 +60,15 @@ class VASSARClient():
         # Close
         self.transport.close()
     
-    def evaluateArchitecture(self, bitString):
-        arch_formatted = self.client.eval(bitString)
+    def evaluateArchitecture(self, problem, bitString):
+        assignation_problems = ['SMAP', 'EOSS']
+        partition_problems = ['Decadal2017Aerosols']
+        if problem in assignation_problems:
+            arch_formatted = self.client.evalBinaryInputArch(problem, bitString)
+        elif problem in partition_problems:
+            arch_formatted = self.client.evalDiscreteInputArch(problem, bitString)
+        else:
+            raise Exception('Problem not recognized')
         arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
         return arch
     
