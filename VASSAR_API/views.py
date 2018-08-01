@@ -63,7 +63,7 @@ class EvaluateArchitecture(APIView):
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
-            architecture = self.VASSARClient.evaluateArchitecture(inputs)
+            architecture = self.VASSARClient.evaluateArchitecture(request.session['problem'], inputs)
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
