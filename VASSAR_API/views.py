@@ -14,13 +14,13 @@ logger = logging.getLogger('VASSAR')
 
 class GetOrbitList(APIView):
     
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         try:
             # Start connection with VASSAR
             port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
-            list = self.VASSARClient.getOrbitList(request.session['problem'])
+            list = self.VASSARClient.getOrbitList(request.data['problem_name'])
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
@@ -33,13 +33,13 @@ class GetOrbitList(APIView):
 
 class GetInstrumentList(APIView):
 
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         try:
             port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
-            list = self.VASSARClient.getInstrumentList(request.session['problem'])
+            list = self.VASSARClient.getInstrumentList(request.data['problem_name'])
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
