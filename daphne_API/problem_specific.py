@@ -128,70 +128,70 @@ smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "
 
 
 def get_orbit_dataset(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return CC_ORBIT_DATASET
     if problem == "SMAP":
         return SMAP_ORBIT_DATASET
 
 
 def get_instrument_dataset(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return CC_INSTRUMENT_DATASET
     if problem == "SMAP":
         return SMAP_INSTRUMENT_DATASET
 
 
 def get_capabilities_sheet(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_capabilities_sheet
     if problem == "SMAP":
         return smap_capabilities_sheet
 
 
 def get_instrument_sheet(problem, instrument):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_instrument_sheet(instrument)
     if problem == "SMAP":
         return smap_instrument_sheet(instrument)
 
 
 def get_instruments_sheet(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_instruments_sheet
     if problem == "SMAP":
         return smap_instruments_sheet
 
 
 def get_requirements_sheet(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_requirements_sheet
     if problem == "SMAP":
         return smap_requirements_sheet
 
 
 def get_param_names(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_param_names
     if problem == "SMAP":
         return smap_param_names
 
 
 def get_orbits_info(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_orbits_info
     if problem == "SMAP":
         return smap_orbits_info
 
 
 def get_instruments_info(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_instruments_info
     if problem == "SMAP":
         return smap_instruments_info
 
 
 def get_stakeholders_list(problem):
-    if problem == "EOSS":
+    if problem == "ClimateCentric":
         return cc_stakeholder_list
     if problem == "SMAP":
         return smap_stakeholder_list
