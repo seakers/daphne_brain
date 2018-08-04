@@ -187,6 +187,7 @@ class ImportData(APIView):
 
             return Response(architectures)
         except Exception:
+            raise ValueError("something is wrong")
             return Response('Error importing the data')
 
 
