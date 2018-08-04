@@ -5,6 +5,7 @@ import json
 import redis
 
 from VASSAR_API.VASSARInterface.ttypes import BinaryInputArchitecture
+from VASSAR_API.VASSARInterface.ttypes import DiscreteInputArchitecture
 from VASSAR_API.api import VASSARClient
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -166,15 +167,28 @@ class StartGA(APIView):
                 client = VASSARClient(port)
                 client.startConnection()
 
+                problem = request.data['problem']
+                inputType = request.data['inputType']
+
                 # Convert the architecture list
                 thrift_list = []
                 inputs_unique_set = set()
-                for arch in request.session['data']:
-                    thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
-                    hashed_input = hash(tuple(arch['inputs']))
-                    inputs_unique_set.add(hashed_input)
 
-                client.client.startGA(thrift_list, request.user.username)
+                if inputType == 'binary':
+                    for arch in request.session['data']:
+                        thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                        hashed_input = hash(tuple(arch['inputs']))
+                        inputs_unique_set.add(hashed_input)
+                        client.client.startGABinaryInput(problem, thrift_list, request.user.username)
+
+                elif inputType == 'discrete':
+                    for arch in request.session['data']:
+                        thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                        hashed_input = hash(tuple(arch['inputs']))
+                        inputs_unique_set.add(hashed_input)
+                        client.client.startGADiscreteInput(problem, thrift_list, request.user.username)
+                else:
+                    raise ValueError('Unrecognized input type: {0}'.format(inputType))
 
                 # End the connection before return statement
                 client.endConnection()
