@@ -60,8 +60,15 @@ class VASSARClient():
         # Close
         self.transport.close()
     
-    def evaluateArchitecture(self, bitString):
-        arch_formatted = self.client.eval(bitString)
+    def evaluateArchitecture(self, problem, bitString):
+        assignation_problems = ['SMAP', 'ClimateCentric']
+        partition_problems = ['Decadal2017Aerosols']
+        if problem in assignation_problems:
+            arch_formatted = self.client.evalBinaryInputArch(problem, bitString)
+        elif problem in partition_problems:
+            arch_formatted = self.client.evalDiscreteInputArch(problem, bitString)
+        else:
+            raise Exception('Problem not recognized')
         arch = { 'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs }
         return arch
     
@@ -81,11 +88,11 @@ class VASSARClient():
         self.client.ping()
         print('ping()')
         
-    def getOrbitList(self):
-        return self.client.getOrbitList()
+    def getOrbitList(self, problem):
+        return self.client.getOrbitList(problem)
     
-    def getInstrumentList(self):
-        return self.client.getInstrumentList()
+    def getInstrumentList(self, problem):
+        return self.client.getInstrumentList(problem)
     
 
 if __name__ == '__main__':

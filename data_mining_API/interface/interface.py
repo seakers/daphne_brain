@@ -124,24 +124,27 @@ class Iface(object):
         """
         pass
 
-    def computeComplexityOfFeatures(self, expressions):
+    def computeComplexityOfFeatures(self, problem, expressions):
         """
         Parameters:
+         - problem
          - expressions
         """
         pass
 
-    def computeAlgebraicTypicality(self, arch, feature):
+    def computeAlgebraicTypicality(self, problem, arch, feature):
         """
         Parameters:
+         - problem
          - arch
          - feature
         """
         pass
 
-    def computeComplexity(self, expression):
+    def computeComplexity(self, problem, expression):
         """
         Parameters:
+         - problem
          - expression
         """
         pass
@@ -160,9 +163,10 @@ class Iface(object):
         """
         pass
 
-    def computeAlgebraicTypicalityWithStringInput(self, architecture, feature):
+    def computeAlgebraicTypicalityWithStringInput(self, problem, architecture, feature):
         """
         Parameters:
+         - problem
          - architecture
          - feature
         """
@@ -540,17 +544,19 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesEpsilonMOEADiscrete failed: unknown result")
 
-    def computeComplexityOfFeatures(self, expressions):
+    def computeComplexityOfFeatures(self, problem, expressions):
         """
         Parameters:
+         - problem
          - expressions
         """
-        self.send_computeComplexityOfFeatures(expressions)
+        self.send_computeComplexityOfFeatures(problem, expressions)
         return self.recv_computeComplexityOfFeatures()
 
-    def send_computeComplexityOfFeatures(self, expressions):
+    def send_computeComplexityOfFeatures(self, problem, expressions):
         self._oprot.writeMessageBegin('computeComplexityOfFeatures', TMessageType.CALL, self._seqid)
         args = computeComplexityOfFeatures_args()
+        args.problem = problem
         args.expressions = expressions
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -571,18 +577,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "computeComplexityOfFeatures failed: unknown result")
 
-    def computeAlgebraicTypicality(self, arch, feature):
+    def computeAlgebraicTypicality(self, problem, arch, feature):
         """
         Parameters:
+         - problem
          - arch
          - feature
         """
-        self.send_computeAlgebraicTypicality(arch, feature)
+        self.send_computeAlgebraicTypicality(problem, arch, feature)
         return self.recv_computeAlgebraicTypicality()
 
-    def send_computeAlgebraicTypicality(self, arch, feature):
+    def send_computeAlgebraicTypicality(self, problem, arch, feature):
         self._oprot.writeMessageBegin('computeAlgebraicTypicality', TMessageType.CALL, self._seqid)
         args = computeAlgebraicTypicality_args()
+        args.problem = problem
         args.arch = arch
         args.feature = feature
         args.write(self._oprot)
@@ -604,17 +612,19 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "computeAlgebraicTypicality failed: unknown result")
 
-    def computeComplexity(self, expression):
+    def computeComplexity(self, problem, expression):
         """
         Parameters:
+         - problem
          - expression
         """
-        self.send_computeComplexity(expression)
+        self.send_computeComplexity(problem, expression)
         return self.recv_computeComplexity()
 
-    def send_computeComplexity(self, expression):
+    def send_computeComplexity(self, problem, expression):
         self._oprot.writeMessageBegin('computeComplexity', TMessageType.CALL, self._seqid)
         args = computeComplexity_args()
+        args.problem = problem
         args.expression = expression
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -697,18 +707,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "convertToDNF failed: unknown result")
 
-    def computeAlgebraicTypicalityWithStringInput(self, architecture, feature):
+    def computeAlgebraicTypicalityWithStringInput(self, problem, architecture, feature):
         """
         Parameters:
+         - problem
          - architecture
          - feature
         """
-        self.send_computeAlgebraicTypicalityWithStringInput(architecture, feature)
+        self.send_computeAlgebraicTypicalityWithStringInput(problem, architecture, feature)
         return self.recv_computeAlgebraicTypicalityWithStringInput()
 
-    def send_computeAlgebraicTypicalityWithStringInput(self, architecture, feature):
+    def send_computeAlgebraicTypicalityWithStringInput(self, problem, architecture, feature):
         self._oprot.writeMessageBegin('computeAlgebraicTypicalityWithStringInput', TMessageType.CALL, self._seqid)
         args = computeAlgebraicTypicalityWithStringInput_args()
+        args.problem = problem
         args.architecture = architecture
         args.feature = feature
         args.write(self._oprot)
@@ -979,7 +991,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = computeComplexityOfFeatures_result()
         try:
-            result.success = self._handler.computeComplexityOfFeatures(args.expressions)
+            result.success = self._handler.computeComplexityOfFeatures(args.problem, args.expressions)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1002,7 +1014,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = computeAlgebraicTypicality_result()
         try:
-            result.success = self._handler.computeAlgebraicTypicality(args.arch, args.feature)
+            result.success = self._handler.computeAlgebraicTypicality(args.problem, args.arch, args.feature)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1025,7 +1037,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = computeComplexity_result()
         try:
-            result.success = self._handler.computeComplexity(args.expression)
+            result.success = self._handler.computeComplexity(args.problem, args.expression)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1094,7 +1106,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = computeAlgebraicTypicalityWithStringInput_result()
         try:
-            result.success = self._handler.computeAlgebraicTypicalityWithStringInput(args.architecture, args.feature)
+            result.success = self._handler.computeAlgebraicTypicalityWithStringInput(args.problem, args.architecture, args.feature)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -2995,11 +3007,13 @@ getDrivingFeaturesEpsilonMOEADiscrete_result.thrift_spec = (
 class computeComplexityOfFeatures_args(object):
     """
     Attributes:
+     - problem
      - expressions
     """
 
 
-    def __init__(self, expressions=None,):
+    def __init__(self, problem=None, expressions=None,):
+        self.problem = problem
         self.expressions = expressions
 
     def read(self, iprot):
@@ -3012,6 +3026,11 @@ class computeComplexityOfFeatures_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
                 if ftype == TType.LIST:
                     self.expressions = []
                     (_etype276, _size273) = iprot.readListBegin()
@@ -3031,8 +3050,12 @@ class computeComplexityOfFeatures_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('computeComplexityOfFeatures_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
         if self.expressions is not None:
-            oprot.writeFieldBegin('expressions', TType.LIST, 1)
+            oprot.writeFieldBegin('expressions', TType.LIST, 2)
             oprot.writeListBegin(TType.STRING, len(self.expressions))
             for iter279 in self.expressions:
                 oprot.writeString(iter279.encode('utf-8') if sys.version_info[0] == 2 else iter279)
@@ -3057,7 +3080,8 @@ class computeComplexityOfFeatures_args(object):
 all_structs.append(computeComplexityOfFeatures_args)
 computeComplexityOfFeatures_args.thrift_spec = (
     None,  # 0
-    (1, TType.LIST, 'expressions', (TType.STRING, 'UTF8', False), None, ),  # 1
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'expressions', (TType.STRING, 'UTF8', False), None, ),  # 2
 )
 
 
@@ -3132,12 +3156,14 @@ computeComplexityOfFeatures_result.thrift_spec = (
 class computeAlgebraicTypicality_args(object):
     """
     Attributes:
+     - problem
      - arch
      - feature
     """
 
 
-    def __init__(self, arch=None, feature=None,):
+    def __init__(self, problem=None, arch=None, feature=None,):
+        self.problem = problem
         self.arch = arch
         self.feature = feature
 
@@ -3151,12 +3177,17 @@ class computeAlgebraicTypicality_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
                 if ftype == TType.STRUCT:
                     self.arch = BinaryInputArchitecture()
                     self.arch.read(iprot)
                 else:
                     iprot.skip(ftype)
-            elif fid == 2:
+            elif fid == 3:
                 if ftype == TType.STRING:
                     self.feature = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -3171,12 +3202,16 @@ class computeAlgebraicTypicality_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('computeAlgebraicTypicality_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
         if self.arch is not None:
-            oprot.writeFieldBegin('arch', TType.STRUCT, 1)
+            oprot.writeFieldBegin('arch', TType.STRUCT, 2)
             self.arch.write(oprot)
             oprot.writeFieldEnd()
         if self.feature is not None:
-            oprot.writeFieldBegin('feature', TType.STRING, 2)
+            oprot.writeFieldBegin('feature', TType.STRING, 3)
             oprot.writeString(self.feature.encode('utf-8') if sys.version_info[0] == 2 else self.feature)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3198,8 +3233,9 @@ class computeAlgebraicTypicality_args(object):
 all_structs.append(computeAlgebraicTypicality_args)
 computeAlgebraicTypicality_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRUCT, 'arch', [BinaryInputArchitecture, None], None, ),  # 1
-    (2, TType.STRING, 'feature', 'UTF8', None, ),  # 2
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.STRUCT, 'arch', [BinaryInputArchitecture, None], None, ),  # 2
+    (3, TType.STRING, 'feature', 'UTF8', None, ),  # 3
 )
 
 
@@ -3274,11 +3310,13 @@ computeAlgebraicTypicality_result.thrift_spec = (
 class computeComplexity_args(object):
     """
     Attributes:
+     - problem
      - expression
     """
 
 
-    def __init__(self, expression=None,):
+    def __init__(self, problem=None, expression=None,):
+        self.problem = problem
         self.expression = expression
 
     def read(self, iprot):
@@ -3291,6 +3329,11 @@ class computeComplexity_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
                 if ftype == TType.STRING:
                     self.expression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -3305,8 +3348,12 @@ class computeComplexity_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('computeComplexity_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
         if self.expression is not None:
-            oprot.writeFieldBegin('expression', TType.STRING, 1)
+            oprot.writeFieldBegin('expression', TType.STRING, 2)
             oprot.writeString(self.expression.encode('utf-8') if sys.version_info[0] == 2 else self.expression)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3328,7 +3375,8 @@ class computeComplexity_args(object):
 all_structs.append(computeComplexity_args)
 computeComplexity_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'expression', 'UTF8', None, ),  # 1
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'expression', 'UTF8', None, ),  # 2
 )
 
 
@@ -3637,12 +3685,14 @@ convertToDNF_result.thrift_spec = (
 class computeAlgebraicTypicalityWithStringInput_args(object):
     """
     Attributes:
+     - problem
      - architecture
      - feature
     """
 
 
-    def __init__(self, architecture=None, feature=None,):
+    def __init__(self, problem=None, architecture=None, feature=None,):
+        self.problem = problem
         self.architecture = architecture
         self.feature = feature
 
@@ -3657,10 +3707,15 @@ class computeAlgebraicTypicalityWithStringInput_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.architecture = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.architecture = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.STRING:
                     self.feature = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -3675,12 +3730,16 @@ class computeAlgebraicTypicalityWithStringInput_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('computeAlgebraicTypicalityWithStringInput_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
         if self.architecture is not None:
-            oprot.writeFieldBegin('architecture', TType.STRING, 1)
+            oprot.writeFieldBegin('architecture', TType.STRING, 2)
             oprot.writeString(self.architecture.encode('utf-8') if sys.version_info[0] == 2 else self.architecture)
             oprot.writeFieldEnd()
         if self.feature is not None:
-            oprot.writeFieldBegin('feature', TType.STRING, 2)
+            oprot.writeFieldBegin('feature', TType.STRING, 3)
             oprot.writeString(self.feature.encode('utf-8') if sys.version_info[0] == 2 else self.feature)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3702,8 +3761,9 @@ class computeAlgebraicTypicalityWithStringInput_args(object):
 all_structs.append(computeAlgebraicTypicalityWithStringInput_args)
 computeAlgebraicTypicalityWithStringInput_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'architecture', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'feature', 'UTF8', None, ),  # 2
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'architecture', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'feature', 'UTF8', None, ),  # 3
 )
 
 

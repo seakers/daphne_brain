@@ -5,6 +5,7 @@ import json
 import redis
 
 from VASSAR_API.VASSARInterface.ttypes import BinaryInputArchitecture
+from VASSAR_API.VASSARInterface.ttypes import DiscreteInputArchitecture
 from VASSAR_API.api import VASSARClient
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -14,13 +15,13 @@ logger = logging.getLogger('VASSAR')
 
 class GetOrbitList(APIView):
     
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         try:
             # Start connection with VASSAR
             port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
-            list = self.VASSARClient.getOrbitList()
+            list = self.VASSARClient.getOrbitList(request.data['problem_name'])
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
@@ -31,16 +32,15 @@ class GetOrbitList(APIView):
             self.VASSARClient.endConnection()
             return Response('')
 
-
 class GetInstrumentList(APIView):
 
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         try:
             port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
-            list = self.VASSARClient.getInstrumentList()
+            list = self.VASSARClient.getInstrumentList(request.data['problem_name'])
             
             # End the connection before return statement
             self.VASSARClient.endConnection()
@@ -64,7 +64,7 @@ class EvaluateArchitecture(APIView):
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
-            architecture = self.VASSARClient.evaluateArchitecture(inputs)
+            architecture = self.VASSARClient.evaluateArchitecture(request.session['problem'], inputs)
 
             # If there is no session data, initialize and create a new dataset
             if 'data' not in request.session:
@@ -167,15 +167,28 @@ class StartGA(APIView):
                 client = VASSARClient(port)
                 client.startConnection()
 
+                problem = request.data['problem']
+                inputType = request.data['inputType']
+
                 # Convert the architecture list
                 thrift_list = []
                 inputs_unique_set = set()
-                for arch in request.session['data']:
-                    thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
-                    hashed_input = hash(tuple(arch['inputs']))
-                    inputs_unique_set.add(hashed_input)
 
-                client.client.startGA(thrift_list, request.user.username)
+                if inputType == 'binary':
+                    for arch in request.session['data']:
+                        thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                        hashed_input = hash(tuple(arch['inputs']))
+                        inputs_unique_set.add(hashed_input)
+                        client.client.startGABinaryInput(problem, thrift_list, request.user.username)
+
+                elif inputType == 'discrete':
+                    for arch in request.session['data']:
+                        thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                        hashed_input = hash(tuple(arch['inputs']))
+                        inputs_unique_set.add(hashed_input)
+                        client.client.startGADiscreteInput(problem, thrift_list, request.user.username)
+                else:
+                    raise ValueError('Unrecognized input type: {0}'.format(inputType))
 
                 # End the connection before return statement
                 client.endConnection()
