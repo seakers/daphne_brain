@@ -132,12 +132,16 @@ def get_orbit_dataset(problem):
         return CC_ORBIT_DATASET
     if problem == "SMAP":
         return SMAP_ORBIT_DATASET
+    if problem == "Decadal2017Aerosols":
+        return SMAP_ORBIT_DATASET
 
 
 def get_instrument_dataset(problem):
     if problem == "ClimateCentric":
         return CC_INSTRUMENT_DATASET
     if problem == "SMAP":
+        return SMAP_INSTRUMENT_DATASET
+    if problem == "Decadal2017Aerosols":
         return SMAP_INSTRUMENT_DATASET
 
 
@@ -181,12 +185,16 @@ def get_orbits_info(problem):
         return cc_orbits_info
     if problem == "SMAP":
         return smap_orbits_info
+    if problem == "Decadal2017Aerosols":
+        return smap_orbits_info
 
 
 def get_instruments_info(problem):
     if problem == "ClimateCentric":
         return cc_instruments_info
     if problem == "SMAP":
+        return smap_instruments_info
+    if problem == "Decadal2017Aerosols":
         return smap_instruments_info
 
 
