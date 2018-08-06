@@ -251,16 +251,29 @@ class GetArchDetails(APIView):
             client = VASSARClient(port)
             client.startConnection()
 
+            assignation_problems = ['SMAP', 'ClimateCentric']
+            partition_problems = ['Decadal2017Aerosols']
+
             # Get the correct architecture
             this_arch = None
             arch_id = int(request.data['arch_id'])
+            problem = request.data['problem']
             for arch in request.session['data']:
                 if arch['id'] == arch_id:
-                    this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    if problem in assignation_problems:
+                        this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    elif problem in partition_problems:
+                        this_arch = DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
                     break
 
-            score_explanation = client.client.getArchScienceInformation(this_arch)
-            cost_explanation = client.client.getArchCostInformation(this_arch)
+            score_explanation = None
+            cost_explanation = None
+            if problem in assignation_problems:
+                score_explanation = client.client.getArchScienceInformationBinaryInput(problem, this_arch)
+                cost_explanation = client.client.getArchCostInformationBinaryInput(problem, this_arch)
+            elif problem in partition_problems:
+                score_explanation = client.client.getArchScienceInformationDiscreteInput(problem, this_arch)
+                cost_explanation = client.client.getArchCostInformationDiscreteInput(problem, this_arch)
 
             # End the connection before return statement
             client.endConnection()
