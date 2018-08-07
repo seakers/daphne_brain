@@ -329,15 +329,26 @@ class GetSubobjectiveDetails(APIView):
             client = VASSARClient(port)
             client.startConnection()
 
+            assignation_problems = ['SMAP', 'ClimateCentric']
+            partition_problems = ['Decadal2017Aerosols']
+
             # Get the correct architecture
             this_arch = None
             arch_id = int(request.data['arch_id'])
+            problem = request.data['problem']
             for arch in request.session['data']:
                 if arch['id'] == arch_id:
-                    this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    if problem in assignation_problems:
+                        this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                    elif problem in partition_problems:
+                        this_arch = DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
                     break
 
-            subobjective_explanation = client.client.getSubscoreDetails(this_arch, request.data['subobjective'])
+            subobjective_explanation = None
+            if problem in assignation_problems:
+                subobjective_explanation = client.client.getSubscoreDetailsBinaryInput(problem, this_arch, request.data['subobjective'])
+            elif problem in partition_problems:
+                subobjective_explanation = client.client.getSubscoreDetailsDiscreteInput(problem, this_arch, request.data['subobjective'])
 
             # End the connection before return statement
             client.endConnection()
