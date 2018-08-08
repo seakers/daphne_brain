@@ -179,14 +179,14 @@ class StartGA(APIView):
                         thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
                         hashed_input = hash(tuple(arch['inputs']))
                         inputs_unique_set.add(hashed_input)
-                        client.client.startGABinaryInput(problem, thrift_list, request.user.username)
+                    client.client.startGABinaryInput(problem, thrift_list, request.user.username)
 
                 elif inputType == 'discrete':
                     for arch in request.session['data']:
                         thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
                         hashed_input = hash(tuple(arch['inputs']))
                         inputs_unique_set.add(hashed_input)
-                        client.client.startGADiscreteInput(problem, thrift_list, request.user.username)
+                    client.client.startGADiscreteInput(problem, thrift_list, request.user.username)
                 else:
                     raise ValueError('Unrecognized input type: {0}'.format(inputType))
 
