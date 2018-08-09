@@ -162,37 +162,6 @@ class StartGA(APIView):
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
-                # Start connection with VASSAR
-                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
-                client = VASSARClient(port)
-                client.startConnection()
-
-                problem = request.data['problem']
-                inputType = request.data['inputType']
-
-                # Convert the architecture list
-                thrift_list = []
-                inputs_unique_set = set()
-
-                if inputType == 'binary':
-                    for arch in request.session['data']:
-                        thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
-                        hashed_input = hash(tuple(arch['inputs']))
-                        inputs_unique_set.add(hashed_input)
-                    client.client.startGABinaryInput(problem, thrift_list, request.user.username)
-
-                elif inputType == 'discrete':
-                    for arch in request.session['data']:
-                        thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
-                        hashed_input = hash(tuple(arch['inputs']))
-                        inputs_unique_set.add(hashed_input)
-                    client.client.startGADiscreteInput(problem, thrift_list, request.user.username)
-                else:
-                    raise ValueError('Unrecognized input type: {0}'.format(inputType))
-
-                # End the connection before return statement
-                client.endConnection()
-
                 # Start listening for redis inputs to share through websockets
                 r = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
                 p = r.pubsub()
@@ -210,7 +179,8 @@ class StartGA(APIView):
                             arch = json.loads(arch)
                             hashed_input = hash(tuple(arch['inputs']))
                             if hashed_input not in inputs_unique_set:
-                                full_arch = {'id': request.session['archID'], 'inputs': arch['inputs'], 'outputs': arch['outputs']}
+                                full_arch = {'id': request.session['archID'], 'inputs': arch['inputs'],
+                                             'outputs': arch['outputs']}
                                 request.session['data'].append(full_arch)
                                 request.session['archID'] += 1
                                 send_back.append(full_arch)
@@ -224,14 +194,134 @@ class StartGA(APIView):
                                                               'type': 'ga.new_archs',
                                                               'archs': send_back
                                                           })
+                    if message['data'] == 'ga_started':
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                                                          {
+                                                              'type': 'ga.started'
+                                                          })
                     if message['data'] == 'ga_done':
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                                                          {
+                                                              'type': 'ga.finished'
+                                                          })
                         print('Ending the thread!')
                         thread.stop()
 
-
                 p.subscribe(**{request.user.username: my_handler})
                 thread = p.run_in_thread(sleep_time=0.001)
+
+                # Start connection with VASSAR
+                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                client = VASSARClient(port)
+                client.startConnection()
+
+                problem = request.data['problem']
+                inputType = request.data['inputType']
+
+                # Convert the architecture list
+                thrift_list = []
+                inputs_unique_set = set()
+
+                if inputType == 'binary':
+                    for arch in request.session['data']:
+                        thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                        hashed_input = hash(tuple(arch['inputs']))
+                        inputs_unique_set.add(hashed_input)
+                    client.client.toggleGABinaryInput(problem, thrift_list, request.user.username)
+
+                elif inputType == 'discrete':
+                    for arch in request.session['data']:
+                        thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                        hashed_input = hash(tuple(arch['inputs']))
+                        inputs_unique_set.add(hashed_input)
+                    client.client.toggleGADiscreteInput(problem, thrift_list, request.user.username)
+                else:
+                    raise ValueError('Unrecognized input type: {0}'.format(inputType))
+
+                # End the connection before return statement
+                client.endConnection()
+
                 return Response('GA started correctly!')
+
+            except Exception:
+                logger.exception('Exception in starting the GA!')
+                client.endConnection()
+                return Response('')
+
+        else:
+            return Response('This is only available to registered users!')
+
+
+class StopGA(APIView):
+
+    def post(self, request, format=None):
+        if request.user.is_authenticated:
+            try:
+                # Start connection with VASSAR
+                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                client = VASSARClient(port)
+                client.startConnection()
+
+                problem = request.data['problem']
+                inputType = request.data['inputType']
+
+                # Convert the architecture list
+
+
+                if inputType == 'binary':
+                    thrift_list = []
+                    client.client.toggleGABinaryInput(problem, thrift_list, request.user.username)
+
+                elif inputType == 'discrete':
+                    thrift_list = []
+                    client.client.toggleGADiscreteInput(problem, thrift_list, request.user.username)
+                else:
+                    raise ValueError('Unrecognized input type: {0}'.format(inputType))
+
+                # End the connection before return statement
+                client.endConnection()
+
+                return Response('GA stopped correctly!')
+
+            except Exception:
+                logger.exception('Exception in stopping the GA!')
+                client.endConnection()
+                return Response('')
+
+        else:
+            return Response('This is only available to registered users!')
+
+
+class CheckGA(APIView):
+
+    def post(self, request, format=None):
+        if request.user.is_authenticated:
+            try:
+                # Start connection with VASSAR
+                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                client = VASSARClient(port)
+                client.startConnection()
+
+                inputType = request.data['inputType']
+
+                status = None
+                if inputType == 'binary':
+                    status = client.client.isGABinaryInputRunning()
+
+                elif inputType == 'discrete':
+                    status = client.client.isGADiscreteInputRunning()
+                else:
+                    raise ValueError('Unrecognized input type: {0}'.format(inputType))
+
+                # End the connection before return statement
+                client.endConnection()
+
+                return Response({
+                    'ga_status': status
+                })
 
             except Exception:
                 logger.exception('Exception in starting the GA!')
