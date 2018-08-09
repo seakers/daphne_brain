@@ -39,11 +39,13 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getArchitectureScoreExplanation(string problem,  arch)')
     print('   getPanelScoreExplanation(string problem,  arch, string panel)')
     print('   getObjectiveScoreExplanation(string problem,  arch, string objective)')
-    print('  void startGABinaryInput(string problem,  dataset, string username)')
+    print('  bool isGABinaryInputRunning()')
+    print('  void toggleGABinaryInput(string problem,  dataset, string username)')
     print('   getArchScienceInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('   getArchCostInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsBinaryInput(string problem, BinaryInputArchitecture arch, string subobj)')
-    print('  void startGADiscreteInput(string problem,  dataset, string username)')
+    print('  bool isGADiscreteInputRunning()')
+    print('  void toggleGADiscreteInput(string problem,  dataset, string username)')
     print('   getArchScienceInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('   getArchCostInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsDiscreteInput(string problem, DiscreteInputArchitecture arch, string subobj)')
@@ -216,11 +218,17 @@ elif cmd == 'getObjectiveScoreExplanation':
         sys.exit(1)
     pp.pprint(client.getObjectiveScoreExplanation(args[0], eval(args[1]), args[2],))
 
-elif cmd == 'startGABinaryInput':
-    if len(args) != 3:
-        print('startGABinaryInput requires 3 args')
+elif cmd == 'isGABinaryInputRunning':
+    if len(args) != 0:
+        print('isGABinaryInputRunning requires 0 args')
         sys.exit(1)
-    pp.pprint(client.startGABinaryInput(args[0], eval(args[1]), args[2],))
+    pp.pprint(client.isGABinaryInputRunning())
+
+elif cmd == 'toggleGABinaryInput':
+    if len(args) != 3:
+        print('toggleGABinaryInput requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.toggleGABinaryInput(args[0], eval(args[1]), args[2],))
 
 elif cmd == 'getArchScienceInformationBinaryInput':
     if len(args) != 2:
@@ -240,11 +248,17 @@ elif cmd == 'getSubscoreDetailsBinaryInput':
         sys.exit(1)
     pp.pprint(client.getSubscoreDetailsBinaryInput(args[0], eval(args[1]), args[2],))
 
-elif cmd == 'startGADiscreteInput':
-    if len(args) != 3:
-        print('startGADiscreteInput requires 3 args')
+elif cmd == 'isGADiscreteInputRunning':
+    if len(args) != 0:
+        print('isGADiscreteInputRunning requires 0 args')
         sys.exit(1)
-    pp.pprint(client.startGADiscreteInput(args[0], eval(args[1]), args[2],))
+    pp.pprint(client.isGADiscreteInputRunning())
+
+elif cmd == 'toggleGADiscreteInput':
+    if len(args) != 3:
+        print('toggleGADiscreteInput requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.toggleGADiscreteInput(args[0], eval(args[1]), args[2],))
 
 elif cmd == 'getArchScienceInformationDiscreteInput':
     if len(args) != 2:

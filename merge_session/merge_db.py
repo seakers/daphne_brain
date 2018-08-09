@@ -10,6 +10,7 @@ from django.contrib.sessions.backends.base import (
 from django.core.exceptions import SuspiciousOperation
 from django.utils import timezone
 from django.db import DatabaseError, IntegrityError, router, transaction
+from daphne_brain.session_lock import session_lock
 
 
 # from https://stackoverflow.com/questions/39997469/how-to-deep-merge-dicts
@@ -92,18 +93,19 @@ class SessionStore(DBStore):
         obj = self.create_model_instance(data)
         using = router.db_for_write(self.model, instance=obj)
         try:
-            with transaction.atomic(using=using):
-                # Load model from database to compare the version values
-                db_data, db_version = self.load_or_default()
-                if db_version == obj.version:
-                    obj.version += 1
-                    obj.save(force_insert=must_create, force_update=not must_create, using=using)
-                else:
-                    # dictionary merge
-                    obj.session_data = self.encode(combine_dict(db_data, data))
-                    # Increment version value to max + 1
-                    obj.version = max(obj.version, db_version) + 1
-                    obj.save(force_insert=must_create, force_update=not must_create, using=using)
+            with session_lock:
+                with transaction.atomic(using=using):
+                    # Load model from database to compare the version values
+                    db_data, db_version = self.load_or_default()
+                    if db_version == obj.version:
+                        obj.version += 1
+                        obj.save(force_insert=must_create, force_update=not must_create, using=using)
+                    else:
+                        # dictionary merge
+                        obj.session_data = self.encode(combine_dict(db_data, data))
+                        # Increment version value to max + 1
+                        obj.version = max(obj.version, db_version) + 1
+                        obj.save(force_insert=must_create, force_update=not must_create, using=using)
         except IntegrityError:
             if must_create:
                 raise CreateError
