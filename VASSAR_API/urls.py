@@ -12,6 +12,8 @@ urlpatterns = [
     path('change-port', views.ChangePort.as_view()),
 
     path('start-ga', views.StartGA.as_view()),
+    path('stop-ga', views.StopGA.as_view()),
+    path('check-ga', views.CheckGA.as_view()),
 
     path('get-arch-details', views.GetArchDetails.as_view()),
     path('get-subobjective-details', views.GetSubobjectiveDetails.as_view())
