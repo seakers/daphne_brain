@@ -163,6 +163,56 @@ class getDrivingFeaturesEpsilonMOEA(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
+
+class getDrivingFeaturesWithGeneralization(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            logger.debug(request.session)
+            architectures = request.session['data']
+
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.getDrivingFeaturesWithGeneralization(problem, inputType, behavioral, non_behavioral, architectures)
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
         
 # Create your views here.
 class GetDrivingFeaturesAutomated(APIView):
@@ -499,6 +549,75 @@ class ComputeComplexityOfFeatures(APIView):
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
             return Response(complexity)
+        
+        except Exception as detail:
+            logger.exception('Exception in ComputeComplexityOfFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class GetProblemParameters(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            problem = request.POST['problem']
+            params = self.DataMiningClient.getProblemParameters(problem)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(params)
+        
+        except Exception as detail:
+            logger.exception('Exception in GetProblemParameters: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class SetProblemParameters(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            problem = request.POST['problem']
+            params = json.loads(request.POST['params'])
+            self.DataMiningClient.setProblemParameters(problem, params)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response()
+        
+        except Exception as detail:
+            logger.exception('Exception in ComputeComplexityOfFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class getTaxonomicScheme(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            problem = request.POST['problem']
+            taxonomicScheme = self.DataMiningClient.getTaxonomicScheme(problem)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(taxonomicScheme)
         
         except Exception as detail:
             logger.exception('Exception in ComputeComplexityOfFeatures: ' + str(detail))
