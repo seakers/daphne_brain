@@ -182,6 +182,31 @@ class DataMiningClient():
 
         return drivingFeatures
 
+    def runGeneralizationLocalSearch(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression):
+        try:
+            print('runGeneralizationLocalSearch')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+            
+            archs_formatted = []
+            if inputType == "binary":
+                for arch in all_archs:
+                    archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
+                drivingFeatures_formatted = self.client.runInputGeneralizationLocalSearchBinary(problem, behavioral, non_behavioral, 
+                                                                            archs_formatted, 
+                                                                           featureExpression)
+                
+            elif inputType == "discrete":
+                raise ValueError("Not implemented yet")
+
+            drivingFeatures = []
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
+                
+        except Exception as e:
+            print('Exc in calling getMarginalDrivingFeatures(): '+str(e))
+
+        return drivingFeatures
+
     def setProblemParameters(self, problem, params):
         try:
             if problem == "ClimateCentric":

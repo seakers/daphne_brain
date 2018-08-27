@@ -6,6 +6,7 @@ urlpatterns = [
     path('get-driving-features', views.GetDrivingFeatures.as_view()),
     path('get-driving-features-epsilon-moea', views.getDrivingFeaturesEpsilonMOEA.as_view()),
     path('get-driving-features-with-generalization', views.getDrivingFeaturesWithGeneralization.as_view()),
+    path('run-generalization-local-search', views.GeneralizationLocalSearch.as_view()),
 
     path('get-driving-features-automated', views.GetDrivingFeaturesAutomated.as_view()),
     path('get-marginal-driving-features', views.GetMarginalDrivingFeatures.as_view()),

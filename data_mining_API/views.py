@@ -314,6 +314,44 @@ class GetMarginalDrivingFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+class GeneralizationLocalSearch(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get selected arch id's
+            behavioral = json.loads(request.POST['selected'])
+            non_behavioral = json.loads(request.POST['non_selected'])
+                
+            featureExpression = request.POST['featureExpression']      
+
+            # Load architecture data from the session info
+            architectures = request.session['data']
+
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.runGeneralizationLocalSearch(problem, inputType, 
+                                                                            behavioral,non_behavioral,
+                                                                            architectures,featureExpression)            
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            self.DataMiningClient.endConnection()
+            return Response('')
+
 class ClusterData(APIView):
 
     def __init__(self):
