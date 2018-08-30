@@ -308,9 +308,18 @@ def Critic_general_call(design_id, designs, context):
         
         # Start connection with VASSAR
         client.startConnection()
+
+        assignation_problems = ['SMAP', 'ClimateCentric']
+        partition_problems = ['Decadal2017Aerosols']
         
         # Criticize architecture (based on rules)
-        result1 = client.critiqueArchitecture(this_design['inputs'])
+        problem = context['problem']
+        result1 = None
+        if problem in assignation_problems:
+            result1 = client.client.getCritiqueBinaryInputArch(problem, this_design['inputs'])
+        elif problem in partition_problems:
+            result1 = client.client.getCritiqueDiscreteInputArch(problem, this_design['inputs'])
+
         result = []
         for advice in result1:
             result.append({
@@ -355,8 +364,12 @@ def Critic_general_call(design_id, designs, context):
                 
         original_outputs = this_design['outputs']
         original_inputs = this_design['inputs']
-        
-        archs = client.runLocalSearch(this_design['inputs'])
+
+        archs = None
+        if problem in assignation_problems:
+            archs = client.client.runLocalSearchBinaryInput(problem, this_design['inputs'])
+        elif problem in partition_problems:
+            archs = client.client.runLocalSearchDiscreteInput(problem, this_design['inputs'])
         advices = []
         for arch in archs:
             new_outputs = arch['outputs']
