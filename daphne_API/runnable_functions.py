@@ -19,6 +19,9 @@ from Naked.toolshed.shell import execute_rb, muterun_rb, run_rb
 from beautifultable import BeautifulTable
 import json
 from daphne_API import GetScorecardObjects
+from daphne_API.MatEngine_object import eng1
+
+
 
 logger = logging.getLogger('VASSAR')
 
@@ -809,6 +812,14 @@ def EDL_load_mat_files(mission_name, mat_file, context):
     file_path = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files/', mission_name, mat_file)
     context["current_mat_file"] = file_path
     context["current_mat_file_for_print"] = mat_file
+    ''' ---------------For MATLAB Engine ------------------'''
+    eng1.addpath(os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files/', mission_name), nargout = 0)
+
+    mat_file_engine = eng1.load(mat_file)
+    # TODO: ADD VARIABLE OF INTEREST TO ENGINE, NOT WHOLE MATFILE
+    # eng1.workspace['dataset'] = mat_file_engine
+
+    # eng1.disp('esto', nargout = 0)
     print('The current mat_file is:')
     print(mat_file)
     return 'file loaded'
@@ -871,6 +882,11 @@ def EDL_compute_stat(mission_name,mat_file, param_name, context):
                      high99_87_minus_mean,
                      median_minus_low_99_87, mean_minus_low_99_87]
     '''Now we want to create a  list as the one in the list sim data query'''
+    # from daphne_API.MatEngine_object import eng1
+    # eng1.eval('2+2')
+    # eng1.load(eval(file_path))
+    # eng1.eval('disp(esto)')
+
     stat = []
     for name, value in zip(name_of_stat, value_of_stat):
         stat.append(
@@ -878,32 +894,43 @@ def EDL_compute_stat(mission_name,mat_file, param_name, context):
                 'command_result': " = ".join([name, value.astype(str)])
             }
         )
+
+    ''' Save parameter into csv file for plotting'''
+    filename = str(param_name)+'.csv'
+    np.savetxt(filename, param_array, delimiter=',', header=param_name, comments="")
     return stat
 
 def load_scorecard(mission_name, mat_file, context):
-    my_file = '/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx'
-    if os.path.isfile(my_file):
-        os.remove(my_file)
-    '''Here we want to call the shell to connect and fill up the scorecard'''
-    matout = mat_file
-    scorecard = '/Users/ssantini/Desktop/scorecard.rb'
-    scorecard_yaml = '/Users/ssantini/Desktop/Code Daphne/daphne_brain/scorecard_yaml.rb'
+
+    ''' Set Paths:
+     1. mat file path;
+     2. the scorecard template path''
+     '''
+    mat_file_path = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', mission_name, mat_file)
+    scorecard_template_path = '"/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardTemplate.xlsx"'
 
 
-    get_scorecard = execute_rb(scorecard, arguments=matout)
-    if get_scorecard:
-        print('the script run was successful, standard output automatically printed to terminal by default')
-    else:
-        print('the script run failed, standard error automatically printed to terminal by default')
-        # does not raise SystemExit by default
-    scorecard_path = '/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx'
+    ''' Connect to the local computer and generate scorecard'''
+    os.system('echo $SHELL')
+    os.system('setenv DYLD_FALLBACK_LIBRARY_PATH $LD_LIBRARY_PATH')
+    # The scorecard ruby location is: /Volumes/Encrypted/Mars2020/mars2020/bin/scorecard.rb'''
+    # The Scorecard template is: /Users/ssantini/Code/ExtractDataMatlab/ScoreCardTemplate.xlsx '''
+    os.system('~/scorecard.rb --help')
+    os.system('pushd "~/Users/ssantini/Desktop/Code Daphne/daphne_brain/"')
+    os.system('pwd')
+    os.environ['MATLAB_PATH']= "/Volumes/Encrypted/Mars2020/mars2020/MATLAB/"
+    print(os.environ['MATLAB_PATH'])
+    os.system(('~/scorecard.rb --yaml --template="/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardTemplate.xlsx"') + ' ' + mat_file_path)
+
+    ''' Rename the Scorecard to the mat file'''
+    scorecard_temp_path = mat_file.replace(".mat", "")
+    scorecard_name = os.path.basename(scorecard_temp_path)+'.yml'
+    scorecard_path = os.path.join('/Users/ssantini/Desktop/Code Daphne/daphne_brain/', scorecard_name)
+    if os.path.isfile('/Users/ssantini/Desktop/Code Daphne/daphne_brain/scorecard.yml'):
+        os.rename('/Users/ssantini/Desktop/Code Daphne/daphne_brain/scorecard.yml', scorecard_path)
+
     context["current_scorecard"] = scorecard_path
-
-
     return 'Score Card Loaded and Populated'
-
-# loaded_scorecard = load_scorecard(mission_name, edl_mat_file)
-# scorecard = pd.read_excel('/Users/ssantini/ScoreCardResults.xlsx')
 
 
 def get_scorecard_post_results(edl_scorecard,scorecard_post_param, context):

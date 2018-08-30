@@ -93,6 +93,7 @@ extract_function["edl_mission"] = extractors.extract_edl_mission
 extract_function["parameter"] = extractors.extract_edl_parameter
 extract_function["edl_mat_file"] = extractors.extract_edl_mat_file
 extract_function["edl_mat_param"] = extractors.extract_edl_mat_parameter
+extract_function["extract_scorecard_filename"] = extractors.extract_scorecard_filename
 extract_function["scorecard_post_results"] = extractors.extract_edl_POSTresult_scorecard
 extract_function["scorecard_edlmetricsheet_results"] = extractors.extract_edl_scorecard_edlmetricsheet
 
@@ -115,6 +116,7 @@ process_function["edl_mission"] = processors.not_processed
 process_function["name"] = processors.not_processed
 process_function["edl_mat_file"] = processors.not_processed
 process_function["edl_mat_param"] = processors.not_processed
+process_function["extract_scorecard_filename"] = processors.not_processed
 process_function["scorecard_post_results"] = processors.not_processed
 process_function["scorecard_edlmetricsheet_results"] = processors.not_processed
 
