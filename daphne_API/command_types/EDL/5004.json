@@ -1,0 +1,25 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true,"from_context":false},
+    { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context":true}
+  ],
+"function":
+{"run_template": "run_func.load_scorecard('${mission}', '${current_mat_file}', context)",
+    "result_type": "single",
+    "result_fields": {
+     "load_result": "command_result"
+    }
+  },
+  "voice_response": {
+    "type": "single",
+    "template": "${load_result}"
+
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "single",
+    "template": "${load_result}"
+  }
+}

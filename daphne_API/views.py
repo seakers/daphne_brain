@@ -7,6 +7,14 @@ import json
 import os
 import csv
 from VASSAR_API.api import VASSARClient
+import pandas as pd
+from daphne_API.MatEngine_object import eng1
+print(eng1)
+eng1.desktop(nargout=0)  # open engine
+
+
+
+
 
 class Command(APIView):
     """
@@ -50,6 +58,14 @@ class Command(APIView):
         response = command_processing.think_response(request.session['context'])
 
         request.session.modified = True
+        print('The command type is:')
+        print(command_type)
+        print('the type is:')
+        print(type(command_type))
+
+        if command_type == int(4):
+            print(eng1.eval('2+2'))
+
 
         # If command is to switch modes, send new mode back, if not
         return Response({'response': response})
@@ -238,6 +254,27 @@ class ClearSession(APIView):
 
         return Response({})
 
+class ImportDataEDLSTATS(APIView):
+    """ Imports data from a csv file. To be deprecated in the future.
+
+    Request Args:
+        filename: Name of the sample data file
+
+    Returns:
+        data: Json string with the read data
+        columns: array with the columns of the data
+
+    """
+
+
+    def post(self, request, format=None):
+
+        # Set the path of the file containing data
+        file_path = '/Users/ssantini/Desktop/Code Daphne/daphne_brain/daphne_API/' + request.data['filename']
+
+        data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
+
+        return Response(data)
 
 class SetProblem(APIView):
     """ Sets the name of the problem

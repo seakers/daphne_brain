@@ -1,0 +1,25 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true,"from_context":true},
+    { "name": "scorecard_post_results", "type": "scorecard_post_results", "options": "", "mandatory": true, "from_context":false}
+  ],
+"function":
+{"run_template": "run_func.get_scorecard_post_results('${current_scorecard}', '${scorecard_post_results}', context)",
+    "result_type": "single",
+    "result_fields": {
+     "load_result": "command_result"
+    }
+  },
+  "voice_response": {
+    "type": "single",
+    "template": "${load_result}"
+
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "single",
+    "template": "${load_result}"
+  }
+}
