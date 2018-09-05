@@ -96,6 +96,7 @@ extract_function["edl_mat_param"] = extractors.extract_edl_mat_parameter
 extract_function["extract_scorecard_filename"] = extractors.extract_scorecard_filename
 extract_function["scorecard_post_results"] = extractors.extract_edl_POSTresult_scorecard
 extract_function["scorecard_edlmetricsheet_results"] = extractors.extract_edl_scorecard_edlmetricsheet
+extract_function["edl_metric_calculate"] = extractors.edl_metric_calculate
 
 process_function = {}
 process_function["mission"] = processors.process_mission
@@ -119,7 +120,7 @@ process_function["edl_mat_param"] = processors.not_processed
 process_function["extract_scorecard_filename"] = processors.not_processed
 process_function["scorecard_post_results"] = processors.not_processed
 process_function["scorecard_edlmetricsheet_results"] = processors.not_processed
-
+process_function["edl_metric_calculate"] = processors.process_edl_scorecard_calculate
 
 def extract_data(processed_question, params, context):
     """ Extract the features from the processed question, with a correcting factor """

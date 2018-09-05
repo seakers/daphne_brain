@@ -20,6 +20,9 @@ from beautifultable import BeautifulTable
 import json
 from daphne_API import GetScorecardObjects
 from daphne_API.MatEngine_object import eng1
+from daphne_API import ScorecardDataFrameFuncs
+import yaml
+from numpy import nan
 
 
 
@@ -851,49 +854,49 @@ def EDL_mat_file_list(mission_name,context):
 
 
 def EDL_compute_stat(mission_name,mat_file, param_name, context):
-    '''Load as dictionary'''
-    dict_NL = json.load(open("/Users/ssantini/Code/ExtractDataMatlab/ExtractSimDataUsingNL/sim_data_dict.txt"))
-
-    for i in range(len(dict_NL)):
-        key = param_name
-        if key in dict_NL:
-            param_name = dict_NL[param_name][0] # this returns the value of the key
-
-        else:
-            param_name = param_name
-    file_path = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files/', mission_name, mat_file)
-    mat_dict = scipy.io.loadmat(file_path)
-    '''Get list of keys in mat dict'''
-    list_keys = list(mat_dict.keys())
-    param_array = mat_dict[param_name]
-    max = np.amax(param_array)
-    min = np.amin(param_array)
-    mean = np.mean(param_array)
-    variance = np.var(param_array)
-    std_dev = np.std(param_array)
-    plus_three_sig = np.mean(param_array) + 3 * np.std(param_array)
-    minus_three_sig = np.mean(param_array) - 3 * np.std(param_array)
-    percentile013 = np.percentile(param_array, 0.13)
-    percentile1 = np.percentile(param_array, 1)
-    percentile10 = np.percentile(param_array, 10)
-    percentile50 = np.percentile(param_array, 50)
-    percentile99 = np.percentile(param_array, 99)
-    percentile99_87 = np.percentile(param_array, 99.87)
-    high99_87_minus_median = np.percentile(param_array, 99.87) - np.median(param_array)
-    high99_87_minus_mean = np.percentile(param_array, 99.87) - np.median(param_array)
-    median_minus_low_99_87 = np.median(param_array) - np.percentile(param_array, 0.13)
-    mean_minus_low_99_87 = np.mean(param_array) - np.percentile(param_array, 0.13)
-
-    name_of_stat = ["max", "min", "mean", "variance", "std", "3s", "mean", "-3s", "0.13%", "1.00%", "10.00%", "50.00%",
-                    "90.00%",
-                    "99.87", "high 99.89 - median", "high 99.87 - mean", "median - low 99.87",
-                    "mean - low 99.87"]
-
-    value_of_stat = [max, min, mean, variance, std_dev, plus_three_sig, mean, minus_three_sig, percentile013,
-                     percentile1,
-                     percentile10, percentile50, percentile99, percentile99_87, high99_87_minus_median,
-                     high99_87_minus_mean,
-                     median_minus_low_99_87, mean_minus_low_99_87]
+    # '''Load as dictionary'''
+    # dict_NL = json.load(open("/Users/ssantini/Code/ExtractDataMatlab/ExtractSimDataUsingNL/sim_data_dict.txt"))
+    #
+    # for i in range(len(dict_NL)):
+    #     key = param_name
+    #     if key in dict_NL:
+    #         param_name = dict_NL[param_name][0] # this returns the value of the key
+    #
+    #     else:
+    #         param_name = param_name
+    # file_path = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files/', mission_name, mat_file)
+    # mat_dict = scipy.io.loadmat(file_path)
+    # '''Get list of keys in mat dict'''
+    # list_keys = list(mat_dict.keys())
+    # param_array = mat_dict[param_name]
+    # max = np.amax(param_array)
+    # min = np.amin(param_array)
+    # mean = np.mean(param_array)
+    # variance = np.var(param_array)
+    # std_dev = np.std(param_array)
+    # plus_three_sig = np.mean(param_array) + 3 * np.std(param_array)
+    # minus_three_sig = np.mean(param_array) - 3 * np.std(param_array)
+    # percentile013 = np.percentile(param_array, 0.13)
+    # percentile1 = np.percentile(param_array, 1)
+    # percentile10 = np.percentile(param_array, 10)
+    # percentile50 = np.percentile(param_array, 50)
+    # percentile99 = np.percentile(param_array, 99)
+    # percentile99_87 = np.percentile(param_array, 99.87)
+    # high99_87_minus_median = np.percentile(param_array, 99.87) - np.median(param_array)
+    # high99_87_minus_mean = np.percentile(param_array, 99.87) - np.median(param_array)
+    # median_minus_low_99_87 = np.median(param_array) - np.percentile(param_array, 0.13)
+    # mean_minus_low_99_87 = np.mean(param_array) - np.percentile(param_array, 0.13)
+    #
+    # name_of_stat = ["max", "min", "mean", "variance", "std", "3s", "mean", "-3s", "0.13%", "1.00%", "10.00%", "50.00%",
+    #                 "90.00%",
+    #                 "99.87", "high 99.89 - median", "high 99.87 - mean", "median - low 99.87",
+    #                 "mean - low 99.87"]
+    #
+    # value_of_stat = [max, min, mean, variance, std_dev, plus_three_sig, mean, minus_three_sig, percentile013,
+    #                  percentile1,
+    #                  percentile10, percentile50, percentile99, percentile99_87, high99_87_minus_median,
+    #                  high99_87_minus_mean,
+    #                  median_minus_low_99_87, mean_minus_low_99_87]
     '''Now we want to create a  list as the one in the list sim data query'''
     # from daphne_API.MatEngine_object import eng1
     # eng1.eval('2+2')
@@ -901,17 +904,24 @@ def EDL_compute_stat(mission_name,mat_file, param_name, context):
     # eng1.eval('disp(esto)')
 
     stat = []
-    for name, value in zip(name_of_stat, value_of_stat):
-        stat.append(
-            {
-                'command_result': " = ".join([name, value.astype(str)])
-            }
-        )
+    # for name, value in zip(name_of_stat, value_of_stat):
+    #     stat.append(
+    #         {
+    #             'command_result': " = ".join([name, value.astype(str)])
+    #         }
+    #     )
 
     ''' Save parameter into csv file for plotting'''
-    filename = str(param_name)+'.csv'
-    np.savetxt(filename, param_array, delimiter=',', header=param_name, comments="")
-    return stat
+    # filename = str(param_name)+'.csv'
+    # np.savetxt(filename, param_array, delimiter=',', header=param_name, comments="")
+
+    val1 = eng1.load(mat_file, param_name, nargout=0) # loads in engine
+    val2 = eng1.workspace[param_name] # returns to python
+    my_list = []
+    for _ in range(val2.size[1]):
+        my_list.append(val2._data[_ * val2.size[0]:_ * val2.size[0] + val2.size[0]].tolist())
+    val3 = json.dumps(my_list) #load to
+    return stat, val3
 
 def load_scorecard(mission_name, mat_file, context):
 
@@ -942,6 +952,7 @@ def load_scorecard(mission_name, mat_file, context):
     if os.path.isfile('/Users/ssantini/Desktop/Code Daphne/daphne_brain/scorecard.yml'):
         os.rename('/Users/ssantini/Desktop/Code Daphne/daphne_brain/scorecard.yml', scorecard_path)
 
+    context["current_scorecard_file"] = os.path.basename(scorecard_path)
     context["current_scorecard"] = scorecard_path
     return 'Score Card Loaded and Populated'
 
@@ -1274,207 +1285,54 @@ def get_scorecard_post_results(edl_scorecard,scorecard_post_param, context):
 
     return scorecard_post_result_returned
 
-def get_flag_summary(edl_scorecard, context, *flag_type):
+def get_flag_summary(edl_scorecard,context, *flag_type):
 
-    '''================================================== Get flagged values ===================================='''
-    dict_NL = json.load(open("/Users/ssantini/Desktop/Code Daphne/daphne_brain/dict_for_flags_outofspec.txt"))
-    all_metrics_dict = dict_NL
+    ''' 1. Convert to dataframe
+    2. Add column with labels : flagged, out of spec, N/A or value is ok
+    3. Get dataframe for flagged metrics and one data frame for out of spec'''
 
-    df = pd.read_excel(
-        '/Users/ssantini/Code/ExtractDataMatlab/ExtractScorecardData/list_of_metrics_complete_ver2.xlsx')  # get renamed metrics
-    list_of_metrics = list(df[0]) # made some modifications
+    scorecard_name = os.path.basename(edl_scorecard)
+    with open(scorecard_name, encoding='utf-8') as scorecard_file:
+        scorecard_dict = yaml.load(scorecard_file)
 
-    flagged_metrics = []
-    flagged_value = []
-    flagged_unit = []
-    flagged_operator = []
-    flagged_flagval = []
-    flagged_note = []
+    scorecard_df = ScorecardDataFrameFuncs.generate_scorecard_dataframe(scorecard_dict)
+    scorecard_df_labeled = ScorecardDataFrameFuncs.generate_scorecard_dataframe_labeled(scorecard_df)
+    flagged_df = scorecard_df_labeled[scorecard_df_labeled.status == 'flagged']
+    out_of_spec_df = scorecard_df_labeled[scorecard_df_labeled.status == 'out of spec']
 
-    outofspec_metrics = []
-    outofspec_value = []
-    outofspec_unit = []
-    outofspec_operator = []
-    outofspec_outofspec = []
-    outofspec_note = []
-
-    for item in list_of_metrics:
-        value = (str((all_metrics_dict[item][0])))
-        unit = (str((all_metrics_dict[item][1])))
-        operator = (str((all_metrics_dict[item][2])))
-        flag_val = (str((all_metrics_dict[item][3])))
-        outofspec_val = (str((all_metrics_dict[item][4])))
-        if value != 'nan' and operator != 'nan' and flag_val != 'nan' and outofspec_val != 'nan':
-            if eval(str(value) + str(operator) + str(flag_val)) == False \
-                    and eval(str(value) + str(operator) + str(outofspec_val)) == True:
-                flagged_metrics.append(item)
-                flagged_value.append(value)
-                flagged_unit.append(unit)
-                flagged_operator.append(str(operator))
-                flagged_flagval.append(str(flag_val))
-                flagged_note.append(str('is not satisfied'))
-            if eval(str(value) + str(operator) + str(flag_val)) == False \
-                    and eval(str(value) + str(operator) + str(outofspec_val)) == False:
-                outofspec_metrics.append(item)
-                outofspec_value.append((value))
-                outofspec_unit.append((unit))
-                outofspec_operator.append(str(operator))
-                outofspec_outofspec.append(str(flag_val))
-                outofspec_note.append(str('is not satisfied'))
-    if ('flagged_results' in flag_type):
-        flagged_values = []
-        for name, value, unit, operator, flagval, note in zip(flagged_metrics, flagged_value, flagged_unit, flagged_operator,
-                                                        flagged_flagval, flagged_note):
-            flagged_values.append(
+    ''' Now we want to get what metrics are flagged and which are out of spec as a list'''
+    if 'flagged_results' in flag_type:
+        flagged_list = []
+        for row in flagged_df.itertuples():
+            flagged_list.append(
                 {
-                    'command_result': "  ".join([name, value, operator, flagval, unit, note])
+                    'command_result':" ".join([str(row.metric_name), str(row.units), "(", str(row.type), ")",
+                                               str(row.direction), str(row.flag), str(row.units), 'is not satisfied'])
                 }
             )
-        return flagged_values
-    if ('outofspec_results' in flag_type):
-        out_of_spec_values = []
-        for name, value, unit, operator, flagval, note in zip(outofspec_metrics, outofspec_value, outofspec_unit,
-                                                              outofspec_operator, outofspec_outofspec, outofspec_note):
-            out_of_spec_values.append(
+        return flagged_list
+    if 'outofspec_results' in flag_type:
+        outofspec_list = []
+        for row in out_of_spec_df.itertuples():
+            outofspec_list.append(
                 {
-                    'command_result': "  ".join([name, value, operator, flagval, unit, note])
+                    'command_result': " ".join([str(row.metric_name), str(row.units), "(", str(row.type), ")",
+                                                str(row.direction), str(row.flag), str(row.units),'is not satisfied'])
                 }
             )
-        return out_of_spec_values
+        return outofspec_list
 
-def get_scorecard_post_results_edlmetrics(edl_scorecard,scorecard_post_param, context):
-    path_scorecard = os.path.join('/Users/ssantini/Desktop/Code Daphne/daphne_brain/', edl_scorecard)
-    scorecard = pd.ExcelFile('/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx')
+# TODO: add function for calculating the metrics from a matfile (5007)
+def calculate_scorecard_metric(mat_file, edl_scorecard_calculate, context):
+    return 'Calculate Scorecard Query works'
+# TODO: add function for plotting metrics  (5010)
+def edl_plot_from_matfile(mat_file, param_name, param_name2, context):
 
-    '''Here we get all lists from all metrics and fields'''
-    NAMES_EDLSHEET = []
-    TYPES_EDLSHEET = []
-    UNITS_EDLSHEET = []
-    GREATORLESSS_EDL_SHEET = []
-    POST_RESULTS_EDLSHEET = []
-    FLAG_EDLSHEET = []
-    OUTOFSPEC_EDLSHEET = []
-    DESCRIPT_EDLSHEET = []
-    CALC_EDLSHEET = []
+    return ['Plot edl metrics query works']
 
-    '''Remove all of the fields we dont want'''
-    sheets = scorecard.sheet_names
-    for sheet in sheets:
-        df = pd.read_excel('/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx', sheet_name=sheet)  # get data from sheet
-        column_names = list(df.columns)
-        metric_col = column_names[1]  # metric sheet will be the reference for deleting empty rows or label rows
-        length_col = len(df[metric_col])  # original number of rows in the excel sheet
-        if sheet == sheets[0]:
-            for i in range(length_col):
-                algo = df[metric_col][i]
-                if type(df[metric_col][i]) == float:
-                    df.drop([i], inplace=True)
-                elif (df[metric_col][i]) == 'Metric':
-                    df.drop([i], inplace=True)
-                    DF_EDLMETRICS = df
 
-            NAMES_EDLSHEET.append(list(DF_EDLMETRICS[column_names[1]]))
-            TYPES_EDLSHEET.append(list(DF_EDLMETRICS[column_names[2]]))
-            UNITS_EDLSHEET.append(list(DF_EDLMETRICS[column_names[3]]))
-            POST_RESULTS_EDLSHEET.append(list(DF_EDLMETRICS[column_names[4]]))
-            GREATORLESSS_EDL_SHEET.append(list(DF_EDLMETRICS[column_names[5]]))
-            FLAG_EDLSHEET.append(list(DF_EDLMETRICS[column_names[6]]))
-            OUTOFSPEC_EDLSHEET.append(list(DF_EDLMETRICS[column_names[7]]))
-            CALC_EDLSHEET.append(list(DF_EDLMETRICS[column_names[10]]))
-            DESCRIPT_EDLSHEET.append(list(DF_EDLMETRICS[column_names[9]]))
-
-    '''Create objects and classes'''
-
-    class ScoreCardCategory(object):
-        def __init__(self, name=0, entries=0):
-            self.name = name  # these are the tab names (categories)
-            self.entries = entries  # These are all the metrics in each
-
-        def __call__(self, name, entries):
-            print(name)
-            print(entries)
-
-    class ScoreCardMetrics(object):
-        def __init__(self, name=0, type=0, units=0, POST_results=0, GreatOrLess=0, Flag=0, OutOfSpec=0, Enum=0,
-                     Description=0, Calculation=0, CalculationCheckedBy=0, MetricCheckedBy=0, FlagOutOfSpecOwner=0):
-            self.name = name
-            self.type = type
-            self.units = units
-            self.POST_results = POST_results
-            self.GreatOrLess = GreatOrLess
-            self.Flag = Flag
-            self.OutOfSpec = OutOfSpec
-            self.Enum = Enum
-            self.Description = Description
-            self.Calculation = Calculation
-            self.CalculationCheckedBy = CalculationCheckedBy
-            self.MetricCheckedBy = MetricCheckedBy
-            self.FlagOutOfSpecOwner = FlagOutOfSpecOwner
-
-        def __call__(self, name, type, units, POST_results, GreatOrLess, Flag, OutOfSpec, Enum,
-                     Description, Calculation, CalculationCheckedBy, MetricCheckedBy, FlagOutOfSpecOwner):
-            print(name)
-            print(type)
-            print(units)
-            print(POST_results)
-            print(GreatOrLess)
-            print(Flag)
-            print(OutOfSpec)
-            print(Enum)
-            print(Description)
-            print(Calculation)
-            print(CalculationCheckedBy)
-            print(MetricCheckedBy)
-            print(FlagOutOfSpecOwner)
-
-    METRIC_OBJECTS_GROUPED_EDLMETRIC = []
-    METRIC_OBJECTS_EDLMETRIC = []
-    for i in range(len(NAMES_EDLSHEET[0])):  # number of metrics in each sheet
-        METRIC_OBJECTS_EDLMETRIC.append(ScoreCardMetrics(name=NAMES_EDLSHEET[0][i], type=TYPES_EDLSHEET[0][i],
-                                                         units=UNITS_EDLSHEET[0][i],
-                                                         POST_results=POST_RESULTS_EDLSHEET[0][i],
-                                                         GreatOrLess=GREATORLESSS_EDL_SHEET[0][i],
-                                                         Flag=FLAG_EDLSHEET[0][i],
-                                                         OutOfSpec=OUTOFSPEC_EDLSHEET[0][i], Enum=0,
-                                                         Description=DESCRIPT_EDLSHEET[0][i],
-                                                         Calculation=CALC_EDLSHEET[0][i], CalculationCheckedBy=0,
-                                                         MetricCheckedBy=0, FlagOutOfSpecOwner=0))
-        METRIC_OBJECTS = list(METRIC_OBJECTS_EDLMETRIC)
-    METRIC_OBJECTS_GROUPED_EDLMETRIC.append(METRIC_OBJECTS)
-
-    edl_metric_objects = METRIC_OBJECTS_GROUPED_EDLMETRIC[0]
-    edl_metric = ScoreCardCategory(scorecard.sheet_names[0], edl_metric_objects)
-
-    '''Here we want to get the call values to convert to a dictionary using the NL language descriptions'''
-    '''This dictionary is to get the POST results with the units'''
-    value_edlmetric_name = []
-    value_edlmetric_units = []
-    value_edlmetric_post = []
-    value_edlmetric_type = []
-    value_edlmetric_greatorless = []
-    value_edlmetric_flag = []
-    value_edlmetric_description = []
-    value_edlmetric_outofspec = []
-
-    for i in range(len(edl_metric_objects)):
-        value_edlmetric_type.append('edl_metric.entries[' + str(i) + '].type')
-        value_edlmetric_units.append('edl_metric.entries[' + str(i) + '].units')
-        value_edlmetric_post.append('edl_metric.entries[' + str(i) + '].POST_results')
-        value_edlmetric_greatorless.append('edl_metric.entries[' + str(i) + '].GreatOrLess')
-        value_edlmetric_flag.append('edl_metric.entries[' + str(i) + '].Flag')
-        value_edlmetric_outofspec.append('edl_metric.entries[' + str(i) + '].OutofSpec')
-        value_edlmetric_description.append('edl_metric.entries[' + str(i) + '].Description')
-
-    '''=========================================Dictionary========================================================='''
-    list_of_metrics_edlmetric = [item for items in NAMES_EDLSHEET for item in items]
-    list_of_lists = [list_of_metrics_edlmetric, value_edlmetric_type, value_edlmetric_units, value_edlmetric_post,
-                     value_edlmetric_greatorless, value_edlmetric_flag, value_edlmetric_outofspec,
-                     value_edlmetric_description]
-    dictionary_edlmetrics = {z[0]: list(z[1:]) for z in zip(*list_of_lists)}
-
-    value = eval(dictionary_edlmetrics[scorecard_post_param][2])
-    units = eval(dictionary_edlmetrics[scorecard_post_param][1])
-    scorecard_post_result_returned_edlmetrics = str(value) + " " + units
+def get_scorecard_post_results_edlmetrics(mat_file,metric_to_calculate, context):
+    scorecard_post_result_returned_edlmetrics = 'need to update with dataframe format'
     return scorecard_post_result_returned_edlmetrics
 
 def get_scorecard_sumamry_edlmetrics(edl_scorecard, context):
