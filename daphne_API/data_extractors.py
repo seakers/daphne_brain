@@ -12,6 +12,7 @@ import scipy.io
 import fnmatch
 import pandas as pd
 import xlrd
+import json
 
 
 instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
@@ -190,8 +191,14 @@ def extract_edl_mat_file(processed_question, number_of_features,context):
     print(os.listdir(base_dir))
     return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
 
-# def extract_mat_parameter(processed_question, number_of_features, context):
-#     return(processed_question, parameter, context)
+def edl_metric_calculate(processed_question, number_of_features, context):
+    with open('scorecard.json') as file:
+        scorecard_json = json.load(file)
+        scorecard_metrics = []
+        for item in scorecard_json:
+            if item['metric'] is not None:
+                scorecard_metrics.append(item['metric'])
+    return sorted_list_of_features_by_index(processed_question, scorecard_metrics, number_of_features)
 
 file_paths = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', 'm2020', 'MC_test.mat')
 mat_dict = scipy.io.loadmat(file_paths)
@@ -205,7 +212,7 @@ def extract_edl_mat_parameter(processed_question, number_of_features, context):
     # TODO: extract a specific parameter from mat files
     mat_parameter = list_items  # mat_dict[random.choice(list_items)]
     mat_parameter = mat_parameter + list_descriptions
-    print(mat_parameter)
+    #print(mat_parameter)
     return sorted_list_of_features_by_index(processed_question, mat_parameter, number_of_features)
 
 def extract_scorecard_filename(processed_question, number_of_features,context):

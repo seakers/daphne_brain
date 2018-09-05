@@ -54,17 +54,17 @@ class Command(APIView):
             condition_name = condition_names[command_type]
             request.session['context']['answers'].append(
                 command_processing.command(processed_command, command_class, condition_name, request.session['context']))
+            print('The command type is:')
+            print(command_type)
+            print('the type is:')
+            print(type(command_type))
 
+            if command_type == int(4):
+                print(eng1.eval('2+2'))
         response = command_processing.think_response(request.session['context'])
 
         request.session.modified = True
-        print('The command type is:')
-        print(command_type)
-        print('the type is:')
-        print(type(command_type))
 
-        if command_type == int(4):
-            print(eng1.eval('2+2'))
 
 
         # If command is to switch modes, send new mode back, if not

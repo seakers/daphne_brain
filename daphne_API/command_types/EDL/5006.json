@@ -3,10 +3,10 @@
   "params":
   [
     { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true,"from_context":true},
-    { "name": "scorecard_edlmetricsheet_results", "type": "scorecard_edlmetricsheet_results", "options": "", "mandatory": true, "from_context":false}
+    { "name": "extract_scorecard_filename", "type": "extract_scorecard_filename", "options": "", "mandatory": true, "from_context":false}
   ],
 "function":
-{"run_template": "run_func.get_scorecard_post_results_edlmetrics('${current_scorecard}', '${scorecard_edlmetricsheet_results}', context)",
+{"run_template": "run_func.get_scorecard_post_results_edlmetrics('${extract_scorecard_filename}', '${scorecard_edlmetricsheet_results}', context)",
     "result_type": "single",
     "result_fields": {
      "load_result": "command_result"
