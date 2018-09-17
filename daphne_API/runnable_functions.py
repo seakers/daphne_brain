@@ -1477,141 +1477,141 @@ def get_scorecard_post_results_edlmetrics(edl_scorecard,scorecard_post_param, co
     scorecard_post_result_returned_edlmetrics = str(value) + " " + units
     return scorecard_post_result_returned_edlmetrics
 
-def get_scorecard_sumamry_edlmetrics(edl_scorecard, context):
-    path_scorecard = os.path.join('/Users/ssantini/Desktop/Code Daphne/daphne_brain/', edl_scorecard)
-    scorecard = pd.ExcelFile('/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx')
+# def get_scorecard_sumamry_edlmetrics(edl_scorecard, context):
+#     path_scorecard = os.path.join('/Users/ssantini/Desktop/Code Daphne/daphne_brain/', edl_scorecard)
+#     scorecard = pd.ExcelFile('/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx')
 
-    '''Here we get all lists from all metrics and fields'''
-    NAMES_EDLSHEET = []
-    TYPES_EDLSHEET = []
-    UNITS_EDLSHEET = []
-    GREATORLESSS_EDL_SHEET = []
-    POST_RESULTS_EDLSHEET = []
-    FLAG_EDLSHEET = []
-    OUTOFSPEC_EDLSHEET = []
-    DESCRIPT_EDLSHEET = []
-    CALC_EDLSHEET = []
+#     '''Here we get all lists from all metrics and fields'''
+#     NAMES_EDLSHEET = []
+#     TYPES_EDLSHEET = []
+#     UNITS_EDLSHEET = []
+#     GREATORLESSS_EDL_SHEET = []
+#     POST_RESULTS_EDLSHEET = []
+#     FLAG_EDLSHEET = []
+#     OUTOFSPEC_EDLSHEET = []
+#     DESCRIPT_EDLSHEET = []
+#     CALC_EDLSHEET = []
 
 
-    '''Remove all of the fields we dont want'''
-    sheets = scorecard.sheet_names
-    for sheet in sheets:
-        df = pd.read_excel('/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx', sheet_name=sheet)  # get data from sheet
-        column_names = list(df.columns)
-        metric_col = column_names[1]  # metric sheet will be the reference for deleting empty rows or label rows
-        length_col = len(df[metric_col])  # original number of rows in the excel sheet
-        if sheet == sheets[0]:
-            for i in range(length_col):
+#     '''Remove all of the fields we dont want'''
+#     sheets = scorecard.sheet_names
+#     for sheet in sheets:
+#         df = pd.read_excel('/Users/ssantini/Desktop/Code Daphne/daphne_brain/ScoreCardResults.xlsx', sheet_name=sheet)  # get data from sheet
+#         column_names = list(df.columns)
+#         metric_col = column_names[1]  # metric sheet will be the reference for deleting empty rows or label rows
+#         length_col = len(df[metric_col])  # original number of rows in the excel sheet
+#         if sheet == sheets[0]:
+#             for i in range(length_col):
 
-                if type(df[metric_col][i]) == float:
-                    df.drop([i], inplace=True)
-                elif (df[metric_col][i]) == 'Metric':
-                    df.drop([i], inplace=True)
-                    DF_EDLMETRICS = df
+#                 if type(df[metric_col][i]) == float:
+#                     df.drop([i], inplace=True)
+#                 elif (df[metric_col][i]) == 'Metric':
+#                     df.drop([i], inplace=True)
+#                     DF_EDLMETRICS = df
 
-            NAMES_EDLSHEET.append(list(DF_EDLMETRICS[column_names[1]]))
-            TYPES_EDLSHEET.append(list(DF_EDLMETRICS[column_names[2]]))
-            UNITS_EDLSHEET.append(list(DF_EDLMETRICS[column_names[3]]))
-            POST_RESULTS_EDLSHEET.append(list(DF_EDLMETRICS[column_names[4]]))
-            GREATORLESSS_EDL_SHEET.append(list(DF_EDLMETRICS[column_names[5]]))
-            FLAG_EDLSHEET.append(list(DF_EDLMETRICS[column_names[6]]))
-            OUTOFSPEC_EDLSHEET.append(list(DF_EDLMETRICS[column_names[7]]))
-            CALC_EDLSHEET.append(list(DF_EDLMETRICS[column_names[10]]))
-            DESCRIPT_EDLSHEET.append(list(DF_EDLMETRICS[column_names[9]]))
+#             NAMES_EDLSHEET.append(list(DF_EDLMETRICS[column_names[1]]))
+#             TYPES_EDLSHEET.append(list(DF_EDLMETRICS[column_names[2]]))
+#             UNITS_EDLSHEET.append(list(DF_EDLMETRICS[column_names[3]]))
+#             POST_RESULTS_EDLSHEET.append(list(DF_EDLMETRICS[column_names[4]]))
+#             GREATORLESSS_EDL_SHEET.append(list(DF_EDLMETRICS[column_names[5]]))
+#             FLAG_EDLSHEET.append(list(DF_EDLMETRICS[column_names[6]]))
+#             OUTOFSPEC_EDLSHEET.append(list(DF_EDLMETRICS[column_names[7]]))
+#             CALC_EDLSHEET.append(list(DF_EDLMETRICS[column_names[10]]))
+#             DESCRIPT_EDLSHEET.append(list(DF_EDLMETRICS[column_names[9]]))
 
-    '''Create objects and classes'''
+#     '''Create objects and classes'''
 
-    class ScoreCardCategory(object):
-        def __init__(self, name=0, entries=0):
-            self.name = name  # these are the tab names (categories)
-            self.entries = entries  # These are all the metrics in each
+#     class ScoreCardCategory(object):
+#         def __init__(self, name=0, entries=0):
+#             self.name = name  # these are the tab names (categories)
+#             self.entries = entries  # These are all the metrics in each
 
-        def __call__(self, name, entries):
-            print(name)
-            print(entries)
+#         def __call__(self, name, entries):
+#             print(name)
+#             print(entries)
 
-    class ScoreCardMetrics(object):
-        def __init__(self, name=0, type=0, units=0, POST_results=0, GreatOrLess=0, Flag=0, OutOfSpec=0, Enum=0,
-                     Description=0, Calculation=0, CalculationCheckedBy=0, MetricCheckedBy=0, FlagOutOfSpecOwner=0):
-            self.name = name
-            self.type = type
-            self.units = units
-            self.POST_results = POST_results
-            self.GreatOrLess = GreatOrLess
-            self.Flag = Flag
-            self.OutOfSpec = OutOfSpec
-            self.Enum = Enum
-            self.Description = Description
-            self.Calculation = Calculation
-            self.CalculationCheckedBy = CalculationCheckedBy
-            self.MetricCheckedBy = MetricCheckedBy
-            self.FlagOutOfSpecOwner = FlagOutOfSpecOwner
+#     class ScoreCardMetrics(object):
+#         def __init__(self, name=0, type=0, units=0, POST_results=0, GreatOrLess=0, Flag=0, OutOfSpec=0, Enum=0,
+#                      Description=0, Calculation=0, CalculationCheckedBy=0, MetricCheckedBy=0, FlagOutOfSpecOwner=0):
+#             self.name = name
+#             self.type = type
+#             self.units = units
+#             self.POST_results = POST_results
+#             self.GreatOrLess = GreatOrLess
+#             self.Flag = Flag
+#             self.OutOfSpec = OutOfSpec
+#             self.Enum = Enum
+#             self.Description = Description
+#             self.Calculation = Calculation
+#             self.CalculationCheckedBy = CalculationCheckedBy
+#             self.MetricCheckedBy = MetricCheckedBy
+#             self.FlagOutOfSpecOwner = FlagOutOfSpecOwner
 
-        def __call__(self, name, type, units, POST_results, GreatOrLess, Flag, OutOfSpec, Enum,
-                     Description, Calculation, CalculationCheckedBy, MetricCheckedBy, FlagOutOfSpecOwner):
-            print(name)
-            print(type)
-            print(units)
-            print(POST_results)
-            print(GreatOrLess)
-            print(Flag)
-            print(OutOfSpec)
-            print(Enum)
-            print(Description)
-            print(Calculation)
-            print(CalculationCheckedBy)
-            print(MetricCheckedBy)
-            print(FlagOutOfSpecOwner)
+#         def __call__(self, name, type, units, POST_results, GreatOrLess, Flag, OutOfSpec, Enum,
+#                      Description, Calculation, CalculationCheckedBy, MetricCheckedBy, FlagOutOfSpecOwner):
+#             print(name)
+#             print(type)
+#             print(units)
+#             print(POST_results)
+#             print(GreatOrLess)
+#             print(Flag)
+#             print(OutOfSpec)
+#             print(Enum)
+#             print(Description)
+#             print(Calculation)
+#             print(CalculationCheckedBy)
+#             print(MetricCheckedBy)
+#             print(FlagOutOfSpecOwner)
 
-    METRIC_OBJECTS_GROUPED_EDLMETRIC = []
-    METRIC_OBJECTS_EDLMETRIC = []
-    for i in range(len(NAMES_EDLSHEET[0])):  # number of metrics in each sheet
-        METRIC_OBJECTS_EDLMETRIC.append(ScoreCardMetrics(name=NAMES_EDLSHEET[0][i], type=TYPES_EDLSHEET[0][i],
-                                                         units=UNITS_EDLSHEET[0][i],
-                                                         POST_results=POST_RESULTS_EDLSHEET[0][i],
-                                                         GreatOrLess=GREATORLESSS_EDL_SHEET[0][i],
-                                                         Flag=FLAG_EDLSHEET[0][i],
-                                                         OutOfSpec=OUTOFSPEC_EDLSHEET[0][i], Enum=0,
-                                                         Description=DESCRIPT_EDLSHEET[0][i],
-                                                         Calculation=CALC_EDLSHEET[0][i], CalculationCheckedBy=0,
-                                                         MetricCheckedBy=0, FlagOutOfSpecOwner=0))
-        METRIC_OBJECTS = list(METRIC_OBJECTS_EDLMETRIC)
-    METRIC_OBJECTS_GROUPED_EDLMETRIC.append(METRIC_OBJECTS)
+#     METRIC_OBJECTS_GROUPED_EDLMETRIC = []
+#     METRIC_OBJECTS_EDLMETRIC = []
+#     for i in range(len(NAMES_EDLSHEET[0])):  # number of metrics in each sheet
+#         METRIC_OBJECTS_EDLMETRIC.append(ScoreCardMetrics(name=NAMES_EDLSHEET[0][i], type=TYPES_EDLSHEET[0][i],
+#                                                          units=UNITS_EDLSHEET[0][i],
+#                                                          POST_results=POST_RESULTS_EDLSHEET[0][i],
+#                                                          GreatOrLess=GREATORLESSS_EDL_SHEET[0][i],
+#                                                          Flag=FLAG_EDLSHEET[0][i],
+#                                                          OutOfSpec=OUTOFSPEC_EDLSHEET[0][i], Enum=0,
+#                                                          Description=DESCRIPT_EDLSHEET[0][i],
+#                                                          Calculation=CALC_EDLSHEET[0][i], CalculationCheckedBy=0,
+#                                                          MetricCheckedBy=0, FlagOutOfSpecOwner=0))
+#         METRIC_OBJECTS = list(METRIC_OBJECTS_EDLMETRIC)
+#     METRIC_OBJECTS_GROUPED_EDLMETRIC.append(METRIC_OBJECTS)
 
-    edl_metric_objects = METRIC_OBJECTS_GROUPED_EDLMETRIC[0]
-    edl_metric = ScoreCardCategory(scorecard.sheet_names[0], edl_metric_objects)
-    '''===================================Create Summary ==========================================================='''
-    name = []
-    types = []
-    units = []
-    post = []
-    GorLess = []
-    flag = []
-    outofspec = []
-    description = []
-    calculation = []
+#     edl_metric_objects = METRIC_OBJECTS_GROUPED_EDLMETRIC[0]
+#     edl_metric = ScoreCardCategory(scorecard.sheet_names[0], edl_metric_objects)
+#     '''===================================Create Summary ==========================================================='''
+#     name = []
+#     types = []
+#     units = []
+#     post = []
+#     GorLess = []
+#     flag = []
+#     outofspec = []
+#     description = []
+#     calculation = []
 
-    for i in range(len(edl_metric_objects)):
-        name.append(str((edl_metric.entries[i].name)))
-        types.append(str((edl_metric.entries[i].type)))
-        units.append(str((edl_metric.entries[i].units)))
-        post.append(str((edl_metric.entries[i].POST_results)))
-        flag.append(str((edl_metric.entries[i].Flag)))
-        outofspec.append(str((edl_metric.entries[i].OutOfSpec)))
-        GorLess.append(str((edl_metric.entries[i].GreatOrLess)))
-        description.append(str((edl_metric.entries[i].Description)))
-        calculation.append(str((edl_metric.entries[i].Calculation)))
+#     for i in range(len(edl_metric_objects)):
+#         name.append(str((edl_metric.entries[i].name)))
+#         types.append(str((edl_metric.entries[i].type)))
+#         units.append(str((edl_metric.entries[i].units)))
+#         post.append(str((edl_metric.entries[i].POST_results)))
+#         flag.append(str((edl_metric.entries[i].Flag)))
+#         outofspec.append(str((edl_metric.entries[i].OutOfSpec)))
+#         GorLess.append(str((edl_metric.entries[i].GreatOrLess)))
+#         description.append(str((edl_metric.entries[i].Description)))
+#         calculation.append(str((edl_metric.entries[i].Calculation)))
 
-    table = BeautifulTable()
-    table.column_headers = ['metric', 'type', 'POST2 Result', 'units', 'direction', 'flag value', 'out of spec value',
-                            'calculation','description']
+#     table = BeautifulTable()
+#     table.column_headers = ['metric', 'type', 'POST2 Result', 'units', 'direction', 'flag value', 'out of spec value',
+#                             'calculation','description']
 
-    for row in zip((name), (types), (post), (units), (GorLess), (flag), (outofspec),
-                   (calculation), (description)):
-        table.append_row(row)
+#     for row in zip((name), (types), (post), (units), (GorLess), (flag), (outofspec),
+#                    (calculation), (description)):
+#         table.append_row(row)
 
-    table.column_widths = [30, 10, 15, 10, 8, 10, 15, 20, 10]
-    print(table.get_string(recalculate_width=False))
+#     table.column_widths = [30, 10, 15, 10, 8, 10, 15, 20, 10]
+#     print(table.get_string(recalculate_width=False))
 
-    table_summary_edlmetrics = table
-    return table_summary_edlmetrics
+#     table_summary_edlmetrics = table
+#     return table_summary_edlmetrics
