@@ -23,4 +23,10 @@ urlpatterns = [
     path('get-problem-parameters', views.GetProblemParameters.as_view()),
     path('set-problem-parameters', views.SetProblemParameters.as_view()),
     path('get-taxonomic-scheme', views.getTaxonomicScheme.as_view()),
+
+
+
+    path('import-feature-data', views.ImportFeatureData.as_view()),
+    path('import-target-selection', views.ImportTargetSelection.as_view()),
+    path('export-target-selection', views.ExportTargetSelection.as_view()),
 ]
