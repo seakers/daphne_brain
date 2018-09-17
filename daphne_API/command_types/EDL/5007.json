@@ -1,0 +1,24 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true,"from_context":true}
+  ],
+"function":
+{"run_template": "run_func.get_scorecard_sumamry_edlmetrics('${current_scorecard}', context)",
+    "result_type": "single",
+    "result_fields": {
+     "load_result": "command_result"
+    }
+  },
+  "voice_response": {
+    "type": "single",
+    "template": "${load_result}"
+
+  },
+  "visual_response": {
+    "type": "text",
+    "from": "single",
+    "template": "${load_result}"
+  }
+}

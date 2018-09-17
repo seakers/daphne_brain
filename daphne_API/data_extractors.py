@@ -7,6 +7,20 @@ import daphne_API.historian.models as earth_models
 import daphne_API.edl.model as edl_models
 from daphne_API import problem_specific
 
+import os, sys
+import scipy.io
+import fnmatch
+import pandas as pd
+import xlrd
+
+
+instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
+measurements_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Measurement')
+param_names = []
+for row in measurements_sheet.itertuples(index=True, name='Measurement'):
+    if row[2] == 'Parameter':
+        for i in range(6, len(row)):
+            param_names.append(row[i])
 
 def feature_list_by_ratio(processed_question, feature_list):
     """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
@@ -163,12 +177,72 @@ def extract_edl_parameter(processed_question, number_of_features, context):
 
 
 
-def extract_mat_file(processed_question, number_of_features,context):
-    # TODO: Read folder and get list of possible mat files
-    path = "/Users/ssantini/Code/EDL_Assistant_Brain/daphne_API/mat_files"
-    mat_files = os.listdir(path)
-
+def extract_edl_mat_file(processed_question, number_of_features,context):
+    '''Read folder and get list of possible mat files'''
+    base_dir = '/Users/ssantini/Desktop/EDL_Simulation_Files/'
+    all_subdirs = [d for d in os.listdir(base_dir) if os.path.isdir(base_dir + d)]
+    mat_files = []
+    for name in all_subdirs:
+        dir = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files/', name)
+        mat_files.extend(os.listdir(dir))
+    print(mat_files)
+    print(all_subdirs)
+    print(os.listdir(base_dir))
     return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
 
-def extract_mat_parameter(processed_question, number_of_features, context):
-    return(processed_question, parameter, context)
+# def extract_mat_parameter(processed_question, number_of_features, context):
+#     return(processed_question, parameter, context)
+
+file_paths = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', 'm2020', 'MC_test.mat')
+mat_dict = scipy.io.loadmat(file_paths)
+'''Get list of keys in mat dict'''
+list_items = list(mat_dict.keys())
+'''Get the NL description of the variable'''
+file_path = pandas.read_excel('/Users/ssantini/Desktop/Code Daphne/command_classifier/edlsimqueries.xlsx')
+list_descriptions = list(file_path[0])
+
+def extract_edl_mat_parameter(processed_question, number_of_features, context):
+    # TODO: extract a specific parameter from mat files
+    mat_parameter = list_items  # mat_dict[random.choice(list_items)]
+    mat_parameter = mat_parameter + list_descriptions
+    print(mat_parameter)
+    return sorted_list_of_features_by_index(processed_question, mat_parameter, number_of_features)
+
+def extract_scorecard_filename(processed_question, number_of_features,context):
+    base_dir = '/Users/ssantini/Desktop/EDL_Simulation_Files/'
+    all_subdirs = [d for d in os.listdir(base_dir) if os.path.isdir(base_dir + d)]
+    mat_file_name = []
+    scorecard_name = []
+    for name in all_subdirs:
+        dir = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', name)
+        mat_file_name.extend((os.listdir(dir)))
+        for item in mat_file_name:
+            scorecard_name.append(item.replace('.mat',''))
+    return sorted_list_of_features_by_index(processed_question, scorecard_name, number_of_features)
+
+
+def extract_edl_POSTresult_scorecard(processed_question, number_of_features, context):
+    # TODO: exrtact the POST results for a particular EDL metric
+    df = pd.read_excel(
+        '/Users/ssantini/Code/ExtractDataMatlab/ExtractScorecardData/list_of_metrics_complete_ver2.xlsx')  # get data from sheet
+    list_of_metrics = list(df[0])
+    edl_metric_post_scorecard = list_of_metrics
+    print(edl_metric_post_scorecard)
+    return sorted_list_of_features_by_index(processed_question, edl_metric_post_scorecard, number_of_features)
+
+
+def extract_edl_scorecard_edlmetricsheet(processed_question, number_of_features, context):
+    # TODO: exrtact the POST results for a particular EDL metric
+    edl_metric_edlsheet = ["Peak Decleration", "Parachute Deploy Mach Number", "Peak Parachute Inflation Load (MEV)",
+                          "Parachute Deploy Range Error", "Timeline Margin", "Touchdown Vertical Velocity",
+                          "Touchdown Horizontal Velocity", "Hazardous Landing Fraction", "Fuel Remaining", "Fuel Used",
+                          "Range to Target", "TRN End-to-End Performance", "LVS Reduced Performance Timeline Margin",
+                          "LVS Fine Mode Timeline Margin", "Probability of Success - Terrain Only",
+                          "Parachute Deploy Flight Path Angle ", "TDS NAV INIT (Mode 20) Altitude ",
+                          "Backshell Separation Altitude ", "Touchdown Ellipse Major Axis ",
+                          "Touchdown Ellipse Minor Axis ", "MLE Priming Time ", "First Accordion Flown ",
+                          "Mortar Fire Dynamic Pressure ", "Parachute Inflation Dynamic Pressure ",
+                          "Peak Parachute Inflation Load (CBE) "]
+    print(edl_metric_edlsheet)
+    return sorted_list_of_features_by_index(processed_question, edl_metric_edlsheet, number_of_features)
+

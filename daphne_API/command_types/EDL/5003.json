@@ -1,0 +1,28 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true,"from_context":false},
+    { "name": "edl_mat_param", "type": "edl_mat_param", "options": "", "mandatory": true,"from_context":false},
+    { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "from_context": true, "mandatory": true },
+    { "name": "current_mat_file_for_print", "type": "edl_mat_file", "options": "", "from_context": true, "mandatory": true }
+  ],
+"function":
+{"run_template": "run_func.EDL_compute_stat('${mission}','${current_mat_file}', '${edl_mat_param}',context)",
+    "result_type": "list",
+    "result_fields": {
+     "load_result": "item['command_result']"
+    }
+  },
+  "voice_response": {
+    "type": "list",
+    "begin": "For ${edl_mat_param} in ${current_mat_file_for_print}, the statistics are",
+    "repeat": "${load_result}",
+    "end":"."
+  },
+  "visual_response": {
+    "type": "list",
+    "begin": "For ${edl_mat_param} in ${current_mat_file_for_print}, the statistics are",
+    "item_template": "${load_result}"
+  }
+}
