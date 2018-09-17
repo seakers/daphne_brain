@@ -212,6 +212,14 @@ class Iface(object):
         """
         pass
 
+    def setAssigningProblemExtendedParameters(self, problem, params):
+        """
+        Parameters:
+         - problem
+         - params
+        """
+        pass
+
     def getAssigningProblemParameters(self, problem):
         """
         Parameters:
@@ -234,10 +242,11 @@ class Iface(object):
         """
         pass
 
-    def getTaxonomicScheme(self, problem):
+    def getAssigningProblemTaxonomicScheme(self, problem, params):
         """
         Parameters:
          - problem
+         - params
         """
         pass
 
@@ -959,6 +968,39 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "setAssigningProblemParameters failed: unknown result")
 
+    def setAssigningProblemExtendedParameters(self, problem, params):
+        """
+        Parameters:
+         - problem
+         - params
+        """
+        self.send_setAssigningProblemExtendedParameters(problem, params)
+        return self.recv_setAssigningProblemExtendedParameters()
+
+    def send_setAssigningProblemExtendedParameters(self, problem, params):
+        self._oprot.writeMessageBegin('setAssigningProblemExtendedParameters', TMessageType.CALL, self._seqid)
+        args = setAssigningProblemExtendedParameters_args()
+        args.problem = problem
+        args.params = params
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_setAssigningProblemExtendedParameters(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = setAssigningProblemExtendedParameters_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "setAssigningProblemExtendedParameters failed: unknown result")
+
     def getAssigningProblemParameters(self, problem):
         """
         Parameters:
@@ -1054,23 +1096,25 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getPartitioningAndAssigningProblemParameters failed: unknown result")
 
-    def getTaxonomicScheme(self, problem):
+    def getAssigningProblemTaxonomicScheme(self, problem, params):
         """
         Parameters:
          - problem
+         - params
         """
-        self.send_getTaxonomicScheme(problem)
-        return self.recv_getTaxonomicScheme()
+        self.send_getAssigningProblemTaxonomicScheme(problem, params)
+        return self.recv_getAssigningProblemTaxonomicScheme()
 
-    def send_getTaxonomicScheme(self, problem):
-        self._oprot.writeMessageBegin('getTaxonomicScheme', TMessageType.CALL, self._seqid)
-        args = getTaxonomicScheme_args()
+    def send_getAssigningProblemTaxonomicScheme(self, problem, params):
+        self._oprot.writeMessageBegin('getAssigningProblemTaxonomicScheme', TMessageType.CALL, self._seqid)
+        args = getAssigningProblemTaxonomicScheme_args()
         args.problem = problem
+        args.params = params
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
 
-    def recv_getTaxonomicScheme(self):
+    def recv_getAssigningProblemTaxonomicScheme(self):
         iprot = self._iprot
         (fname, mtype, rseqid) = iprot.readMessageBegin()
         if mtype == TMessageType.EXCEPTION:
@@ -1078,12 +1122,12 @@ class Client(Iface):
             x.read(iprot)
             iprot.readMessageEnd()
             raise x
-        result = getTaxonomicScheme_result()
+        result = getAssigningProblemTaxonomicScheme_result()
         result.read(iprot)
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "getTaxonomicScheme failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "getAssigningProblemTaxonomicScheme failed: unknown result")
 
 
 class Processor(Iface, TProcessor):
@@ -1109,10 +1153,11 @@ class Processor(Iface, TProcessor):
         self._processMap["runInputGeneralizationLocalSearchBinary"] = Processor.process_runInputGeneralizationLocalSearchBinary
         self._processMap["runFeatureGeneralizationLocalSearchBinary"] = Processor.process_runFeatureGeneralizationLocalSearchBinary
         self._processMap["setAssigningProblemParameters"] = Processor.process_setAssigningProblemParameters
+        self._processMap["setAssigningProblemExtendedParameters"] = Processor.process_setAssigningProblemExtendedParameters
         self._processMap["getAssigningProblemParameters"] = Processor.process_getAssigningProblemParameters
         self._processMap["setPartitioningAndAssigningProblemParameters"] = Processor.process_setPartitioningAndAssigningProblemParameters
         self._processMap["getPartitioningAndAssigningProblemParameters"] = Processor.process_getPartitioningAndAssigningProblemParameters
-        self._processMap["getTaxonomicScheme"] = Processor.process_getTaxonomicScheme
+        self._processMap["getAssigningProblemTaxonomicScheme"] = Processor.process_getAssigningProblemTaxonomicScheme
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -1566,6 +1611,29 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
+    def process_setAssigningProblemExtendedParameters(self, seqid, iprot, oprot):
+        args = setAssigningProblemExtendedParameters_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = setAssigningProblemExtendedParameters_result()
+        try:
+            result.success = self._handler.setAssigningProblemExtendedParameters(args.problem, args.params)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("setAssigningProblemExtendedParameters", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
     def process_getAssigningProblemParameters(self, seqid, iprot, oprot):
         args = getAssigningProblemParameters_args()
         args.read(iprot)
@@ -1635,13 +1703,13 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_getTaxonomicScheme(self, seqid, iprot, oprot):
-        args = getTaxonomicScheme_args()
+    def process_getAssigningProblemTaxonomicScheme(self, seqid, iprot, oprot):
+        args = getAssigningProblemTaxonomicScheme_args()
         args.read(iprot)
         iprot.readMessageEnd()
-        result = getTaxonomicScheme_result()
+        result = getAssigningProblemTaxonomicScheme_result()
         try:
-            result.success = self._handler.getTaxonomicScheme(args.problem)
+            result.success = self._handler.getAssigningProblemTaxonomicScheme(args.problem, args.params)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1653,7 +1721,7 @@ class Processor(Iface, TProcessor):
             logging.exception('Unexpected exception in handler')
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("getTaxonomicScheme", msg_type, seqid)
+        oprot.writeMessageBegin("getAssigningProblemTaxonomicScheme", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -5101,6 +5169,140 @@ setAssigningProblemParameters_result.thrift_spec = (
 )
 
 
+class setAssigningProblemExtendedParameters_args(object):
+    """
+    Attributes:
+     - problem
+     - params
+    """
+
+
+    def __init__(self, problem=None, params=None,):
+        self.problem = problem
+        self.params = params
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.params = AssigningProblemParameters()
+                    self.params.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('setAssigningProblemExtendedParameters_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.params is not None:
+            oprot.writeFieldBegin('params', TType.STRUCT, 2)
+            self.params.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(setAssigningProblemExtendedParameters_args)
+setAssigningProblemExtendedParameters_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.STRUCT, 'params', [AssigningProblemParameters, None], None, ),  # 2
+)
+
+
+class setAssigningProblemExtendedParameters_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.BOOL:
+                    self.success = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('setAssigningProblemExtendedParameters_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.BOOL, 0)
+            oprot.writeBool(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(setAssigningProblemExtendedParameters_result)
+setAssigningProblemExtendedParameters_result.thrift_spec = (
+    (0, TType.BOOL, 'success', None, None, ),  # 0
+)
+
+
 class getAssigningProblemParameters_args(object):
     """
     Attributes:
@@ -5479,15 +5681,17 @@ getPartitioningAndAssigningProblemParameters_result.thrift_spec = (
 )
 
 
-class getTaxonomicScheme_args(object):
+class getAssigningProblemTaxonomicScheme_args(object):
     """
     Attributes:
      - problem
+     - params
     """
 
 
-    def __init__(self, problem=None,):
+    def __init__(self, problem=None, params=None,):
         self.problem = problem
+        self.params = params
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -5503,6 +5707,12 @@ class getTaxonomicScheme_args(object):
                     self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.params = AssigningProblemParameters()
+                    self.params.read(iprot)
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -5512,10 +5722,14 @@ class getTaxonomicScheme_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('getTaxonomicScheme_args')
+        oprot.writeStructBegin('getAssigningProblemTaxonomicScheme_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.params is not None:
+            oprot.writeFieldBegin('params', TType.STRUCT, 2)
+            self.params.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -5533,14 +5747,15 @@ class getTaxonomicScheme_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(getTaxonomicScheme_args)
-getTaxonomicScheme_args.thrift_spec = (
+all_structs.append(getAssigningProblemTaxonomicScheme_args)
+getAssigningProblemTaxonomicScheme_args.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.STRUCT, 'params', [AssigningProblemParameters, None], None, ),  # 2
 )
 
 
-class getTaxonomicScheme_result(object):
+class getAssigningProblemTaxonomicScheme_result(object):
     """
     Attributes:
      - success
@@ -5574,7 +5789,7 @@ class getTaxonomicScheme_result(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('getTaxonomicScheme_result')
+        oprot.writeStructBegin('getAssigningProblemTaxonomicScheme_result')
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.STRUCT, 0)
             self.success.write(oprot)
@@ -5595,8 +5810,8 @@ class getTaxonomicScheme_result(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(getTaxonomicScheme_result)
-getTaxonomicScheme_result.thrift_spec = (
+all_structs.append(getAssigningProblemTaxonomicScheme_result)
+getAssigningProblemTaxonomicScheme_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [TaxonomicScheme, None], None, ),  # 0
 )
 fix_spec(all_structs)

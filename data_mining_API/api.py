@@ -11,7 +11,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 from data_mining_API.interface import interface as DataMiningInterface
-from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature, AssigningProblemParameters
 
 
 from config.loader import ConfigurationLoader
@@ -234,11 +234,12 @@ class DataMiningClient():
 
         return params
 
-    def getTaxonomicScheme(self, problem):
+    def getTaxonomicScheme(self, problem, params):
         scheme = None
         try:
             if problem == "ClimateCentric":
-                scheme_ = self.client.getTaxonomicScheme(problem)
+                params = AssigningProblemParameters(params["orbitList"], params["instrumentList"])
+                scheme_ = self.client.getAssigningProblemTaxonomicScheme(problem, params)
                 scheme = {}
                 scheme['instanceMap'] = scheme_.instanceMap
                 scheme['superclassMap'] = scheme_.superclassMap
@@ -246,7 +247,7 @@ class DataMiningClient():
                 raise ValueError("Unsupported problem formulation: {0}".format(problem))
 
         except Exception as e:
-            print('Exc in calling getProblemParameters(): '+str(e))
+            print('Exc in calling getTaxonomicScheme(): ' + str(e))
 
         return scheme
 
