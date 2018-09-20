@@ -190,16 +190,16 @@ def extract_edl_mat_file(processed_question, number_of_features,context):
     print(os.listdir(base_dir))
     return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
 
-# def extract_mat_parameter(processed_question, number_of_features, context):
-#     return(processed_question, parameter, context)
+# # def extract_mat_parameter(processed_question, number_of_features, context):
+# #     return(processed_question, parameter, context)
 
-file_paths = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', 'm2020', 'MC_test.mat')
-mat_dict = scipy.io.loadmat(file_paths)
-'''Get list of keys in mat dict'''
-list_items = list(mat_dict.keys())
-'''Get the NL description of the variable'''
-file_path = pandas.read_excel('/Users/ssantini/Desktop/Code Daphne/command_classifier/edlsimqueries.xlsx')
-list_descriptions = list(file_path[0])
+# file_paths = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', 'm2020', 'MC_test.mat')
+# mat_dict = scipy.io.loadmat(file_paths)
+# '''Get list of keys in mat dict'''
+# list_items = list(mat_dict.keys())
+# '''Get the NL description of the variable'''
+# file_path = pandas.read_excel('/Users/ssantini/Desktop/Code Daphne/command_classifier/edlsimqueries.xlsx')
+# list_descriptions = list(file_path[0])
 
 def extract_edl_mat_parameter(processed_question, number_of_features, context):
     # TODO: extract a specific parameter from mat files
