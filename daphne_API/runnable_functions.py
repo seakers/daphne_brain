@@ -72,7 +72,7 @@ def VASSAR_get_architecture_scores(design_id, designs, context):
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        list = client.client.getArchitectureScoreExplanation(designs[num_design_id]['inputs'])
+        list = client.client.getArchitectureScoreExplanation(context["problem"], designs[num_design_id]['inputs'])
 
         # End the connection before return statement
         client.endConnection()
@@ -103,8 +103,8 @@ def VASSAR_get_panel_scores(design_id, designs, panel, context):
             "human health": "HEA"
         }
 
-        panel_code = stakeholders_to_excel[panel]
-        list = client.client.getPanelScoreExplanation(designs[num_design_id]['inputs'], panel_code)
+        panel_code = stakeholders_to_excel[panel.lower()]
+        list = client.client.getPanelScoreExplanation(context["problem"], designs[num_design_id]['inputs'], panel_code)
 
         # End the connection before return statement
         client.endConnection()
@@ -124,7 +124,7 @@ def VASSAR_get_objective_scores(design_id, designs, objective, context):
         # Start connection with VASSAR
         client.startConnection()
         num_design_id = int(design_id)
-        objective_list = client.client.getObjectiveScoreExplanation(designs[num_design_id]['inputs'], objective)
+        objective_list = client.client.getObjectiveScoreExplanation(context["problem"], designs[num_design_id]['inputs'], objective)
 
         # End the connection before return statement
         client.endConnection()
@@ -143,7 +143,7 @@ def VASSAR_get_instruments_for_objective(objective, context):
     try:
         # Start connection with VASSAR
         client.startConnection()
-        list = client.client.getInstrumentsForObjective(objective)
+        list = client.client.getInstrumentsForObjective(context["problem"], objective)
 
         # End the connection before return statement
         client.endConnection()
@@ -172,8 +172,8 @@ def VASSAR_get_instruments_for_stakeholder(stakeholder, context):
             "water": "WAT",
             "human health": "HEA"
         }
-        panel_code = stakeholders_to_excel[stakeholder]
-        list = client.client.getInstrumentsForPanel(panel_code)
+        panel_code = stakeholders_to_excel[stakeholder.lower()]
+        list = client.client.getInstrumentsForPanel(context["problem"], panel_code)
 
         # End the connection before return statement
         client.endConnection()
