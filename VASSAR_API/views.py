@@ -3,12 +3,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
 import redis
+import time
 
-from VASSAR_API.VASSARInterface.ttypes import BinaryInputArchitecture
-from VASSAR_API.VASSARInterface.ttypes import DiscreteInputArchitecture
+from VASSAR_API.thriftinterface.ttypes import BinaryInputArchitecture
+from VASSAR_API.thriftinterface.ttypes import DiscreteInputArchitecture
 from VASSAR_API.api import VASSARClient
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+
+from importlib import import_module
+from django.conf import settings
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
@@ -167,29 +172,30 @@ class StartGA(APIView):
                 p = r.pubsub()
 
                 def my_handler(message):
+                    updated_session = SessionStore(session_key=request.session.session_key)
+
                     if message['data'] == 'new_arch':
                         print('Processing some new archs!')
                         nonlocal inputs_unique_set
-                        nonlocal request
-                        # Archs are added in pairs
-                        new_archs = r.lrange(request.user.username, -2, -1)
+                        # Archs are added one by one
+                        new_archs = r.lrange(request.user.username, -1, -1)
                         send_back = []
                         # Add archs to the context data before sending back to user
                         for arch in new_archs:
                             arch = json.loads(arch)
                             hashed_input = hash(tuple(arch['inputs']))
                             if hashed_input not in inputs_unique_set:
-                                full_arch = {'id': request.session['archID'], 'inputs': arch['inputs'],
+                                full_arch = {'id': updated_session['archID'], 'inputs': arch['inputs'],
                                              'outputs': arch['outputs']}
-                                request.session['data'].append(full_arch)
-                                request.session['archID'] += 1
+                                updated_session['data'].append(full_arch)
+                                updated_session['archID'] += 1
                                 send_back.append(full_arch)
                                 inputs_unique_set.add(hashed_input)
-                                request.session.save()
+                                updated_session.save()
 
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                        async_to_sync(channel_layer.send)(updated_session['channel_name'],
                                                           {
                                                               'type': 'ga.new_archs',
                                                               'archs': send_back
@@ -197,13 +203,13 @@ class StartGA(APIView):
                     if message['data'] == 'ga_started':
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                        async_to_sync(channel_layer.send)(updated_session['channel_name'],
                                                           {
                                                               'type': 'ga.started'
                                                           })
                     if message['data'] == 'ga_done':
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(request.session['channel_name'],
+                        async_to_sync(channel_layer.send)(updated_session['channel_name'],
                                                           {
                                                               'type': 'ga.finished'
                                                           })
@@ -221,7 +227,7 @@ class StartGA(APIView):
                 problem = request.data['problem']
                 inputType = request.data['inputType']
 
-                # Convert the architecture list
+                # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
                 thrift_list = []
                 inputs_unique_set = set()
 
@@ -230,14 +236,20 @@ class StartGA(APIView):
                         thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
                         hashed_input = hash(tuple(arch['inputs']))
                         inputs_unique_set.add(hashed_input)
-                    client.client.toggleGABinaryInput(problem, thrift_list, request.user.username)
+                    client.client.stopGABinaryInput(request.user.username)
+                    while client.client.isGABinaryInputRunning():
+                        time.sleep(0.1)
+                    client.client.startGABinaryInput(problem, thrift_list, request.user.username)
 
                 elif inputType == 'discrete':
                     for arch in request.session['data']:
                         thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
                         hashed_input = hash(tuple(arch['inputs']))
                         inputs_unique_set.add(hashed_input)
-                    client.client.toggleGADiscreteInput(problem, thrift_list, request.user.username)
+                    client.client.stopGADiscreteInput(request.user.username)
+                    while client.client.isGADiscreteInputRunning():
+                        time.sleep(0.1)
+                    client.client.startGADiscreteInput(problem, thrift_list, request.user.username)
                 else:
                     raise ValueError('Unrecognized input type: {0}'.format(inputType))
 
@@ -268,16 +280,15 @@ class StopGA(APIView):
                 problem = request.data['problem']
                 inputType = request.data['inputType']
 
-                # Convert the architecture list
-
-
+                # Call the GA stop function on Engineer
                 if inputType == 'binary':
-                    thrift_list = []
-                    client.client.toggleGABinaryInput(problem, thrift_list, request.user.username)
-
+                    client.client.stopGABinaryInput(request.user.username)
+                    while client.client.isGABinaryInputRunning():
+                        time.sleep(0.1)
                 elif inputType == 'discrete':
-                    thrift_list = []
-                    client.client.toggleGADiscreteInput(problem, thrift_list, request.user.username)
+                    client.client.stopGADiscreteInput(request.user.username)
+                    while client.client.isGADiscreteInputRunning():
+                        time.sleep(0.1)
                 else:
                     raise ValueError('Unrecognized input type: {0}'.format(inputType))
 
