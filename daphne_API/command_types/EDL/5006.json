@@ -3,23 +3,33 @@
   "params":
   [
     { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true,"from_context":true},
-    { "name": "extract_scorecard_filename", "type": "extract_scorecard_filename", "options": "", "mandatory": true, "from_context":false}
+    { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context":false}
   ],
-"function":
-{"run_template": "run_func.get_scorecard_post_results_edlmetrics('${extract_scorecard_filename}', '${scorecard_edlmetricsheet_results}', context)",
-    "result_type": "single",
-    "result_fields": {
-     "load_result": "command_result"
+  "function":
+  {
+    "run_template": "run_func.get_scorecard_post_results('${current_scorecard}', '${edl_metric_names}', context)",
+    "results":[
+    {
+        "result_type": "list",
+        "result_fields": {
+          "load_result": "item['command_result']"
+      }
     }
+    ]
   },
-  "voice_response": {
-    "type": "single",
-    "template": "${load_result}"
-
-  },
-  "visual_response": {
-    "type": "text",
-    "from": "single",
-    "template": "${load_result}"
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The POST results are:",
+      "repeat": "${load_result}",
+      "end":"."
+    }
+  ],
+  "visual_response": [
+  {
+      "type": "list",
+      "begin": "The POST results are:",
+      "item_template": "${load_result}"
   }
+  ]
 }

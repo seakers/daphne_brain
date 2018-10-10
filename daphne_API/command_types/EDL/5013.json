@@ -3,11 +3,10 @@
   "params":
   [
     { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context":true},
-    { "name": "edl_metric_calculate", "type": "edl_metric_calculate", "options": "", "mandatory": true, "from_context":false},
-    { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context":false}
+    { "name": "edl_metric_calculate", "type": "edl_metric_calculate", "options": "", "mandatory": true, "from_context":false}
   ],
   "function":
-  {"run_template": "run_func.calculate_scorecard_metric('${current_mat_file}', '${edl_metric_calculate}','${edl_metric_names}', context)",
+  {"run_template": "run_func.calculate_scorecard_metric('${current_mat_file}', '${edl_metric_calculate}', context)",
     "results":[
       {
         "result_type": "single",

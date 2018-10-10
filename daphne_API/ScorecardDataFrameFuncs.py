@@ -47,9 +47,10 @@ def generate_scorecard_dataframe(scorecard_dict):
 status_list = []
 def generate_scorecard_dataframe_labeled(scorecard_dataframe_labeled):
     for i in list(range(len(scorecard_dataframe_labeled.index.values))):  # list(range(len(scorecard_df.index.values)))
-        if scorecard_dataframe_labeled['post_results'][i] != nan and scorecard_dataframe_labeled['flag'][i] != nan \
-                and scorecard_dataframe_labeled['direction'][i] != nan and scorecard_dataframe_labeled['direction'][i] != None \
-                and scorecard_dataframe_labeled['direction'][i] != 'N/A':
+        if pd.isna(scorecard_dataframe_labeled['post_results'][i]) != True and pd.isna(scorecard_dataframe_labeled['flag'][i]) != True \
+                and pd.isna(scorecard_dataframe_labeled['direction'][i]) != True and scorecard_dataframe_labeled['direction'][i] != None\
+                and scorecard_dataframe_labeled['direction'][i] != 'N/A' and pd.isna(scorecard_dataframe_labeled['out_of_spec'][i]) != True\
+                and scorecard_dataframe_labeled['out_of_spec'][i] != 0 and scorecard_dataframe_labeled['flag'][i] != 0:
                     if eval(str(scorecard_dataframe_labeled['post_results'][i]) + str(scorecard_dataframe_labeled['direction'][i]) + str(scorecard_dataframe_labeled['flag'][i])) == False \
                             and eval(str(scorecard_dataframe_labeled['post_results'][i]) + str(scorecard_dataframe_labeled['direction'][i]) + str(scorecard_dataframe_labeled['out_of_spec'][i])) == True:
                         status_list.append(str('flagged'))

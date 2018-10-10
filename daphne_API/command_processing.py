@@ -87,13 +87,13 @@ def command(processed_command, command_class, condition_name, context):
     data = qa_pipeline.augment_data(data, context)
     # Query the database
     if information["type"] == "db_query":
-        result = qa_pipeline.query(information["query"], data)
+        results = qa_pipeline.query(information["query"], data)
     elif information["type"] == "run_function":
-        result = qa_pipeline.run_function(information["function"], data, context)
+        results = qa_pipeline.run_function(information["function"], data, context)
     else:
-        result = None
+        results = None
     # Construct the response from the database query and the response format
-    answers = qa_pipeline.build_answers(information["voice_response"], information["visual_response"], result, data)
+    answers = qa_pipeline.build_answers(information["voice_response"], information["visual_response"], results, data)
 
     # Return the answer to the client
     return answers
