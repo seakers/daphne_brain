@@ -7,22 +7,34 @@
     { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "from_context": true, "mandatory": true },
     { "name": "current_mat_file_for_print", "type": "edl_mat_file", "options": "", "from_context": true, "mandatory": true }
   ],
-"function":
-{"run_template": "run_func.edl_plot_from_matfile('${current_mat_file}','${edl_mat_param}', '${edl_mat_param2}',context)",
-    "result_type": "list",
-    "result_fields": {
-     "load_result": "row.command_result"
-    }
+  "function":
+  {
+    "run_template": "run_func.edl_plot_from_matfile('${current_mat_file}','${edl_mat_param}', '${edl_mat_param2}',context)",
+    "results":[
+      {
+        "result_type": "list",
+        "result_fields": {
+        "plot_elem": "item"
+        }
+      }
+    ]
   },
-  "voice_response": {
+  "voice_response": [
+  {
     "type": "list",
-    "begin": "test",
-    "repeat": "${load_result}",
-    "end":"."
-  },
-  "visual_response": {
-    "type": "list",
-    "begin": "test",
-    "item_template": "${load_result}"
+    "begin": "",
+    "repeat": "",
+    "end":""
   }
+  ],
+  "visual_response": [
+    {
+      "type": "plot_vars",
+      "title": "Title of plot",
+      "item_template": "{ \"x\": ${plot_elem}[0], \"y\": ${plot_elem}[1], \"extra_info\": {\"output_case\": ${plot_elem}[2]} }",
+      "x_axis_template": "${edl_mat_param}",
+      "y_axis_template": "${edl_mat_param2}"
+
+    }
+  ]
 }

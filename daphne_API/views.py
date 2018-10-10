@@ -270,7 +270,7 @@ class ImportDataEDLSTATS(APIView):
     def post(self, request, format=None):
 
         # Set the path of the file containing data
-        file_path = '/Users/ssantini/Desktop/Code Daphne/daphne_brain/daphne_API/' + request.data['filename']
+        file_path = '/Users/ssantini/Desktop/Code_Daphne/daphne_brain/daphne_API/' + request.data['filename']
 
         data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
 
