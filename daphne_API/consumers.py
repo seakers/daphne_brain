@@ -69,7 +69,8 @@ class DaphneConsumer(JsonWebsocketConsumer):
 
     def send_ping(self):
         # wait 15s more for ping back, if not received, close ws
-        self.kill_event = self.scheduler.every(15).seconds.do(self.kill_ws)
+        self.scheduler.clear("kill-events")
+        self.kill_event = self.scheduler.every(15).seconds.do(self.kill_ws).tag("kill-events")
 
         if self.is_connected:
             self.send(json.dumps({"type": "ping"}))
