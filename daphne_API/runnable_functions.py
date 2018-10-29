@@ -311,9 +311,17 @@ def Critic_general_call(design_id, designs, context):
 
         assignation_problems = ['SMAP', 'ClimateCentric']
         partition_problems = ['Decadal2017Aerosols']
+
+        problem = context['problem']
+        if problem in assignation_problems:
+            problem_type = 'binary'
+        elif problem in partition_problems:
+            problem_type = 'discrete'
+        else:
+            problem_type = 'unknown'
         
         # Criticize architecture (based on rules)
-        problem = context['problem']
+
         result1 = None
         if problem in assignation_problems:
             result1 = client.client.getCritiqueBinaryInputArch(problem, this_design['inputs'])
@@ -366,32 +374,35 @@ def Critic_general_call(design_id, designs, context):
         original_inputs = this_design['inputs']
 
         archs = None
+        advices = []
         if problem in assignation_problems:
             archs = client.client.runLocalSearchBinaryInput(problem, this_design['inputs'])
+
+            for arch in archs:
+                new_outputs = arch.outputs
+
+                new_design_inputs = arch.inputs
+                diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
+                advice = [getAdvicesFromBitStringDiff(diff)]
+
+                # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
+                if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
+                    # New solution dominates the original solution
+                    advice.append(" to increase the science benefit and lower the cost.")
+                elif new_outputs[0] > original_outputs[0]:
+                    advice.append(" to increase the science benefit (but cost may increase!).")
+                elif new_outputs[1] < original_outputs[1]:
+                    advice.append(" to lower the cost (but science may decrease too!).")
+                else:
+                    continue
+
+                advice = "".join(advice)
+                advices.append(advice)
         elif problem in partition_problems:
             archs = client.client.runLocalSearchDiscreteInput(problem, this_design['inputs'])
-        advices = []
-        for arch in archs:
-            new_outputs = arch['outputs']
-            
-            new_design_inputs = arch['inputs']
-            diff = [a-b for a,b in zip(new_design_inputs,original_inputs)]  
-            advice = [getAdvicesFromBitStringDiff(diff)]
-            
-            # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
-            if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
-                # New solution dominates the original solution
-                advice.append(" to increase the science benefit and lower the cost.")
-            elif new_outputs[0] > original_outputs[0]:
-                advice.append(" to increase the science benefit (but cost may increase!).")
-            elif new_outputs[1] < original_outputs[1]:
-                advice.append(" to lower the cost (but science may decrease too!).")
-            else:
-                continue
-                
-            advice = "".join(advice)
-            advices.append(advice)
-                
+
+            # TODO: Add the delta code for discrete architectures
+
         client.endConnection()
         result2 = []
         for advice in advices:
@@ -403,7 +414,7 @@ def Critic_general_call(design_id, designs, context):
             
             
         # Criticize architecture (based on database)
-        result3 = critic.criticize_arch(this_design['inputs'])
+        result3 = critic.criticize_arch(problem_type, this_design['inputs'])
         result.extend(result3)
         
         
@@ -444,7 +455,8 @@ def Critic_general_call(design_id, designs, context):
                         
             # Extract feature
             #features = client.getDrivingFeatures(behavioral, non_behavioral, designs, support_threshold, confidence_threshold, lift_threshold)   
-            features = client.runAutomatedLocalSearch(behavioral, non_behavioral, designs, support_threshold, confidence_threshold, lift_threshold)
+            features = client.runAutomatedLocalSearch(problem, problem_type, behavioral, non_behavioral, designs,
+                                                      support_threshold, confidence_threshold, lift_threshold)
             
             advices = []
             if not len(features) == 0:
