@@ -281,8 +281,39 @@ class SetProblem(APIView):
     """
 
     def post(self, request, format=None):
-        from . daphne_fields import daphne_fields
-
         problem = request.data['problem']
         request.session['problem'] = problem
+        return Response({})
+
+
+class ActiveFeedbackSettings(APIView):
+    """ Returns the values for the different active daphne settings
+    """
+    def get(self, request, format=None):
+        if request.user.is_authenticated:
+            if 'show_background_search_feedback' not in request.session \
+                    or 'check_for_diversity' not in request.session \
+                    or 'show_arch_suggestions' not in request.session:
+                request.session['show_background_search_feedback'] = False
+                request.session['check_for_diversity'] = True
+                request.session['show_arch_suggestions'] = True
+
+            return Response({
+                'show_background_search_feedback': request.session['show_background_search_feedback'],
+                'check_for_diversity': request.session['check_for_diversity'] ,
+                'show_arch_suggestions': request.session['show_arch_suggestions'] ,
+            })
+        else:
+            return Response({
+                'error': 'User not logged in!'
+            })
+
+
+    def post(self, request, format=None):
+        if 'show_background_search_feedback' in request.data:
+            request.session['show_background_search_feedback'] = request.data['show_background_search_feedback']
+        if 'check_for_diversity' in request.data:
+            request.session['check_for_diversity'] = request.data['check_for_diversity']
+        if 'show_arch_suggestions' in request.data:
+            request.session['show_arch_suggestions'] = request.data['show_arch_suggestions']
         return Response({})

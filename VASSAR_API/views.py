@@ -227,6 +227,9 @@ class StartGA(APIView):
                 problem = request.data['problem']
                 inputType = request.data['inputType']
 
+                # Restart archs queue before starting the GA again
+                request.session['background_search_archs_queue'] = []
+
                 # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
                 thrift_list = []
                 inputs_unique_set = set()
