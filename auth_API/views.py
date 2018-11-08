@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
+from auth_API.helpers import get_or_create_user_information
 from daphne_API.daphne_fields import daphne_fields
 
 
@@ -85,14 +86,11 @@ class CheckStatus(APIView):
     Check if a user is logged in
     """
     def get(self, request, format=None):
-        if 'problem' in request.session:
-            problem = request.session['problem']
-        else:
-            problem = ''
-        if 'dataset' in request.session:
-            dataset = request.session['dataset']
-        else:
-            dataset = ''
+
+        user_info = get_or_create_user_information(request, 'EOSS')
+
+        problem = user_info.eoss_context.problem
+        dataset = user_info.eoss_context.dataset_name
 
         response = {
             'username': request.user.username,
@@ -103,8 +101,9 @@ class CheckStatus(APIView):
 
         if request.user.is_authenticated:
             response['is_logged_in'] = True
-            if 'data' in request.session:
-                response['data'] = request.session['data']
+            response['data'] = user_info.eoss_context.design_set
+            if len(user_info.eoss_context.design_set) > 0:
+
                 response['modified_dataset'] = True
             else:
                 response['data'] = []

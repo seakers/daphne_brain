@@ -13,6 +13,9 @@ from asgiref.sync import async_to_sync
 
 from importlib import import_module
 from django.conf import settings
+
+from auth_API.helpers import get_or_create_user_information
+
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 # Get an instance of a logger
@@ -23,7 +26,8 @@ class GetOrbitList(APIView):
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request, 'EOSS')
+            port = user_info.eoss_context.vassar_port
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getOrbitList(request.data['problem_name'])
@@ -41,7 +45,8 @@ class GetInstrumentList(APIView):
 
     def post(self, request, format=None):
         try:
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request, 'EOSS')
+            port = user_info.eoss_context.vassar_port
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -157,8 +162,9 @@ class ChangePort(APIView):
 
     def post(self, request, format=None):
         new_port = request.data['port']
-        request.session['vassar_port'] = new_port
-        request.session.modified = True
+        user_info = get_or_create_user_information(request, 'EOSS')
+        user_info.eoss_context.vassar_port = new_port
+        user_info.save()
         return Response('')
 
 
@@ -275,8 +281,10 @@ class StopGA(APIView):
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
+                user_info = get_or_create_user_information(request, 'EOSS')
+
                 # Start connection with VASSAR
-                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                port = user_info.eoss_context.vassar_port
                 client = VASSARClient(port)
                 client.startConnection()
 
