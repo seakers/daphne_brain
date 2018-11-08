@@ -12,3 +12,4 @@ data_mining_API/data/
 db.sqlite3
 daphne_API/models
 /logs/daphne.log
+venv/
