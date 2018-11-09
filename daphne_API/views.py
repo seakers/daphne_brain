@@ -1,13 +1,16 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-import daphne_API.command_processing as command_processing
-from daphne_brain.nlp_object import nlp
-import daphne_API.command_lists as command_lists
 import json
 import os
 import csv
-from VASSAR_API.api import VASSARClient
 import pandas as pd
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from daphne_brain.nlp_object import nlp
+import daphne_API.command_processing as command_processing
+from auth_API.helpers import get_or_create_user_information
+from daphne_API.models import Design
+import daphne_API.command_lists as command_lists
+from VASSAR_API.api import VASSARClient
+
 # from daphne_API.MatEngine_object import eng1
 # print(eng1)
 # eng1.desktop(nargout=0)  # open engine
@@ -135,6 +138,8 @@ class ImportData(APIView):
 
     def post(self, request, format=None):
         try:
+            user_info = get_or_create_user_information(request, 'EOSS')
+
             # Set the path of the file containing data
             user_path = request.user.username if request.data['load_user_files'] == 'true' != '' else 'default'
             problem = request.data['problem']
@@ -145,11 +150,13 @@ class ImportData(APIView):
             input_type = request.data['input_type']
             output_num = int(request.data['output_num'])
 
-            archID = 0
+            user_info.eosscontext.last_arch_id = 0
 
             # Open the file
             with open(file_path) as csvfile:
+                Design.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
                 architectures = []
+                architectures_json = []
 
                 inputs_unique_set = set()
                 # For each row, store the information
@@ -190,21 +197,23 @@ class ImportData(APIView):
 
                     hashed_input = hash(tuple(inputs))
                     if hashed_input not in inputs_unique_set:
-                        architectures.append({'id': archID, 'inputs': inputs, 'outputs': outputs})
-                        archID += 1
+                        architectures.append(Design(id=user_info.eosscontext.last_arch_id,
+                                                    eosscontext=user_info.eosscontext,
+                                                    inputs=json.dumps(inputs),
+                                                    outputs=json.dumps(outputs)))
+                        architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
+                        user_info.eosscontext.last_arch_id += 1
                         inputs_unique_set.add(hashed_input)
 
             # Define context and see if it was already defined for this session
-            request.session['data'] = architectures
-            request.session['archID'] = archID
-            request.session['problem'] = problem
-            request.session['dataset'] = filename
-            request.session.modified = True
+            Design.objects.bulk_create(architectures)
+            user_info.eosscontext.problem = problem
+            user_info.eosscontext.dataset_name = filename
+            user_info.save()
 
-            return Response(architectures)
+            return Response(architectures_json)
         except Exception:
-            raise ValueError("something is wrong")
-            return Response('Error importing the data')
+            raise ValueError("There has been an error when parsing the architectures")
 
 
 class DatasetList(APIView):

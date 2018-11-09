@@ -27,7 +27,7 @@ class GetOrbitList(APIView):
         try:
             # Start connection with VASSAR
             user_info = get_or_create_user_information(request, 'EOSS')
-            port = user_info.eoss_context.vassar_port
+            port = user_info.eosscontext.vassar_port
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getOrbitList(request.data['problem_name'])
@@ -46,7 +46,7 @@ class GetInstrumentList(APIView):
     def post(self, request, format=None):
         try:
             user_info = get_or_create_user_information(request, 'EOSS')
-            port = user_info.eoss_context.vassar_port
+            port = user_info.eosscontext.vassar_port
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -163,7 +163,7 @@ class ChangePort(APIView):
     def post(self, request, format=None):
         new_port = request.data['port']
         user_info = get_or_create_user_information(request, 'EOSS')
-        user_info.eoss_context.vassar_port = new_port
+        user_info.eosscontext.vassar_port = new_port
         user_info.save()
         return Response('')
 
@@ -284,7 +284,7 @@ class StopGA(APIView):
                 user_info = get_or_create_user_information(request, 'EOSS')
 
                 # Start connection with VASSAR
-                port = user_info.eoss_context.vassar_port
+                port = user_info.eosscontext.vassar_port
                 client = VASSARClient(port)
                 client.startConnection()
 
