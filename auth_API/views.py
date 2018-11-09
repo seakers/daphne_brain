@@ -89,8 +89,8 @@ class CheckStatus(APIView):
 
         user_info = get_or_create_user_information(request, 'EOSS')
 
-        problem = user_info.eoss_context.problem
-        dataset = user_info.eoss_context.dataset_name
+        problem = user_info.eosscontext.problem
+        dataset = user_info.eosscontext.dataset_name
 
         response = {
             'username': request.user.username,
@@ -101,8 +101,8 @@ class CheckStatus(APIView):
 
         if request.user.is_authenticated:
             response['is_logged_in'] = True
-            response['data'] = user_info.eoss_context.design_set
-            if len(user_info.eoss_context.design_set) > 0:
+            response['data'] = user_info.eosscontext.design_set
+            if len(user_info.eosscontext.design_set) > 0:
 
                 response['modified_dataset'] = True
             else:
