@@ -18,6 +18,9 @@ class UserInformation(models.Model):
     )
     daphne_version = models.CharField(max_length=40, choices=DAPHNE_VERSIONS)
 
+    # Websockets communication
+    channel_name = models.CharField(max_length=120)
+
     # Special restrictions
     class Meta:
         unique_together = ("session", "user")
@@ -41,9 +44,9 @@ class ActiveContext(models.Model):
     eosscontext = models.OneToOneField(EOSSContext, on_delete=models.CASCADE)
 
     # Settings for the Active Context
-    show_background_search_feedback = models.BooleanField()
-    check_for_diversity = models.BooleanField()
-    show_arch_suggestions = models.BooleanField()
+    show_background_search_feedback = models.BooleanField(default=False)
+    check_for_diversity = models.BooleanField(default=True)
+    show_arch_suggestions = models.BooleanField(default=True)
 
     # The list of designs in the queue is contained in model Design
 
@@ -54,6 +57,7 @@ class EngineerContext(models.Model):
     # Context that is used for those questions related with the engineer skill
     vassar_instrument = models.TextField()
     instrument_parameter = models.TextField()
+    vassar_measurement = models.TextField()
 
 
 # A design can be part of either a dataset in the EOSSContext or a queue for the active background search
@@ -75,3 +79,30 @@ class Answer(models.Model):
     voice_answer = models.TextField()
     visual_answer_type = models.TextField()
     visual_answer = models.TextField()
+
+
+# An allowed command for Daphne (to be used with experiments to limit functionalities programmatically
+class AllowedCommand(models.Model):
+    eosscontext = models.ForeignKey(EOSSContext, on_delete=models.CASCADE)
+
+    # Command Type Choice
+    COMMAND_TYPES = (
+        ('engineer', 'Engineer Commands'),
+        ('critic', 'Critic Commands'),
+        ('historian', 'Historian Commands'),
+        ('analyst', 'iFEED Commands'),
+        ('analyst_instruments', 'Instruments Cheatsheet'),
+        ('analyst_instrument_parameters', 'Instrument Parameters Cheatsheet'),
+        ('analyst_measurements', 'Measurements Cheatsheet'),
+        ('analyst_stakeholders', 'Stakeholders Cheatsheet'),
+        ('measurements', 'Historical Measurements Cheatsheet'),
+        ('missions', 'Historical Missions Cheatsheet'),
+        ('technologies', 'Historical Technologies Cheatsheet'),
+        ('objectives', 'Objectives Cheatsheet'),
+        ('space_agencies', 'Space Agencies Cheatsheet'),
+
+    )
+    command_type = models.CharField(max_length=40, choices=COMMAND_TYPES)
+
+    # Command number
+    command_descriptor = models.IntegerField()

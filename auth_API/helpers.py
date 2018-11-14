@@ -35,23 +35,32 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
 
         return user_info
 
-def get_or_create_user_information(request, version):
 
-    if request.user.is_authenticated:
+def get_user_information(session, user):
+
+    if user.is_authenticated:
         # First try lookup by username
-        userinfo_qs = UserInformation.objects.filter(user__exact=request.user)
+        userinfo_qs = UserInformation.objects.filter(user__exact=user)
     else:
         # Try to look by session key
         # If no session exists, create one here
-        if request.session.session_key is None:
-            request.session.create()
-        session = MergeSession.objects.get(session_key=request.session.session_key)
+        if session.session_key is None:
+            session.create()
+        session = MergeSession.objects.get(session_key=session.session_key)
         userinfo_qs = UserInformation.objects.filter(session__exact=session)
 
     if len(userinfo_qs) == 1:
         return userinfo_qs[0]
     elif len(userinfo_qs) == 0:
-        if request.user.is_authenticated:
-            return create_user_information(username=request.user.username, version=version)
+        raise Exception("Information not already created!")
+
+
+def get_or_create_user_information(session, user, version='EOSS'):
+    try:
+        userinfo = get_user_information(session, user)
+        return userinfo
+    except Exception:
+        if user.is_authenticated:
+            return create_user_information(username=user.username, version=version)
         else:
-            return create_user_information(session_key=request.session.session_key, version=version)
+            return create_user_information(session_key=session.session_key, version=version)

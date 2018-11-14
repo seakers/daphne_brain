@@ -6,7 +6,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.Critic_general_call('${design_id}', data['designs'], context)",
+    "run_template": "run_func.eoss.critic.general_call('${design_id}', data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",

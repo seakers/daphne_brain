@@ -7,16 +7,13 @@ from rest_framework.response import Response
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
-from daphne_API.models import Design
+from daphne_API.models import Design, Answer, AllowedCommand
 import daphne_API.command_lists as command_lists
 from VASSAR_API.api import VASSARClient
 
 # from daphne_API.MatEngine_object import eng1
 # print(eng1)
 # eng1.desktop(nargout=0)  # open engine
-
-
-
 
 
 class Command(APIView):
@@ -34,53 +31,43 @@ class Command(APIView):
         command_types = command_processing.classify_command(processed_command)
 
         # Define context and see if it was already defined for this session
-        if 'context' not in request.session:
-            request.session['context'] = {}
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
-        if 'data' in request.session:
-            request.session['context']['data'] = request.session['data']
-
-        if 'vassar_port' in request.session:
-            request.session['context']['vassar_port'] = request.session['vassar_port']
-
-        if 'problem' in request.session:
-            request.session['context']['problem'] = request.session['problem']
-
-        request.session['context']['answers'] = []
+        # Remove all past answers related to this user
+        Answer.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
+        AllowedCommand.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
 
         if 'allowed_commands' in request.data:
-            request.session['context']['allowed_commands'] = json.loads(request.data['allowed_commands'])
+            for command_type, command_list in request.data['allowed_commands'].items():
+                for command_number in command_list:
+                    AllowedCommand.objects.create(eosscontext=user_info.eosscontext, command_type=command_type,
+                                                  command_descriptor=command_number)
 
         # Act based on the types
         for command_type in command_types:
             command_class = command_options[command_type]
             condition_name = condition_names[command_type]
-            request.session['context']['answers'].append(
-                command_processing.command(processed_command, command_class, condition_name, request.session['context']))
+            answer = command_processing.command(processed_command, command_class,
+                                                condition_name, user_info)
+            Answer.objects.create(eosscontext=user_info.eosscontext,
+                                  voice_answer=answer["voice_answer"],
+                                  visual_answer_type=answer["visual_answer_type"],
+                                  visual_answer=json.dumps(answer["visual_answer"]))
 
-        response = command_processing.think_response(request.session['context'])
+        frontend_response = command_processing.think_response(user_info)
 
-        request.session.modified = True
-        print('The command type is:')
-        print(command_type)
-        print('the type is:')
-        print(type(command_type))
+        return Response({'response': frontend_response})
 
-        if command_type == int(4):
-            print(eng1.eval('2+2'))
-
-
-        # If command is to switch modes, send new mode back, if not
-        return Response({'response': response})
 
 class CommandList(APIView):
     """
     Get a list of commands, either for all the system or for a single subsystem
     """
     def post(self, request, format=None):
-        port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        port = user_info.eosscontext.vassar_port
         vassar_client = VASSARClient(port)
-        problem = request.session["problem"]
+        problem = user_info.eosscontext.problem
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
@@ -138,7 +125,7 @@ class ImportData(APIView):
 
     def post(self, request, format=None):
         try:
-            user_info = get_or_create_user_information(request, 'EOSS')
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
             # Set the path of the file containing data
             user_path = request.user.username if request.data['load_user_files'] == 'true' != '' else 'default'
@@ -263,6 +250,7 @@ class ClearSession(APIView):
 
         return Response({})
 
+
 class ImportDataEDLSTATS(APIView):
     """ Imports data from a csv file. To be deprecated in the future.
 
@@ -285,13 +273,16 @@ class ImportDataEDLSTATS(APIView):
 
         return Response(data)
 
+
 class SetProblem(APIView):
     """ Sets the name of the problem
     """
 
     def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         problem = request.data['problem']
-        request.session['problem'] = problem
+        user_info.eosscontext.problem = problem
+        user_info.save()
         return Response({})
 
 
@@ -300,29 +291,26 @@ class ActiveFeedbackSettings(APIView):
     """
     def get(self, request, format=None):
         if request.user.is_authenticated:
-            if 'show_background_search_feedback' not in request.session \
-                    or 'check_for_diversity' not in request.session \
-                    or 'show_arch_suggestions' not in request.session:
-                request.session['show_background_search_feedback'] = False
-                request.session['check_for_diversity'] = True
-                request.session['show_arch_suggestions'] = True
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
             return Response({
-                'show_background_search_feedback': request.session['show_background_search_feedback'],
-                'check_for_diversity': request.session['check_for_diversity'] ,
-                'show_arch_suggestions': request.session['show_arch_suggestions'] ,
+                'show_background_search_feedback': user_info.eosscontext.activecontext.show_background_search_feedback,
+                'check_for_diversity': user_info.eosscontext.activecontext.check_for_diversity,
+                'show_arch_suggestions': user_info.eosscontext.activecontext.show_arch_suggestions,
             })
         else:
             return Response({
                 'error': 'User not logged in!'
             })
 
-
     def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         if 'show_background_search_feedback' in request.data:
-            request.session['show_background_search_feedback'] = request.data['show_background_search_feedback']
+            user_info.eosscontext.activecontext.show_background_search_feedback = \
+                request.data['show_background_search_feedback']
         if 'check_for_diversity' in request.data:
-            request.session['check_for_diversity'] = request.data['check_for_diversity']
+            user_info.eosscontext.activecontext.check_for_diversity = request.data['check_for_diversity']
         if 'show_arch_suggestions' in request.data:
-            request.session['show_arch_suggestions'] = request.data['show_arch_suggestions']
+            user_info.eosscontext.activecontext.show_arch_suggestions = request.data['show_arch_suggestions']
+        user_info.save()
         return Response({})

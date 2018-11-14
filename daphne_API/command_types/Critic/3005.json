@@ -2,11 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_design_id", "type": "design_id", "options": "", "from_context": true, "mandatory": true }
+    { "name": "current_design_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true }
   ],
   "function":
   {
-    "run_template": "run_func.Critic_general_call('${current_design_id}', data['designs'], context)",
+    "run_template": "run_func.eoss.critic.general_call('${current_design_id}', data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",
