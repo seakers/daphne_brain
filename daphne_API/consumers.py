@@ -2,11 +2,10 @@ import hashlib
 import json
 import threading
 import time
-
 from channels.generic.websocket import JsonWebsocketConsumer
-from django.conf import settings
-from importlib import import_module
 import schedule
+from auth_API.helpers import get_user_information
+
 
 def run_continuously(self, interval=1):
     """Continuously run, while executing pending jobs at each elapsed
@@ -52,8 +51,10 @@ class DaphneConsumer(JsonWebsocketConsumer):
         # Accept the connection
         self.accept()
         self.is_connected = True
-        self.scope['session']['channel_name'] = self.channel_name
-        self.scope['session'].save()
+        user_info = get_user_information(self.scope['session'], self.scope['user'])
+        user_info.channel_name = self.channel_name
+        user_info.save()
+
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Add to the group
@@ -92,15 +93,14 @@ class DaphneConsumer(JsonWebsocketConsumer):
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
         # Get an updated session store
-        session_key = self.scope["cookies"].get(settings.SESSION_COOKIE_NAME)
-        self.scope["session"] = import_module(settings.SESSION_ENGINE).SessionStore(session_key)
+        user_info = get_user_information(self.scope['session'], self.scope['user'])
 
+        # Update context to SQL one
         if content.get('msg_type') == 'context_add':
-            if 'context' not in self.scope['session']:
-                self.scope['session']['context'] = {}
-            for key, value in content.get('new_context').items():
-                self.scope['session']['context'][key] = value
-            self.scope['session'].save()
+            for subcontext_name, subcontext in content.get('new_context').items():
+                for key, value in subcontext.items():
+                    setattr(getattr(user_info, subcontext_name), key, value)
+            user_info.save()
         elif content.get('msg_type') == 'text_msg':
             textMessage = content.get('text', None)
             # Broadcast

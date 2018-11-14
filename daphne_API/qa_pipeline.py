@@ -17,6 +17,7 @@ import daphne_API.data_processors as processors
 import daphne_API.runnable_functions as run_func
 from daphne_API.errors import ParameterMissingError
 import daphne_API.edl.model as edl_models
+from daphne_API.models import UserInformation
 
 
 def classify(question, module_name):
@@ -121,7 +122,7 @@ process_function["scorecard_post_results"] = processors.not_processed
 process_function["scorecard_edlmetricsheet_results"] = processors.not_processed
 
 
-def extract_data(processed_question, params, context):
+def extract_data(processed_question, params, context: UserInformation):
     """ Extract the features from the processed question, with a correcting factor """
     number_of_features = {}
     extracted_raw_data = {}
@@ -141,10 +142,16 @@ def extract_data(processed_question, params, context):
     for param in params:
         extracted_param = None
         if param["from_context"]:
-            if param["name"] in context:
-                extracted_param = context[param["name"]]
-            elif param["mandatory"]:
-                raise ParameterMissingError(param["type"])
+            try:
+                subcontext = context
+                if param["context"] is not "":
+                    subcontext = getattr(subcontext, param["context"])
+                if param["subcontext"] is not "":
+                    subcontext = getattr(subcontext, param["subcontext"])
+                extracted_param = getattr(subcontext, param["name"])
+            except AttributeError:
+                if param["mandatory"]:
+                    raise ParameterMissingError(param["type"])
         else:
             if len(extracted_raw_data[param["type"]]) > 0:
                 extracted_param = extracted_raw_data[param["type"]].pop(0)
@@ -156,11 +163,11 @@ def extract_data(processed_question, params, context):
     return extracted_data
 
 
-def augment_data(data, context):
+def augment_data(data, context: UserInformation):
     data['now'] = datetime.datetime.utcnow()
 
-    if 'data' in context:
-        data['designs'] = context['data']
+    data['designs'] = context.eosscontext.design_set
+
     if 'behavioral' in context:
         data['behavioral'] = context['behavioral']
     if 'non_behavioral' in context:
@@ -245,7 +252,7 @@ def query(query, data):
     return result
 
 
-def run_function(function_info, data, context):
+def run_function(function_info, data, context: UserInformation):
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)
