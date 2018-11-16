@@ -13,3 +13,4 @@ db.sqlite3
 daphne_API/models
 /logs/daphne.log
 venv/
+venv_linux/

@@ -62,15 +62,18 @@ class EngineerContext(models.Model):
 
 # A design can be part of either a dataset in the EOSSContext or a queue for the active background search
 class Design(models.Model):
+    design_id = models.AutoField(primary_key=True)
+
     eosscontext = models.ForeignKey(EOSSContext, on_delete=models.CASCADE, null=True)
     activecontext = models.ForeignKey(ActiveContext, on_delete=models.CASCADE, null=True)
 
+    id = models.IntegerField()
     inputs = models.TextField()
     outputs = models.TextField()
 
     # Special restrictions
     class Meta:
-        unique_together = ("eosscontext", "activecontext")
+        unique_together = ("eosscontext", "activecontext", "id")
 
 
 # An answer from Daphne

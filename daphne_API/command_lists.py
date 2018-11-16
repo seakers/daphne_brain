@@ -99,9 +99,9 @@ def agencies_list():
     return agencies
 
 
-def objectives_list(vassar_client):
+def objectives_list(vassar_client, problem):
     vassar_client.startConnection()
-    objectives = vassar_client.client.getObjectiveList()
+    objectives = vassar_client.client.getObjectiveList(problem)
     objectives.sort(key=lambda obj: int(obj[3:]))
     objectives.sort(key=lambda obj: obj[0:2])
     vassar_client.endConnection()

@@ -81,7 +81,7 @@ class EvaluateArchitecture(APIView):
             architecture = self.VASSARClient.evaluateArchitecture(user_info.eosscontext.problem, inputs)
 
             is_same = True
-            for old_arch in user_info.eosscontext.design_set:
+            for old_arch in user_info.eosscontext.design_set.all():
                 is_same = True
                 old_arch_outputs = json.loads(old_arch.outputs)
                 for i in range(len(old_arch_outputs)):
@@ -92,13 +92,14 @@ class EvaluateArchitecture(APIView):
 
             if not is_same:
                 architecture['id'] = user_info.eosscontext.last_arch_id
-                print(user_info.eosscontext.current_design_id)
+                print(user_info.eosscontext.last_arch_id)
                 Design.objects.create(eosscontext=user_info.eosscontext,
                                       id=architecture['id'],
                                       inputs=json.dumps(architecture['inputs']),
                                       outputs=json.dumps(architecture['outputs']))
                 user_info.eosscontext.last_arch_id += 1
 
+            user_info.eosscontext.save()
             user_info.save()
 
             # End the connection before return statement
@@ -134,6 +135,7 @@ class RunLocalSearch(APIView):
                                       inputs=json.dumps(arch["inputs"]),
                                       outputs=json.dumps(arch["outputs"]))
 
+            user_info.eosscontext.save()
             user_info.save()
 
             # End the connection before return statement
@@ -152,6 +154,7 @@ class ChangePort(APIView):
         new_port = request.data['port']
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         user_info.eosscontext.vassar_port = new_port
+        user_info.eosscontext.save()
         user_info.save()
         return Response('')
 
@@ -190,6 +193,7 @@ class StartGA(APIView):
                                 thread_user_info.eosscontext.last_arch_id += 1
                                 send_back.append(full_arch)
                                 inputs_unique_set.add(hashed_input)
+                                thread_user_info.eosscontext.save()
                                 thread_user_info.save()
 
                         # Look for channel to send back to user
@@ -235,7 +239,7 @@ class StartGA(APIView):
                 inputs_unique_set = set()
 
                 if inputType == 'binary':
-                    for arch in user_info.eosscontext.design_set:
+                    for arch in user_info.eosscontext.design_set.all():
                         thrift_list.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
                         hashed_input = hash(tuple(json.loads(arch.inputs)))
                         inputs_unique_set.add(hashed_input)
@@ -245,7 +249,7 @@ class StartGA(APIView):
                     client.client.startGABinaryInput(problem, thrift_list, request.user.username)
 
                 elif inputType == 'discrete':
-                    for arch in user_info.eosscontext.design_set:
+                    for arch in user_info.eosscontext.design_set.all():
                         thrift_list.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
                         hashed_input = hash(tuple(json.loads(arch.inputs)))
                         inputs_unique_set.add(hashed_input)
@@ -366,7 +370,7 @@ class GetArchDetails(APIView):
             this_arch = None
             arch_id = int(request.data['arch_id'])
             problem = request.data['problem']
-            for arch in user_info.eosscontext.design_set:
+            for arch in user_info.eosscontext.design_set.all():
                 if arch.id == arch_id:
                     if problem in assignation_problems:
                         this_arch = BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
@@ -445,7 +449,7 @@ class GetSubobjectiveDetails(APIView):
             this_arch = None
             arch_id = int(request.data['arch_id'])
             problem = request.data['problem']
-            for arch in user_info.eosscontext.design_set:
+            for arch in user_info.eosscontext.design_set.all():
                 if arch.id == arch_id:
                     if problem in assignation_problems:
                         this_arch = BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
