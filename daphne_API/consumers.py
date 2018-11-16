@@ -100,6 +100,7 @@ class DaphneConsumer(JsonWebsocketConsumer):
             for subcontext_name, subcontext in content.get('new_context').items():
                 for key, value in subcontext.items():
                     setattr(getattr(user_info, subcontext_name), key, value)
+                getattr(user_info, subcontext_name).save()
             user_info.save()
         elif content.get('msg_type') == 'text_msg':
             textMessage = content.get('text', None)

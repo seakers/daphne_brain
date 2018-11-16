@@ -102,7 +102,7 @@ def extract_date(processed_question, number_of_features, context: UserInformatio
 
 def extract_design_id(processed_question, number_of_features, context: UserInformation):
     # Get a list of design ids
-    design_ids = ['d' + str(design.id) for design in context.eosscontext.design_set]
+    design_ids = ['d' + str(design.id) for design in context.eosscontext.design_set.all()]
     extracted_list = []
     for word in processed_question:
         if word.text in design_ids:

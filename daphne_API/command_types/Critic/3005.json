@@ -2,11 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_design_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true }
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true }
   ],
   "function":
   {
-    "run_template": "run_func.eoss.critic.general_call('${current_design_id}', data['designs'], context)",
+    "run_template": "run_func.eoss.critic.general_call('${selected_arch_id}', data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",
@@ -15,13 +15,13 @@
   },
   "voice_response": {
     "type": "list",
-    "begin": "The advice I have for the selected design (${current_design_id}) is: ",
+    "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
     "repeat": "${adv_type}: ${advice}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
-    "begin": "The advice I have for the selected design (${current_design_id}) is: ",
+    "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
     "item_template": "<b>${adv_type}</b>: ${advice}"
   }
 }

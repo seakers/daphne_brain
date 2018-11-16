@@ -2,11 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_design_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true }
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true }
   ],
   "function":
   {
-    "run_template": "run_func.eoss.engineer.get_architecture_scores('${current_design_id}', data['designs'], context)",
+    "run_template": "run_func.eoss.engineer.get_architecture_scores('${selected_arch_id}', data['designs'], context)",
     "result_type": "list",
     "result_fields": {
       "obj_name": "item.objective_name",
@@ -16,13 +16,13 @@
   },
   "voice_response": {
     "type": "list",
-    "begin": "The reasons for the score of the selected design (${current_design_id}) are: ",
+    "begin": "The reasons for the score of the selected design (${selected_arch_id}) are: ",
     "repeat": "stakeholder ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
-    "begin": "The reasons for the score of the selected design (${current_design_id}) are: ",
+    "begin": "The reasons for the score of the selected design (${selected_arch_id}) are: ",
     "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
   }
 }

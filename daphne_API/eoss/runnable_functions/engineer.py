@@ -136,6 +136,7 @@ def get_instruments_for_stakeholder(stakeholder, context: UserInformation):
 def get_instrument_parameter(vassar_instrument, instrument_parameter, context: UserInformation):
     context.eosscontext.engineercontext.vassar_instrument = vassar_instrument
     context.eosscontext.engineercontext.instrument_parameter = instrument_parameter
+    context.eosscontext.engineercontext.save()
     context.save()
 
     capabilities_sheet = problem_specific.get_capabilities_sheet(context.eosscontext.problem)
@@ -181,6 +182,7 @@ def get_instrument_parameter_followup(vassar_instrument, instrument_parameter, i
 def get_measurement_requirement(vassar_measurement, instrument_parameter, context: UserInformation):
     context.eosscontext.engineercontext.vassar_measurement = vassar_measurement
     context.eosscontext.engineercontext.instrument_parameter = instrument_parameter
+    context.eosscontext.engineercontext.save()
     context.save()
 
     requirements_sheet = problem_specific.get_requirements_sheet(context.eosscontext.problem)
@@ -219,14 +221,14 @@ def get_measurement_requirement(vassar_measurement, instrument_parameter, contex
 def get_measurement_requirement_followup(vassar_measurement, instrument_parameter, stakeholder, context: UserInformation):
     requirements_sheet = problem_specific.get_requirements_sheet(context.eosscontext.problem)
     stakeholders_to_excel = {
-        "atmospheric": "ATM",
-        "oceanic": "OCE",
-        "terrestrial": "TER",
-        "weather": "WEA",
-        "climate": "CLI",
-        "land and ecosystems": "ECO",
-        "water": "WAT",
-        "human health": "HEA"
+        "Atmospheric": "ATM",
+        "Oceanic": "OCE",
+        "Terrestrial": "TER",
+        "Weather": "WEA",
+        "Climate": "CLI",
+        "Land and ecosystems": "ECO",
+        "Water": "WAT",
+        "Human health": "HEA"
     }
     requirement = None
     for row in requirements_sheet.itertuples(name='Requirement'):

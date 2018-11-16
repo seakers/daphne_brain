@@ -166,12 +166,12 @@ def extract_data(processed_question, params, context: UserInformation):
 def augment_data(data, context: UserInformation):
     data['now'] = datetime.datetime.utcnow()
 
-    data['designs'] = context.eosscontext.design_set
+    data['designs'] = context.eosscontext.design_set.all()
 
-    if 'behavioral' in context:
-        data['behavioral'] = context['behavioral']
-    if 'non_behavioral' in context:
-        data['non_behavioral'] = context['non_behavioral']
+    #if 'behavioral' in context:
+    #    data['behavioral'] = context['behavioral']
+    #if 'non_behavioral' in context:
+    #    data['non_behavioral'] = context['non_behavioral']
     # TODO: Add useful information from context if needed
     return data
 

@@ -93,7 +93,7 @@ class CommandList(APIView):
         elif command_list_request == 'space_agencies':
             command_list = command_lists.agencies_list()
         elif command_list_request == 'objectives':
-            command_list = command_lists.objectives_list(vassar_client)
+            command_list = command_lists.objectives_list(vassar_client, problem)
         elif command_list_request == 'orb_info':
             command_list = command_lists.orbits_info(problem)
         elif command_list_request == 'instr_info':
@@ -196,6 +196,7 @@ class ImportData(APIView):
             Design.objects.bulk_create(architectures)
             user_info.eosscontext.problem = problem
             user_info.eosscontext.dataset_name = filename
+            user_info.eosscontext.save()
             user_info.save()
 
             return Response(architectures_json)
@@ -282,6 +283,7 @@ class SetProblem(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         problem = request.data['problem']
         user_info.eosscontext.problem = problem
+        user_info.eosscontext.save()
         user_info.save()
         return Response({})
 
@@ -312,5 +314,6 @@ class ActiveFeedbackSettings(APIView):
             user_info.eosscontext.activecontext.check_for_diversity = request.data['check_for_diversity']
         if 'show_arch_suggestions' in request.data:
             user_info.eosscontext.activecontext.show_arch_suggestions = request.data['show_arch_suggestions']
+            user_info.eosscontext.activecontext.save()
         user_info.save()
         return Response({})

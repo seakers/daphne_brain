@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_design_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true },
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true },
     { "name": "objective", "type": "objective", "options": "", "from_context": false, "mandatory": true }
   ],
   "function":
   {
-    "run_template": "run_func.eoss.engineer.get_objective_scores('${current_design_id}', data['designs'], '${objective}', context)",
+    "run_template": "run_func.eoss.engineer.get_objective_scores('${selected_arch_id}', data['designs'], '${objective}', context)",
     "result_type": "list",
     "result_fields": {
       "obj_name": "item.objective_name",
@@ -17,13 +17,13 @@
   },
   "voice_response": {
     "type": "list",
-    "begin": "The reasons for the score of the selected objective (${current_design_id}) are: ",
+    "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
     "repeat": "Subobjective ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
-    "begin": "The reasons for the score of the selected objective (${current_design_id}) are: ",
+    "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
     "item_template": "Subobjective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
   }
 }

@@ -56,9 +56,9 @@ def error_answers(missing_param):
 
 
 def not_allowed_condition(context: UserInformation, command_class, command_type):
-    if len(context.eosscontext.allowedcommand_set) == 0:
+    if len(context.eosscontext.allowedcommand_set.all()) == 0:
         return False
-    for allowed_command in context.eosscontext.allowedcommand_set:
+    for allowed_command in context.eosscontext.allowedcommand_set.all():
         if command_class == allowed_command.command_type and command_type == allowed_command.command_descriptor:
             return False
     return True
@@ -104,7 +104,7 @@ def command(processed_command, command_class, condition_name, context: UserInfor
 
 def think_response(context: UserInformation):
     # TODO: Make this intelligent, e.g. hook this to a rule based engine
-    db_answer = context.eosscontext.answer_set[0]
+    db_answer = context.eosscontext.answer_set.all()[:1].get()
     frontend_answer = {
         "voice_answer": db_answer.voice_answer,
         "visual_answer_type": db_answer.visual_answer_type,
