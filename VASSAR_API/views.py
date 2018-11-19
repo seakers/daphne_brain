@@ -15,6 +15,7 @@ from importlib import import_module
 from django.conf import settings
 
 from auth_API.helpers import get_or_create_user_information
+from daphne_API.background_search import send_archs_from_queue_to_main_dataset, send_archs_back
 from daphne_API.models import Design
 
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
@@ -186,10 +187,16 @@ class StartGA(APIView):
                                     'inputs': arch['inputs'],
                                     'outputs': arch['outputs']
                                 }
-                                Design.objects.create(activecontext=thread_user_info.eosscontext.activecontext,
-                                                      id=full_arch["id"],
-                                                      inputs=json.dumps(full_arch["inputs"]),
-                                                      outputs=json.dumps(full_arch["outputs"]))
+                                if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
+                                    Design.objects.create(eosscontext=thread_user_info.eosscontext,
+                                                          id=full_arch["id"],
+                                                          inputs=json.dumps(full_arch["inputs"]),
+                                                          outputs=json.dumps(full_arch["outputs"]))
+                                else:
+                                    Design.objects.create(activecontext=thread_user_info.eosscontext.activecontext,
+                                                          id=full_arch["id"],
+                                                          inputs=json.dumps(full_arch["inputs"]),
+                                                          outputs=json.dumps(full_arch["outputs"]))
                                 thread_user_info.eosscontext.last_arch_id += 1
                                 send_back.append(full_arch)
                                 inputs_unique_set.add(hashed_input)
@@ -198,11 +205,22 @@ class StartGA(APIView):
 
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                          {
-                                                              'type': 'ga.new_archs',
-                                                              'archs': send_back
-                                                          })
+
+                        background_queue_qs = Design.objects.filter(activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
+                        if background_queue_qs.count() >= 10:
+                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                              {
+                                                                  'type': 'active.notification',
+                                                                  'notification': {
+                                                                      'title': 'Background search results',
+                                                                      'message': 'The background search has found more than 10 architectures, but you have chosen to not show them. Do you want to see them now?',
+                                                                      'setting': 'show_background_search_feedback'
+                                                                  }
+                                                              })
+                        if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
+                            back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
+                            send_back.extend(back_list)
+                            send_archs_back(channel_layer, thread_user_info.channel_name, send_back)
                     if message['data'] == 'ga_started':
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
@@ -233,6 +251,8 @@ class StartGA(APIView):
 
                 # Restart archs queue before starting the GA again
                 Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
+                user_info.eosscontext.last_arch_id = user_info.eosscontext.design_set.count()
+                user_info.eosscontext.save()
 
                 # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
                 thrift_list = []

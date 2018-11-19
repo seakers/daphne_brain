@@ -2,8 +2,11 @@ import json
 import os
 import csv
 import pandas as pd
+from channels.layers import get_channel_layer
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+from daphne_API.background_search import send_archs_from_queue_to_main_dataset, send_archs_back
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
@@ -308,12 +311,19 @@ class ActiveFeedbackSettings(APIView):
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         if 'show_background_search_feedback' in request.data:
-            user_info.eosscontext.activecontext.show_background_search_feedback = \
-                request.data['show_background_search_feedback']
+            show_background_search_feedback = request.data['show_background_search_feedback'] == 'true'
+            user_info.eosscontext.activecontext.show_background_search_feedback = show_background_search_feedback
+            if show_background_search_feedback:
+                back_list = send_archs_from_queue_to_main_dataset(user_info)
+                channel_layer = get_channel_layer()
+                send_archs_back(channel_layer, user_info.channel_name, back_list)
         if 'check_for_diversity' in request.data:
-            user_info.eosscontext.activecontext.check_for_diversity = request.data['check_for_diversity']
+            check_for_diversity = request.data['check_for_diversity'] == 'true'
+            user_info.eosscontext.activecontext.check_for_diversity = check_for_diversity
         if 'show_arch_suggestions' in request.data:
-            user_info.eosscontext.activecontext.show_arch_suggestions = request.data['show_arch_suggestions']
-            user_info.eosscontext.activecontext.save()
+            show_arch_suggestions = request.data['show_arch_suggestions'] == 'true'
+            user_info.eosscontext.activecontext.show_arch_suggestions = show_arch_suggestions
+
+        user_info.eosscontext.activecontext.save()
         user_info.save()
         return Response({})
