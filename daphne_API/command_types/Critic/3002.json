@@ -7,7 +7,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.Critic_specific_call('${design_id}', '${agent}', data['designs'])",
+    "run_template": "run_func.eoss.critic.specific_call('${design_id}', '${agent}', data['designs'])",
     "result_type": "list",
     "result_fields": {
       "advice": "item[\"advice\"]"

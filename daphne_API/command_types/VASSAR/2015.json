@@ -6,7 +6,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_instruments_for_objective('${objective}', context)",
+    "run_template": "run_func.eoss.engineer.get_instruments_for_objective('${objective}', context)",
     "result_type": "list",
     "result_fields": {
       "instrument_name": "item"

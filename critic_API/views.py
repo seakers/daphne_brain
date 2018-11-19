@@ -6,6 +6,8 @@ import json
 
 from importlib import import_module
 from django.conf import settings
+
+from auth_API.helpers import get_or_create_user_information
 from daphne_brain.session_lock import session_lock
 from VASSAR_API.api import VASSARClient
 
@@ -21,7 +23,8 @@ class CriticizeArchitecture(APIView):
     
     def post(self, request, format=None):
         try:
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             
             inputs = request.POST['inputs']   
                         

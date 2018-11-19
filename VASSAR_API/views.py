@@ -13,17 +13,24 @@ from asgiref.sync import async_to_sync
 
 from importlib import import_module
 from django.conf import settings
+
+from auth_API.helpers import get_or_create_user_information
+from daphne_API.background_search import send_archs_from_queue_to_main_dataset, send_archs_back
+from daphne_API.models import Design
+
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 # Get an instance of a logger
 logger = logging.getLogger('VASSAR')
+
 
 class GetOrbitList(APIView):
     
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
             list = self.VASSARClient.getOrbitList(request.data['problem_name'])
@@ -37,11 +44,13 @@ class GetOrbitList(APIView):
             self.VASSARClient.endConnection()
             return Response('')
 
+
 class GetInstrumentList(APIView):
 
     def post(self, request, format=None):
         try:
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -61,7 +70,8 @@ class EvaluateArchitecture(APIView):
     
     def post(self, request, format=None):
         try:
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             self.VASSARClient = VASSARClient(port)
             # Start connection with VASSAR
             self.VASSARClient.startConnection()
@@ -69,33 +79,29 @@ class EvaluateArchitecture(APIView):
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
-            architecture = self.VASSARClient.evaluateArchitecture(request.session['problem'], inputs)
-
-            # If there is no session data, initialize and create a new dataset
-            if 'data' not in request.session:
-                request.session['data'] = []
-            if 'context' not in request.session:
-                request.session['context'] = {}
-            if 'current_design_id' not in request.session['context']:
-                request.session['context']['current_design_id'] = None
+            architecture = self.VASSARClient.evaluateArchitecture(user_info.eosscontext.problem, inputs)
 
             is_same = True
-            for old_arch in request.session['data']:
+            for old_arch in user_info.eosscontext.design_set.all():
                 is_same = True
-                for i in range(len(old_arch['outputs'])):
-                    if old_arch['outputs'][i] != architecture['outputs'][i]:
+                old_arch_outputs = json.loads(old_arch.outputs)
+                for i in range(len(old_arch_outputs)):
+                    if old_arch_outputs[i] != architecture['outputs'][i]:
                         is_same = False
                 if is_same:
                     break
 
             if not is_same:
-                architecture['id'] = request.session['archID']
-                request.session['context']['current_design_id'] = architecture['id']
-                print(request.session['context']['current_design_id'])
-                request.session['data'].append(architecture)
-                request.session['archID'] += 1
+                architecture['id'] = user_info.eosscontext.last_arch_id
+                print(user_info.eosscontext.last_arch_id)
+                Design.objects.create(eosscontext=user_info.eosscontext,
+                                      id=architecture['id'],
+                                      inputs=json.dumps(architecture['inputs']),
+                                      outputs=json.dumps(architecture['outputs']))
+                user_info.eosscontext.last_arch_id += 1
 
-            request.session.modified = True
+            user_info.eosscontext.save()
+            user_info.save()
 
             # End the connection before return statement
             self.VASSARClient.endConnection()
@@ -105,48 +111,38 @@ class EvaluateArchitecture(APIView):
             logger.exception('Exception in evaluating an architecture')
             self.VASSARClient.endConnection()
             return Response('')
-        
-        
-        
+
+
 class RunLocalSearch(APIView):
 
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             self.VASSARClient = VASSARClient(port)
             self.VASSARClient.startConnection()
-                        
+
             inputs = request.data['inputs']
             inputs = json.loads(inputs)
 
             architectures = self.VASSARClient.runLocalSearch(inputs)
 
-            # If there is no session data, initialize and create a new dataset
-            if 'data' not in request.session:
-                request.session['data'] = []
-                
-            if 'archID' not in request.session:
-                request.session['archID'] = None
+            for arch in architectures:
+                arch['id'] = user_info.eosscontext.last_arch_id
+                user_info.eosscontext.last_arch_id += 1
+                Design.objects.create(eosscontext=user_info.eosscontext,
+                                      id=arch["id"],
+                                      inputs=json.dumps(arch["inputs"]),
+                                      outputs=json.dumps(arch["outputs"]))
 
-            self.architectures = request.session['data']
-            self.archID = request.session['archID'] 
-            
-            if self.archID is None:
-                self.archID = 0
-                
-            for arch in architectures:                
-                arch['id'] = self.archID
-                self.archID += 1
-                self.architectures.append(arch)
-            
-            request.session['archID'] = self.archID            
-            request.session['data'] = self.architectures
-            
+            user_info.eosscontext.save()
+            user_info.save()
+
             # End the connection before return statement
             self.VASSARClient.endConnection()
             return Response(architectures)
-        
+
         except Exception:
             logger.exception('Exception in evaluating an architecture')
             self.VASSARClient.endConnection()
@@ -157,8 +153,10 @@ class ChangePort(APIView):
 
     def post(self, request, format=None):
         new_port = request.data['port']
-        request.session['vassar_port'] = new_port
-        request.session.modified = True
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        user_info.eosscontext.vassar_port = new_port
+        user_info.eosscontext.save()
+        user_info.save()
         return Response('')
 
 
@@ -172,8 +170,7 @@ class StartGA(APIView):
                 p = r.pubsub()
 
                 def my_handler(message):
-                    updated_session = SessionStore(session_key=request.session.session_key)
-
+                    thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
                     if message['data'] == 'new_arch':
                         print('Processing some new archs!')
                         nonlocal inputs_unique_set
@@ -185,31 +182,55 @@ class StartGA(APIView):
                             arch = json.loads(arch)
                             hashed_input = hash(tuple(arch['inputs']))
                             if hashed_input not in inputs_unique_set:
-                                full_arch = {'id': updated_session['archID'], 'inputs': arch['inputs'],
-                                             'outputs': arch['outputs']}
-                                updated_session['data'].append(full_arch)
-                                updated_session['archID'] += 1
+                                full_arch = {
+                                    'id': thread_user_info.eosscontext.last_arch_id,
+                                    'inputs': arch['inputs'],
+                                    'outputs': arch['outputs']
+                                }
+                                if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
+                                    Design.objects.create(eosscontext=thread_user_info.eosscontext,
+                                                          id=full_arch["id"],
+                                                          inputs=json.dumps(full_arch["inputs"]),
+                                                          outputs=json.dumps(full_arch["outputs"]))
+                                else:
+                                    Design.objects.create(activecontext=thread_user_info.eosscontext.activecontext,
+                                                          id=full_arch["id"],
+                                                          inputs=json.dumps(full_arch["inputs"]),
+                                                          outputs=json.dumps(full_arch["outputs"]))
+                                thread_user_info.eosscontext.last_arch_id += 1
                                 send_back.append(full_arch)
                                 inputs_unique_set.add(hashed_input)
-                                updated_session.save()
+                                thread_user_info.eosscontext.save()
+                                thread_user_info.save()
 
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(updated_session['channel_name'],
-                                                          {
-                                                              'type': 'ga.new_archs',
-                                                              'archs': send_back
-                                                          })
+
+                        background_queue_qs = Design.objects.filter(activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
+                        if background_queue_qs.count() >= 10:
+                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                              {
+                                                                  'type': 'active.notification',
+                                                                  'notification': {
+                                                                      'title': 'Background search results',
+                                                                      'message': 'The background search has found more than 10 architectures, but you have chosen to not show them. Do you want to see them now?',
+                                                                      'setting': 'show_background_search_feedback'
+                                                                  }
+                                                              })
+                        if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
+                            back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
+                            send_back.extend(back_list)
+                            send_archs_back(channel_layer, thread_user_info.channel_name, send_back)
                     if message['data'] == 'ga_started':
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(updated_session['channel_name'],
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                           {
                                                               'type': 'ga.started'
                                                           })
                     if message['data'] == 'ga_done':
                         channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(updated_session['channel_name'],
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                           {
                                                               'type': 'ga.finished'
                                                           })
@@ -220,7 +241,8 @@ class StartGA(APIView):
                 thread = p.run_in_thread(sleep_time=0.001)
 
                 # Start connection with VASSAR
-                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                port = user_info.eosscontext.vassar_port
                 client = VASSARClient(port)
                 client.startConnection()
 
@@ -228,16 +250,18 @@ class StartGA(APIView):
                 inputType = request.data['inputType']
 
                 # Restart archs queue before starting the GA again
-                request.session['background_search_archs_queue'] = []
+                Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
+                user_info.eosscontext.last_arch_id = user_info.eosscontext.design_set.count()
+                user_info.eosscontext.save()
 
                 # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
                 thrift_list = []
                 inputs_unique_set = set()
 
                 if inputType == 'binary':
-                    for arch in request.session['data']:
-                        thrift_list.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
-                        hashed_input = hash(tuple(arch['inputs']))
+                    for arch in user_info.eosscontext.design_set.all():
+                        thrift_list.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                        hashed_input = hash(tuple(json.loads(arch.inputs)))
                         inputs_unique_set.add(hashed_input)
                     client.client.stopGABinaryInput(request.user.username)
                     while client.client.isGABinaryInputRunning():
@@ -245,9 +269,9 @@ class StartGA(APIView):
                     client.client.startGABinaryInput(problem, thrift_list, request.user.username)
 
                 elif inputType == 'discrete':
-                    for arch in request.session['data']:
-                        thrift_list.append(DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
-                        hashed_input = hash(tuple(arch['inputs']))
+                    for arch in user_info.eosscontext.design_set.all():
+                        thrift_list.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                        hashed_input = hash(tuple(json.loads(arch.inputs)))
                         inputs_unique_set.add(hashed_input)
                     client.client.stopGADiscreteInput(request.user.username)
                     while client.client.isGADiscreteInputRunning():
@@ -275,8 +299,10 @@ class StopGA(APIView):
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
                 # Start connection with VASSAR
-                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                port = user_info.eosscontext.vassar_port
                 client = VASSARClient(port)
                 client.startConnection()
 
@@ -315,7 +341,8 @@ class CheckGA(APIView):
         if request.user.is_authenticated:
             try:
                 # Start connection with VASSAR
-                port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                port = user_info.eosscontext.vassar_port
                 client = VASSARClient(port)
                 client.startConnection()
 
@@ -351,7 +378,8 @@ class GetArchDetails(APIView):
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             client = VASSARClient(port)
             client.startConnection()
 
@@ -362,12 +390,12 @@ class GetArchDetails(APIView):
             this_arch = None
             arch_id = int(request.data['arch_id'])
             problem = request.data['problem']
-            for arch in request.session['data']:
-                if arch['id'] == arch_id:
+            for arch in user_info.eosscontext.design_set.all():
+                if arch.id == arch_id:
                     if problem in assignation_problems:
-                        this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                        this_arch = BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
                     elif problem in partition_problems:
-                        this_arch = DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                        this_arch = DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
                     break
 
             score_explanation = None
@@ -429,7 +457,8 @@ class GetSubobjectiveDetails(APIView):
     def post(self, request, format=None):
         try:
             # Start connection with VASSAR
-            port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
             client = VASSARClient(port)
             client.startConnection()
 
@@ -440,12 +469,12 @@ class GetSubobjectiveDetails(APIView):
             this_arch = None
             arch_id = int(request.data['arch_id'])
             problem = request.data['problem']
-            for arch in request.session['data']:
-                if arch['id'] == arch_id:
+            for arch in user_info.eosscontext.design_set.all():
+                if arch.id == arch_id:
                     if problem in assignation_problems:
-                        this_arch = BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                        this_arch = BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
                     elif problem in partition_problems:
-                        this_arch = DiscreteInputArchitecture(arch['id'], arch['inputs'], arch['outputs'])
+                        this_arch = DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
                     break
 
             subobjective_explanation = None
