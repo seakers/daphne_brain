@@ -6,7 +6,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_instruments_for_stakeholder('${vassar_stakeholder}', context)",
+    "run_template": "run_func.eoss.engineer.get_instruments_for_stakeholder('${vassar_stakeholder}', context)",
     "result_type": "list",
     "result_fields": {
       "instrument_name": "item"

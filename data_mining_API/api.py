@@ -207,6 +207,51 @@ class DataMiningClient():
 
         return drivingFeatures
 
+
+    def runAutomatedLocalSearch(self, problem, input_type, behavioral, non_behavioral, all_archs,
+                                support_threshold, confidence_threshold, lift_threshold):
+        try:
+            print('runAutomatedLocalSearch')
+            print(
+                'b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(all_archs)))
+
+            archs_formatted = []
+            if input_type == "binary":
+                for arch in all_archs:
+                    archs_formatted.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                drivingFeatures_formatted = self.client.runAutomatedLocalSearchBinary(problem,
+                                                                                      behavioral,
+                                                                                      non_behavioral,
+                                                                                      archs_formatted,
+                                                                                      support_threshold,
+                                                                                      confidence_threshold,
+                                                                                      lift_threshold)
+
+            elif input_type == "discrete":
+                for arch in all_archs:
+                    inputs = []
+                    for i in arch['inputs']:
+                        inputs.append(int(i))
+                    archs_formatted.append(DiscreteInputArchitecture(arch['id'], inputs, arch['outputs']))
+                drivingFeatures_formatted = self.client.runAutomatedLocalSearchDiscrete(problem,
+                                                                                        behavioral,
+                                                                                        non_behavioral,
+                                                                                        archs_formatted,
+                                                                                        support_threshold,
+                                                                                        confidence_threshold,
+                                                                                        lift_threshold)
+
+            drivingFeatures = []
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append(
+                    {'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics,
+                     'complexity': df.complexity})
+
+        except Exception as e:
+            print('Exc in calling getMarginalDrivingFeatures(): ' + str(e))
+
+        return drivingFeatures
+
     def setProblemParameters(self, problem, params):
         try:
             if problem == "ClimateCentric":
