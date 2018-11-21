@@ -781,10 +781,19 @@ class ImportFeatureData(APIView):
                     index = int(row[0])
                     feature_expression = row[1]
 
-                    coverage = float(row[2])
-                    specificity = float(row[3])
-                    complexity = float(row[4])
-                    metrics = [-1, -1, coverage, specificity]
+                    if len(row) > 5:
+                        support = float(row[2])
+                        lift = float(row[3])
+                        coverage = float(row[4])
+                        specificity = float(row[5])
+                        complexity = float(row[6])
+                        metrics = [support, lift, coverage, specificity]
+                        
+                    else:
+                        coverage = float(row[2])
+                        specificity = float(row[3])
+                        complexity = float(row[4])
+                        metrics = [-1, -1, coverage, specificity]
 
                     features.append({'id':index, 'name':feature_expression, 'expression':feature_expression, 'metrics':metrics, 'complexity': complexity})
 
