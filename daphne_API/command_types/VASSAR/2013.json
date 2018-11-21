@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_design_id", "type": "design_id", "options": "", "from_context": true, "mandatory": true },
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true },
     { "name": "vassar_stakeholder", "type": "vassar_stakeholder", "options": "", "from_context": false, "mandatory": true }
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_panel_scores('${current_design_id}', data['designs'], '${vassar_stakeholder}', context)",
+    "run_template": "run_func.eoss.engineer.get_panel_scores('${selected_arch_id}', data['designs'], '${vassar_stakeholder}', context)",
     "result_type": "list",
     "result_fields": {
       "obj_name": "item.objective_name",
@@ -17,13 +17,13 @@
   },
   "voice_response": {
     "type": "list",
-    "begin": "The reasons for the score of the selected panel (${current_design_id}) are: ",
+    "begin": "The reasons for the score of the selected panel (${selected_arch_id}) are: ",
     "repeat": "Objective ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
     "end": "."
   },
   "visual_response": {
     "type": "list",
-    "begin": "The reasons for the score of the selected panel (${current_design_id}) are: ",
+    "begin": "The reasons for the score of the selected panel (${selected_arch_id}) are: ",
     "item_template": "Objective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
   }
 }

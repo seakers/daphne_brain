@@ -1,3 +1,4 @@
+import json
 import os
 
 import numpy as np
@@ -6,6 +7,7 @@ from tensorflow.contrib import learn
 
 from daphne_API import data_helpers, qa_pipeline
 from daphne_API.errors import ParameterMissingError
+from daphne_API.models import EOSSContext, UserInformation
 
 
 def classify_command(command):
@@ -53,12 +55,13 @@ def error_answers(missing_param):
     }
 
 
-def not_allowed_condition(context, command_class, command_type):
-    if 'allowed_commands' not in context:
+def not_allowed_condition(context: UserInformation, command_class, command_type):
+    if len(context.eosscontext.allowedcommand_set.all()) == 0:
         return False
-    if command_type not in context['allowed_commands'][command_class]:
-        return True
-    return False
+    for allowed_command in context.eosscontext.allowedcommand_set.all():
+        if command_class == allowed_command.command_type and command_type == allowed_command.command_descriptor:
+            return False
+    return True
 
 
 def not_allowed_answers():
@@ -69,7 +72,7 @@ def not_allowed_answers():
     }
 
 
-def command(processed_command, command_class, condition_name, context):
+def command(processed_command, command_class, condition_name, context: UserInformation):
     # Classify the question, obtaining a question type
     question_type = qa_pipeline.classify(processed_command, command_class)
     print(question_type)
@@ -98,6 +101,13 @@ def command(processed_command, command_class, condition_name, context):
     # Return the answer to the client
     return answers
 
-def think_response(context):
+
+def think_response(context: UserInformation):
     # TODO: Make this intelligent, e.g. hook this to a rule based engine
-    return context["answers"][0]
+    db_answer = context.eosscontext.answer_set.all()[:1].get()
+    frontend_answer = {
+        "voice_answer": db_answer.voice_answer,
+        "visual_answer_type": db_answer.visual_answer_type,
+        "visual_answer": json.loads(db_answer.visual_answer)
+    }
+    return frontend_answer

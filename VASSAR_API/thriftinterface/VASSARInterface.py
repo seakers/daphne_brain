@@ -142,11 +142,18 @@ class Iface(object):
     def isGABinaryInputRunning(self):
         pass
 
-    def toggleGABinaryInput(self, problem, dataset, username):
+    def startGABinaryInput(self, problem, dataset, username):
         """
         Parameters:
          - problem
          - dataset
+         - username
+        """
+        pass
+
+    def stopGABinaryInput(self, username):
+        """
+        Parameters:
          - username
         """
         pass
@@ -179,11 +186,18 @@ class Iface(object):
     def isGADiscreteInputRunning(self):
         pass
 
-    def toggleGADiscreteInput(self, problem, dataset, username):
+    def startGADiscreteInput(self, problem, dataset, username):
         """
         Parameters:
          - problem
          - dataset
+         - username
+        """
+        pass
+
+    def stopGADiscreteInput(self, username):
+        """
+        Parameters:
          - username
         """
         pass
@@ -737,24 +751,71 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "isGABinaryInputRunning failed: unknown result")
 
-    def toggleGABinaryInput(self, problem, dataset, username):
+    def startGABinaryInput(self, problem, dataset, username):
         """
         Parameters:
          - problem
          - dataset
          - username
         """
-        self.send_toggleGABinaryInput(problem, dataset, username)
+        self.send_startGABinaryInput(problem, dataset, username)
+        return self.recv_startGABinaryInput()
 
-    def send_toggleGABinaryInput(self, problem, dataset, username):
-        self._oprot.writeMessageBegin('toggleGABinaryInput', TMessageType.ONEWAY, self._seqid)
-        args = toggleGABinaryInput_args()
+    def send_startGABinaryInput(self, problem, dataset, username):
+        self._oprot.writeMessageBegin('startGABinaryInput', TMessageType.CALL, self._seqid)
+        args = startGABinaryInput_args()
         args.problem = problem
         args.dataset = dataset
         args.username = username
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
+
+    def recv_startGABinaryInput(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = startGABinaryInput_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "startGABinaryInput failed: unknown result")
+
+    def stopGABinaryInput(self, username):
+        """
+        Parameters:
+         - username
+        """
+        self.send_stopGABinaryInput(username)
+        return self.recv_stopGABinaryInput()
+
+    def send_stopGABinaryInput(self, username):
+        self._oprot.writeMessageBegin('stopGABinaryInput', TMessageType.CALL, self._seqid)
+        args = stopGABinaryInput_args()
+        args.username = username
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_stopGABinaryInput(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = stopGABinaryInput_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "stopGABinaryInput failed: unknown result")
 
     def getArchScienceInformationBinaryInput(self, problem, arch):
         """
@@ -883,24 +944,71 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "isGADiscreteInputRunning failed: unknown result")
 
-    def toggleGADiscreteInput(self, problem, dataset, username):
+    def startGADiscreteInput(self, problem, dataset, username):
         """
         Parameters:
          - problem
          - dataset
          - username
         """
-        self.send_toggleGADiscreteInput(problem, dataset, username)
+        self.send_startGADiscreteInput(problem, dataset, username)
+        return self.recv_startGADiscreteInput()
 
-    def send_toggleGADiscreteInput(self, problem, dataset, username):
-        self._oprot.writeMessageBegin('toggleGADiscreteInput', TMessageType.ONEWAY, self._seqid)
-        args = toggleGADiscreteInput_args()
+    def send_startGADiscreteInput(self, problem, dataset, username):
+        self._oprot.writeMessageBegin('startGADiscreteInput', TMessageType.CALL, self._seqid)
+        args = startGADiscreteInput_args()
         args.problem = problem
         args.dataset = dataset
         args.username = username
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
+
+    def recv_startGADiscreteInput(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = startGADiscreteInput_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "startGADiscreteInput failed: unknown result")
+
+    def stopGADiscreteInput(self, username):
+        """
+        Parameters:
+         - username
+        """
+        self.send_stopGADiscreteInput(username)
+        return self.recv_stopGADiscreteInput()
+
+    def send_stopGADiscreteInput(self, username):
+        self._oprot.writeMessageBegin('stopGADiscreteInput', TMessageType.CALL, self._seqid)
+        args = stopGADiscreteInput_args()
+        args.username = username
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_stopGADiscreteInput(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = stopGADiscreteInput_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "stopGADiscreteInput failed: unknown result")
 
     def getArchScienceInformationDiscreteInput(self, problem, arch):
         """
@@ -1024,12 +1132,14 @@ class Processor(Iface, TProcessor):
         self._processMap["getPanelScoreExplanation"] = Processor.process_getPanelScoreExplanation
         self._processMap["getObjectiveScoreExplanation"] = Processor.process_getObjectiveScoreExplanation
         self._processMap["isGABinaryInputRunning"] = Processor.process_isGABinaryInputRunning
-        self._processMap["toggleGABinaryInput"] = Processor.process_toggleGABinaryInput
+        self._processMap["startGABinaryInput"] = Processor.process_startGABinaryInput
+        self._processMap["stopGABinaryInput"] = Processor.process_stopGABinaryInput
         self._processMap["getArchScienceInformationBinaryInput"] = Processor.process_getArchScienceInformationBinaryInput
         self._processMap["getArchCostInformationBinaryInput"] = Processor.process_getArchCostInformationBinaryInput
         self._processMap["getSubscoreDetailsBinaryInput"] = Processor.process_getSubscoreDetailsBinaryInput
         self._processMap["isGADiscreteInputRunning"] = Processor.process_isGADiscreteInputRunning
-        self._processMap["toggleGADiscreteInput"] = Processor.process_toggleGADiscreteInput
+        self._processMap["startGADiscreteInput"] = Processor.process_startGADiscreteInput
+        self._processMap["stopGADiscreteInput"] = Processor.process_stopGADiscreteInput
         self._processMap["getArchScienceInformationDiscreteInput"] = Processor.process_getArchScienceInformationDiscreteInput
         self._processMap["getArchCostInformationDiscreteInput"] = Processor.process_getArchCostInformationDiscreteInput
         self._processMap["getSubscoreDetailsDiscreteInput"] = Processor.process_getSubscoreDetailsDiscreteInput
@@ -1417,16 +1527,51 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_toggleGABinaryInput(self, seqid, iprot, oprot):
-        args = toggleGABinaryInput_args()
+    def process_startGABinaryInput(self, seqid, iprot, oprot):
+        args = startGABinaryInput_args()
         args.read(iprot)
         iprot.readMessageEnd()
+        result = startGABinaryInput_result()
         try:
-            self._handler.toggleGABinaryInput(args.problem, args.dataset, args.username)
+            result.success = self._handler.startGABinaryInput(args.problem, args.dataset, args.username)
+            msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
         except Exception:
-            logging.exception('Exception in oneway handler')
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("startGABinaryInput", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_stopGABinaryInput(self, seqid, iprot, oprot):
+        args = stopGABinaryInput_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = stopGABinaryInput_result()
+        try:
+            result.success = self._handler.stopGABinaryInput(args.username)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("stopGABinaryInput", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
 
     def process_getArchScienceInformationBinaryInput(self, seqid, iprot, oprot):
         args = getArchScienceInformationBinaryInput_args()
@@ -1520,16 +1665,51 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_toggleGADiscreteInput(self, seqid, iprot, oprot):
-        args = toggleGADiscreteInput_args()
+    def process_startGADiscreteInput(self, seqid, iprot, oprot):
+        args = startGADiscreteInput_args()
         args.read(iprot)
         iprot.readMessageEnd()
+        result = startGADiscreteInput_result()
         try:
-            self._handler.toggleGADiscreteInput(args.problem, args.dataset, args.username)
+            result.success = self._handler.startGADiscreteInput(args.problem, args.dataset, args.username)
+            msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
         except Exception:
-            logging.exception('Exception in oneway handler')
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("startGADiscreteInput", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_stopGADiscreteInput(self, seqid, iprot, oprot):
+        args = stopGADiscreteInput_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = stopGADiscreteInput_result()
+        try:
+            result.success = self._handler.stopGADiscreteInput(args.username)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("stopGADiscreteInput", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
 
     def process_getArchScienceInformationDiscreteInput(self, seqid, iprot, oprot):
         args = getArchScienceInformationDiscreteInput_args()
@@ -3817,7 +3997,7 @@ isGABinaryInputRunning_result.thrift_spec = (
 )
 
 
-class toggleGABinaryInput_args(object):
+class startGABinaryInput_args(object):
     """
     Attributes:
      - problem
@@ -3870,7 +4050,7 @@ class toggleGABinaryInput_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('toggleGABinaryInput_args')
+        oprot.writeStructBegin('startGABinaryInput_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
@@ -3902,12 +4082,193 @@ class toggleGABinaryInput_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(toggleGABinaryInput_args)
-toggleGABinaryInput_args.thrift_spec = (
+all_structs.append(startGABinaryInput_args)
+startGABinaryInput_args.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
     (2, TType.LIST, 'dataset', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 2
     (3, TType.STRING, 'username', 'UTF8', None, ),  # 3
+)
+
+
+class startGABinaryInput_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('startGABinaryInput_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(startGABinaryInput_result)
+startGABinaryInput_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
+)
+
+
+class stopGABinaryInput_args(object):
+    """
+    Attributes:
+     - username
+    """
+
+
+    def __init__(self, username=None,):
+        self.username = username
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.username = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('stopGABinaryInput_args')
+        if self.username is not None:
+            oprot.writeFieldBegin('username', TType.STRING, 1)
+            oprot.writeString(self.username.encode('utf-8') if sys.version_info[0] == 2 else self.username)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(stopGABinaryInput_args)
+stopGABinaryInput_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'username', 'UTF8', None, ),  # 1
+)
+
+
+class stopGABinaryInput_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('stopGABinaryInput_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(stopGABinaryInput_result)
+stopGABinaryInput_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
 )
 
 
@@ -4447,7 +4808,7 @@ isGADiscreteInputRunning_result.thrift_spec = (
 )
 
 
-class toggleGADiscreteInput_args(object):
+class startGADiscreteInput_args(object):
     """
     Attributes:
      - problem
@@ -4500,7 +4861,7 @@ class toggleGADiscreteInput_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('toggleGADiscreteInput_args')
+        oprot.writeStructBegin('startGADiscreteInput_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
@@ -4532,12 +4893,193 @@ class toggleGADiscreteInput_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(toggleGADiscreteInput_args)
-toggleGADiscreteInput_args.thrift_spec = (
+all_structs.append(startGADiscreteInput_args)
+startGADiscreteInput_args.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
     (2, TType.LIST, 'dataset', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 2
     (3, TType.STRING, 'username', 'UTF8', None, ),  # 3
+)
+
+
+class startGADiscreteInput_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('startGADiscreteInput_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(startGADiscreteInput_result)
+startGADiscreteInput_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
+)
+
+
+class stopGADiscreteInput_args(object):
+    """
+    Attributes:
+     - username
+    """
+
+
+    def __init__(self, username=None,):
+        self.username = username
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.username = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('stopGADiscreteInput_args')
+        if self.username is not None:
+            oprot.writeFieldBegin('username', TType.STRING, 1)
+            oprot.writeString(self.username.encode('utf-8') if sys.version_info[0] == 2 else self.username)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(stopGADiscreteInput_args)
+stopGADiscreteInput_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'username', 'UTF8', None, ),  # 1
+)
+
+
+class stopGADiscreteInput_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('stopGADiscreteInput_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(stopGADiscreteInput_result)
+stopGADiscreteInput_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
 )
 
 

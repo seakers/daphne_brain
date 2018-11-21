@@ -3,7 +3,7 @@
   "params": [],
   "function":
   {
-    "run_template": "run_func.data_mining_run(data['designs'], data['behavioral'], data['non_behavioral'], context)",
+    "run_template": "run_func.eoss.analyst.data_mining_run(data['designs'], data['behavioral'], data['non_behavioral'], context)",
     "result_type": "list",
     "result_fields": {
       "adv_type": "item[\"type\"]",
