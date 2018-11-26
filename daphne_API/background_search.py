@@ -2,6 +2,7 @@ import json
 
 from asgiref.sync import async_to_sync
 
+from daphne_API.diversifier import activate_diversifier
 from daphne_API.models import Design
 
 
@@ -20,9 +21,17 @@ def send_archs_from_queue_to_main_dataset(context):
         design.activecontext = None
         design.eosscontext = context.eosscontext
         design.save()
+        context.eosscontext.added_archs_count += 1
+        context.eosscontext.save()
         arch_list.append({
             'id': design.id,
             'inputs': json.loads(design.inputs),
             'outputs': json.loads(design.outputs),
         })
+
+    if context.eosscontext.added_archs_count >= 5:
+        context.eosscontext.added_archs_count = 0
+        context.eosscontext.save()
+        activate_diversifier(context.eosscontext)
+
     return arch_list
