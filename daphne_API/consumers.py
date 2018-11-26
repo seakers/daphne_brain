@@ -127,6 +127,10 @@ class DaphneConsumer(JsonWebsocketConsumer):
         print(event)
         self.send(json.dumps(event))
 
+    def active_modification(self, event):
+        print(event)
+        self.send(json.dumps(event))
+
     def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
