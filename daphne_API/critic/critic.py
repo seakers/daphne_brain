@@ -1,21 +1,31 @@
-import csv
 import json
-import string
+import math
+import sys
+import traceback
+
 import numpy as np
 from sqlalchemy.orm import sessionmaker
 
 import daphne_API.historian.models as models
 import daphne_API.problem_specific as problem_specific
+from VASSAR_API.api import VASSARClient
+from daphne_API.eoss.runnable_functions.helpers import get_feature_unsatisfied, get_feature_satisfied, \
+    feature_expression_to_string
+from daphne_API.models import UserInformation, Design
+from data_mining_API.api import DataMiningClient
 
-class CRITIC:
 
-    def __init__(self, problem):
+class Critic:
+
+    def __init__(self, context: UserInformation):
         # Connect to the CEOS database
         self.engine = models.db_connect()
         self.session = sessionmaker(bind=self.engine)()
-        self.instruments_dataset = problem_specific.get_instrument_dataset(problem)
-        self.orbits_dataset = problem_specific.get_orbit_dataset(problem)
-
+        self.context = context
+        self.instruments_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
+        self.orbits_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
+        self.assignation_problems = ['SMAP', 'ClimateCentric']
+        self.partition_problems = ['Decadal2017Aerosols']
 
     def get_missions_from_genome(self, problem_type, genome):
         missions = []
@@ -31,7 +41,7 @@ class CRITIC:
         num_instr = len(self.instruments_dataset)
         num_orbits = len(self.orbits_dataset)
         for orbit in range(num_orbits):
-            mission = { "orbit": self.orbits_dataset[orbit]["name"], "instruments": [] }
+            mission = {"orbit": self.orbits_dataset[orbit]["name"], "instruments": []}
 
             for instr in range(num_instr):
                 idx = orbit*num_instr + instr
@@ -47,7 +57,6 @@ class CRITIC:
         # TODO: Retrieve all missions from genome
 
         return missions
-
 
     def orbits_similarity(self, mission_orbit, hist_mission):
         score = 0
@@ -106,7 +115,6 @@ class CRITIC:
             sim[:, i2] = 0
         return score
 
-
     def missions_similarity(self, mission_orbit, mission_instruments, missions_database):
         max_score = -1
         max_mission = None
@@ -125,11 +133,122 @@ class CRITIC:
         # Return result
         return [(max_score*10)/7, max_mission]
 
+    def expert_critic(self, design):
+        # Criticize architecture (based on rules)
+        port = self.context.eosscontext.vassar_port
+        problem = self.context.eosscontext.problem
+        inputs = json.loads(design.inputs)
+        client = VASSARClient(port)
+        client.startConnection()
 
-    def historian_critic(self, problem_type, arch):
+        result_list = None
+        if problem in self.assignation_problems:
+            result_list = client.client.getCritiqueBinaryInputArch(problem, inputs)
+        elif problem in self.partition_problems:
+            result_list = client.client.getCritiqueDiscreteInputArch(problem, inputs)
+
+        client.endConnection()
+
         result = []
+        for advice in result_list:
+            result.append({
+                "type": "Expert",
+                "advice": advice
+            })
+
+        return result
+
+    def explorer_critic(self, design):
+
+        def get_advices_from_bit_string_diff(difference):
+            out = []
+            ninstr = len(self.instruments_dataset)
+
+            for i in range(len(difference)):
+                advice = []
+                if difference[i] == 1:
+                    advice.append("add")
+                elif difference[i] == -1:
+                    advice.append("remove")
+                else:
+                    continue
+
+                orbit_index = i // ninstr  # Floor division
+                instr_index = i % ninstr  # Get the remainder
+                advice.append("instrument {}".format(self.instruments_dataset[instr_index]['name']))
+
+                if difference[i] == 1:
+                    advice.append("to")
+                elif difference[i] == -1:
+                    advice.append("from")
+
+                advice.append("orbit {}".format(self.orbits_dataset[orbit_index]['name']))
+
+                advice = " ".join(advice)
+                out.append(advice)
+
+            out = ", and ".join(out)
+            out = out[0].upper() + out[1:]
+            return out
+
+        original_outputs = json.loads(design.outputs)
+        original_inputs = json.loads(design.inputs)
+        problem = self.context.eosscontext.problem
+        port = self.context.eosscontext.vassar_port
+        client = VASSARClient(port)
+
+        archs = None
+        advices = []
+        if problem in self.assignation_problems:
+            archs = client.client.runLocalSearchBinaryInput(problem, json.loads(design.inputs))
+
+            for arch in archs:
+                new_outputs = arch.outputs
+
+                new_design_inputs = arch.inputs
+                diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
+                advice = [get_advices_from_bit_string_diff(diff)]
+
+                # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
+                if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
+                    # New solution dominates the original solution
+                    advice.append(" to increase the science benefit and lower the cost.")
+                elif new_outputs[0] > original_outputs[0]:
+                    advice.append(" to increase the science benefit (but cost may increase!).")
+                elif new_outputs[1] < original_outputs[1]:
+                    advice.append(" to lower the cost (but science may decrease too!).")
+                else:
+                    continue
+
+                advice = "".join(advice)
+                advices.append(advice)
+        elif problem in self.partition_problems:
+            archs = client.client.runLocalSearchDiscreteInput(problem, json.loads(design.inputs))
+
+            # TODO: Add the delta code for discrete architectures
+
+        client.endConnection()
+        result = []
+        for advice in advices:
+            result.append({
+                "type": "Explorer",
+                "advice": advice
+            })
+        return result
+
+    def historian_critic(self, design):
+        historian_feedback = []
+
+        problem = self.context.eosscontext.problem
+        if problem in self.assignation_problems:
+            problem_type = 'binary'
+        elif problem in self.partition_problems:
+            problem_type = 'discrete'
+        else:
+            problem_type = 'unknown'
+
         # Convert architecture format
-        missions = self.get_missions_from_genome(problem_type, arch)
+        missions = self.get_missions_from_genome(problem_type, design)
 
         # Type 2: Mission by mission
         missions_database = self.session.query(models.Mission)
@@ -145,47 +264,113 @@ class CRITIC:
             res = self.missions_similarity(orbit_info, mission["instruments"], missions_database)
             if len(mission["instruments"]) > 0:
                 if res[0] < 6:
-                    result.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
-                                  mission["orbit"])
+                    historian_feedback.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
+                                              mission["orbit"])
                 else:
-                    result.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
-                                  (mission["orbit"], res[1].name))
-                        # +
-                        # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
-                        #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
-        return result
+                    historian_feedback.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
+                                              (mission["orbit"], res[1].name))
+                    # +
+                    # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
+                    #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
 
-
-    def criticize_arch(self, problem_type, arch):
         result = []
-        # Type 1: Instrument by intrument
-        #for o in range(len(arch)):
-        #    for i in arch[o]:
-        #        orbit = self.orbitsDataset[o]
-        #        instrument = next(ii for ii in self.instrumentsDataset if ii["alias"] == i)
-        #        res = self.getSimilarInstruments(orbit, instrument)
-        #        if len(res) == 0:
-        #            result.append([
-        #                "historian1",
-        #                "Instrument %s has never been flown in orbit %s before" % \
-        #                     (instrument["alias"], orbit["alias"])
-        #            ])
-        #        else:
-        #            result.append([
-        #                "historian1",
-        #                "Instrument %s has been flown in orbit %s before (%s matches in the database)" % \
-        #                    (instrument["alias"], orbit["alias"], len(res)),
-        #                str(', '.join([r.name for r in res]))
-        #        ])
-        
-        
-        # Type 2: Mission by mission
-        historian_results = self.historian_critic(problem_type, arch)
-        for hist in historian_results:
+        for advice in historian_feedback:
             result.append({
                 "type": "Historian",
-                "advice": hist
+                "advice": advice
             })
+        return result
 
-        # Return result
+    def analyst_critic(self, this_design):
+        result = []
+        client = DataMiningClient()
+
+        problem = self.context.eosscontext.problem
+        if problem in self.assignation_problems:
+            problem_type = 'binary'
+        elif problem in self.partition_problems:
+            problem_type = 'discrete'
+        else:
+            problem_type = 'unknown'
+
+        try:
+            # Start connection with data_mining
+            client.startConnection()
+
+            support_threshold = 0.02
+            confidence_threshold = 0.2
+            lift_threshold = 1
+
+            behavioral = []
+            non_behavioral = []
+
+            dataset = Design.objects.filter(eosscontext_id__exact=self.context.eosscontext.id).all()
+
+            if len(dataset) < 10:
+                raise ValueError("Could not run data mining: the number of samples is less than 10")
+            else:
+
+                utopiaPoint = [0.26, 0]
+                temp = []
+                # Select the top N% archs based on the distance to the utopia point
+                for design in dataset:
+                    outputs = json.loads(this_design.outputs)
+                    id = design.id
+                    dist = math.sqrt((outputs[0] - utopiaPoint[0]) ** 2 + (outputs[1] - utopiaPoint[1]) ** 2)
+                    temp.append((id, dist))
+
+                # Sort the list based on the distance to the utopia point
+                temp = sorted(temp, key=lambda x: x[1])
+                for i in range(len(temp)):
+                    if i <= len(temp) // 10:  # Label the top 10% architectures as behavioral
+                        behavioral.append(temp[i][0])
+                    else:
+                        non_behavioral.append(temp[i][0])
+
+            # Extract feature
+            # features = client.getDrivingFeatures(behavioral, non_behavioral, designs, support_threshold, confidence_threshold, lift_threshold)
+            features = client.runAutomatedLocalSearch(problem, problem_type, behavioral, non_behavioral, dataset,
+                                                      support_threshold, confidence_threshold, lift_threshold)
+
+            advices = []
+            if not len(features) == 0:
+
+                # Compare features to the current design
+                unsatisfied = get_feature_unsatisfied(features[0]['name'], this_design, self.context)
+                satisfied = get_feature_satisfied(features[0]['name'], this_design, self.context)
+
+                if type(unsatisfied) is not list:
+                    unsatisfied = [unsatisfied]
+
+                if type(satisfied) is not list:
+                    satisfied = [satisfied]
+
+                for exp in unsatisfied:
+                    if exp == "":
+                        continue
+                    advices.append(
+                        "Based on the data mining result, I advise you to make the following change: " +
+                        feature_expression_to_string(exp, is_critique=True, context=self.context))
+
+                for exp in satisfied:
+                    if exp == "":
+                        continue
+                    advices.append(
+                        "Based on the data mining result, these are the good features. Consider keeping them: " +
+                        feature_expression_to_string(exp, is_critique=False, context=self.context))
+
+            # End the connection before return statement
+            client.endConnection()
+
+            for i in range(len(advices)):  # Generate answers for the first 5 features
+                advice = advices[i]
+                result.append({
+                    "type": "Analyst",
+                    "advice": advice
+                })
+        except Exception as e:
+            print("Exc in generating critic from data mining: " + str(e))
+            traceback.print_exc(file=sys.stdout)
+            client.endConnection()
+
         return result
