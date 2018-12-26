@@ -23,7 +23,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
 
         # Create the EOSS Context and its children
         eoss_context = EOSSContext(user_information=user_info, problem='', dataset_name='', last_arch_id=0,
-                                   selected_arch_id=-1, vassar_port=9090)
+                                   selected_arch_id=-1, added_archs_count=0, vassar_port=9090)
         eoss_context.save()
 
         active_context = ActiveContext(eosscontext=eoss_context, show_background_search_feedback=False,
