@@ -196,6 +196,7 @@ class Critic:
         problem = self.context.eosscontext.problem
         port = self.context.eosscontext.vassar_port
         client = VASSARClient(port)
+        client.startConnection()
 
         archs = None
         advices = []
@@ -248,7 +249,7 @@ class Critic:
             problem_type = 'unknown'
 
         # Convert architecture format
-        missions = self.get_missions_from_genome(problem_type, design)
+        missions = self.get_missions_from_genome(problem_type, json.loads(design.inputs))
 
         # Type 2: Mission by mission
         missions_database = self.session.query(models.Mission)

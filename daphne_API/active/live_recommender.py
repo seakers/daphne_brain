@@ -11,6 +11,14 @@ def active_engineer_response(user_info: UserInformation, inputs):
     suggestion_list = critic.expert_critic(modified_design)
     return suggestion_list
 
+
+def active_historian_response(user_info: UserInformation, inputs):
+    modified_design = Design(inputs=json.dumps(inputs), outputs="")
+    critic = Critic(user_info)
+    suggestion_list = critic.historian_critic(modified_design)
+    return suggestion_list
+
+
 def parse_suggestions_list(raw_list):
     parsed_list = []
     element_template = Template("<b>${type}</b>: ${advice}")

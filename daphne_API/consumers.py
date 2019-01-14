@@ -105,16 +105,42 @@ class DaphneConsumer(JsonWebsocketConsumer):
                 getattr(user_info, subcontext_name).save()
             user_info.save()
         elif content.get('msg_type') == 'active_engineer':
-            suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'))
-            suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
-            self.send_json({
-                'type': 'active.live_suggestion',
-                'agent': 'engineer',
-                'suggestion_list': suggestion_list
-            })
-            pass # TODO: Implement server response to a Live Recommender Engineer request
+            if user_info.eosscontext.activecontext.show_arch_suggestions:
+                suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
+                self.send_json({
+                    'type': 'active.live_suggestion',
+                    'agent': 'engineer',
+                    'suggestion_list': suggestion_list
+                })
+            else:
+                self.send_json({
+                                'type': 'active.notification',
+                                'notification': {
+                                    'title': 'Live Recommender System',
+                                    'message': 'The Live Recommender System has some suggestions for your modified architecture, but you have chosen to not show them. Do you want to see them now?',
+                                    'setting': 'show_arch_suggestions'
+                                }
+                              })
+
         elif content.get('msg_type') == 'active_historian':
-            pass # TODO: Implement server response to a Live Recommender Historian request
+            if user_info.eosscontext.activecontext.show_arch_suggestions:
+                suggestion_list = live_recommender.active_historian_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
+                self.send_json({
+                    'type': 'active.live_suggestion',
+                    'agent': 'historian',
+                    'suggestion_list': suggestion_list
+                })
+            else:
+                self.send_json({
+                    'type': 'active.notification',
+                    'notification': {
+                        'title': 'Live Recommender System',
+                        'message': 'The Live Recommender System has some suggestions for your modified architecture, but you have chosen to not show them. Do you want to see them now?',
+                        'setting': 'show_arch_suggestions'
+                    }
+                })
         elif content.get('msg_type') == 'text_msg':
             textMessage = content.get('text', None)
             # Broadcast
@@ -123,6 +149,8 @@ class DaphneConsumer(JsonWebsocketConsumer):
             print("Ping back")
             # Stop the connection killer
             self.scheduler.cancel_job(self.kill_event)
+            # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
+
 
     def ga_new_archs(self, event):
         print(event)
