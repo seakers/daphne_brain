@@ -1037,6 +1037,7 @@ def calculate_scorecard_metric(mat_file, edl_scorecard_calculate, scorecard_post
             if item['metric'] == scorecard_post_param:
                 units = item['units']
                 type_result = item['type']
+                eval_string = item['evalString']
     ''' Check if the variables in the string to be calculate exist in the matfile, this uses a function called vars_for_calc(list, mat_file_path) and returns a list we can use to load them in the workspace'''
     # split the calculation string
     eng1.addpath('/Volumes/Encrypted/Mars2020/mars2020/MATLAB/', nargout=0)
@@ -1059,8 +1060,9 @@ def calculate_scorecard_metric(mat_file, edl_scorecard_calculate, scorecard_post
     for item in eqs_to_calc:
         eng1.eval(item, nargout=0)
     calculation_result = eng1.workspace['ans']
+    calculation_string = eng1.eval(eval_string)
 
-    calculation_response = "".join([str('The'), str(' '), str(scorecard_post_param),  str(' = '), str(calculation_result),
+    calculation_response = "".join([str('The'), str(' '), str(scorecard_post_param),  str(' = '), str(calculation_string),
                                                 str(units), str(" ("), str(type_result),str(") ")])
 
     return calculation_response
