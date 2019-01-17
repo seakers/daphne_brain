@@ -64,45 +64,9 @@ class GetDrivingFeatures(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            #########################################
-            #########################################
-            ### Write data file with labels
-
-            # dir_path = "/Users/bang/workspace/featureGA/data/"
-            # with open(os.path.join(dir_path,"data.csv"), "w") as file:
-
-            #     content = []
-
-            #     for i, arch in enumerate(architectures):
-            #         line = []
-
-            #         archID = arch['id']
-            #         label = None
-            #         if archID in behavioral:
-            #             label = "1"
-            #         else:
-            #             label = "0"
-
-            #         inputs = arch['inputs']
-            #         inputString = ""
-            #         for val in inputs:
-            #             if val:
-            #                 inputString += "1"
-            #             else:
-            #                 inputString += "0"
-
-            #         line.append(str(label))
-            #         line.append(inputString)
-            #         content.append(",".join(line))    
-
-            #     file.write("\n".join(content))
-
-            #########################################
-            #########################################
-
             drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
                                                                        architectures, supp, conf, lift)
-                
+
             output = drivingFeatures
 
             # End the connection before return statement
@@ -153,6 +117,56 @@ class getDrivingFeaturesEpsilonMOEA(APIView):
             inputType = request.POST['input_type']
 
             drivingFeatures = self.DataMiningClient.getDrivingFeaturesEpsilonMOEA(problem, inputType, behavioral, non_behavioral, architectures)
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class getDrivingFeaturesWithGeneralization(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            logger.debug(request.session)
+            architectures = request.session['data']
+
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.getDrivingFeaturesWithGeneralization(problem, inputType, behavioral, non_behavioral, architectures)
             output = drivingFeatures
 
             # End the connection before return statement
@@ -253,6 +267,44 @@ class GetMarginalDrivingFeatures(APIView):
 
             drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(problem, inputType, behavioral,non_behavioral,architectures,
                                                                                featureExpression,logicalConnective, supp,conf,lift)            
+            output = drivingFeatures
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(output)
+        
+        except Exception as detail:
+            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class GeneralizationLocalSearch(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            # Get selected arch id's
+            behavioral = json.loads(request.POST['selected'])
+            non_behavioral = json.loads(request.POST['non_selected'])
+                
+            featureExpression = request.POST['featureExpression']      
+
+            # Load architecture data from the session info
+            architectures = request.session['data']
+
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+
+            drivingFeatures = self.DataMiningClient.runGeneralizationLocalSearch(problem, inputType, 
+                                                                            behavioral,non_behavioral,
+                                                                            architectures,featureExpression)            
             output = drivingFeatures
 
             # End the connection before return statement
@@ -505,6 +557,77 @@ class ComputeComplexityOfFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+class GetProblemParameters(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            problem = request.POST['problem']
+            params = self.DataMiningClient.getProblemParameters(problem)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(params)
+        
+        except Exception as detail:
+            logger.exception('Exception in GetProblemParameters: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class SetProblemParameters(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            problem = request.POST['problem']
+            params = json.loads(request.POST['params'])
+            self.DataMiningClient.setProblemParameters(problem, params)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response()
+        
+        except Exception as detail:
+            logger.exception('Exception in ComputeComplexityOfFeatures: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+class getTaxonomicScheme(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+
+    def post(self, request, format=None):
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+            
+            problem = request.POST['problem']
+            params = json.loads(request.POST['params'])
+
+            taxonomicScheme = self.DataMiningClient.getTaxonomicScheme(problem, params)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(taxonomicScheme)
+        
+        except Exception as detail:
+            logger.exception('Exception in calling getTaxonomicScheme: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
 def booleanArray2booleanString(booleanArray):
     leng = len(booleanArray)
     boolString = ''
@@ -514,3 +637,194 @@ def booleanArray2booleanString(booleanArray):
         else:
             boolString += '0'
     return boolString
+
+class ImportTargetSelection(APIView):
+
+    def post(self, request, format=None):
+        try:
+            filename = request.POST['filename']
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
+
+            selected_arch_ids = []
+
+            with open(file_path, "r") as file:
+
+                content = file.read().split("\n")
+
+                for row in content:
+                    if row == "":
+                        continue
+
+                    elif "," in row:
+                        id = row.split(",")[0]
+                        label = row.split(",")[1]
+
+                        if label == "1":
+                            selected_arch_ids.append(int(id))
+
+            return Response(selected_arch_ids)
+        
+        except Exception as detail:
+            logger.exception('Exception in getting cluster labels: ' + str(detail))
+            return Response('') 
+
+class ExportTargetSelection(APIView):
+
+    def post(self, request, format=None):
+        try:
+            problem = request.POST['problem']
+            inputType = request.POST['input_type']
+            filename = request.POST['name']
+
+            import datetime
+            timestamp = datetime.datetime.now().strftime("%y-%m-%d_%H-%M-%S")
+
+            if filename is None:
+                filename = ""
+            else:
+                pass
+            filename = filename + "_" + timestamp + ".selection"
+
+            # Set the path of the file containing data
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
+
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            architectures = request.session['data']
+
+            #########################################
+            #########################################
+            ### Write data file with labels
+
+            with open(file_path, "w") as file:
+
+                content = []
+                for i, arch in enumerate(architectures):
+                    line = []
+
+                    archID = arch['id']
+                    label = None
+                    if archID in behavioral:
+                        label = "1"
+                    else:
+                        label = "0"
+
+                    inputs = arch['inputs']
+                    inputString = ""
+                    for val in inputs:
+                        if val:
+                            inputString += "1"
+                        else:
+                            inputString += "0"
+
+                    line.append(str(archID))
+                    line.append(str(label))
+                    line.append(inputString)
+                    content.append(",".join(line))    
+
+                file.write("\n".join(content))
+
+            #########################################
+            #########################################
+
+            return Response('')
+        
+        except Exception:
+            logger.exception('Exception in importing feature data')
+            return Response('')
+
+class ImportFeatureData(APIView):
+
+    def post(self, request, format=None):
+        try:
+            # Set the path of the file containing data
+            filename_data = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', request.POST['filename_data'])
+            filename_params = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', request.POST['filename_params'])
+
+            generalization_enabled = json.loads(request.POST['generalization_enabled'])
+
+            out = {}
+            out['params'] = []
+            out['data'] = []
+            features = []
+
+            # Open the file
+            with open(filename_data) as csvfile:
+                # Read the file as a csv file
+                read = csv.reader(csvfile, delimiter=' ')
+
+                # For each row, store the information
+                for ind, row in enumerate(read):
+                    if ind == 0: # Check if the first line is a header
+                        if row[0].startswith("#"):
+                            continue
+
+                    index = int(row[0])
+                    feature_expression = row[1]
+
+                    coverage = float(row[2])
+                    specificity = float(row[3])
+                    complexity = float(row[4])
+                    metrics = [-1, -1, coverage, specificity]
+
+                    features.append({'id':index, 'name':feature_expression, 'expression':feature_expression, 'metrics':metrics, 'complexity': complexity})
+
+            params = None
+            if generalization_enabled:
+                # Open the file
+                with open(filename_params) as csvfile:
+
+                    # Read the file as a csv file
+                    read = csv.reader(csvfile, delimiter=',')
+
+                    paramNames = []
+                    params = {}
+
+                    # For each row, store the information
+                    for ind, row in enumerate(read):
+                        if ind == 0: # Check if the first line is a header
+                            if row[0].startswith("#"):
+                                for cell in row:
+                                    if cell.startswith("#"):
+                                        paramNames.append(cell[1:].strip())
+                                    else:
+                                        paramNames.append(cell.strip())
+                                continue
+
+                        # Get param name
+                        paramName = None
+                        if len(paramNames) != 0:
+                            paramName = paramNames[ind - 1]
+                        else:
+                            paramName = "param" + str(ind)
+
+                        params[paramName] = []
+                        for cell in row:    
+                            params[paramName].append(cell)
+
+            out['data'] = features
+            out['params'] = params
+            return Response(out)
+        
+        except Exception:
+            logger.exception('Exception in importing feature data')
+            return Response('')

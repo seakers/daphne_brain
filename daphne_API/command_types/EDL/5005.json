@@ -2,11 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "extract_scorecard_filename", "type": "extract_scorecard_filename", "options": "", "mandatory": true,"from_context":false},
-    { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context":false}
+    { "name": "extract_scorecard_filename", "type": "extract_scorecard_filename", "options": "", "mandatory": true, "from_context":false },
+    { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context":false }
   ],
   "function": {
-    "run_template": "run_func.get_scorecard_post_results('${extract_scorecard_filename}', '${edl_metric_names}', context)",
+    "run_template": "run_func.edl.get_scorecard_post_results('${extract_scorecard_filename}', '${edl_metric_names}', context)",
     "results": [
       {
         "result_type": "list",

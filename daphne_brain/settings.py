@@ -26,6 +26,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
+ACTIVE_MODULES = ['EDL']
+
+EDL_PATH = '/Users/ssantini/Desktop/'
+
 
 
 # Application definition

@@ -1,6 +1,4 @@
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/*.iml
+.idea
 daphne_brain/__pycache__/*
 *.DS_Store
 iFEED_API/__pycache__/*
@@ -9,7 +7,10 @@ VASSAR_API/__pycache__/*
 *.ipynb
 data_mining_API/__pycache__/*
 data_mining_API/.ipynb_checkpoints/
+data_mining_API/data/
 *.pyc
 db.sqlite3
 daphne_API/models
 /logs/daphne.log
+venv/
+venv_linux/

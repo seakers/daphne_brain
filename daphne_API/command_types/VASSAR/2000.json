@@ -6,23 +6,31 @@
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_architecture_scores('${design_id}'[1:], data['designs'], context)",
-    "result_type": "list",
-    "result_fields": {
-      "obj_name": "item.objective_name",
-      "obj_value": "str(\"%.2f\" % round(item.satisfaction,2))",
-      "obj_weight": "str(\"%.2f\" % round(item.weight,2))"
+    "run_template": "run_func.eoss.engineer.get_architecture_scores('${design_id}'[1:], data['designs'], context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "obj_name": "item.objective_name",
+          "obj_value": "str(\"%.2f\" % round(item.satisfaction,2))",
+          "obj_weight": "str(\"%.2f\" % round(item.weight,2))"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The reasons for the score of design ${design_id} are: ",
+      "repeat": "stakeholder ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
+      "end": "."
     }
-  },
-  "voice_response": {
-    "type": "list",
-    "begin": "The reasons for the score of design ${design_id} are: ",
-    "repeat": "stakeholder ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
-    "end": "."
-  },
-  "visual_response": {
-    "type": "list",
-    "begin": "The reasons for the score of design ${design_id} are: ",
-    "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The reasons for the score of design ${design_id} are: ",
+      "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+    }
+  ]
 }

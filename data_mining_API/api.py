@@ -11,7 +11,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 from data_mining_API.interface import interface as DataMiningInterface
-from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature, AssigningProblemParameters
 
 
 from config.loader import ConfigurationLoader
@@ -102,6 +102,26 @@ class DataMiningClient():
             drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
 
         return drivingFeatures
+
+    def getDrivingFeaturesWithGeneralization(self, problem, inputType, behavioral, non_behavioral, all_archs):
+        # try:
+        print('getDrivingFeatures')
+        print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+        
+        archs_formatted = []
+        if inputType == "binary":
+            for arch in all_archs:
+                archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
+            drivingFeatures_formatted = self.client.getDrivingFeaturesWithGeneralizationBinary(problem, behavioral, non_behavioral, archs_formatted)
+
+        elif inputType == "discrete":
+            raise ValueError("Data mining with generalization not implemented for discrete input problem.")
+
+        drivingFeatures = []
+        for df in drivingFeatures_formatted:
+            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
+
+        return drivingFeatures
     
     def getDrivingFeaturesAutomated(self, problem, inputType, behavioral, non_behavioral, all_archs, supp, conf, lift):
         # try:
@@ -161,6 +181,120 @@ class DataMiningClient():
             print('Exc in calling getMarginalDrivingFeatures(): '+str(e))
 
         return drivingFeatures
+
+    def runGeneralizationLocalSearch(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression):
+        try:
+            print('runGeneralizationLocalSearch')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
+            
+            archs_formatted = []
+            if inputType == "binary":
+                for arch in all_archs:
+                    archs_formatted.append(BinaryInputArchitecture(arch['id'],arch['inputs'],arch['outputs']))
+                drivingFeatures_formatted = self.client.runInputGeneralizationLocalSearchBinary(problem, behavioral, non_behavioral, 
+                                                                            archs_formatted, 
+                                                                           featureExpression)
+                
+            elif inputType == "discrete":
+                raise ValueError("Not implemented yet")
+
+            drivingFeatures = []
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
+                
+        except Exception as e:
+            print('Exc in calling getMarginalDrivingFeatures(): '+str(e))
+
+        return drivingFeatures
+
+
+    def runAutomatedLocalSearch(self, problem, input_type, behavioral, non_behavioral, all_archs,
+                                support_threshold, confidence_threshold, lift_threshold):
+        try:
+            print('runAutomatedLocalSearch')
+            print(
+                'b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(all_archs)))
+
+            archs_formatted = []
+            if input_type == "binary":
+                for arch in all_archs:
+                    archs_formatted.append(BinaryInputArchitecture(arch['id'], arch['inputs'], arch['outputs']))
+                drivingFeatures_formatted = self.client.runAutomatedLocalSearchBinary(problem,
+                                                                                      behavioral,
+                                                                                      non_behavioral,
+                                                                                      archs_formatted,
+                                                                                      support_threshold,
+                                                                                      confidence_threshold,
+                                                                                      lift_threshold)
+
+            elif input_type == "discrete":
+                for arch in all_archs:
+                    inputs = []
+                    for i in arch['inputs']:
+                        inputs.append(int(i))
+                    archs_formatted.append(DiscreteInputArchitecture(arch['id'], inputs, arch['outputs']))
+                drivingFeatures_formatted = self.client.runAutomatedLocalSearchDiscrete(problem,
+                                                                                        behavioral,
+                                                                                        non_behavioral,
+                                                                                        archs_formatted,
+                                                                                        support_threshold,
+                                                                                        confidence_threshold,
+                                                                                        lift_threshold)
+
+            drivingFeatures = []
+            for df in drivingFeatures_formatted:
+                drivingFeatures.append(
+                    {'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics,
+                     'complexity': df.complexity})
+
+        except Exception as e:
+            print('Exc in calling getMarginalDrivingFeatures(): ' + str(e))
+
+        return drivingFeatures
+
+    def setProblemParameters(self, problem, params):
+        try:
+            if problem == "ClimateCentric":
+                pass
+
+            else:
+                raise ValueError("Unsupported problem formulation: {0}".format(problem))
+
+        except Exception as e:
+            print('Exc in calling setProblemParameters(): '+str(e))
+
+    def getProblemParameters(self, problem):
+        params = None
+        try:
+            if problem == "ClimateCentric":
+                params_ = self.client.getAssigningProblemParameters(problem)
+                params = {}
+                params['orbitList'] = params_.orbitList
+                params['instrumentList'] = params_.instrumentList
+            else:
+                raise ValueError("Unsupported problem formulation: {0}".format(problem))
+
+        except Exception as e:
+            print('Exc in calling getProblemParameters(): '+str(e))
+
+        return params
+
+    def getTaxonomicScheme(self, problem, params):
+        scheme = None
+        try:
+            if problem == "ClimateCentric":
+                params = AssigningProblemParameters(params["orbitList"], params["instrumentList"])
+                scheme_ = self.client.getAssigningProblemTaxonomicScheme(problem, params)
+                scheme = {}
+                scheme['instanceMap'] = scheme_.instanceMap
+                scheme['superclassMap'] = scheme_.superclassMap
+            else:
+                raise ValueError("Unsupported problem formulation: {0}".format(problem))
+
+        except Exception as e:
+            print('Exc in calling getTaxonomicScheme(): ' + str(e))
+
+        return scheme
 
     def convertToDNF(self, expression):
         try:

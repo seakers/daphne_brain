@@ -2,11 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true,"from_context":true}
+    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": true, "context": "edlcontext", "subcontext": "" }
   ],
   "function":
   {
-    "run_template": "run_func.get_flag_summary('${current_scorecard}', context, 'outofspec_results')",
+    "run_template": "run_func.edl.get_flag_summary('${current_scorecard}', context, 'outofspec_results')",
     "results": [
       {
         "result_type": "list",

@@ -1,19 +1,22 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-import daphne_API.command_processing as command_processing
-from daphne_brain.nlp_object import nlp
-import daphne_API.command_lists as command_lists
 import json
 import os
 import csv
-from VASSAR_API.api import VASSARClient
 import pandas as pd
-from daphne_API.MatEngine_object import eng1
-print(eng1)
-eng1.desktop(nargout=0)  # open engine
+from channels.layers import get_channel_layer
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
+from daphne_API.background_search import send_archs_from_queue_to_main_dataset, send_archs_back
+from daphne_brain.nlp_object import nlp
+import daphne_API.command_processing as command_processing
+from auth_API.helpers import get_or_create_user_information
+from daphne_API.models import Design, Answer, AllowedCommand
+import daphne_API.command_lists as command_lists
+from VASSAR_API.api import VASSARClient
 
-
+# from daphne_API.MatEngine_object import eng1
+# print(eng1)
+# eng1.desktop(nargout=0)  # open engine
 
 
 class Command(APIView):
@@ -31,53 +34,45 @@ class Command(APIView):
         command_types = command_processing.classify_command(processed_command)
 
         # Define context and see if it was already defined for this session
-        if 'context' not in request.session:
-            request.session['context'] = {}
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
-        if 'data' in request.session:
-            request.session['context']['data'] = request.session['data']
-
-        if 'vassar_port' in request.session:
-            request.session['context']['vassar_port'] = request.session['vassar_port']
-
-        if 'problem' in request.session:
-            request.session['context']['problem'] = request.session['problem']
-
-        request.session['context']['answers'] = []
+        # Remove all past answers related to this user
+        Answer.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
+        AllowedCommand.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
 
         if 'allowed_commands' in request.data:
-            request.session['context']['allowed_commands'] = json.loads(request.data['allowed_commands'])
+            for command_type, command_list in request.data['allowed_commands'].items():
+                for command_number in command_list:
+                    AllowedCommand.objects.create(eosscontext=user_info.eosscontext, command_type=command_type,
+                                                  command_descriptor=command_number)
 
         # Act based on the types
         for command_type in command_types:
             command_class = command_options[command_type]
             condition_name = condition_names[command_type]
-            request.session['context']['answers'].append(
-                command_processing.command(processed_command, command_class, condition_name, request.session['context']))
-            print('The command type is:')
-            print(command_type)
-            print('the type is:')
-            print(type(command_type))
 
-            if command_type == int(4):
-                print(eng1.eval('2+2'))
-        response = command_processing.think_response(request.session['context'])
+            answer = command_processing.command(processed_command, command_class,
+                                                condition_name, user_info)
+            Answer.objects.create(eosscontext=user_info.eosscontext,
+                                  voice_answer=answer["voice_answer"],
+                                  visual_answer_type=answer["visual_answer_type"],
+                                  visual_answer=json.dumps(answer["visual_answer"]))
 
-        request.session.modified = True
+        frontend_response = command_processing.think_response(user_info)
 
+        return Response({'response': frontend_response})
 
 
-        # If command is to switch modes, send new mode back, if not
-        return Response({'response': response})
 
 class CommandList(APIView):
     """
     Get a list of commands, either for all the system or for a single subsystem
     """
     def post(self, request, format=None):
-        port = request.session['vassar_port'] if 'vassar_port' in request.session else 9090
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        port = user_info.eosscontext.vassar_port
         vassar_client = VASSARClient(port)
-        problem = request.session["problem"]
+        problem = user_info.eosscontext.problem
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
@@ -103,7 +98,7 @@ class CommandList(APIView):
         elif command_list_request == 'space_agencies':
             command_list = command_lists.agencies_list()
         elif command_list_request == 'objectives':
-            command_list = command_lists.objectives_list(vassar_client)
+            command_list = command_lists.objectives_list(vassar_client, problem)
         elif command_list_request == 'orb_info':
             command_list = command_lists.orbits_info(problem)
         elif command_list_request == 'instr_info':
@@ -135,6 +130,8 @@ class ImportData(APIView):
 
     def post(self, request, format=None):
         try:
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
             # Set the path of the file containing data
             user_path = request.user.username if request.data['load_user_files'] == 'true' != '' else 'default'
             problem = request.data['problem']
@@ -145,11 +142,13 @@ class ImportData(APIView):
             input_type = request.data['input_type']
             output_num = int(request.data['output_num'])
 
-            archID = 0
+            user_info.eosscontext.last_arch_id = 0
 
             # Open the file
             with open(file_path) as csvfile:
+                Design.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
                 architectures = []
+                architectures_json = []
 
                 inputs_unique_set = set()
                 # For each row, store the information
@@ -190,21 +189,24 @@ class ImportData(APIView):
 
                     hashed_input = hash(tuple(inputs))
                     if hashed_input not in inputs_unique_set:
-                        architectures.append({'id': archID, 'inputs': inputs, 'outputs': outputs})
-                        archID += 1
+                        architectures.append(Design(id=user_info.eosscontext.last_arch_id,
+                                                    eosscontext=user_info.eosscontext,
+                                                    inputs=json.dumps(inputs),
+                                                    outputs=json.dumps(outputs)))
+                        architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
+                        user_info.eosscontext.last_arch_id += 1
                         inputs_unique_set.add(hashed_input)
 
             # Define context and see if it was already defined for this session
-            request.session['data'] = architectures
-            request.session['archID'] = archID
-            request.session['problem'] = problem
-            request.session['dataset'] = filename
-            request.session.modified = True
+            Design.objects.bulk_create(architectures)
+            user_info.eosscontext.problem = problem
+            user_info.eosscontext.dataset_name = filename
+            user_info.eosscontext.save()
+            user_info.save()
 
-            return Response(architectures)
+            return Response(architectures_json)
         except Exception:
-            raise ValueError("something is wrong")
-            return Response('Error importing the data')
+            raise ValueError("There has been an error when parsing the architectures")
 
 
 class DatasetList(APIView):
@@ -254,6 +256,7 @@ class ClearSession(APIView):
 
         return Response({})
 
+
 class ImportDataEDLSTATS(APIView):
     """ Imports data from a csv file. To be deprecated in the future.
 
@@ -276,13 +279,53 @@ class ImportDataEDLSTATS(APIView):
 
         return Response(data)
 
+
 class SetProblem(APIView):
     """ Sets the name of the problem
     """
 
     def post(self, request, format=None):
-        from . daphne_fields import daphne_fields
-
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         problem = request.data['problem']
-        request.session['problem'] = problem
+        user_info.eosscontext.problem = problem
+        user_info.eosscontext.save()
+        user_info.save()
+        return Response({})
+
+
+class ActiveFeedbackSettings(APIView):
+    """ Returns the values for the different active daphne settings
+    """
+    def get(self, request, format=None):
+        if request.user.is_authenticated:
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+            return Response({
+                'show_background_search_feedback': user_info.eosscontext.activecontext.show_background_search_feedback,
+                'check_for_diversity': user_info.eosscontext.activecontext.check_for_diversity,
+                'show_arch_suggestions': user_info.eosscontext.activecontext.show_arch_suggestions,
+            })
+        else:
+            return Response({
+                'error': 'User not logged in!'
+            })
+
+    def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        if 'show_background_search_feedback' in request.data:
+            show_background_search_feedback = request.data['show_background_search_feedback'] == 'true'
+            user_info.eosscontext.activecontext.show_background_search_feedback = show_background_search_feedback
+            if show_background_search_feedback:
+                back_list = send_archs_from_queue_to_main_dataset(user_info)
+                channel_layer = get_channel_layer()
+                send_archs_back(channel_layer, user_info.channel_name, back_list)
+        if 'check_for_diversity' in request.data:
+            check_for_diversity = request.data['check_for_diversity'] == 'true'
+            user_info.eosscontext.activecontext.check_for_diversity = check_for_diversity
+        if 'show_arch_suggestions' in request.data:
+            show_arch_suggestions = request.data['show_arch_suggestions'] == 'true'
+            user_info.eosscontext.activecontext.show_arch_suggestions = show_arch_suggestions
+
+        user_info.eosscontext.activecontext.save()
+        user_info.save()
         return Response({})
