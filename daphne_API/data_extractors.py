@@ -2,16 +2,15 @@ import operator
 import Levenshtein as lev
 from sqlalchemy.orm import sessionmaker
 import pandas
-import os
 import daphne_API.historian.models as earth_models
 import daphne_API.edl.model as edl_models
 from daphne_API import problem_specific
+from daphne_API.models import EOSSContext, UserInformation
+from django.conf import settings
 
-import os, sys
+import os
 import scipy.io
-import fnmatch
 import pandas as pd
-import xlrd
 import json
 
 
@@ -22,6 +21,7 @@ for row in measurements_sheet.itertuples(index=True, name='Measurement'):
     if row[2] == 'Parameter':
         for i in range(6, len(row)):
             param_names.append(row[i])
+
 
 def feature_list_by_ratio(processed_question, feature_list):
     """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
@@ -59,7 +59,7 @@ def sorted_list_of_features_by_index(processed_question, feature_list, number_of
     return obt_feature_list
 
 
-def extract_mission(processed_question, number_of_features, context):
+def extract_mission(processed_question, number_of_features, context: UserInformation):
     # Get a list of missions
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -67,7 +67,7 @@ def extract_mission(processed_question, number_of_features, context):
     return sorted_list_of_features_by_index(processed_question, missions, number_of_features)
 
 
-def extract_measurement(processed_question, number_of_features, context):
+def extract_measurement(processed_question, number_of_features, context: UserInformation):
     # Get a list of measurements
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -75,7 +75,7 @@ def extract_measurement(processed_question, number_of_features, context):
     return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
 
 
-def extract_technology(processed_question, number_of_features, context):
+def extract_technology(processed_question, number_of_features, context: UserInformation):
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -83,7 +83,7 @@ def extract_technology(processed_question, number_of_features, context):
     technologies = technologies + [type.name.strip().lower() for type in session.query(earth_models.InstrumentType).all()]
     return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
 
-def extract_space_agency(processed_question, number_of_features, context):
+def extract_space_agency(processed_question, number_of_features, context: UserInformation):
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -91,7 +91,7 @@ def extract_space_agency(processed_question, number_of_features, context):
     return sorted_list_of_features_by_index(processed_question, agencies, number_of_features)
 
 
-def extract_date(processed_question, number_of_features, context):
+def extract_date(processed_question, number_of_features, context: UserInformation):
     # For now just pick the years
     extracted_list = []
     for word in processed_question:
@@ -101,9 +101,9 @@ def extract_date(processed_question, number_of_features, context):
     return crop_list(extracted_list, number_of_features)
 
 
-def extract_design_id(processed_question, number_of_features, context):
+def extract_design_id(processed_question, number_of_features, context: UserInformation):
     # Get a list of design ids
-    design_ids = ['d' + str(item['id']) for item in context['data']]
+    design_ids = ['d' + str(design.id) for design in context.eosscontext.design_set.all()]
     extracted_list = []
     for word in processed_question:
         if word.text in design_ids:
@@ -111,7 +111,7 @@ def extract_design_id(processed_question, number_of_features, context):
     return crop_list(extracted_list, number_of_features)
 
 
-def extract_agent(processed_question, number_of_features, context):
+def extract_agent(processed_question, number_of_features, context: UserInformation):
     agents = ["expert", "historian", "analyst", "explorer"]
     extracted_list = []
     for word in processed_question:
@@ -120,26 +120,27 @@ def extract_agent(processed_question, number_of_features, context):
     return crop_list(extracted_list, number_of_features)
 
 
-def extract_instrument_parameter(processed_question, number_of_features, context):
-    instrument_parameters = problem_specific.get_instruments_sheet(context["problem"])['Attributes-for-object-Instrument']
+def extract_instrument_parameter(processed_question, number_of_features, context: UserInformation):
+    instrument_parameters = \
+        problem_specific.get_instruments_sheet(context.eosscontext.problem)['Attributes-for-object-Instrument']
     return sorted_list_of_features_by_index(processed_question, instrument_parameters, number_of_features)
 
 
-def extract_vassar_instrument(processed_question, number_of_features, context):
-    options = [instr["name"] for instr in problem_specific.get_instrument_dataset(context["problem"])]
+def extract_vassar_instrument(processed_question, number_of_features, context: UserInformation):
+    options = [instr["name"] for instr in problem_specific.get_instrument_dataset(context.eosscontext.problem)]
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
 
-def extract_vassar_measurement(processed_question, number_of_features, context):
-    param_names = problem_specific.get_param_names(context["problem"])
+def extract_vassar_measurement(processed_question, number_of_features, context: UserInformation):
+    param_names = problem_specific.get_param_names(context.eosscontext.problem)
     return sorted_list_of_features_by_index(processed_question, param_names, number_of_features)
 
 
-def extract_vassar_stakeholder(processed_question, number_of_features, context):
-    options = problem_specific.get_stakeholders_list(context["problem"])
+def extract_vassar_stakeholder(processed_question, number_of_features, context: UserInformation):
+    options = problem_specific.get_stakeholders_list(context.eosscontext.problem)
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
-def extract_vassar_objective(processed_question, number_of_features, context):
+def extract_vassar_objective(processed_question, number_of_features, context: EOSSContext):
     options = ["ATM" + str(i) for i in range(1,10)]
     options.extend(["OCE" + str(i) for i in range(1,10)])
     options.extend(["TER" + str(i) for i in range(1, 10)])
@@ -178,7 +179,7 @@ def extract_edl_parameter(processed_question, number_of_features, context):
 
 
 
-def extract_edl_mat_file(processed_question, number_of_features,context):
+def extract_edl_mat_file(processed_question, number_of_features, context):
     '''Read folder and get list of possible mat files'''
     base_dir = '/Users/ssantini/Desktop/EDL_Simulation_Files/'
     all_subdirs = [d for d in os.listdir(base_dir) if os.path.isdir(base_dir + d)]
@@ -190,6 +191,7 @@ def extract_edl_mat_file(processed_question, number_of_features,context):
     print(all_subdirs)
     print(os.listdir(base_dir))
     return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
+
 
 def get_edl_metric_names(processed_question, number_of_features, context):
     with open('scorecard.json') as file:
@@ -210,13 +212,17 @@ def edl_metric_calculate(processed_question, number_of_features, context):
                 scorecard_metrics.append(item['metric'])
     return sorted_list_of_features_by_index(processed_question, scorecard_metrics, number_of_features)
 
-file_paths = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', 'm2020', 'MC_test.mat')
-mat_dict = scipy.io.loadmat(file_paths)
-'''Get list of keys in mat dict'''
-list_items = list(mat_dict.keys())
-'''Get the NL description of the variable'''
-file_path = pandas.read_excel('/Users/ssantini/Desktop/Code_Daphne/command_classifier/edlsimqueries.xlsx')
-list_descriptions = list(file_path[0])
+
+if 'EDL' in settings.ACTIVE_MODULES:
+    file_paths = os.path.join(settings.EDL_PATH, 'EDL_Simulation_Files', 'm2020', 'MC_test.mat')
+    mat_dict = scipy.io.loadmat(file_paths)
+    '''Get list of keys in mat dict'''
+    list_items = list(mat_dict.keys())
+    '''Get the NL description of the variable'''
+    xls_path = os.path.join(settings.EDL_PATH, 'Code_Daphne/command_classifier/edlsimqueries.xlsx')
+    file_path = pandas.read_excel(xls_path)
+    list_descriptions = list(file_path[0])
+
 
 def extract_edl_mat_parameter(processed_question, number_of_features, context):
     # TODO: extract a specific parameter from mat files

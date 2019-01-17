@@ -39,6 +39,15 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  string convertToCNF(string expression)')
     print('  string convertToDNF(string expression)')
     print('   computeAlgebraicTypicalityWithStringInput(string problem, string architecture, string feature)')
+    print('   getDrivingFeaturesWithGeneralizationBinary(string problem,  behavioral,  non_behavioral,  all_archs)')
+    print('   runInputGeneralizationLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
+    print('   runFeatureGeneralizationLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
+    print('  bool setAssigningProblemParameters(string problem, AssigningProblemParameters params)')
+    print('  bool setAssigningProblemExtendedParameters(string problem, AssigningProblemParameters params)')
+    print('  AssigningProblemParameters getAssigningProblemParameters(string problem)')
+    print('  bool setPartitioningAndAssigningProblemParameters(string problem, PartitioningAndAssigningProblemParameters params)')
+    print('  PartitioningAndAssigningProblemParameters getPartitioningAndAssigningProblemParameters(string problem)')
+    print('  TaxonomicScheme getAssigningProblemTaxonomicScheme(string problem, AssigningProblemParameters params)')
     print('')
     sys.exit(0)
 
@@ -207,6 +216,60 @@ elif cmd == 'computeAlgebraicTypicalityWithStringInput':
         print('computeAlgebraicTypicalityWithStringInput requires 3 args')
         sys.exit(1)
     pp.pprint(client.computeAlgebraicTypicalityWithStringInput(args[0], args[1], args[2],))
+
+elif cmd == 'getDrivingFeaturesWithGeneralizationBinary':
+    if len(args) != 4:
+        print('getDrivingFeaturesWithGeneralizationBinary requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.getDrivingFeaturesWithGeneralizationBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
+
+elif cmd == 'runInputGeneralizationLocalSearchBinary':
+    if len(args) != 5:
+        print('runInputGeneralizationLocalSearchBinary requires 5 args')
+        sys.exit(1)
+    pp.pprint(client.runInputGeneralizationLocalSearchBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
+
+elif cmd == 'runFeatureGeneralizationLocalSearchBinary':
+    if len(args) != 5:
+        print('runFeatureGeneralizationLocalSearchBinary requires 5 args')
+        sys.exit(1)
+    pp.pprint(client.runFeatureGeneralizationLocalSearchBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
+
+elif cmd == 'setAssigningProblemParameters':
+    if len(args) != 2:
+        print('setAssigningProblemParameters requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.setAssigningProblemParameters(args[0], eval(args[1]),))
+
+elif cmd == 'setAssigningProblemExtendedParameters':
+    if len(args) != 2:
+        print('setAssigningProblemExtendedParameters requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.setAssigningProblemExtendedParameters(args[0], eval(args[1]),))
+
+elif cmd == 'getAssigningProblemParameters':
+    if len(args) != 1:
+        print('getAssigningProblemParameters requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getAssigningProblemParameters(args[0],))
+
+elif cmd == 'setPartitioningAndAssigningProblemParameters':
+    if len(args) != 2:
+        print('setPartitioningAndAssigningProblemParameters requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.setPartitioningAndAssigningProblemParameters(args[0], eval(args[1]),))
+
+elif cmd == 'getPartitioningAndAssigningProblemParameters':
+    if len(args) != 1:
+        print('getPartitioningAndAssigningProblemParameters requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.getPartitioningAndAssigningProblemParameters(args[0],))
+
+elif cmd == 'getAssigningProblemTaxonomicScheme':
+    if len(args) != 2:
+        print('getAssigningProblemTaxonomicScheme requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getAssigningProblemTaxonomicScheme(args[0], eval(args[1]),))
 
 else:
     print('Unrecognized method %s' % cmd)

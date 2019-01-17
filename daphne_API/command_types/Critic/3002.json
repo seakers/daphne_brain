@@ -7,21 +7,29 @@
   ],
   "function":
   {
-    "run_template": "run_func.Critic_specific_call('${design_id}', '${agent}', data['designs'])",
-    "result_type": "list",
-    "result_fields": {
-      "advice": "item[\"advice\"]"
+    "run_template": "run_func.eoss.critic.specific_call('${design_id}', '${agent}', data['designs'])",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "advice": "item[\"advice\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have as a ${agent} for design ${design_id} is: ",
+      "repeat": "${advice}",
+      "end": "."
     }
-  },
-  "voice_response": {
-    "type": "list",
-    "begin": "The advice I have as a ${agent} for design ${design_id} is: ",
-    "repeat": "${advice}",
-    "end": "."
-  },
-  "visual_response": {
-    "type": "list",
-    "begin": "The advice I have as a ${agent} for design ${design_id} is: ",
-    "item_template": "${advice}"
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have as a ${agent} for design ${design_id} is: ",
+      "item_template": "${advice}"
+    }
+  ]
 }
