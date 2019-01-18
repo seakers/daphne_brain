@@ -107,7 +107,7 @@ def think_response(context: UserInformation):
     db_answer = context.eosscontext.answer_set.all()[:1].get()
     frontend_answer = {
         "voice_answer": db_answer.voice_answer,
-        "visual_answer_type": db_answer.visual_answer_type,
+        "visual_answer_type": json.loads(db_answer.visual_answer_type),
         "visual_answer": json.loads(db_answer.visual_answer)
     }
     return frontend_answer

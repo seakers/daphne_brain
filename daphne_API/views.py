@@ -55,7 +55,7 @@ class Command(APIView):
                                                 condition_name, user_info)
             Answer.objects.create(eosscontext=user_info.eosscontext,
                                   voice_answer=answer["voice_answer"],
-                                  visual_answer_type=answer["visual_answer_type"],
+                                  visual_answer_type=json.dumps(answer["visual_answer_type"]),
                                   visual_answer=json.dumps(answer["visual_answer"]))
 
         frontend_response = command_processing.think_response(user_info)
