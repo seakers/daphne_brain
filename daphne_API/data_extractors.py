@@ -3,8 +3,11 @@ import Levenshtein as lev
 from sqlalchemy.orm import sessionmaker
 import pandas
 import daphne_API.historian.models as earth_models
-import daphne_API.edl.model as edl_models
-from daphne_API import problem_specific
+from django.conf import settings
+if 'EDL' in settings.ACTIVE_MODULES:
+    import daphne_API.edl.model as edl_models
+if 'EOSS' in settings.ACTIVE_MODULES:
+    from daphne_API import problem_specific
 from daphne_API.models import EOSSContext, UserInformation
 from django.conf import settings
 
