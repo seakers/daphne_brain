@@ -5,7 +5,10 @@ import time
 from channels.generic.websocket import JsonWebsocketConsumer
 import schedule
 from auth_API.helpers import get_user_information
-from daphne_API.active import live_recommender
+from django.conf import settings
+
+if 'EOSS' in settings.ACTIVE_MODULES:
+    from daphne_API.active import live_recommender
 
 
 def run_continuously(self, interval=1):
