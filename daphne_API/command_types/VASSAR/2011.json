@@ -9,18 +9,26 @@
   "function":
   {
     "run_template": "run_func.eoss.engineer.get_measurement_requirement_followup('${vassar_measurement}', '${instrument_parameter}', '${vassar_stakeholder}', context)",
-    "result_type": "single",
-    "result_fields": {
-      "text_response": "command_result"
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "text_response": "command_result"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${text_response}"
     }
-  },
-  "voice_response": {
-    "type": "single",
-    "template": "${text_response}"
-  },
-  "visual_response": {
-    "type": "text",
-    "from": "single",
-    "template": "${text_response}"
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${text_response}"
+    }
+  ]
 }

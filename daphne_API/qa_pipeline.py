@@ -5,6 +5,7 @@ from string import Template
 
 import numpy as np
 import tensorflow as tf
+from django.conf import settings
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import or_
 from sqlalchemy import func
@@ -16,8 +17,10 @@ import daphne_API.data_extractors as extractors
 import daphne_API.data_processors as processors
 import daphne_API.runnable_functions as run_func
 from daphne_API.errors import ParameterMissingError
-import daphne_API.edl.model as edl_models
 from daphne_API.models import UserInformation
+
+if 'EDL' in settings.ACTIVE_MODULES:
+    import daphne_API.edl.model as edl_models
 
 
 def classify(question, module_name):
@@ -95,8 +98,9 @@ extract_function["parameter"] = extractors.extract_edl_parameter
 extract_function["edl_mat_file"] = extractors.extract_edl_mat_file
 extract_function["edl_mat_param"] = extractors.extract_edl_mat_parameter
 extract_function["extract_scorecard_filename"] = extractors.extract_scorecard_filename
-extract_function["scorecard_post_results"] = extractors.extract_edl_POSTresult_scorecard
 extract_function["scorecard_edlmetricsheet_results"] = extractors.extract_edl_scorecard_edlmetricsheet
+extract_function["edl_metric_calculate"] = extractors.edl_metric_calculate
+extract_function["edl_metric_names"] = extractors.get_edl_metric_names
 
 process_function = {}
 process_function["mission"] = processors.process_mission
@@ -118,9 +122,9 @@ process_function["name"] = processors.not_processed
 process_function["edl_mat_file"] = processors.not_processed
 process_function["edl_mat_param"] = processors.not_processed
 process_function["extract_scorecard_filename"] = processors.not_processed
-process_function["scorecard_post_results"] = processors.not_processed
 process_function["scorecard_edlmetricsheet_results"] = processors.not_processed
-
+process_function["edl_metric_calculate"] = processors.process_edl_scorecard_calculate
+process_function["edl_metric_names"]=processors.not_processed
 
 def extract_data(processed_question, params, context: UserInformation):
     """ Extract the features from the processed question, with a correcting factor """
@@ -179,8 +183,9 @@ def augment_data(data, context: UserInformation):
 def query(query, data):
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    edl_engine = edl_models.db_connect()
-    edl_session = sessionmaker(bind=edl_engine)()
+    if 'EDL' in settings.ACTIVE_MODULES:
+        edl_engine = edl_models.db_connect()
+        edl_session = sessionmaker(bind=edl_engine)()
 
     def print_orbit(orbit):
         text_orbit = ""
@@ -235,60 +240,70 @@ def query(query, data):
     end_template = Template(query["end"])
     expression += end_template.substitute(data)
     query_db = eval(expression)
-    result = None
-    if query["result_type"] == "list":
-        result = []
-        for row in query_db.all():
-            result_row = {}
-            for key, value in query["result_fields"].items():
-                result_row[key] = eval(Template(value).substitute(data))
-            result.append(result_row)
-    elif query["result_type"] == "single":
-        row = query_db.first()
-        result = {}
-        for key, value in query["result_fields"].items():
-            result[key] = eval(Template(value).substitute(data))
 
-    return result
+    results = []
+    for result_info in query["results"]:
+        if result_info["result_type"] == "list":
+            result = []
+            for row in query_db.all():
+                result_row = {}
+                for key, value in result_info["result_fields"].items():
+                    result_row[key] = eval(Template(value).substitute(data))
+                result.append(result_row)
+        elif result_info["result_type"] == "single":
+            row = query_db.first()
+            result = {}
+            for key, value in result_info["result_fields"].items():
+                result[key] = eval(Template(value).substitute(data))
+        else:
+            raise ValueError("RIP result_type")
+        results.append(result)
+
+    return results
 
 
 def run_function(function_info, data, context: UserInformation):
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)
-    command_result = eval(run_command)
+    command_results = eval(run_command)
+    if len(function_info["results"]) == 1:
+        command_results = (command_results,)
 
-    result = None
-    if function_info["result_type"] == "list":
-        result = []
-        for item in command_result:
-            result_row = {}
-            for key, value in function_info["result_fields"].items():
-                result_row[key] = eval(Template(value).substitute(data))
-            result.append(result_row)
-    elif function_info["result_type"] == "single":
-        result = {}
-        for key, value in function_info["result_fields"].items():
-            result[key] = eval(Template(value).substitute(data))
+    results = []
+    for index, result_info in enumerate(function_info["results"]):
+        if result_info["result_type"] == "list":
+            result = []
+            for item in command_results[index]:
+                result_row = {}
+                for key, value in result_info["result_fields"].items():
+                    result_row[key] = eval(Template(value).substitute(data))
+                result.append(result_row)
+        elif result_info["result_type"] == "single":
+            result = {}
+            for key, value in result_info["result_fields"].items():
+                result[key] = eval(Template(value).substitute(data))
+        else:
+            raise ValueError("RIP result_type")
+        results.append(result)
+
+    return results
 
 
-    return result
-
-
-def build_answers(voice_response_template, visual_response_template, result, data):
+def build_answers(voice_response_templates, visual_response_templates, results, data):
     complete_data = data
-    complete_data["result"] = result
+    complete_data["results"] = results
 
     answers = {}
 
-    def build_text_from_list(templates):
+    def build_text_from_list(templates, result):
         text = ""
         begin_template = Template(templates["begin"])
         text += begin_template.substitute(complete_data)
         repeat_template = Template(templates["repeat"])
-        if len(complete_data["result"]) > 0:
+        if len(result) > 0:
             first = True
-            for item in complete_data["result"]:
+            for item in result:
                 if first:
                     first = False
                 else:
@@ -300,54 +315,83 @@ def build_answers(voice_response_template, visual_response_template, result, dat
         text += end_template.substitute(complete_data)
         return text
 
-    def build_text_from_single(template):
+    def build_text_from_single(template, result):
         text_template = Template(template["template"])
         result_data = complete_data
-        for key, value in complete_data["result"].items():
+        for key, value in result.items():
             result_data[key] = value
         text = text_template.substitute(result_data)
         return text
 
     # Create voice response
-    if voice_response_template["type"] == "list":
-        answers["voice_answer"] = build_text_from_list(voice_response_template)
-    elif voice_response_template["type"] == "single":
-        answers["voice_answer"] = build_text_from_single(voice_response_template)
+    answers["voice_answer"] = ""
+    for index, result in enumerate(results):
+        if voice_response_templates[index]["type"] == "list":
+            answers["voice_answer"] += build_text_from_list(voice_response_templates[index], result)
+        elif voice_response_templates[index]["type"] == "single":
+            answers["voice_answer"] += build_text_from_single(voice_response_templates[index], result)
 
     # Create visual response
-    if visual_response_template["type"] == "text":
-        answers["visual_answer_type"] = "text"
-        if visual_response_template["from"] == "list":
-            answers["visual_answer"] = build_text_from_list(visual_response_template)
-        elif visual_response_template["from"] == "single":
-            answers["visual_answer"] = build_text_from_single(visual_response_template)
-    elif visual_response_template["type"] == "list":
-        answers["visual_answer_type"] = "list"
-        visual_answer = {}
-        begin_template = Template(visual_response_template["begin"])
-        visual_answer["begin"] = begin_template.substitute(complete_data)
-        visual_answer["list"] = []
-        item_template = Template(visual_response_template["item_template"])
-        for item in complete_data["result"]:
-            visual_answer["list"].append(item_template.substitute(item))
-        answers["visual_answer"] = visual_answer
-    elif visual_response_template["type"] == "timeline_plot":
-        answers["visual_answer_type"] = "timeline_plot"
-        visual_answer = {}
-        title_template = Template(visual_response_template["title"])
-        visual_answer["title"] = title_template.substitute(complete_data)
-        visual_answer["plot_data"] = []
-        for item in complete_data["result"]:
-            category_template = Template(visual_response_template["item"]["category"])
-            id_template = Template(visual_response_template["item"]["id"])
-            start_template = Template(visual_response_template["item"]["start"])
-            end_template = Template(visual_response_template["item"]["end"])
-            visual_answer["plot_data"].append({
-                "category": category_template.substitute(item),
-                "id": id_template.substitute(item),
-                "start": start_template.substitute(item),
-                "end": end_template.substitute(item)
-            })
-        answers["visual_answer"] = visual_answer
+    answers["visual_answer"] = []
+    answers["visual_answer_type"] = []
+    for index, result in enumerate(results):
+        if visual_response_templates[index]["type"] == "text":
+            answers["visual_answer_type"].append("text")
+            if visual_response_templates[index]["from"] == "list":
+                answers["visual_answer"].append(build_text_from_list(visual_response_templates[index], result))
+            elif visual_response_templates[index]["from"] == "single":
+                answers["visual_answer"].append(build_text_from_single(visual_response_templates[index], result))
+        elif visual_response_templates[index]["type"] == "list":
+            answers["visual_answer_type"].append("list")
+            visual_answer = {}
+            begin_template = Template(visual_response_templates[index]["begin"])
+            visual_answer["begin"] = begin_template.substitute(complete_data)
+            visual_answer["list"] = []
+            item_template = Template(visual_response_templates[index]["item_template"])
+            for item in result:
+                visual_answer["list"].append(item_template.substitute(item))
+            answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "timeline_plot":
+            answers["visual_answer_type"].append("timeline_plot")
+            visual_answer = {}
+            title_template = Template(visual_response_templates[index]["title"])
+            visual_answer["title"] = title_template.substitute(complete_data)
+            visual_answer["plot_data"] = []
+            for item in result:
+                category_template = Template(visual_response_templates[index]["item"]["category"])
+                id_template = Template(visual_response_templates[index]["item"]["id"])
+                start_template = Template(visual_response_templates[index]["item"]["start"])
+                end_template = Template(visual_response_templates[index]["item"]["end"])
+                visual_answer["plot_data"].append({
+                    "category": category_template.substitute(item),
+                    "id": id_template.substitute(item),
+                    "start": start_template.substitute(item),
+                    "end": end_template.substitute(item)
+                })
+            answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "hist_plot":
+            answers["visual_answer_type"].append("hist_plot")
+            visual_answer = {}
+            title_template = Template(visual_response_templates[index]["title"])
+            visual_answer["plot_info"] = {"plot_data": []}
+            visual_answer["plot_info"]["title"] = title_template.substitute(complete_data)
+            for item in result:
+                item_template = Template(visual_response_templates[index]["item_template"])
+                visual_answer["plot_info"]["plot_data"].append(float(item_template.substitute(item)))
+            answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "plot_vars":
+            answers["visual_answer_type"].append("plot_vars")
+            visual_answer = {}
+            visual_answer["plot_info"] = {"plot_data": []}
+            for item in result:
+                item_template = Template(visual_response_templates[index]["item_template"])
+                visual_answer["plot_info"]["plot_data"].append(eval(item_template.substitute(item)))
+            title_template = Template(visual_response_templates[index]["title"])
+            visual_answer["plot_info"]["title"] = title_template.substitute(complete_data)
+            x_axis_template = Template(visual_response_templates[index]["x_axis_template"])
+            y_axis_template = Template(visual_response_templates[index]["y_axis_template"])
+            visual_answer["plot_info"]["x_axis"] = x_axis_template.substitute(complete_data)
+            visual_answer["plot_info"]["y_axis"] = y_axis_template.substitute(complete_data)
+            answers["visual_answer"].append(visual_answer)
 
     return answers

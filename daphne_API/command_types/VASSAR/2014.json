@@ -8,22 +8,30 @@
   "function":
   {
     "run_template": "run_func.eoss.engineer.get_objective_scores('${selected_arch_id}', data['designs'], '${objective}', context)",
-    "result_type": "list",
-    "result_fields": {
-      "obj_name": "item.objective_name",
-      "obj_value": "str(\"%.2f\" % round(item.satisfaction,2))",
-      "obj_weight": "str(\"%.2f\" % round(item.weight,2))"
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "obj_name": "item.objective_name",
+          "obj_value": "str(\"%.2f\" % round(item.satisfaction,2))",
+          "obj_weight": "str(\"%.2f\" % round(item.weight,2))"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
+      "repeat": "Subobjective ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
+      "end": "."
     }
-  },
-  "voice_response": {
-    "type": "list",
-    "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
-    "repeat": "Subobjective ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
-    "end": "."
-  },
-  "visual_response": {
-    "type": "list",
-    "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
-    "item_template": "Subobjective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
+      "item_template": "Subobjective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+    }
+  ]
 }

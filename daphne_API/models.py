@@ -36,6 +36,9 @@ class EOSSContext(models.Model):
     last_arch_id = models.IntegerField()
     selected_arch_id = models.IntegerField()
 
+    # Counter for manually added designs
+    added_archs_count = models.IntegerField()
+
     vassar_port = models.IntegerField()
 
 
@@ -109,3 +112,12 @@ class AllowedCommand(models.Model):
 
     # Command number
     command_descriptor = models.IntegerField()
+
+
+class EDLContext(models.Model):
+    user_information = models.OneToOneField(UserInformation, on_delete=models.CASCADE)
+
+    current_mat_file = models.CharField(max_length=255)
+    current_mat_file_for_print = models.CharField(max_length=255)
+    current_scorecard_file = models.CharField(max_length=255)
+    current_scorecard = models.CharField(max_length=255)

@@ -26,12 +26,18 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
+ACTIVE_MODULES = ['EOSS']
+
+EDL_PATH = '/Users/ssantini/Desktop/'
+
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'channels',
+    'corsheaders',
     'auth_API',
     'daphne_API',
     'data_mining_API',
@@ -49,6 +55,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -108,6 +115,21 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# CORS & CSRF
+
+CORS_ORIGIN_WHITELIST = (
+    'daphne.engr.tamu.edu',
+    'localhost:8080'
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+CSRF_TRUSTED_ORIGINS = (
+    'daphne.engr.tamu.edu',
+    'localhost:8080'
+)
 
 
 # Internationalization
