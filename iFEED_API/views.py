@@ -81,9 +81,9 @@ class ImportData(APIView):
                     inputs = []
                     outputs = []
 
-                    if problem == "constellation":
+                    if problem == "Constellation_10":
                         # Filter out outliers
-                         
+
                         if float(row[40]) > 22000: # mean_resp
                             continue
                         elif float(row[41]) > 93000: # latency

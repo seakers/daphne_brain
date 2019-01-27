@@ -11,7 +11,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 from data_mining_API.interface import interface as DataMiningInterface
-from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature, AssigningProblemParameters
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, ContinuousInputArchitecture, Feature, AssigningProblemParameters
 
 
 from config.loader import ConfigurationLoader
@@ -96,6 +96,15 @@ class DataMiningClient():
                     inputs.append(int(i))
                 archs_formatted.append(DiscreteInputArchitecture(arch['id'], inputs, arch['outputs']))
             drivingFeatures_formatted = self.client.getDrivingFeaturesEpsilonMOEADiscrete(problem, behavioral, non_behavioral, archs_formatted)
+
+        elif inputType == "continuous":
+            for arch in all_archs:
+                inputs = []
+                for i in arch['inputs']:
+                    inputs.append(float(i))
+                archs_formatted.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
+            drivingFeatures_formatted = self.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, archs_formatted)
+
 
         drivingFeatures = []
         for df in drivingFeatures_formatted:
