@@ -24,7 +24,9 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
+
+USE_X_FORWARDED_HOST = True
 
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
 ACTIVE_MODULES = ['EOSS']
