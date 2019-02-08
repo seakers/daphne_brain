@@ -17,7 +17,6 @@ class TamuSubdomainsSessionMiddleware:
             # check if it's a different domain
             if "engr.tamu.edu" in host:
                 for cookie in response.cookies:
-                    if 'domain' in response.cookies[cookie]:
-                        response.cookies[cookie]['domain'] = "engr.tamu.edu"
+                    response.cookies[cookie]['domain'] = "engr.tamu.edu"
 
         return response
