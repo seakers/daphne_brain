@@ -1,6 +1,9 @@
 import logging
 
 # Get an instance of a logger
+from auth_API.helpers import get_or_create_user_information
+from daphne_API.models import Design
+
 logger = logging.getLogger('data-mining')
 
 
@@ -21,6 +24,7 @@ import csv
 
 from data_mining_API.api import DataMiningClient
 
+
 # Create your views here.
 class GetDrivingFeatures(APIView):
 
@@ -33,6 +37,8 @@ class GetDrivingFeatures(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get threshold values for the metrics
             supp = float(request.POST['supp'])
@@ -58,14 +64,13 @@ class GetDrivingFeatures(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
-            logger.debug(request.session)
-            architectures = request.session['data']
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
             drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
-                                                                       architectures, supp, conf, lift)
+                                                                       dataset, supp, conf, lift)
 
             output = drivingFeatures
 
@@ -78,7 +83,8 @@ class GetDrivingFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
-class getDrivingFeaturesEpsilonMOEA(APIView):
+
+class GetDrivingFeaturesEpsilonMOEA(APIView):
 
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
@@ -89,6 +95,8 @@ class getDrivingFeaturesEpsilonMOEA(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get selected arch id's
             selected = request.POST['selected']
@@ -110,13 +118,12 @@ class getDrivingFeaturesEpsilonMOEA(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
-            logger.debug(request.session)
-            architectures = request.session['data']
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeaturesEpsilonMOEA(problem, inputType, behavioral, non_behavioral, architectures)
+            drivingFeatures = self.DataMiningClient.getDrivingFeaturesEpsilonMOEA(problem, inputType, behavioral, non_behavioral, dataset)
             output = drivingFeatures
 
             # End the connection before return statement
@@ -128,7 +135,8 @@ class getDrivingFeaturesEpsilonMOEA(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
-class getDrivingFeaturesWithGeneralization(APIView):
+
+class GetDrivingFeaturesWithGeneralization(APIView):
 
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
@@ -139,6 +147,8 @@ class getDrivingFeaturesWithGeneralization(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get selected arch id's
             selected = request.POST['selected']
@@ -160,13 +170,12 @@ class getDrivingFeaturesWithGeneralization(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
-            logger.debug(request.session)
-            architectures = request.session['data']
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeaturesWithGeneralization(problem, inputType, behavioral, non_behavioral, architectures)
+            drivingFeatures = self.DataMiningClient.getDrivingFeaturesWithGeneralization(problem, inputType, behavioral, non_behavioral, dataset)
             output = drivingFeatures
 
             # End the connection before return statement
@@ -177,7 +186,8 @@ class getDrivingFeaturesWithGeneralization(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
-        
+
+
 # Create your views here.
 class GetDrivingFeaturesAutomated(APIView):
 
@@ -190,6 +200,8 @@ class GetDrivingFeaturesAutomated(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get threshold values for the metrics
             supp = float(request.POST['supp'])
@@ -215,14 +227,13 @@ class GetDrivingFeaturesAutomated(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
-            logger.debug(request.session)
-            architectures = request.session['data']
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
             drivingFeatures = self.DataMiningClient.getDrivingFeaturesAutomated(problem, inputType, behavioral, non_behavioral,
-                                                                       architectures, supp, conf, lift)
+                                                                       dataset, supp, conf, lift)
                 
             output = drivingFeatures
 
@@ -234,7 +245,8 @@ class GetDrivingFeaturesAutomated(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
-        
+
+
 class GetMarginalDrivingFeatures(APIView):
 
     def __init__(self):
@@ -246,6 +258,8 @@ class GetMarginalDrivingFeatures(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get threshold values for the metrics
             supp = float(request.POST['supp'])
@@ -260,12 +274,12 @@ class GetMarginalDrivingFeatures(APIView):
             logicalConnective = request.POST['logical_connective']      
 
             # Load architecture data from the session info
-            architectures = request.session['data']
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(problem, inputType, behavioral,non_behavioral,architectures,
+            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(problem, inputType, behavioral,non_behavioral,dataset,
                                                                                featureExpression,logicalConnective, supp,conf,lift)            
             output = drivingFeatures
 
@@ -278,6 +292,7 @@ class GetMarginalDrivingFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+
 class GeneralizationLocalSearch(APIView):
 
     def __init__(self):
@@ -289,6 +304,8 @@ class GeneralizationLocalSearch(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get selected arch id's
             behavioral = json.loads(request.POST['selected'])
@@ -297,14 +314,14 @@ class GeneralizationLocalSearch(APIView):
             featureExpression = request.POST['featureExpression']      
 
             # Load architecture data from the session info
-            architectures = request.session['data']
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
             drivingFeatures = self.DataMiningClient.runGeneralizationLocalSearch(problem, inputType, 
                                                                             behavioral,non_behavioral,
-                                                                            architectures,featureExpression)            
+                                                                            dataset,featureExpression)
             output = drivingFeatures
 
             # End the connection before return statement
@@ -315,6 +332,7 @@ class GeneralizationLocalSearch(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + detail)
             self.DataMiningClient.endConnection()
             return Response('')
+
 
 class ClusterData(APIView):
 
@@ -388,7 +406,7 @@ class ClusterData(APIView):
         except Exception as detail:
             logger.exception('Exception in clustering: ' + str(detail))
             return Response('')
-    
+
 
 class GetCluster(APIView):
 
@@ -425,6 +443,7 @@ class GetCluster(APIView):
             logger.exception('Exception in getting cluster labels: ' + str(detail))
             return Response('')        
 
+
 class ConvertToDNF(APIView):
 
     def __init__(self):
@@ -448,7 +467,8 @@ class ConvertToDNF(APIView):
             logger.exception('Exception in convertingToDNF: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
-        
+
+
 class ConvertToCNF(APIView):
 
     def __init__(self):
@@ -472,6 +492,7 @@ class ConvertToCNF(APIView):
             logger.exception('Exception in convertingToCNF: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
+
 
 class ComputeTypicality(APIView):
 
@@ -507,6 +528,7 @@ class ComputeTypicality(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+
 class ComputeComplexity(APIView):
 
     def __init__(self):
@@ -530,6 +552,7 @@ class ComputeComplexity(APIView):
             logger.exception('Exception in ComputeComplexity: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
+
 
 class ComputeComplexityOfFeatures(APIView):
 
@@ -557,6 +580,7 @@ class ComputeComplexityOfFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+
 class GetProblemParameters(APIView):
 
     def __init__(self):
@@ -579,6 +603,7 @@ class GetProblemParameters(APIView):
             logger.exception('Exception in GetProblemParameters: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
+
 
 class SetProblemParameters(APIView):
 
@@ -604,7 +629,8 @@ class SetProblemParameters(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
-class getTaxonomicScheme(APIView):
+
+class GetTaxonomicScheme(APIView):
 
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
@@ -628,6 +654,7 @@ class getTaxonomicScheme(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+
 def booleanArray2booleanString(booleanArray):
     leng = len(booleanArray)
     boolString = ''
@@ -637,6 +664,7 @@ def booleanArray2booleanString(booleanArray):
         else:
             boolString += '0'
     return boolString
+
 
 class ImportTargetSelection(APIView):
 
@@ -667,6 +695,7 @@ class ImportTargetSelection(APIView):
         except Exception as detail:
             logger.exception('Exception in getting cluster labels: ' + str(detail))
             return Response('') 
+
 
 class ExportTargetSelection(APIView):
 
@@ -751,6 +780,7 @@ class ExportTargetSelection(APIView):
         except Exception:
             logger.exception('Exception in importing feature data')
             return Response('')
+
 
 class ImportFeatureData(APIView):
 
