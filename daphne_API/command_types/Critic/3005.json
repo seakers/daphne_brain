@@ -7,21 +7,29 @@
   "function":
   {
     "run_template": "run_func.eoss.critic.general_call('${selected_arch_id}', data['designs'], context)",
-    "result_type": "list",
-    "result_fields": {
-      "adv_type": "item[\"type\"]",
-      "advice": "item[\"advice\"]"
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "adv_type": "item[\"type\"]",
+          "advice": "item[\"advice\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
+      "repeat": "${adv_type}: ${advice}",
+      "end": "."
     }
-  },
-  "voice_response": {
-    "type": "list",
-    "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
-    "repeat": "${adv_type}: ${advice}",
-    "end": "."
-  },
-  "visual_response": {
-    "type": "list",
-    "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
-    "item_template": "<b>${adv_type}</b>: ${advice}"
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
+      "item_template": "<b>${adv_type}</b>: ${advice}"
+    }
+  ]
 }

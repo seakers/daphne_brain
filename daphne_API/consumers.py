@@ -5,6 +5,10 @@ import time
 from channels.generic.websocket import JsonWebsocketConsumer
 import schedule
 from auth_API.helpers import get_user_information
+from django.conf import settings
+
+if 'EOSS' in settings.ACTIVE_MODULES:
+    from daphne_API.active import live_recommender
 
 
 def run_continuously(self, interval=1):
@@ -36,6 +40,7 @@ def run_continuously(self, interval=1):
 
 
 schedule.Scheduler.run_continuously = run_continuously
+
 
 class DaphneConsumer(JsonWebsocketConsumer):
     scheduler = schedule.Scheduler()
@@ -102,6 +107,43 @@ class DaphneConsumer(JsonWebsocketConsumer):
                     setattr(getattr(user_info, subcontext_name), key, value)
                 getattr(user_info, subcontext_name).save()
             user_info.save()
+        elif content.get('msg_type') == 'active_engineer':
+            if user_info.eosscontext.activecontext.show_arch_suggestions:
+                suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
+                self.send_json({
+                    'type': 'active.live_suggestion',
+                    'agent': 'engineer',
+                    'suggestion_list': suggestion_list
+                })
+            else:
+                self.send_json({
+                                'type': 'active.notification',
+                                'notification': {
+                                    'title': 'Live Recommender System',
+                                    'message': 'The Live Recommender System has some suggestions for your modified architecture, but you have chosen to not show them. Do you want to see them now?',
+                                    'setting': 'show_arch_suggestions'
+                                }
+                              })
+
+        elif content.get('msg_type') == 'active_historian':
+            if user_info.eosscontext.activecontext.show_arch_suggestions:
+                suggestion_list = live_recommender.active_historian_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
+                self.send_json({
+                    'type': 'active.live_suggestion',
+                    'agent': 'historian',
+                    'suggestion_list': suggestion_list
+                })
+            else:
+                self.send_json({
+                    'type': 'active.notification',
+                    'notification': {
+                        'title': 'Live Recommender System',
+                        'message': 'The Live Recommender System has some suggestions for your modified architecture, but you have chosen to not show them. Do you want to see them now?',
+                        'setting': 'show_arch_suggestions'
+                    }
+                })
         elif content.get('msg_type') == 'text_msg':
             textMessage = content.get('text', None)
             # Broadcast
@@ -110,6 +152,8 @@ class DaphneConsumer(JsonWebsocketConsumer):
             print("Ping back")
             # Stop the connection killer
             self.scheduler.cancel_job(self.kill_event)
+            # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
+
 
     def ga_new_archs(self, event):
         print(event)
@@ -124,6 +168,10 @@ class DaphneConsumer(JsonWebsocketConsumer):
         self.send(json.dumps(event))
 
     def active_notification(self, event):
+        print(event)
+        self.send(json.dumps(event))
+
+    def active_modification(self, event):
         print(event)
         self.send(json.dumps(event))
 

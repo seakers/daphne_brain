@@ -9,18 +9,26 @@
     "always": "session.query(models.MeasurementMostCommonOrbit).filter(models.MeasurementMostCommonOrbit.measurement.ilike('%${measurement}%'))",
     "opt": [],
     "end": "",
-    "result_type": "single",
-    "result_fields": {
-      "orbit": "print_orbit(row.orbit)"
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "orbit": "print_orbit(row.orbit)"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "The most common orbit for ${measurement} is ${orbit}."
     }
-  },
-  "voice_response": {
-    "type": "single",
-    "template": "The most common orbit for ${measurement} is ${orbit}."
-  },
-  "visual_response": {
-    "type": "text",
-    "from": "single",
-    "template": "The most common orbit for ${measurement} is ${orbit}."
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "The most common orbit for ${measurement} is ${orbit}."
+    }
+  ]
 }

@@ -67,16 +67,27 @@ def process_parameter(extracted_data, options, context):
     return db_names[extracted_data]
 
 def process_edl_mat_file_parameter(extracted_data, options, context):
-    file_path = pd.read_excel('/Users/ssantini/Desktop/Code Daphne/command_classifier/edlsimqueries.xlsx')
+    file_path = pd.read_excel('/Users/ssantini/Desktop/Code_Daphne/command_classifier/edlsimqueries.xlsx')
     list_descriptions = list(file_path[0])
     '''Load as dictionary'''
     dict_NL = json.load(open("/Users/ssantini/Code/ExtractDataMatlab/ExtractSimDataUsingNL/sim_data_dict.txt"))
     return dict_NL[extracted_data][0]
 
-def process_scorecard_post_results(extracted_data, options, context):
-    dict_all_metrics = json.load(open("/Users/ssantini/Desktop/Code Daphne/daphne_brain/dict_all_metrics.txt"))
-    post_names = dict_all_metrics
-    return post_names[extracted_data]
+def process_edl_scorecard_calculate(extracted_data, options, context):
+    metric_calculation = []
+    with open('scorecard.json') as file:
+        scorecard_json = json.load(file)
+        scorecard_metrics = []
+        for item in scorecard_json:
+            scorecard_metrics.append(item['metric'])
+            metric_calculation = {x['metric']: x['calculation'] for x in scorecard_json if x['metric'] is not None}
+
+    return metric_calculation[extracted_data]
+
+# def process_scorecard_post_results(extracted_data, options, context):
+#     dict_all_metrics = json.load(open("/Users/ssantini/Desktop/Code_Daphne/daphne_brain/dict_all_metrics.txt"))
+#     post_names = dict_all_metrics
+#     return post_names[extracted_data]
 
 def process_scorecard_edlmetricsheet_results(extracted_data, options, context):
     edlmetricssheet_names = {"Peak Decleration": ["edl_metric.entries[0].type", "edl_metric.entries[0].units",
