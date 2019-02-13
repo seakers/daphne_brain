@@ -16,6 +16,7 @@ from django.conf import settings
 
 from auth_API.helpers import get_or_create_user_information
 from daphne_API.background_search import send_archs_from_queue_to_main_dataset, send_archs_back
+from daphne_API.design_helpers import add_design
 from daphne_API.models import Design
 
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
@@ -94,13 +95,8 @@ class EvaluateArchitecture(APIView):
             if not is_same:
                 architecture['id'] = user_info.eosscontext.last_arch_id
                 print(user_info.eosscontext.last_arch_id)
-                Design.objects.create(eosscontext=user_info.eosscontext,
-                                      id=architecture['id'],
-                                      inputs=json.dumps(architecture['inputs']),
-                                      outputs=json.dumps(architecture['outputs']))
-                user_info.eosscontext.last_arch_id += 1
+                add_design(architecture, user_info.eosscontext, False)
 
-            user_info.eosscontext.save()
             user_info.save()
 
             # End the connection before return statement
@@ -130,13 +126,8 @@ class RunLocalSearch(APIView):
 
             for arch in architectures:
                 arch['id'] = user_info.eosscontext.last_arch_id
-                user_info.eosscontext.last_arch_id += 1
-                Design.objects.create(eosscontext=user_info.eosscontext,
-                                      id=arch["id"],
-                                      inputs=json.dumps(arch["inputs"]),
-                                      outputs=json.dumps(arch["outputs"]))
+                add_design(arch, user_info.eosscontext, False)
 
-            user_info.eosscontext.save()
             user_info.save()
 
             # End the connection before return statement
@@ -188,19 +179,11 @@ class StartGA(APIView):
                                     'outputs': arch['outputs']
                                 }
                                 if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
-                                    Design.objects.create(eosscontext=thread_user_info.eosscontext,
-                                                          id=full_arch["id"],
-                                                          inputs=json.dumps(full_arch["inputs"]),
-                                                          outputs=json.dumps(full_arch["outputs"]))
+                                    add_design(full_arch, thread_user_info.eosscontext, False)
                                 else:
-                                    Design.objects.create(activecontext=thread_user_info.eosscontext.activecontext,
-                                                          id=full_arch["id"],
-                                                          inputs=json.dumps(full_arch["inputs"]),
-                                                          outputs=json.dumps(full_arch["outputs"]))
-                                thread_user_info.eosscontext.last_arch_id += 1
+                                    add_design(full_arch, thread_user_info.eosscontext, True)
                                 send_back.append(full_arch)
                                 inputs_unique_set.add(hashed_input)
-                                thread_user_info.eosscontext.save()
                                 thread_user_info.save()
 
                         # Look for channel to send back to user

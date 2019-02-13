@@ -1,6 +1,9 @@
+from django.conf import settings
 from sqlalchemy.orm import sessionmaker
-import daphne_API.historian.models as models
-import daphne_API.problem_specific as problem_specific
+
+if 'EOSS' in settings.ACTIVE_MODULES:
+    import daphne_API.historian.models as models
+    import daphne_API.problem_specific as problem_specific
 
 
 general_commands = [
