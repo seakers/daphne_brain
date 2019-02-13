@@ -7,20 +7,28 @@
   "function":
   {
     "run_template": "run_func.eoss.engineer.get_instruments_for_stakeholder('${vassar_stakeholder}', context)",
-    "result_type": "list",
-    "result_fields": {
-      "instrument_name": "item"
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "instrument_name": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
+      "repeat": "${instrument_name}",
+      "end": "."
     }
-  },
-  "voice_response": {
-    "type": "list",
-    "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
-    "repeat": "${instrument_name}",
-    "end": "."
-  },
-  "visual_response": {
-    "type": "list",
-    "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
-    "item_template": "${instrument_name}"
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
+      "item_template": "${instrument_name}"
+    }
+  ]
 }

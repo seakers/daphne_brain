@@ -3,14 +3,18 @@ import Levenshtein as lev
 from sqlalchemy.orm import sessionmaker
 import pandas
 import daphne_API.historian.models as earth_models
-import daphne_API.edl.model as edl_models
-from daphne_API import problem_specific
+from django.conf import settings
+if 'EDL' in settings.ACTIVE_MODULES:
+    import daphne_API.edl.model as edl_models
+if 'EOSS' in settings.ACTIVE_MODULES:
+    from daphne_API import problem_specific
 from daphne_API.models import EOSSContext, UserInformation
+from django.conf import settings
 
 import os
 import scipy.io
-import fnmatch
 import pandas as pd
+import json
 
 
 instruments_sheet = pandas.read_excel('./daphne_API/xls/Climate-centric/Climate-centric AttributeSet.xls', sheet_name='Instrument')
@@ -191,22 +195,43 @@ def extract_edl_mat_file(processed_question, number_of_features, context):
     print(os.listdir(base_dir))
     return sorted_list_of_features_by_index(processed_question, mat_files, number_of_features)
 
-# # def extract_mat_parameter(processed_question, number_of_features, context):
-# #     return(processed_question, parameter, context)
 
-# file_paths = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', 'm2020', 'MC_test.mat')
-# mat_dict = scipy.io.loadmat(file_paths)
-# '''Get list of keys in mat dict'''
-# list_items = list(mat_dict.keys())
-# '''Get the NL description of the variable'''
-# file_path = pandas.read_excel('/Users/ssantini/Desktop/Code Daphne/command_classifier/edlsimqueries.xlsx')
-# list_descriptions = list(file_path[0])
+def get_edl_metric_names(processed_question, number_of_features, context):
+    with open('scorecard.json') as file:
+        scorecard_json = json.load(file)
+        scorecard_metrics = []
+        for item in scorecard_json:
+            if item['metric'] is not None:
+                scorecard_metrics.append(item['metric'])
+    return sorted_list_of_features_by_index(processed_question, scorecard_metrics, number_of_features)
+
+
+def edl_metric_calculate(processed_question, number_of_features, context):
+    with open('scorecard.json') as file:
+        scorecard_json = json.load(file)
+        scorecard_metrics = []
+        for item in scorecard_json:
+            if item['metric'] is not None:
+                scorecard_metrics.append(item['metric'])
+    return sorted_list_of_features_by_index(processed_question, scorecard_metrics, number_of_features)
+
+
+if 'EDL' in settings.ACTIVE_MODULES:
+    file_paths = os.path.join(settings.EDL_PATH, 'EDL_Simulation_Files', 'm2020', 'MC_test.mat')
+    mat_dict = scipy.io.loadmat(file_paths)
+    '''Get list of keys in mat dict'''
+    list_items = list(mat_dict.keys())
+    '''Get the NL description of the variable'''
+    xls_path = os.path.join(settings.EDL_PATH, 'Code_Daphne/command_classifier/edlsimqueries.xlsx')
+    file_path = pandas.read_excel(xls_path)
+    list_descriptions = list(file_path[0])
+
 
 def extract_edl_mat_parameter(processed_question, number_of_features, context):
     # TODO: extract a specific parameter from mat files
     mat_parameter = list_items  # mat_dict[random.choice(list_items)]
     mat_parameter = mat_parameter + list_descriptions
-    print(mat_parameter)
+    #print(mat_parameter)
     return sorted_list_of_features_by_index(processed_question, mat_parameter, number_of_features)
 
 def extract_scorecard_filename(processed_question, number_of_features,context):
@@ -218,7 +243,7 @@ def extract_scorecard_filename(processed_question, number_of_features,context):
         dir = os.path.join('/Users/ssantini/Desktop/EDL_Simulation_Files', name)
         mat_file_name.extend((os.listdir(dir)))
         for item in mat_file_name:
-            scorecard_name.append(item.replace('.mat',''))
+            scorecard_name.append(item.replace('.mat','.yml'))
     return sorted_list_of_features_by_index(processed_question, scorecard_name, number_of_features)
 
 

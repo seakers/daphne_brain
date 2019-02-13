@@ -13,22 +13,30 @@
       { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
     ],
     "end": ".order_by(models.Mission.launch_date)",
-    "result_type": "list",
-    "result_fields": {
-      "name": "row.name"
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "name": "row.name"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The missions that currently measure ${measurement} are ",
+      "repeat": "${name}",
+      "end": "."
     }
-  },
-  "voice_response": {
-    "type": "list",
-    "begin": "The missions that currently measure ${measurement} are ",
-    "repeat": "${name}",
-    "end": "."
-  },
-  "visual_response": {
-    "type": "text",
-    "from": "list",
-    "begin": "The missions that currently measure ${measurement} are ",
-    "repeat": "${name}",
-    "end": "."
-  }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "list",
+      "begin": "The missions that currently measure ${measurement} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ]
 }

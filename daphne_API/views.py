@@ -50,16 +50,18 @@ class Command(APIView):
         for command_type in command_types:
             command_class = command_options[command_type]
             condition_name = condition_names[command_type]
+
             answer = command_processing.command(processed_command, command_class,
                                                 condition_name, user_info)
             Answer.objects.create(eosscontext=user_info.eosscontext,
                                   voice_answer=answer["voice_answer"],
-                                  visual_answer_type=answer["visual_answer_type"],
+                                  visual_answer_type=json.dumps(answer["visual_answer_type"]),
                                   visual_answer=json.dumps(answer["visual_answer"]))
 
         frontend_response = command_processing.think_response(user_info)
 
         return Response({'response': frontend_response})
+
 
 
 class CommandList(APIView):
@@ -271,7 +273,7 @@ class ImportDataEDLSTATS(APIView):
     def post(self, request, format=None):
 
         # Set the path of the file containing data
-        file_path = '/Users/ssantini/Desktop/Code Daphne/daphne_brain/daphne_API/' + request.data['filename']
+        file_path = '/Users/ssantini/Desktop/Code_Daphne/daphne_brain/daphne_API/' + request.data['filename']
 
         data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
 

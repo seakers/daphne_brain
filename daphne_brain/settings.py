@@ -24,7 +24,14 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
+
+USE_X_FORWARDED_HOST = True
+
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
+ACTIVE_MODULES = ['EOSS']
+
+EDL_PATH = '/Users/ssantini/Desktop/'
 
 
 
@@ -32,6 +39,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 INSTALLED_APPS = [
     'channels',
+    'corsheaders',
     'auth_API',
     'daphne_API',
     'data_mining_API',
@@ -49,7 +57,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'daphne_brain.tamu_subdomains_session.TamuSubdomainsSessionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -108,6 +118,21 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# CORS & CSRF
+
+CORS_ORIGIN_WHITELIST = (
+    'daphne.engr.tamu.edu',
+    'localhost:8080'
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+CSRF_TRUSTED_ORIGINS = (
+    'daphne.engr.tamu.edu',
+    'localhost:8080'
+)
 
 
 # Internationalization

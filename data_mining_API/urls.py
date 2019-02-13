@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     path('get-driving-features', views.GetDrivingFeatures.as_view()),
-    path('get-driving-features-epsilon-moea', views.getDrivingFeaturesEpsilonMOEA.as_view()),
-    path('get-driving-features-with-generalization', views.getDrivingFeaturesWithGeneralization.as_view()),
+    path('get-driving-features-epsilon-moea', views.GetDrivingFeaturesEpsilonMOEA.as_view()),
+    path('get-driving-features-with-generalization', views.GetDrivingFeaturesWithGeneralization.as_view()),
     path('run-generalization-local-search', views.GeneralizationLocalSearch.as_view()),
 
     path('get-driving-features-automated', views.GetDrivingFeaturesAutomated.as_view()),
@@ -22,7 +22,7 @@ urlpatterns = [
 
     path('get-problem-parameters', views.GetProblemParameters.as_view()),
     path('set-problem-parameters', views.SetProblemParameters.as_view()),
-    path('get-taxonomic-scheme', views.getTaxonomicScheme.as_view()),
+    path('get-taxonomic-scheme', views.GetTaxonomicScheme.as_view()),
 
 
 
