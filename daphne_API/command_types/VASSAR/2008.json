@@ -7,7 +7,7 @@
   ],
   "function":
   {
-    "run_template": "run_func.VASSAR_get_instrument_parameter('${vassar_instrument}', '${instrument_parameter}', context)",
+    "run_template": "run_func.eoss.engineer.get_instrument_parameter('${vassar_instrument}', '${instrument_parameter}', context)",
     "result_type": "single",
     "result_fields": {
       "text_response": "command_result"

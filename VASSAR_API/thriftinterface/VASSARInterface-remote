@@ -16,8 +16,8 @@ else:
 from thrift.transport import TTransport, TSocket, TSSLSocket, THttpClient
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 
-from pyInterface import VASSARInterface
-from pyInterface.ttypes import *
+from thriftinterface import VASSARInterface
+from thriftinterface.ttypes import *
 
 if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('')
@@ -40,12 +40,14 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getPanelScoreExplanation(string problem,  arch, string panel)')
     print('   getObjectiveScoreExplanation(string problem,  arch, string objective)')
     print('  bool isGABinaryInputRunning()')
-    print('  void toggleGABinaryInput(string problem,  dataset, string username)')
+    print('  int startGABinaryInput(string problem,  dataset, string username)')
+    print('  int stopGABinaryInput(string username)')
     print('   getArchScienceInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('   getArchCostInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsBinaryInput(string problem, BinaryInputArchitecture arch, string subobj)')
     print('  bool isGADiscreteInputRunning()')
-    print('  void toggleGADiscreteInput(string problem,  dataset, string username)')
+    print('  int startGADiscreteInput(string problem,  dataset, string username)')
+    print('  int stopGADiscreteInput(string username)')
     print('   getArchScienceInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('   getArchCostInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsDiscreteInput(string problem, DiscreteInputArchitecture arch, string subobj)')
@@ -224,11 +226,17 @@ elif cmd == 'isGABinaryInputRunning':
         sys.exit(1)
     pp.pprint(client.isGABinaryInputRunning())
 
-elif cmd == 'toggleGABinaryInput':
+elif cmd == 'startGABinaryInput':
     if len(args) != 3:
-        print('toggleGABinaryInput requires 3 args')
+        print('startGABinaryInput requires 3 args')
         sys.exit(1)
-    pp.pprint(client.toggleGABinaryInput(args[0], eval(args[1]), args[2],))
+    pp.pprint(client.startGABinaryInput(args[0], eval(args[1]), args[2],))
+
+elif cmd == 'stopGABinaryInput':
+    if len(args) != 1:
+        print('stopGABinaryInput requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.stopGABinaryInput(args[0],))
 
 elif cmd == 'getArchScienceInformationBinaryInput':
     if len(args) != 2:
@@ -254,11 +262,17 @@ elif cmd == 'isGADiscreteInputRunning':
         sys.exit(1)
     pp.pprint(client.isGADiscreteInputRunning())
 
-elif cmd == 'toggleGADiscreteInput':
+elif cmd == 'startGADiscreteInput':
     if len(args) != 3:
-        print('toggleGADiscreteInput requires 3 args')
+        print('startGADiscreteInput requires 3 args')
         sys.exit(1)
-    pp.pprint(client.toggleGADiscreteInput(args[0], eval(args[1]), args[2],))
+    pp.pprint(client.startGADiscreteInput(args[0], eval(args[1]), args[2],))
+
+elif cmd == 'stopGADiscreteInput':
+    if len(args) != 1:
+        print('stopGADiscreteInput requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.stopGADiscreteInput(args[0],))
 
 elif cmd == 'getArchScienceInformationDiscreteInput':
     if len(args) != 2:
