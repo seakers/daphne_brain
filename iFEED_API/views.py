@@ -97,14 +97,18 @@ class ImportData(APIView):
                         if inputType == "binary": 
                             # Assumes that there is only one column for the inputs
                             inputs = self.booleanString2booleanArray(row[i])
+
                         elif inputType == "discrete":
                             inp = row[i]
                             inp = int(inp)
                             inputs.append(inp)
-                        else:
+
+                        else: # continuous variable input
                             inp = row[i]
                             if inp == "":
-                                inp = -1
+                                inp = None
+                            elif inp == "null":
+                                inp = None
                             else:
                                 inp = float(inp)
                             inputs.append(inp)

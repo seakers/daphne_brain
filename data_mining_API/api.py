@@ -101,7 +101,11 @@ class DataMiningClient():
             for arch in all_archs:
                 inputs = []
                 for i in arch['inputs']:
-                    inputs.append(float(i))
+                    if i is None:
+                        pass
+                    else:
+                        inputs.append(float(i))
+                        
                 archs_formatted.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
             drivingFeatures_formatted = self.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, archs_formatted)
 

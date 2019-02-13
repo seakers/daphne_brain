@@ -41,6 +41,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  string convertToCNF(string expression)')
     print('  string convertToDNF(string expression)')
     print('   computeAlgebraicTypicalityWithStringInput(string problem, string architecture, string feature)')
+    print('   generalizeFeature(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
     print('   getDrivingFeaturesWithGeneralizationBinary(string problem,  behavioral,  non_behavioral,  all_archs)')
     print('   runInputGeneralizationLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
     print('   runFeatureGeneralizationLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
@@ -230,6 +231,12 @@ elif cmd == 'computeAlgebraicTypicalityWithStringInput':
         print('computeAlgebraicTypicalityWithStringInput requires 3 args')
         sys.exit(1)
     pp.pprint(client.computeAlgebraicTypicalityWithStringInput(args[0], args[1], args[2],))
+
+elif cmd == 'generalizeFeature':
+    if len(args) != 5:
+        print('generalizeFeature requires 5 args')
+        sys.exit(1)
+    pp.pprint(client.generalizeFeature(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
 
 elif cmd == 'getDrivingFeaturesWithGeneralizationBinary':
     if len(args) != 4:

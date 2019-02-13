@@ -195,6 +195,17 @@ class Iface(object):
         """
         pass
 
+    def generalizeFeature(self, problem, behavioral, non_behavioral, all_archs, featureExpression):
+        """
+        Parameters:
+         - problem
+         - behavioral
+         - non_behavioral
+         - all_archs
+         - featureExpression
+        """
+        pass
+
     def getDrivingFeaturesWithGeneralizationBinary(self, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
@@ -923,6 +934,45 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "computeAlgebraicTypicalityWithStringInput failed: unknown result")
 
+    def generalizeFeature(self, problem, behavioral, non_behavioral, all_archs, featureExpression):
+        """
+        Parameters:
+         - problem
+         - behavioral
+         - non_behavioral
+         - all_archs
+         - featureExpression
+        """
+        self.send_generalizeFeature(problem, behavioral, non_behavioral, all_archs, featureExpression)
+        return self.recv_generalizeFeature()
+
+    def send_generalizeFeature(self, problem, behavioral, non_behavioral, all_archs, featureExpression):
+        self._oprot.writeMessageBegin('generalizeFeature', TMessageType.CALL, self._seqid)
+        args = generalizeFeature_args()
+        args.problem = problem
+        args.behavioral = behavioral
+        args.non_behavioral = non_behavioral
+        args.all_archs = all_archs
+        args.featureExpression = featureExpression
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_generalizeFeature(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = generalizeFeature_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "generalizeFeature failed: unknown result")
+
     def getDrivingFeaturesWithGeneralizationBinary(self, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
@@ -1254,6 +1304,7 @@ class Processor(Iface, TProcessor):
         self._processMap["convertToCNF"] = Processor.process_convertToCNF
         self._processMap["convertToDNF"] = Processor.process_convertToDNF
         self._processMap["computeAlgebraicTypicalityWithStringInput"] = Processor.process_computeAlgebraicTypicalityWithStringInput
+        self._processMap["generalizeFeature"] = Processor.process_generalizeFeature
         self._processMap["getDrivingFeaturesWithGeneralizationBinary"] = Processor.process_getDrivingFeaturesWithGeneralizationBinary
         self._processMap["runInputGeneralizationLocalSearchBinary"] = Processor.process_runInputGeneralizationLocalSearchBinary
         self._processMap["runFeatureGeneralizationLocalSearchBinary"] = Processor.process_runFeatureGeneralizationLocalSearchBinary
@@ -1666,6 +1717,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("computeAlgebraicTypicalityWithStringInput", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_generalizeFeature(self, seqid, iprot, oprot):
+        args = generalizeFeature_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = generalizeFeature_result()
+        try:
+            result.success = self._handler.generalizeFeature(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("generalizeFeature", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -5007,21 +5081,23 @@ computeAlgebraicTypicalityWithStringInput_result.thrift_spec = (
 )
 
 
-class getDrivingFeaturesWithGeneralizationBinary_args(object):
+class generalizeFeature_args(object):
     """
     Attributes:
      - problem
      - behavioral
      - non_behavioral
      - all_archs
+     - featureExpression
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None,):
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
+        self.featureExpression = featureExpression
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -5068,6 +5144,11 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.featureExpression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -5077,7 +5158,7 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('getDrivingFeaturesWithGeneralizationBinary_args')
+        oprot.writeStructBegin('generalizeFeature_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
@@ -5101,6 +5182,202 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter451 in self.all_archs:
                 iter451.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.featureExpression is not None:
+            oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
+            oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(generalizeFeature_args)
+generalizeFeature_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
+    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
+    (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
+)
+
+
+class generalizeFeature_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype455, _size452) = iprot.readListBegin()
+                    for _i456 in range(_size452):
+                        _elem457 = Feature()
+                        _elem457.read(iprot)
+                        self.success.append(_elem457)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('generalizeFeature_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRUCT, len(self.success))
+            for iter458 in self.success:
+                iter458.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(generalizeFeature_result)
+generalizeFeature_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
+)
+
+
+class getDrivingFeaturesWithGeneralizationBinary_args(object):
+    """
+    Attributes:
+     - problem
+     - behavioral
+     - non_behavioral
+     - all_archs
+    """
+
+
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+        self.problem = problem
+        self.behavioral = behavioral
+        self.non_behavioral = non_behavioral
+        self.all_archs = all_archs
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.behavioral = []
+                    (_etype462, _size459) = iprot.readListBegin()
+                    for _i463 in range(_size459):
+                        _elem464 = iprot.readI32()
+                        self.behavioral.append(_elem464)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.non_behavioral = []
+                    (_etype468, _size465) = iprot.readListBegin()
+                    for _i469 in range(_size465):
+                        _elem470 = iprot.readI32()
+                        self.non_behavioral.append(_elem470)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.all_archs = []
+                    (_etype474, _size471) = iprot.readListBegin()
+                    for _i475 in range(_size471):
+                        _elem476 = BinaryInputArchitecture()
+                        _elem476.read(iprot)
+                        self.all_archs.append(_elem476)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('getDrivingFeaturesWithGeneralizationBinary_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.behavioral is not None:
+            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeListBegin(TType.I32, len(self.behavioral))
+            for iter477 in self.behavioral:
+                oprot.writeI32(iter477)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.non_behavioral is not None:
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeListBegin(TType.I32, len(self.non_behavioral))
+            for iter478 in self.non_behavioral:
+                oprot.writeI32(iter478)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.all_archs is not None:
+            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
+            for iter479 in self.all_archs:
+                iter479.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -5151,11 +5428,11 @@ class getDrivingFeaturesWithGeneralizationBinary_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype455, _size452) = iprot.readListBegin()
-                    for _i456 in range(_size452):
-                        _elem457 = Feature()
-                        _elem457.read(iprot)
-                        self.success.append(_elem457)
+                    (_etype483, _size480) = iprot.readListBegin()
+                    for _i484 in range(_size480):
+                        _elem485 = Feature()
+                        _elem485.read(iprot)
+                        self.success.append(_elem485)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -5172,8 +5449,8 @@ class getDrivingFeaturesWithGeneralizationBinary_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter458 in self.success:
-                iter458.write(oprot)
+            for iter486 in self.success:
+                iter486.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -5199,209 +5476,6 @@ getDrivingFeaturesWithGeneralizationBinary_result.thrift_spec = (
 
 
 class runInputGeneralizationLocalSearchBinary_args(object):
-    """
-    Attributes:
-     - problem
-     - behavioral
-     - non_behavioral
-     - all_archs
-     - featureExpression
-    """
-
-
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None,):
-        self.problem = problem
-        self.behavioral = behavioral
-        self.non_behavioral = non_behavioral
-        self.all_archs = all_archs
-        self.featureExpression = featureExpression
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 1:
-                if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
-                if ftype == TType.LIST:
-                    self.behavioral = []
-                    (_etype462, _size459) = iprot.readListBegin()
-                    for _i463 in range(_size459):
-                        _elem464 = iprot.readI32()
-                        self.behavioral.append(_elem464)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 3:
-                if ftype == TType.LIST:
-                    self.non_behavioral = []
-                    (_etype468, _size465) = iprot.readListBegin()
-                    for _i469 in range(_size465):
-                        _elem470 = iprot.readI32()
-                        self.non_behavioral.append(_elem470)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 4:
-                if ftype == TType.LIST:
-                    self.all_archs = []
-                    (_etype474, _size471) = iprot.readListBegin()
-                    for _i475 in range(_size471):
-                        _elem476 = BinaryInputArchitecture()
-                        _elem476.read(iprot)
-                        self.all_archs.append(_elem476)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 5:
-                if ftype == TType.STRING:
-                    self.featureExpression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('runInputGeneralizationLocalSearchBinary_args')
-        if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
-            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
-            oprot.writeFieldEnd()
-        if self.behavioral is not None:
-            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
-            oprot.writeListBegin(TType.I32, len(self.behavioral))
-            for iter477 in self.behavioral:
-                oprot.writeI32(iter477)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        if self.non_behavioral is not None:
-            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
-            oprot.writeListBegin(TType.I32, len(self.non_behavioral))
-            for iter478 in self.non_behavioral:
-                oprot.writeI32(iter478)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        if self.all_archs is not None:
-            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
-            oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
-            for iter479 in self.all_archs:
-                iter479.write(oprot)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        if self.featureExpression is not None:
-            oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
-            oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(runInputGeneralizationLocalSearchBinary_args)
-runInputGeneralizationLocalSearchBinary_args.thrift_spec = (
-    None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
-    (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
-)
-
-
-class runInputGeneralizationLocalSearchBinary_result(object):
-    """
-    Attributes:
-     - success
-    """
-
-
-    def __init__(self, success=None,):
-        self.success = success
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 0:
-                if ftype == TType.LIST:
-                    self.success = []
-                    (_etype483, _size480) = iprot.readListBegin()
-                    for _i484 in range(_size480):
-                        _elem485 = Feature()
-                        _elem485.read(iprot)
-                        self.success.append(_elem485)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('runInputGeneralizationLocalSearchBinary_result')
-        if self.success is not None:
-            oprot.writeFieldBegin('success', TType.LIST, 0)
-            oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter486 in self.success:
-                iter486.write(oprot)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(runInputGeneralizationLocalSearchBinary_result)
-runInputGeneralizationLocalSearchBinary_result.thrift_spec = (
-    (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
-)
-
-
-class runFeatureGeneralizationLocalSearchBinary_args(object):
     """
     Attributes:
      - problem
@@ -5478,7 +5552,7 @@ class runFeatureGeneralizationLocalSearchBinary_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('runFeatureGeneralizationLocalSearchBinary_args')
+        oprot.writeStructBegin('runInputGeneralizationLocalSearchBinary_args')
         if self.problem is not None:
             oprot.writeFieldBegin('problem', TType.STRING, 1)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
@@ -5502,6 +5576,209 @@ class runFeatureGeneralizationLocalSearchBinary_args(object):
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter507 in self.all_archs:
                 iter507.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.featureExpression is not None:
+            oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
+            oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(runInputGeneralizationLocalSearchBinary_args)
+runInputGeneralizationLocalSearchBinary_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
+    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
+    (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
+)
+
+
+class runInputGeneralizationLocalSearchBinary_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype511, _size508) = iprot.readListBegin()
+                    for _i512 in range(_size508):
+                        _elem513 = Feature()
+                        _elem513.read(iprot)
+                        self.success.append(_elem513)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('runInputGeneralizationLocalSearchBinary_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.STRUCT, len(self.success))
+            for iter514 in self.success:
+                iter514.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(runInputGeneralizationLocalSearchBinary_result)
+runInputGeneralizationLocalSearchBinary_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
+)
+
+
+class runFeatureGeneralizationLocalSearchBinary_args(object):
+    """
+    Attributes:
+     - problem
+     - behavioral
+     - non_behavioral
+     - all_archs
+     - featureExpression
+    """
+
+
+    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None,):
+        self.problem = problem
+        self.behavioral = behavioral
+        self.non_behavioral = non_behavioral
+        self.all_archs = all_archs
+        self.featureExpression = featureExpression
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.behavioral = []
+                    (_etype518, _size515) = iprot.readListBegin()
+                    for _i519 in range(_size515):
+                        _elem520 = iprot.readI32()
+                        self.behavioral.append(_elem520)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.non_behavioral = []
+                    (_etype524, _size521) = iprot.readListBegin()
+                    for _i525 in range(_size521):
+                        _elem526 = iprot.readI32()
+                        self.non_behavioral.append(_elem526)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.all_archs = []
+                    (_etype530, _size527) = iprot.readListBegin()
+                    for _i531 in range(_size527):
+                        _elem532 = BinaryInputArchitecture()
+                        _elem532.read(iprot)
+                        self.all_archs.append(_elem532)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.featureExpression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('runFeatureGeneralizationLocalSearchBinary_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.behavioral is not None:
+            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeListBegin(TType.I32, len(self.behavioral))
+            for iter533 in self.behavioral:
+                oprot.writeI32(iter533)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.non_behavioral is not None:
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeListBegin(TType.I32, len(self.non_behavioral))
+            for iter534 in self.non_behavioral:
+                oprot.writeI32(iter534)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.all_archs is not None:
+            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
+            for iter535 in self.all_archs:
+                iter535.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.featureExpression is not None:
@@ -5557,11 +5834,11 @@ class runFeatureGeneralizationLocalSearchBinary_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype511, _size508) = iprot.readListBegin()
-                    for _i512 in range(_size508):
-                        _elem513 = Feature()
-                        _elem513.read(iprot)
-                        self.success.append(_elem513)
+                    (_etype539, _size536) = iprot.readListBegin()
+                    for _i540 in range(_size536):
+                        _elem541 = Feature()
+                        _elem541.read(iprot)
+                        self.success.append(_elem541)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -5578,8 +5855,8 @@ class runFeatureGeneralizationLocalSearchBinary_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter514 in self.success:
-                iter514.write(oprot)
+            for iter542 in self.success:
+                iter542.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
