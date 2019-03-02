@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 
 from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext
-from merge_session.merge_db import MergeSession
+from django.contrib.sessions.models import Session
 
 
 def create_user_information(session_key=None, username=None, version='EOSS'):
@@ -13,7 +13,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         if username is not None and session_key is None:
             user_info = UserInformation(user=User.objects.get(username=username), daphne_version=version)
         elif session_key is not None and username is None:
-            user_info = UserInformation(session=MergeSession.objects.get(session_key=session_key),
+            user_info = UserInformation(session=Session.objects.get(session_key=session_key),
                                         daphne_version=version)
         else:
             raise Exception("Unexpected input for create_user_information")
@@ -50,7 +50,7 @@ def get_user_information(session, user):
         # If no session exists, create one here
         if session.session_key is None:
             session.create()
-        session = MergeSession.objects.get(session_key=session.session_key)
+        session = Session.objects.get(session_key=session.session_key)
         userinfo_qs = UserInformation.objects.filter(session__exact=session)
 
     if len(userinfo_qs) == 1:
