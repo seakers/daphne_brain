@@ -48,8 +48,12 @@ class StartExperiment(APIView):
         experiment_context.experiment_id = new_id
 
         # Specific to current experiment
-        ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 0))
-        ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 1))
+        ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 0),
+                                       start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
+                                       end_state="")
+        ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 1),
+                                       start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
+                                       end_state="")
 
         # Save experiment started on database
         experiment_context.is_running = True
