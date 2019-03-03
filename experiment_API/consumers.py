@@ -1,4 +1,6 @@
 import datetime
+import json
+
 from channels.generic.websocket import JsonWebsocketConsumer
 
 from auth_API.helpers import get_or_create_user_information
@@ -26,14 +28,14 @@ class ExperimentConsumer(JsonWebsocketConsumer):
 
         if content.get('msg_type') == 'add_action':
             experiment_stage = experiment_context.experimentstage_set.all()[content['stage']]
-            ExperimentAction.objects.create(experimentstage=experiment_stage, action=content['action'],
+            ExperimentAction.objects.create(experimentstage=experiment_stage, action=json.dumps(content['action']),
                                             date=datetime.datetime.utcnow())
             self.send_json({
                 'action': content['action'],
                 'date': datetime.datetime.utcnow().isoformat()
             })
         elif content.get('msg_type') == 'update_state':
-            experiment_context.current_state = content['state']
+            experiment_context.current_state = json.dumps(content['state'])
             experiment_context.save()
             self.send_json({
                 "state": content["state"]

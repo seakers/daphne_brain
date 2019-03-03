@@ -11,6 +11,8 @@ from anomaly_API.I_Forest import iForest
 # selecting on either the connection type (ProtocolTypeRouter) or properties
 # of the connection's scope (like URLRouter, which looks at scope["path"])
 # For more, see http://channels.readthedocs.io/en/latest/topics/routing.html
+from experiment_API.consumers import ExperimentConsumer
+
 application = ProtocolTypeRouter({
     # Route all WebSocket requests to our custom chat handler.
     # We actually don't need the URLRouter here, but we've put it in for
@@ -20,6 +22,7 @@ application = ProtocolTypeRouter({
         URLRouter([
             # URLRouter just takes standard Django path() or url() entries.
             path('api/daphne', DaphneConsumer),
+            path('api/experiment', ExperimentConsumer),
             path('api/anomaly/SARIMAX_AD', SARIMAX_AD),
             path('api/anomaly/adaptiveKNN', adaptiveKNN),
             path('api/anomaly/iForest', iForest)
