@@ -1,8 +1,10 @@
 import datetime
 import json
+
 from channels.generic.websocket import JsonWebsocketConsumer
-from django.conf import settings
-from importlib import import_module
+
+from auth_API.helpers import get_or_create_user_information
+from daphne_API.models import ExperimentAction
 
 
 class ExperimentConsumer(JsonWebsocketConsumer):
@@ -21,16 +23,20 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         """
 
         # Get an updated session store
-        session_key = self.scope["cookies"].get(settings.SESSION_COOKIE_NAME)
-        self.scope["session"] = import_module(settings.SESSION_ENGINE).SessionStore(session_key)
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'EOSS')
+        experiment_context = user_info.eosscontext.experimentcontext
 
         if content.get('msg_type') == 'add_action':
-            action = content['action']
-            action['date'] = datetime.datetime.utcnow().isoformat()
-            self.scope['session']['experiment']['stages'][content['stage']]['actions'].append(action)
-            self.scope['session'].save()
-            self.send(json.dumps(self.scope['session']['experiment']))
+            experiment_stage = experiment_context.experimentstage_set.all()[content['stage']]
+            ExperimentAction.objects.create(experimentstage=experiment_stage, action=json.dumps(content['action']),
+                                            date=datetime.datetime.utcnow())
+            self.send_json({
+                'action': content['action'],
+                'date': datetime.datetime.utcnow().isoformat()
+            })
         elif content.get('msg_type') == 'update_state':
-            self.scope['session']['experiment']['state'] = content['state']
-            self.scope['session'].save()
-            self.send(json.dumps(self.scope['session']['experiment']))
+            experiment_context.current_state = json.dumps(content['state'])
+            experiment_context.save()
+            self.send_json({
+                "state": content["state"]
+            })
