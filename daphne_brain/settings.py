@@ -95,10 +95,10 @@ WSGI_APPLICATION = 'daphne_brain.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'daphne',
+        'NAME': 'selva',
         'USER': os.environ['USER'],
         'PASSWORD': os.environ['PASSWORD'],
-        'HOST': 'localhost',
+        'HOST': 'selva-rds.csl99y1ur3jh.us-east-2.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
@@ -173,11 +173,11 @@ ASGI_APPLICATION = 'daphne_brain.routing.application'
 # Databases for Daphne
 ALCHEMY_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
+    'host': 'selva-rds.csl99y1ur3jh.us-east-2.rds.amazonaws.com',
     'port': '5432',
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
-    'database': 'daphne'
+    'database': 'selva'
 }
 
 EDL_DATABASE = {
