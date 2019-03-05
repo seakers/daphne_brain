@@ -223,7 +223,7 @@ class StartGA(APIView):
                                                               'type': 'ga.finished'
                                                           })
                         print('Ending the thread!')
-                        channel.close()
+                        channel.stop_consuming()
 
                 channel.basic_consume(callback,
                                       queue=request.user.username + '_gabrain',
