@@ -265,11 +265,15 @@ class Critic:
             res = self.missions_similarity(orbit_info, mission["instruments"], missions_database)
             if len(mission["instruments"]) > 0:
                 if res[0] < 6:
-                    historian_feedback.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
-                                              mission["orbit"])
+                    historian_feedback.append("""I noticed that nobody has ever flown a satellite with these 
+                    instruments: {} in the {} orbit. This is great from an innovation standpoint, but be sure to check 
+                    the Expert for some reasons this might not be a good idea!"""
+                                              .format(", ".join(mission["instruments"]),
+                                                      mission["orbit"]))
                 else:
-                    historian_feedback.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
-                                              (mission["orbit"], res[1].name))
+                    historian_feedback.append("""I found a mission that is very similar to your design in orbit {}: {}.
+                    Would you like to see more information? Click <a href="http://database.eohandbook.com/database/missionsummary.aspx?missionID={}">here</a>"""
+                                              .format(mission["orbit"], res[1].name, res[1].id))
                     # +
                     # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
                     #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
