@@ -4,14 +4,8 @@ from rest_framework.response import Response
 import logging
 import json
 
-from importlib import import_module
-from django.conf import settings
-
 from auth_API.helpers import get_or_create_user_information
-from daphne_brain.session_lock import session_lock
 from VASSAR_API.api import VASSARClient
-
-#from critic_API.historian_critic import Critic
 
 
 # Get an instance of a logger

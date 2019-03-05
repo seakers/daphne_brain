@@ -79,11 +79,18 @@ SMAP_ORBIT_DATASET = [
 
 
 SMAP_INSTRUMENT_DATASET = [
-    {"alias": "A", "name": "BIOMASS", "type": "", "technology": "", "geometry": "", "wavebands": []},
-    {"alias": "B", "name": "SMAP_RAD", "type": "", "technology": "", "geometry": "", "wavebands": []},
-    {"alias": "C", "name": "SMAP_MWR", "type": "", "technology": "", "geometry": "", "wavebands": []},
-    {"alias": "D", "name": "CMIS", "type": "", "technology": "", "geometry": "", "wavebands": []},
-    {"alias": "E", "name": "VIIRS", "type": "", "technology": "", "geometry": "", "wavebands": []},
+    {"alias": "A", "name": "BIOMASS", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
+     "geometry": "Conical scanning", "wavebands": ["P-band"]},
+    {"alias": "B", "name": "SMAP_RAD", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
+     "geometry": "Conical scanning", "wavebands": ["L-band"]},
+    {"alias": "C", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
+     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L - band"]},
+    {"alias": "D", "name": "CMIS", "type": "Imaging multi-spectral radiometers (passive microwave)",
+     "technology": "Multi-purpose imaging MW radiometer'", "geometry": "Conical scanning",
+     "wavebands": ["C-band", "X-band", "K-band", "Ka-band", "W-band"]},
+    {"alias": "E", "name": "VIIRS", "type": "High-resolution nadir-scanning IR spectrometer",
+     "technology": "Atmospheric temperature and humidity sounders", "geometry": "Nadir-viewing",
+     "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
 ]
 
 
