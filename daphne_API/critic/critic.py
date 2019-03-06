@@ -24,7 +24,7 @@ class Critic:
         self.context = context
         self.instruments_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
         self.orbits_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
-        self.assignation_problems = ['SMAP', 'ClimateCentric']
+        self.assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
         self.partition_problems = ['Decadal2017Aerosols']
 
     def get_missions_from_genome(self, problem_type, genome):
