@@ -374,7 +374,7 @@ class GetArchDetails(APIView):
             client = VASSARClient(port)
             client.startConnection()
 
-            assignation_problems = ['SMAP', 'ClimateCentric']
+            assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
             partition_problems = ['Decadal2017Aerosols']
 
             # Get the correct architecture
@@ -453,7 +453,7 @@ class GetSubobjectiveDetails(APIView):
             client = VASSARClient(port)
             client.startConnection()
 
-            assignation_problems = ['SMAP', 'ClimateCentric']
+            assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
             partition_problems = ['Decadal2017Aerosols']
 
             # Get the correct architecture

@@ -110,7 +110,7 @@ class Register(APIView):
             user.save()
             # Create folders in the server structure
             os.mkdir('./daphne_API/data/' + username)
-            problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP"]
+            problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2"]
             for problem in problem_list:
                 os.mkdir('./daphne_API/data/' + username + '/' + problem)
         except ValueError:
