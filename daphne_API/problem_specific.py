@@ -52,7 +52,7 @@ cc_orbits_info = [
 
 
 cc_instruments_info = [
-    "<b>Instrument name: Instrument technology, Instrument type</b>",
+    "<b>Instrument name: Instrument type, Instrument technology</b>",
     "ACE_ORCA: Ocean colour instruments, Medium-resolution spectro-radiometer",
     "ACE_POL: Multiple direction/polarisation radiometers, Multi-channel/direction/polarisation radiometer",
     "ACE_LID: Lidars, Atmospheric lidar",
@@ -86,7 +86,7 @@ SMAP_INSTRUMENT_DATASET = [
     {"alias": "C", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
      "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L - band"]},
     {"alias": "D", "name": "CMIS", "type": "Imaging multi-spectral radiometers (passive microwave)",
-     "technology": "Multi-purpose imaging MW radiometer'", "geometry": "Conical scanning",
+     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning",
      "wavebands": ["C-band", "X-band", "K-band", "Ka-band", "W-band"]},
     {"alias": "E", "name": "VIIRS", "type": "High-resolution nadir-scanning IR spectrometer",
      "technology": "Atmospheric temperature and humidity sounders", "geometry": "Nadir-viewing",
@@ -95,13 +95,13 @@ SMAP_INSTRUMENT_DATASET = [
 
 
 smap_capabilities_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls',
-                                       sheet_name='CHARACTERISTICS')
+                                            sheet_name='CHARACTERISTICS')
 
 smap_instrument_sheet = lambda vassar_instrument: pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls',
-                                         sheet_name=vassar_instrument, header=None)
+                                                                    sheet_name=vassar_instrument, header=None)
 
 smap_requirements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Requirement Rules.xls',
-                                           sheet_name='Attributes')
+                                            sheet_name='Attributes')
 
 smap_instruments_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Instrument')
 smap_measurements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Measurement')
@@ -123,12 +123,12 @@ smap_orbits_info = [
 
 
 smap_instruments_info = [
-    "<b>Instrument name: Instrument technology, Instrument type</b>",
-    "BIOMASS: ?, ?",
-    "SMAP_RAD: ?, ?",
-    "SMAP_MWR: ?, ?",
-    "CMIS: ?, ?",
-    "VIIRS: ?, ?",
+    "<b>Instrument name: Instrument type, Instrument technology</b>",
+    "BIOMASS: Imaging microwave radars, Imaging radar (SAR)",
+    "SMAP_RAD: Imaging microwave radars, Imaging radar (SAR)",
+    "SMAP_MWR: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer",
+    "CMIS: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer",
+    "VIIRS: High-resolution nadir-scanning IR spectrometer, Atmospheric temperature and humidity sounders",
 ]
 
 smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
@@ -137,7 +137,7 @@ smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "
 def get_orbit_dataset(problem):
     if problem == "ClimateCentric":
         return CC_ORBIT_DATASET
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return SMAP_ORBIT_DATASET
     if problem == "Decadal2017Aerosols":
         return SMAP_ORBIT_DATASET
@@ -146,7 +146,7 @@ def get_orbit_dataset(problem):
 def get_instrument_dataset(problem):
     if problem == "ClimateCentric":
         return CC_INSTRUMENT_DATASET
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return SMAP_INSTRUMENT_DATASET
     if problem == "Decadal2017Aerosols":
         return SMAP_INSTRUMENT_DATASET
@@ -155,42 +155,42 @@ def get_instrument_dataset(problem):
 def get_capabilities_sheet(problem):
     if problem == "ClimateCentric":
         return cc_capabilities_sheet
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_capabilities_sheet
 
 
 def get_instrument_sheet(problem, instrument):
     if problem == "ClimateCentric":
         return cc_instrument_sheet(instrument)
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_instrument_sheet(instrument)
 
 
 def get_instruments_sheet(problem):
     if problem == "ClimateCentric":
         return cc_instruments_sheet
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_instruments_sheet
 
 
 def get_requirements_sheet(problem):
     if problem == "ClimateCentric":
         return cc_requirements_sheet
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_requirements_sheet
 
 
 def get_param_names(problem):
     if problem == "ClimateCentric":
         return cc_param_names
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_param_names
 
 
 def get_orbits_info(problem):
     if problem == "ClimateCentric":
         return cc_orbits_info
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_orbits_info
     if problem == "Decadal2017Aerosols":
         return smap_orbits_info
@@ -199,7 +199,7 @@ def get_orbits_info(problem):
 def get_instruments_info(problem):
     if problem == "ClimateCentric":
         return cc_instruments_info
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_instruments_info
     if problem == "Decadal2017Aerosols":
         return smap_instruments_info
@@ -208,5 +208,5 @@ def get_instruments_info(problem):
 def get_stakeholders_list(problem):
     if problem == "ClimateCentric":
         return cc_stakeholder_list
-    if problem == "SMAP":
+    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_stakeholder_list
