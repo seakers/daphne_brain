@@ -163,6 +163,7 @@ class StartGA(APIView):
                 channel = connection.channel()
 
                 channel.queue_declare(queue=request.user.username + '_gabrain')
+                channel.queue_purge(queue=request.user.username + '_gabrain')
 
                 def callback(ch, method, properties, body):
                     thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
