@@ -123,7 +123,7 @@ class FinishExperiment(APIView):
         with open('./experiment_API/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
             json_experiment = {
                 "experiment_id": experiment_context.experiment_id,
-                "current_state": experiment_context.current_state,
+                "current_state": json.loads(experiment_context.current_state),
                 "stages": []
             }
             for stage in experiment_context.experimentstage_set.all():
@@ -131,12 +131,12 @@ class FinishExperiment(APIView):
                     "type": stage.type,
                     "start_date": stage.start_date.isoformat(),
                     "end_date": stage.end_date.isoformat(),
-                    "end_state": stage.end_state,
+                    "end_state": json.loads(stage.end_state),
                     "actions": []
                 }
                 for action in stage.experimentaction_set.all():
                     json_action = {
-                        "action": action.action,
+                        "action": json.loads(action.action),
                         "date": action.date.isoformat()
                     }
                     json_stage["actions"].append(json_action)
