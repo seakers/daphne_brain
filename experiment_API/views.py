@@ -5,8 +5,7 @@ import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from auth_API.helpers import get_or_create_user_information
-from daphne_API.models import ExperimentStage
-
+from daphne_API.models import ExperimentStage, ExperimentContext
 
 # Get an instance of a logger
 logger = logging.getLogger('experiment')
@@ -43,7 +42,12 @@ class StartExperiment(APIView):
 
         # Save experiment start info
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        experiment_context = user_info.eosscontext.experimentcontext
+
+        # Ensure experiment is started again
+        ExperimentContext.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
+        experiment_context = ExperimentContext(eosscontext=user_info.eoss_context, is_running=False, experiment_id=-1,
+                                               current_state="")
+        experiment_context.save()
 
         experiment_context.experiment_id = new_id
 
