@@ -268,7 +268,7 @@ class Critic:
                     historian_feedback.append("""I noticed that nobody has ever flown a satellite with these 
                     instruments: {} in the {} orbit. This is great from an innovation standpoint, but be sure to check 
                     the Expert for some reasons this might not be a good idea!"""
-                                              .format(", ".join(mission["instruments"]),
+                                              .format(", ".join([instr["name"] for instr in mission["instruments"]]),
                                                       mission["orbit"]))
                 else:
                     historian_feedback.append("""I found a mission that is very similar to your design in orbit {}: {}.
