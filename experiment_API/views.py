@@ -106,7 +106,7 @@ class ReloadExperiment(APIView):
 
     def get(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        if user_info.eosscontext.experimentcontext:
+        if hasattr(user_info.eosscontext, 'experimentcontext'):
             experiment_context = user_info.eosscontext.experimentcontext
             if experiment_context.is_running:
                 return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
