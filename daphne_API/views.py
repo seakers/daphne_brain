@@ -42,7 +42,8 @@ class Command(APIView):
         AllowedCommand.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
 
         if 'allowed_commands' in request.data:
-            for command_type, command_list in request.data['allowed_commands'].items():
+            allowed_commands = json.loads(request.data['allowed_commands'])
+            for command_type, command_list in allowed_commands.items():
                 for command_number in command_list:
                     AllowedCommand.objects.create(eosscontext=user_info.eosscontext, command_type=command_type,
                                                   command_descriptor=command_number)
