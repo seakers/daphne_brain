@@ -48,6 +48,7 @@ class StartExperiment(APIView):
         experiment_context.experiment_id = new_id
 
         # Specific to current experiment
+        experiment_context.experimentstage_set.all().delete()
         ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 0),
                                        start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
                                        end_state="")
@@ -133,7 +134,7 @@ class FinishExperiment(APIView):
                 for action in stage.experimentaction_set.all():
                     json_action = {
                         "action": action.action,
-                        "date": action.date
+                        "date": action.date.isoformat()
                     }
                     json_stage["actions"].append(json_action)
                 json_experiment["stages"].append(json_stage)
