@@ -45,7 +45,7 @@ class StartExperiment(APIView):
 
         # Ensure experiment is started again
         ExperimentContext.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
-        experiment_context = ExperimentContext(eosscontext=user_info.eoss_context, is_running=False, experiment_id=-1,
+        experiment_context = ExperimentContext(eosscontext=user_info.eosscontext, is_running=False, experiment_id=-1,
                                                current_state="")
         experiment_context.save()
 
