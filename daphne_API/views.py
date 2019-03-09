@@ -147,7 +147,7 @@ class ImportData(APIView):
 
             # Open the file
             with open(file_path) as csvfile:
-                Design.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
+                Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
                 architectures = []
                 architectures_json = []
 
