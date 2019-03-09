@@ -59,7 +59,7 @@ def not_allowed_condition(context: UserInformation, command_class, command_type)
     if len(context.eosscontext.allowedcommand_set.all()) == 0:
         return False
     for allowed_command in context.eosscontext.allowedcommand_set.all():
-        if command_class == allowed_command.command_type and command_type == allowed_command.command_descriptor:
+        if command_class == allowed_command.command_type and command_type == str(allowed_command.command_descriptor):
             return False
     return True
 
