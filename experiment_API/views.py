@@ -78,7 +78,7 @@ class StartStage(APIView):
         experiment_stage.save()
 
         return Response({
-            'start_date': experiment_stage.start_date
+            'start_date': experiment_stage.start_date.isoformat()
         })
 
 
@@ -93,7 +93,7 @@ class FinishStage(APIView):
         experiment_stage.save()
 
         return Response({
-            'end_date': experiment_stage.end_date
+            'end_date': experiment_stage.end_date.isoformat()
         })
 
 
@@ -125,8 +125,8 @@ class FinishExperiment(APIView):
             for stage in experiment_context.experimentstage_set.all():
                 json_stage = {
                     "type": stage.type,
-                    "start_date": stage.start_date,
-                    "end_date": stage.end_date,
+                    "start_date": stage.start_date.isoformat(),
+                    "end_date": stage.end_date.isoformat(),
                     "end_state": stage.end_state,
                     "actions": []
                 }
