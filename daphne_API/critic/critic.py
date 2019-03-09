@@ -272,7 +272,7 @@ class Critic:
                                                       mission["orbit"]))
                 else:
                     historian_feedback.append("""I found a mission that is very similar to your design in orbit {}: {}.
-                    Would you like to see more information? Click <a href="http://database.eohandbook.com/database/missionsummary.aspx?missionID={}">here</a>"""
+                    Would you like to see more information? Click <a target="_blank" href="http://database.eohandbook.com/database/missionsummary.aspx?missionID={}">here</a>"""
                                               .format(mission["orbit"], res[1].name, res[1].id))
                     # +
                     # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
