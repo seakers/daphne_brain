@@ -50,8 +50,8 @@ def classify_command(command):
 def error_answers(missing_param):
     return {
         'voice_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.',
-        'visual_answer_type': 'text',
-        'visual_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.'
+        'visual_answer_type': ['text'],
+        'visual_answer': ['I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.']
     }
 
 
