@@ -84,7 +84,7 @@ SMAP_INSTRUMENT_DATASET = [
     {"alias": "B", "name": "SMAP_RAD", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
      "geometry": "Conical scanning", "wavebands": ["L-band"]},
     {"alias": "C", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
-     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L - band"]},
+     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L-band"]},
     {"alias": "D", "name": "CMIS", "type": "Imaging multi-spectral radiometers (passive microwave)",
      "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning",
      "wavebands": ["C-band", "X-band", "K-band", "Ka-band", "W-band"]},
@@ -123,12 +123,12 @@ smap_orbits_info = [
 
 
 smap_instruments_info = [
-    "<b>Instrument name: Instrument type, Instrument technology</b>",
-    "BIOMASS: Imaging microwave radars, Imaging radar (SAR)",
-    "SMAP_RAD: Imaging microwave radars, Imaging radar (SAR)",
-    "SMAP_MWR: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer",
-    "CMIS: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer",
-    "VIIRS: High-resolution nadir-scanning IR spectrometer, Atmospheric temperature and humidity sounders",
+    "<b>Instrument name: Instrument type, Instrument technology, Band, Mass, Power</b>",
+    "BIOMASS: Imaging microwave radars, Imaging radar (SAR), P-band, 500kg, 1672W",
+    "SMAP_RAD: Imaging microwave radars, Imaging radar (SAR), L-band, 45.2kg, 1672W",
+    "SMAP_MWR: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, L-band, 10.4kg, 45.2W",
+    "CMIS: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, C-band/X-band/K-band/Ka-band/W-band, 257kg, 340W",
+    "VIIRS: High-resolution nadir-scanning IR spectrometer, Atmospheric temperature and humidity sounders, VIS/NIR/SWIR/MWIR/TIR, 199kg, 134W",
 ]
 
 smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
