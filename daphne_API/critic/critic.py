@@ -271,7 +271,7 @@ class Critic:
                                               .format(", ".join([instr["name"] for instr in mission["instruments"]]),
                                                       mission["orbit"]))
                 else:
-                    historian_feedback.append("""I found a mission that is very similar to your design in orbit {}: {}.
+                    historian_feedback.append("""I found a mission that is similar to your design in orbit {}: {}.
                     Would you like to see more information? Click <a target="_blank" href="http://database.eohandbook.com/database/missionsummary.aspx?missionID={}">here</a>"""
                                               .format(mission["orbit"], res[1].name, res[1].id))
                     # +
