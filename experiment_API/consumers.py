@@ -27,7 +27,7 @@ class ExperimentConsumer(JsonWebsocketConsumer):
         experiment_context = user_info.eosscontext.experimentcontext
 
         if content.get('msg_type') == 'add_action':
-            experiment_stage = experiment_context.experimentstage_set.all()[content['stage']]
+            experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[content['stage']]
             ExperimentAction.objects.create(experimentstage=experiment_stage, action=json.dumps(content['action']),
                                             date=datetime.datetime.utcnow())
             self.send_json({
