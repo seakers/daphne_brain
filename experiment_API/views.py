@@ -53,10 +53,10 @@ class StartExperiment(APIView):
 
         # Specific to current experiment
         experiment_context.experimentstage_set.all().delete()
-        ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 0),
+        experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
                                        start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
                                        end_state="")
-        ExperimentStage.objects.create(experimentcontext=experiment_context, type=stage_type(new_id, 1),
+        experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
                                        start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
                                        end_state="")
 
@@ -78,7 +78,7 @@ class StartStage(APIView):
     def get(self, request, stage, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         experiment_context = user_info.eosscontext.experimentcontext
-        experiment_stage = experiment_context.experimentstage_set.all()[stage]
+        experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[stage]
         experiment_stage.start_date = datetime.datetime.utcnow()
         experiment_stage.save()
 
@@ -92,7 +92,7 @@ class FinishStage(APIView):
     def get(self, request, stage, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         experiment_context = user_info.eosscontext.experimentcontext
-        experiment_stage = experiment_context.experimentstage_set.all()[stage]
+        experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[stage]
         experiment_stage.end_date = datetime.datetime.utcnow()
         experiment_stage.end_state = experiment_context.current_state
         experiment_stage.save()
@@ -127,6 +127,7 @@ class FinishExperiment(APIView):
                 "stages": []
             }
             for stage in experiment_context.experimentstage_set.all():
+                print(stage.type, stage.end_state)
                 json_stage = {
                     "type": stage.type,
                     "start_date": stage.start_date.isoformat(),
