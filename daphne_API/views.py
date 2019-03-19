@@ -3,6 +3,7 @@ import os
 import csv
 import pandas as pd
 from channels.layers import get_channel_layer
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -41,7 +42,8 @@ class Command(APIView):
         AllowedCommand.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
 
         if 'allowed_commands' in request.data:
-            for command_type, command_list in request.data['allowed_commands'].items():
+            allowed_commands = json.loads(request.data['allowed_commands'])
+            for command_type, command_list in allowed_commands.items():
                 for command_number in command_list:
                     AllowedCommand.objects.create(eosscontext=user_info.eosscontext, command_type=command_type,
                                                   command_descriptor=command_number)
@@ -146,7 +148,7 @@ class ImportData(APIView):
 
             # Open the file
             with open(file_path) as csvfile:
-                Design.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
+                Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
                 architectures = []
                 architectures_json = []
 
@@ -201,12 +203,118 @@ class ImportData(APIView):
             Design.objects.bulk_create(architectures)
             user_info.eosscontext.problem = problem
             user_info.eosscontext.dataset_name = filename
+            user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'
             user_info.eosscontext.save()
             user_info.save()
 
             return Response(architectures_json)
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")
+
+
+class SaveData(APIView):
+    """ Save current dataset to a new csv file in the user folder
+    """
+
+    def post(self, request, format=None):
+        if request.user.is_authenticated:
+            try:
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+                # Get the problem type
+                assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
+                partition_problems = ['Decadal2017Aerosols']
+
+                problem = user_info.eosscontext.problem
+                if problem in assignation_problems:
+                    problem_type = 'binary'
+                elif problem in partition_problems:
+                    problem_type = 'discrete'
+                else:
+                    problem_type = 'unknown'
+
+                # Set the path of the file where the data will be saved
+                user_path = request.user.username
+                filename = request.data['filename']
+                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', user_path, problem,
+                                         filename)
+
+                # input_num = int(request.data['input_num'])
+                # input_type = request.data['input_type']
+                # output_num = int(request.data['output_num'])
+
+                # Open the file
+                with open(file_path, 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile)
+                    # Write header
+                    if problem_type == 'binary':
+                        design = user_info.eosscontext.design_set.first()
+                        num_outputs = len(json.loads(design.outputs))
+                        writer.writerow(['Inputs'] + ['Output' + str(i) for i in range(num_outputs)])
+                    elif problem_type == 'discrete':
+                        design = user_info.eosscontext.design_set.first()
+                        num_inputs = len(json.loads(design.inputs))
+                        num_outputs = len(json.loads(design.outputs))
+                        writer.writerow(['Input' + str(i) for i in range(num_inputs)] + ['Output' + str(i) for i in range(num_outputs)])
+                    else:
+                        raise ValueError("Not implemented!")
+                    # Write designs
+                    for design in user_info.eosscontext.design_set.all():
+                        inputs = json.loads(design.inputs)
+                        if problem_type == 'binary':
+                            input_list = [''.join(['1' if x else '0' for x in inputs])]
+                        elif problem_type == 'discrete':
+                            input_list = inputs
+                        else:
+                            raise ValueError("Not implemented!")
+                        output_list = json.loads(design.outputs)
+                        writer.writerow(input_list + output_list)
+
+                return Response(filename + " has been saved correctly!")
+            except Exception:
+                raise ValueError("There has been an error when writing the file")
+        else:
+            return Response('This is only available to registered users!')
+
+
+class DownloadData(APIView):
+    """ Download the csv file to the user computer
+    """
+
+    def get(self, request, format=None):
+        if request.user.is_authenticated:
+            try:
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+                # Get the problem type
+                assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
+                partition_problems = ['Decadal2017Aerosols']
+
+                problem = user_info.eosscontext.problem
+                if problem in assignation_problems:
+                    problem_type = 'binary'
+                elif problem in partition_problems:
+                    problem_type = 'discrete'
+                else:
+                    problem_type = 'unknown'
+
+                # Set the path of the file where the data will be saved
+                user_path = request.user.username
+                filename = request.query_params['filename']
+                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', user_path, problem,
+                                         filename)
+
+                # Create the HttpResponse object with the appropriate CSV header.
+                csv_data = open(file_path, "r").read()
+                response = HttpResponse(csv_data, content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+
+                return response
+
+            except Exception:
+                raise ValueError("There has been an error when downloading the file")
+        else:
+            return Response('This is only available to registered users!')
 
 
 class DatasetList(APIView):

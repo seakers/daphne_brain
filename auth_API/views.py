@@ -1,5 +1,9 @@
 import json
+import os
 
+from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
@@ -68,16 +72,56 @@ class Register(APIView):
     Register a user
     """
     def post(self, request, format=None):
-        if request.data["password1"] == request.data["password2"]:
-            user = User.objects.create_user(request.data["username"], request.data["email"], request.data["password1"])
+        username = request.data["username"]
+        email = request.data["email"]
+        password1 = request.data["password1"]
+        password2 = request.data["password2"]
+
+        # Validate all fields against our rules
+        if not password1 or not password2 or password1 != password2:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'The passwords do not match.'
+            })
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'Email has an incorrect format.'
+            })
+
+        if username in ["default"]:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'This username is already in use.'
+            })
+
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'This username is already in use.'
+            })
+
+        # Do the registration procedure which includes creating folders for all problems
+        try:
+            user = User.objects.create_user(username, email, password1)
             user.save()
+            # Create folders in the server structure
+            os.mkdir('./daphne_API/data/' + username)
+            problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2"]
+            for problem in problem_list:
+                os.mkdir('./daphne_API/data/' + username + '/' + problem)
+        except ValueError:
             return Response({
-                'status': 'Successful registration'
+                'status': 'registration_error',
+                'registration_error': 'Please write a username.'
             })
-        else:
-            return Response({
-                'status': 'Error registering'
-            })
+
+        return Response({
+            'status': 'registered'
+        })
 
 
 class CheckStatus(APIView):
@@ -89,13 +133,15 @@ class CheckStatus(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         problem = user_info.eosscontext.problem
-        dataset = user_info.eosscontext.dataset_name
+        dataset_filename = user_info.eosscontext.dataset_name
+        dataset_user = user_info.eosscontext.dataset_user
 
         response = {
             'username': request.user.username,
             'permissions': [],
             'problem': problem,
-            'dataset': dataset
+            'dataset_filename': dataset_filename,
+            'dataset_user': dataset_user
         }
 
         if request.user.is_authenticated:
