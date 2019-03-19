@@ -1,8 +1,10 @@
 import logging
+import threading
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
-import redis
+import pika
 import time
 
 from VASSAR_API.thriftinterface.ttypes import BinaryInputArchitecture
@@ -157,20 +159,23 @@ class StartGA(APIView):
         if request.user.is_authenticated:
             try:
                 # Start listening for redis inputs to share through websockets
-                r = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
-                p = r.pubsub()
+                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+                channel = connection.channel()
 
-                def my_handler(message):
+                channel.queue_declare(queue=request.user.username + '_gabrain')
+                channel.queue_purge(queue=request.user.username + '_gabrain')
+
+                def callback(ch, method, properties, body):
                     thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                    if message['data'] == 'new_arch':
+                    message = json.loads(body)
+                    if message['type'] == 'new_arch':
                         print('Processing some new archs!')
                         nonlocal inputs_unique_set
                         # Archs are added one by one
-                        new_archs = r.lrange(request.user.username, -1, -1)
+                        new_archs = [message['data']]
                         send_back = []
                         # Add archs to the context data before sending back to user
                         for arch in new_archs:
-                            arch = json.loads(arch)
                             hashed_input = hash(tuple(arch['inputs']))
                             if hashed_input not in inputs_unique_set:
                                 full_arch = {
@@ -189,7 +194,8 @@ class StartGA(APIView):
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
 
-                        background_queue_qs = Design.objects.filter(activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
+                        background_queue_qs = Design.objects.filter(
+                            activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
                         if background_queue_qs.count() >= 10:
                             async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                               {
@@ -204,24 +210,28 @@ class StartGA(APIView):
                             back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
                             send_back.extend(back_list)
                             send_archs_back(channel_layer, thread_user_info.channel_name, send_back)
-                    if message['data'] == 'ga_started':
+                    if message['type'] == 'ga_started':
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
                         async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                           {
                                                               'type': 'ga.started'
                                                           })
-                    if message['data'] == 'ga_done':
+                    if message['type'] == 'ga_done':
                         channel_layer = get_channel_layer()
                         async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                           {
                                                               'type': 'ga.finished'
                                                           })
                         print('Ending the thread!')
-                        thread.stop()
+                        channel.stop_consuming()
 
-                p.subscribe(**{request.user.username: my_handler})
-                thread = p.run_in_thread(sleep_time=0.001)
+                channel.basic_consume(callback,
+                                      queue=request.user.username + '_gabrain',
+                                      no_ack=True)
+
+                thread = threading.Thread(target=channel.start_consuming)
+                thread.start()
 
                 # Start connection with VASSAR
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
@@ -270,7 +280,6 @@ class StartGA(APIView):
 
             except Exception:
                 logger.exception('Exception in starting the GA!')
-                client.endConnection()
                 return Response('')
 
         else:
@@ -366,7 +375,7 @@ class GetArchDetails(APIView):
             client = VASSARClient(port)
             client.startConnection()
 
-            assignation_problems = ['SMAP', 'ClimateCentric']
+            assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
             partition_problems = ['Decadal2017Aerosols']
 
             # Get the correct architecture
@@ -445,7 +454,7 @@ class GetSubobjectiveDetails(APIView):
             client = VASSARClient(port)
             client.startConnection()
 
-            assignation_problems = ['SMAP', 'ClimateCentric']
+            assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
             partition_problems = ['Decadal2017Aerosols']
 
             # Get the correct architecture

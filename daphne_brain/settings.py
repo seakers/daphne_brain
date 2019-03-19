@@ -52,8 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'merge_session'
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
@@ -95,8 +94,12 @@ WSGI_APPLICATION = 'daphne_brain.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'daphne',
+        'USER': os.environ['USER'],
+        'PASSWORD': os.environ['PASSWORD'],
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -174,7 +177,7 @@ ALCHEMY_DATABASE = {
     'port': '5432',
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
-    'database': 'ceos'
+    'database': 'daphne'
 }
 
 EDL_DATABASE = {
@@ -188,7 +191,7 @@ EDL_DATABASE = {
 
 
 # Session configuration
-SESSION_ENGINE = "merge_session.merge_db"
+# SESSION_ENGINE = "merge_session.merge_db"
 
 
 # Logging

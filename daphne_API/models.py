@@ -1,13 +1,12 @@
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.db import models
-from merge_session.merge_db import MergeSession
 
 
 # General user information class
 class UserInformation(models.Model):
     # Primary key tuple
-    session = models.ForeignKey(MergeSession, on_delete=models.CASCADE, null=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     # Daphne Version Choice
@@ -31,6 +30,7 @@ class EOSSContext(models.Model):
     user_information = models.OneToOneField(UserInformation, on_delete=models.CASCADE)
     problem = models.CharField(max_length=50)
     dataset_name = models.CharField(max_length=80)
+    dataset_user = models.BooleanField()
 
     # Properties related to the dataset, the list of designs comes from the Design model
     last_arch_id = models.IntegerField()
@@ -87,7 +87,33 @@ class Answer(models.Model):
     visual_answer = models.TextField()
 
 
-# An allowed command for Daphne (to be used with experiments to limit functionalities programmatically
+# Experiment Context (to perform experiments with human subjects and Daphne)
+class ExperimentContext(models.Model):
+    eosscontext = models.OneToOneField(EOSSContext, on_delete=models.CASCADE)
+
+    is_running = models.BooleanField()
+    experiment_id = models.IntegerField()
+    current_state = models.TextField()
+
+
+# A data structure defining an experimental stage
+class ExperimentStage(models.Model):
+    experimentcontext = models.ForeignKey(ExperimentContext, on_delete=models.CASCADE)
+
+    type = models.CharField(max_length=50)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    end_state = models.TextField()
+
+
+class ExperimentAction(models.Model):
+    experimentstage = models.ForeignKey(ExperimentStage, on_delete=models.CASCADE)
+
+    action = models.TextField()
+    date = models.DateTimeField()
+
+
+# An allowed command for Daphne (to be used with experiments to limit functionalities programmatically)
 class AllowedCommand(models.Model):
     eosscontext = models.ForeignKey(EOSSContext, on_delete=models.CASCADE)
 

@@ -50,8 +50,8 @@ def classify_command(command):
 def error_answers(missing_param):
     return {
         'voice_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.',
-        'visual_answer_type': 'text',
-        'visual_answer': 'I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.'
+        'visual_answer_type': ['text'],
+        'visual_answer': ['I can\'t answer this question because I\'m missing a ' + missing_param + ' parameter.']
     }
 
 
@@ -59,7 +59,7 @@ def not_allowed_condition(context: UserInformation, command_class, command_type)
     if len(context.eosscontext.allowedcommand_set.all()) == 0:
         return False
     for allowed_command in context.eosscontext.allowedcommand_set.all():
-        if command_class == allowed_command.command_type and command_type == allowed_command.command_descriptor:
+        if command_class == allowed_command.command_type and command_type == str(allowed_command.command_descriptor):
             return False
     return True
 
