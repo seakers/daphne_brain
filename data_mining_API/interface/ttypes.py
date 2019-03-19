@@ -24,15 +24,17 @@ class Feature(object):
      - expression
      - metrics
      - complexity
+     - description
     """
 
 
-    def __init__(self, id=None, name=None, expression=None, metrics=None, complexity=None,):
+    def __init__(self, id=None, name=None, expression=None, metrics=None, complexity=None, description=None,):
         self.id = id
         self.name = name
         self.expression = expression
         self.metrics = metrics
         self.complexity = complexity
+        self.description = description
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -73,6 +75,11 @@ class Feature(object):
                     self.complexity = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRING:
+                    self.description = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -105,6 +112,104 @@ class Feature(object):
         if self.complexity is not None:
             oprot.writeFieldBegin('complexity', TType.DOUBLE, 5)
             oprot.writeDouble(self.complexity)
+            oprot.writeFieldEnd()
+        if self.description is not None:
+            oprot.writeFieldBegin('description', TType.STRING, 6)
+            oprot.writeString(self.description.encode('utf-8') if sys.version_info[0] == 2 else self.description)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class Architecture(object):
+    """
+    Attributes:
+     - id
+     - inputs
+     - outputs
+    """
+
+
+    def __init__(self, id=None, inputs=None, outputs=None,):
+        self.id = id
+        self.inputs = inputs
+        self.outputs = outputs
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.inputs = []
+                    (_etype10, _size7) = iprot.readListBegin()
+                    for _i11 in range(_size7):
+                        _elem12 = iprot.readDouble()
+                        self.inputs.append(_elem12)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.outputs = []
+                    (_etype16, _size13) = iprot.readListBegin()
+                    for _i17 in range(_size13):
+                        _elem18 = iprot.readDouble()
+                        self.outputs.append(_elem18)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('Architecture')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
+        if self.inputs is not None:
+            oprot.writeFieldBegin('inputs', TType.LIST, 2)
+            oprot.writeListBegin(TType.DOUBLE, len(self.inputs))
+            for iter19 in self.inputs:
+                oprot.writeDouble(iter19)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.outputs is not None:
+            oprot.writeFieldBegin('outputs', TType.LIST, 3)
+            oprot.writeListBegin(TType.DOUBLE, len(self.outputs))
+            for iter20 in self.outputs:
+                oprot.writeDouble(iter20)
+            oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -155,20 +260,20 @@ class BinaryInputArchitecture(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.inputs = []
-                    (_etype10, _size7) = iprot.readListBegin()
-                    for _i11 in range(_size7):
-                        _elem12 = iprot.readBool()
-                        self.inputs.append(_elem12)
+                    (_etype24, _size21) = iprot.readListBegin()
+                    for _i25 in range(_size21):
+                        _elem26 = iprot.readBool()
+                        self.inputs.append(_elem26)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
                     self.outputs = []
-                    (_etype16, _size13) = iprot.readListBegin()
-                    for _i17 in range(_size13):
-                        _elem18 = iprot.readDouble()
-                        self.outputs.append(_elem18)
+                    (_etype30, _size27) = iprot.readListBegin()
+                    for _i31 in range(_size27):
+                        _elem32 = iprot.readDouble()
+                        self.outputs.append(_elem32)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -189,15 +294,15 @@ class BinaryInputArchitecture(object):
         if self.inputs is not None:
             oprot.writeFieldBegin('inputs', TType.LIST, 2)
             oprot.writeListBegin(TType.BOOL, len(self.inputs))
-            for iter19 in self.inputs:
-                oprot.writeBool(iter19)
+            for iter33 in self.inputs:
+                oprot.writeBool(iter33)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.outputs is not None:
             oprot.writeFieldBegin('outputs', TType.LIST, 3)
             oprot.writeListBegin(TType.DOUBLE, len(self.outputs))
-            for iter20 in self.outputs:
-                oprot.writeDouble(iter20)
+            for iter34 in self.outputs:
+                oprot.writeDouble(iter34)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -249,103 +354,9 @@ class DiscreteInputArchitecture(object):
             elif fid == 2:
                 if ftype == TType.LIST:
                     self.inputs = []
-                    (_etype24, _size21) = iprot.readListBegin()
-                    for _i25 in range(_size21):
-                        _elem26 = iprot.readI32()
-                        self.inputs.append(_elem26)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 3:
-                if ftype == TType.LIST:
-                    self.outputs = []
-                    (_etype30, _size27) = iprot.readListBegin()
-                    for _i31 in range(_size27):
-                        _elem32 = iprot.readDouble()
-                        self.outputs.append(_elem32)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('DiscreteInputArchitecture')
-        if self.id is not None:
-            oprot.writeFieldBegin('id', TType.I32, 1)
-            oprot.writeI32(self.id)
-            oprot.writeFieldEnd()
-        if self.inputs is not None:
-            oprot.writeFieldBegin('inputs', TType.LIST, 2)
-            oprot.writeListBegin(TType.I32, len(self.inputs))
-            for iter33 in self.inputs:
-                oprot.writeI32(iter33)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        if self.outputs is not None:
-            oprot.writeFieldBegin('outputs', TType.LIST, 3)
-            oprot.writeListBegin(TType.DOUBLE, len(self.outputs))
-            for iter34 in self.outputs:
-                oprot.writeDouble(iter34)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-class ContinuousInputArchitecture(object):
-    """
-    Attributes:
-     - id
-     - inputs
-     - outputs
-    """
-
-
-    def __init__(self, id=None, inputs=None, outputs=None,):
-        self.id = id
-        self.inputs = inputs
-        self.outputs = outputs
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 1:
-                if ftype == TType.I32:
-                    self.id = iprot.readI32()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
-                if ftype == TType.LIST:
-                    self.inputs = []
                     (_etype38, _size35) = iprot.readListBegin()
                     for _i39 in range(_size35):
-                        _elem40 = iprot.readDouble()
+                        _elem40 = iprot.readI32()
                         self.inputs.append(_elem40)
                     iprot.readListEnd()
                 else:
@@ -369,16 +380,16 @@ class ContinuousInputArchitecture(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('ContinuousInputArchitecture')
+        oprot.writeStructBegin('DiscreteInputArchitecture')
         if self.id is not None:
             oprot.writeFieldBegin('id', TType.I32, 1)
             oprot.writeI32(self.id)
             oprot.writeFieldEnd()
         if self.inputs is not None:
             oprot.writeFieldBegin('inputs', TType.LIST, 2)
-            oprot.writeListBegin(TType.DOUBLE, len(self.inputs))
+            oprot.writeListBegin(TType.I32, len(self.inputs))
             for iter47 in self.inputs:
-                oprot.writeDouble(iter47)
+                oprot.writeI32(iter47)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.outputs is not None:
@@ -406,7 +417,7 @@ class ContinuousInputArchitecture(object):
         return not (self == other)
 
 
-class Architecture(object):
+class ContinuousInputArchitecture(object):
     """
     Attributes:
      - id
@@ -463,7 +474,7 @@ class Architecture(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('Architecture')
+        oprot.writeStructBegin('ContinuousInputArchitecture')
         if self.id is not None:
             oprot.writeFieldBegin('id', TType.I32, 1)
             oprot.writeI32(self.id)
@@ -500,17 +511,17 @@ class Architecture(object):
         return not (self == other)
 
 
-class AssigningProblemParameters(object):
+class AssigningProblemEntities(object):
     """
     Attributes:
-     - orbitList
-     - instrumentList
+     - leftSet
+     - rightSet
     """
 
 
-    def __init__(self, orbitList=None, instrumentList=None,):
-        self.orbitList = orbitList
-        self.instrumentList = instrumentList
+    def __init__(self, leftSet=None, rightSet=None,):
+        self.leftSet = leftSet
+        self.rightSet = rightSet
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -523,21 +534,21 @@ class AssigningProblemParameters(object):
                 break
             if fid == 1:
                 if ftype == TType.LIST:
-                    self.orbitList = []
+                    self.leftSet = []
                     (_etype66, _size63) = iprot.readListBegin()
                     for _i67 in range(_size63):
                         _elem68 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.orbitList.append(_elem68)
+                        self.leftSet.append(_elem68)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.LIST:
-                    self.instrumentList = []
+                    self.rightSet = []
                     (_etype72, _size69) = iprot.readListBegin()
                     for _i73 in range(_size69):
                         _elem74 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.instrumentList.append(_elem74)
+                        self.rightSet.append(_elem74)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -550,18 +561,18 @@ class AssigningProblemParameters(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('AssigningProblemParameters')
-        if self.orbitList is not None:
-            oprot.writeFieldBegin('orbitList', TType.LIST, 1)
-            oprot.writeListBegin(TType.STRING, len(self.orbitList))
-            for iter75 in self.orbitList:
+        oprot.writeStructBegin('AssigningProblemEntities')
+        if self.leftSet is not None:
+            oprot.writeFieldBegin('leftSet', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRING, len(self.leftSet))
+            for iter75 in self.leftSet:
                 oprot.writeString(iter75.encode('utf-8') if sys.version_info[0] == 2 else iter75)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
-        if self.instrumentList is not None:
-            oprot.writeFieldBegin('instrumentList', TType.LIST, 2)
-            oprot.writeListBegin(TType.STRING, len(self.instrumentList))
-            for iter76 in self.instrumentList:
+        if self.rightSet is not None:
+            oprot.writeFieldBegin('rightSet', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.rightSet))
+            for iter76 in self.rightSet:
                 oprot.writeString(iter76.encode('utf-8') if sys.version_info[0] == 2 else iter76)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
@@ -583,90 +594,7 @@ class AssigningProblemParameters(object):
         return not (self == other)
 
 
-class PartitioningAndAssigningProblemParameters(object):
-    """
-    Attributes:
-     - orbitList
-     - instrumentList
-    """
-
-
-    def __init__(self, orbitList=None, instrumentList=None,):
-        self.orbitList = orbitList
-        self.instrumentList = instrumentList
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 1:
-                if ftype == TType.LIST:
-                    self.orbitList = []
-                    (_etype80, _size77) = iprot.readListBegin()
-                    for _i81 in range(_size77):
-                        _elem82 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.orbitList.append(_elem82)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
-                if ftype == TType.LIST:
-                    self.instrumentList = []
-                    (_etype86, _size83) = iprot.readListBegin()
-                    for _i87 in range(_size83):
-                        _elem88 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        self.instrumentList.append(_elem88)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('PartitioningAndAssigningProblemParameters')
-        if self.orbitList is not None:
-            oprot.writeFieldBegin('orbitList', TType.LIST, 1)
-            oprot.writeListBegin(TType.STRING, len(self.orbitList))
-            for iter89 in self.orbitList:
-                oprot.writeString(iter89.encode('utf-8') if sys.version_info[0] == 2 else iter89)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        if self.instrumentList is not None:
-            oprot.writeFieldBegin('instrumentList', TType.LIST, 2)
-            oprot.writeListBegin(TType.STRING, len(self.instrumentList))
-            for iter90 in self.instrumentList:
-                oprot.writeString(iter90.encode('utf-8') if sys.version_info[0] == 2 else iter90)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-class TaxonomicScheme(object):
+class FlattenedConceptHierarchy(object):
     """
     Attributes:
      - instanceMap
@@ -690,32 +618,32 @@ class TaxonomicScheme(object):
             if fid == 1:
                 if ftype == TType.MAP:
                     self.instanceMap = {}
-                    (_ktype92, _vtype93, _size91) = iprot.readMapBegin()
-                    for _i95 in range(_size91):
-                        _key96 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val97 = []
-                        (_etype101, _size98) = iprot.readListBegin()
-                        for _i102 in range(_size98):
-                            _elem103 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _val97.append(_elem103)
+                    (_ktype78, _vtype79, _size77) = iprot.readMapBegin()
+                    for _i81 in range(_size77):
+                        _key82 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val83 = []
+                        (_etype87, _size84) = iprot.readListBegin()
+                        for _i88 in range(_size84):
+                            _elem89 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val83.append(_elem89)
                         iprot.readListEnd()
-                        self.instanceMap[_key96] = _val97
+                        self.instanceMap[_key82] = _val83
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.MAP:
                     self.superclassMap = {}
-                    (_ktype105, _vtype106, _size104) = iprot.readMapBegin()
-                    for _i108 in range(_size104):
-                        _key109 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val110 = []
-                        (_etype114, _size111) = iprot.readListBegin()
-                        for _i115 in range(_size111):
-                            _elem116 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                            _val110.append(_elem116)
+                    (_ktype91, _vtype92, _size90) = iprot.readMapBegin()
+                    for _i94 in range(_size90):
+                        _key95 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                        _val96 = []
+                        (_etype100, _size97) = iprot.readListBegin()
+                        for _i101 in range(_size97):
+                            _elem102 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                            _val96.append(_elem102)
                         iprot.readListEnd()
-                        self.superclassMap[_key109] = _val110
+                        self.superclassMap[_key95] = _val96
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
@@ -728,26 +656,26 @@ class TaxonomicScheme(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('TaxonomicScheme')
+        oprot.writeStructBegin('FlattenedConceptHierarchy')
         if self.instanceMap is not None:
             oprot.writeFieldBegin('instanceMap', TType.MAP, 1)
             oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.instanceMap))
-            for kiter117, viter118 in self.instanceMap.items():
-                oprot.writeString(kiter117.encode('utf-8') if sys.version_info[0] == 2 else kiter117)
-                oprot.writeListBegin(TType.STRING, len(viter118))
-                for iter119 in viter118:
-                    oprot.writeString(iter119.encode('utf-8') if sys.version_info[0] == 2 else iter119)
+            for kiter103, viter104 in self.instanceMap.items():
+                oprot.writeString(kiter103.encode('utf-8') if sys.version_info[0] == 2 else kiter103)
+                oprot.writeListBegin(TType.STRING, len(viter104))
+                for iter105 in viter104:
+                    oprot.writeString(iter105.encode('utf-8') if sys.version_info[0] == 2 else iter105)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.superclassMap is not None:
             oprot.writeFieldBegin('superclassMap', TType.MAP, 2)
             oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.superclassMap))
-            for kiter120, viter121 in self.superclassMap.items():
-                oprot.writeString(kiter120.encode('utf-8') if sys.version_info[0] == 2 else kiter120)
-                oprot.writeListBegin(TType.STRING, len(viter121))
-                for iter122 in viter121:
-                    oprot.writeString(iter122.encode('utf-8') if sys.version_info[0] == 2 else iter122)
+            for kiter106, viter107 in self.superclassMap.items():
+                oprot.writeString(kiter106.encode('utf-8') if sys.version_info[0] == 2 else kiter106)
+                oprot.writeListBegin(TType.STRING, len(viter107))
+                for iter108 in viter107:
+                    oprot.writeString(iter108.encode('utf-8') if sys.version_info[0] == 2 else iter108)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
@@ -775,6 +703,14 @@ Feature.thrift_spec = (
     (3, TType.STRING, 'expression', 'UTF8', None, ),  # 3
     (4, TType.LIST, 'metrics', (TType.DOUBLE, None, False), None, ),  # 4
     (5, TType.DOUBLE, 'complexity', None, None, ),  # 5
+    (6, TType.STRING, 'description', 'UTF8', None, ),  # 6
+)
+all_structs.append(Architecture)
+Architecture.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'id', None, None, ),  # 1
+    (2, TType.LIST, 'inputs', (TType.DOUBLE, None, False), None, ),  # 2
+    (3, TType.LIST, 'outputs', (TType.DOUBLE, None, False), None, ),  # 3
 )
 all_structs.append(BinaryInputArchitecture)
 BinaryInputArchitecture.thrift_spec = (
@@ -797,27 +733,14 @@ ContinuousInputArchitecture.thrift_spec = (
     (2, TType.LIST, 'inputs', (TType.DOUBLE, None, False), None, ),  # 2
     (3, TType.LIST, 'outputs', (TType.DOUBLE, None, False), None, ),  # 3
 )
-all_structs.append(Architecture)
-Architecture.thrift_spec = (
+all_structs.append(AssigningProblemEntities)
+AssigningProblemEntities.thrift_spec = (
     None,  # 0
-    (1, TType.I32, 'id', None, None, ),  # 1
-    (2, TType.LIST, 'inputs', (TType.DOUBLE, None, False), None, ),  # 2
-    (3, TType.LIST, 'outputs', (TType.DOUBLE, None, False), None, ),  # 3
+    (1, TType.LIST, 'leftSet', (TType.STRING, 'UTF8', False), None, ),  # 1
+    (2, TType.LIST, 'rightSet', (TType.STRING, 'UTF8', False), None, ),  # 2
 )
-all_structs.append(AssigningProblemParameters)
-AssigningProblemParameters.thrift_spec = (
-    None,  # 0
-    (1, TType.LIST, 'orbitList', (TType.STRING, 'UTF8', False), None, ),  # 1
-    (2, TType.LIST, 'instrumentList', (TType.STRING, 'UTF8', False), None, ),  # 2
-)
-all_structs.append(PartitioningAndAssigningProblemParameters)
-PartitioningAndAssigningProblemParameters.thrift_spec = (
-    None,  # 0
-    (1, TType.LIST, 'orbitList', (TType.STRING, 'UTF8', False), None, ),  # 1
-    (2, TType.LIST, 'instrumentList', (TType.STRING, 'UTF8', False), None, ),  # 2
-)
-all_structs.append(TaxonomicScheme)
-TaxonomicScheme.thrift_spec = (
+all_structs.append(FlattenedConceptHierarchy)
+FlattenedConceptHierarchy.thrift_spec = (
     None,  # 0
     (1, TType.MAP, 'instanceMap', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 1
     (2, TType.MAP, 'superclassMap', (TType.STRING, 'UTF8', TType.LIST, (TType.STRING, 'UTF8', False), False), None, ),  # 2

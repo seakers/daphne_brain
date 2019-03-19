@@ -26,11 +26,9 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void ping()')
     print('   getDrivingFeaturesBinary(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
-    print('   runAutomatedLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression, string logical_connective, double supp, double conf, double lift)')
     print('   getDrivingFeaturesEpsilonMOEABinary(string problem,  behavioral,  non_behavioral,  all_archs)')
     print('   getDrivingFeaturesDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
-    print('   runAutomatedLocalSearchDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   getMarginalDrivingFeaturesDiscrete(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression, string logical_connective, double supp, double conf, double lift)')
     print('   getDrivingFeaturesEpsilonMOEADiscrete(string problem,  behavioral,  non_behavioral,  all_archs)')
     print('   getDrivingFeaturesContinuous(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
@@ -41,16 +39,12 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  string convertToCNF(string expression)')
     print('  string convertToDNF(string expression)')
     print('   computeAlgebraicTypicalityWithStringInput(string problem, string architecture, string feature)')
-    print('   generalizeFeature(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
+    print('   generalizeFeatureBinary(string problem,  behavioral,  non_behavioral,  all_archs, string rootfeatureExpression, string nodeFeatureExpression)')
     print('   getDrivingFeaturesWithGeneralizationBinary(string problem,  behavioral,  non_behavioral,  all_archs)')
-    print('   runInputGeneralizationLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
-    print('   runFeatureGeneralizationLocalSearchBinary(string problem,  behavioral,  non_behavioral,  all_archs, string featureExpression)')
-    print('  bool setAssigningProblemParameters(string problem, AssigningProblemParameters params)')
-    print('  bool setAssigningProblemExtendedParameters(string problem, AssigningProblemParameters params)')
-    print('  AssigningProblemParameters getAssigningProblemParameters(string problem)')
-    print('  bool setPartitioningAndAssigningProblemParameters(string problem, PartitioningAndAssigningProblemParameters params)')
-    print('  PartitioningAndAssigningProblemParameters getPartitioningAndAssigningProblemParameters(string problem)')
-    print('  TaxonomicScheme getAssigningProblemTaxonomicScheme(string problem, AssigningProblemParameters params)')
+    print('  bool setAssigningProblemEntities(string problem, AssigningProblemEntities entities)')
+    print('  bool setAssigningProblemGeneralizedConcepts(string problem, AssigningProblemEntities generalizedConcepts)')
+    print('  AssigningProblemEntities getAssigningProblemEntities(string problem)')
+    print('  FlattenedConceptHierarchy getAssigningProblemConceptHierarchy(string problem, AssigningProblemEntities params)')
     print('')
     sys.exit(0)
 
@@ -142,12 +136,6 @@ elif cmd == 'getDrivingFeaturesBinary':
         sys.exit(1)
     pp.pprint(client.getDrivingFeaturesBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]), eval(args[6]),))
 
-elif cmd == 'runAutomatedLocalSearchBinary':
-    if len(args) != 7:
-        print('runAutomatedLocalSearchBinary requires 7 args')
-        sys.exit(1)
-    pp.pprint(client.runAutomatedLocalSearchBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]), eval(args[6]),))
-
 elif cmd == 'getMarginalDrivingFeaturesBinary':
     if len(args) != 9:
         print('getMarginalDrivingFeaturesBinary requires 9 args')
@@ -165,12 +153,6 @@ elif cmd == 'getDrivingFeaturesDiscrete':
         print('getDrivingFeaturesDiscrete requires 7 args')
         sys.exit(1)
     pp.pprint(client.getDrivingFeaturesDiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]), eval(args[6]),))
-
-elif cmd == 'runAutomatedLocalSearchDiscrete':
-    if len(args) != 7:
-        print('runAutomatedLocalSearchDiscrete requires 7 args')
-        sys.exit(1)
-    pp.pprint(client.runAutomatedLocalSearchDiscrete(args[0], eval(args[1]), eval(args[2]), eval(args[3]), eval(args[4]), eval(args[5]), eval(args[6]),))
 
 elif cmd == 'getMarginalDrivingFeaturesDiscrete':
     if len(args) != 9:
@@ -232,11 +214,11 @@ elif cmd == 'computeAlgebraicTypicalityWithStringInput':
         sys.exit(1)
     pp.pprint(client.computeAlgebraicTypicalityWithStringInput(args[0], args[1], args[2],))
 
-elif cmd == 'generalizeFeature':
-    if len(args) != 5:
-        print('generalizeFeature requires 5 args')
+elif cmd == 'generalizeFeatureBinary':
+    if len(args) != 6:
+        print('generalizeFeatureBinary requires 6 args')
         sys.exit(1)
-    pp.pprint(client.generalizeFeature(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
+    pp.pprint(client.generalizeFeatureBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], args[5],))
 
 elif cmd == 'getDrivingFeaturesWithGeneralizationBinary':
     if len(args) != 4:
@@ -244,53 +226,29 @@ elif cmd == 'getDrivingFeaturesWithGeneralizationBinary':
         sys.exit(1)
     pp.pprint(client.getDrivingFeaturesWithGeneralizationBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
 
-elif cmd == 'runInputGeneralizationLocalSearchBinary':
-    if len(args) != 5:
-        print('runInputGeneralizationLocalSearchBinary requires 5 args')
-        sys.exit(1)
-    pp.pprint(client.runInputGeneralizationLocalSearchBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
-
-elif cmd == 'runFeatureGeneralizationLocalSearchBinary':
-    if len(args) != 5:
-        print('runFeatureGeneralizationLocalSearchBinary requires 5 args')
-        sys.exit(1)
-    pp.pprint(client.runFeatureGeneralizationLocalSearchBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
-
-elif cmd == 'setAssigningProblemParameters':
+elif cmd == 'setAssigningProblemEntities':
     if len(args) != 2:
-        print('setAssigningProblemParameters requires 2 args')
+        print('setAssigningProblemEntities requires 2 args')
         sys.exit(1)
-    pp.pprint(client.setAssigningProblemParameters(args[0], eval(args[1]),))
+    pp.pprint(client.setAssigningProblemEntities(args[0], eval(args[1]),))
 
-elif cmd == 'setAssigningProblemExtendedParameters':
+elif cmd == 'setAssigningProblemGeneralizedConcepts':
     if len(args) != 2:
-        print('setAssigningProblemExtendedParameters requires 2 args')
+        print('setAssigningProblemGeneralizedConcepts requires 2 args')
         sys.exit(1)
-    pp.pprint(client.setAssigningProblemExtendedParameters(args[0], eval(args[1]),))
+    pp.pprint(client.setAssigningProblemGeneralizedConcepts(args[0], eval(args[1]),))
 
-elif cmd == 'getAssigningProblemParameters':
+elif cmd == 'getAssigningProblemEntities':
     if len(args) != 1:
-        print('getAssigningProblemParameters requires 1 args')
+        print('getAssigningProblemEntities requires 1 args')
         sys.exit(1)
-    pp.pprint(client.getAssigningProblemParameters(args[0],))
+    pp.pprint(client.getAssigningProblemEntities(args[0],))
 
-elif cmd == 'setPartitioningAndAssigningProblemParameters':
+elif cmd == 'getAssigningProblemConceptHierarchy':
     if len(args) != 2:
-        print('setPartitioningAndAssigningProblemParameters requires 2 args')
+        print('getAssigningProblemConceptHierarchy requires 2 args')
         sys.exit(1)
-    pp.pprint(client.setPartitioningAndAssigningProblemParameters(args[0], eval(args[1]),))
-
-elif cmd == 'getPartitioningAndAssigningProblemParameters':
-    if len(args) != 1:
-        print('getPartitioningAndAssigningProblemParameters requires 1 args')
-        sys.exit(1)
-    pp.pprint(client.getPartitioningAndAssigningProblemParameters(args[0],))
-
-elif cmd == 'getAssigningProblemTaxonomicScheme':
-    if len(args) != 2:
-        print('getAssigningProblemTaxonomicScheme requires 2 args')
-        sys.exit(1)
-    pp.pprint(client.getAssigningProblemTaxonomicScheme(args[0], eval(args[1]),))
+    pp.pprint(client.getAssigningProblemConceptHierarchy(args[0], eval(args[1]),))
 
 else:
     print('Unrecognized method %s' % cmd)
