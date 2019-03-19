@@ -110,6 +110,7 @@ class ImportData(APIView):
                             inputs.append(int(row[i]))
 
                         elif input_type == 'continuous': # continuous variable input
+
                             inp = row[i]
                             if inp == "":
                                 inp = None
