@@ -3,7 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-
     # Run data mining
     path('get-driving-features', views.GetDrivingFeatures.as_view()),
     path('get-driving-features-epsilon-moea', views.GetDrivingFeaturesEpsilonMOEA.as_view()),

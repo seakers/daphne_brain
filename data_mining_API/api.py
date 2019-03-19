@@ -13,7 +13,6 @@ from thrift.protocol import TBinaryProtocol
 from data_mining_API.interface import DataMiningInterface
 from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, ContinuousInputArchitecture, Feature, AssigningProblemEntities, FlattenedConceptHierarchy
 
-
 from config.loader import ConfigurationLoader
 config = ConfigurationLoader().load()
 
@@ -103,7 +102,6 @@ class DataMiningClient():
                 _all_archs.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
             _features = self.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, _all_archs)
 
-
         drivingFeatures = []
         for df in _features:
             drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
@@ -140,6 +138,7 @@ class DataMiningClient():
                 for arch in all_archs:
                     _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
                 _features = self.client.getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, _all_archs, 
+
                                                                            featureExpression, logicalConnective, supp, conf, lift)
 
             elif inputType == "discrete":
@@ -189,6 +188,7 @@ class DataMiningClient():
 
         return featuresWithDescription
 
+
     def setProblemParameters(self, problem, params):
         try:
             if problem == "ClimateCentric":
@@ -200,6 +200,7 @@ class DataMiningClient():
 
         except Exception as e:
             print('Exc in calling setProblemParameters(): ' + str(e))
+
 
     def getProblemParameters(self, problem):
         params = None

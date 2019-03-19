@@ -177,6 +177,7 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             inputType = request.POST['input_type']
 
             drivingFeatures = self.DataMiningClient.getDrivingFeaturesWithGeneralization(problem, inputType, behavioral, non_behavioral, dataset)
+
             output = drivingFeatures
 
             # End the connection before return statement
@@ -187,6 +188,7 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
             return Response('')
+
 
 class GetMarginalDrivingFeatures(APIView):
 
@@ -265,6 +267,7 @@ class GeneralizeFeature(APIView):
                                                                 behavioral,non_behavioral,
                                                                 dataset,
                                                                 rootFeatureExpression, nodeFeatureExpression)
+
             output = drivingFeatures
 
             # End the connection before return statement
