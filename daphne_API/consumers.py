@@ -1,7 +1,7 @@
 import hashlib
 import json
-import threading
-import time
+
+import pika
 from channels.generic.websocket import JsonWebsocketConsumer
 import schedule
 from auth_API.helpers import get_user_information
@@ -11,42 +11,10 @@ if 'EOSS' in settings.ACTIVE_MODULES:
     from daphne_API.active import live_recommender
 
 
-def run_continuously(self, interval=1):
-    """Continuously run, while executing pending jobs at each elapsed
-    time interval.
-    @return cease_continuous_run: threading.Event which can be set to
-    cease continuous run.
-    Please note that it is *intended behavior that run_continuously()
-    does not run missed jobs*. For example, if you've registered a job
-    that should run every minute and you set a continuous run interval
-    of one hour then your job won't be run 60 times at each interval but
-    only once.
-    """
-
-    cease_continuous_run = threading.Event()
-
-    class ScheduleThread(threading.Thread):
-
-        @classmethod
-        def run(cls):
-            while not cease_continuous_run.is_set():
-                self.run_pending()
-                time.sleep(interval)
-
-    continuous_thread = ScheduleThread()
-    continuous_thread.setDaemon(True)
-    continuous_thread.start()
-    return cease_continuous_run
-
-
-schedule.Scheduler.run_continuously = run_continuously
-
-
 class DaphneConsumer(JsonWebsocketConsumer):
     scheduler = schedule.Scheduler()
     sched_stopper = None
     kill_event = None
-    is_connected = False
 
     ##### WebSocket event handlers
     def connect(self):
@@ -55,7 +23,6 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         # Accept the connection
         self.accept()
-        self.is_connected = True
         user_info = get_user_information(self.scope['session'], self.scope['user'])
         user_info.channel_name = self.channel_name
         user_info.save()
@@ -64,30 +31,6 @@ class DaphneConsumer(JsonWebsocketConsumer):
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Add to the group
         self.channel_layer.group_add(hash_key, self.channel_name)
-
-        # Start a ping routine every 30 seconds, close channel when ping not answered
-        self.scheduler.every(30).seconds.do(self.send_ping)
-
-        # Start a thread to run the events
-        self.sched_stopper = self.scheduler.run_continuously()
-
-        print("Hey! Im after the scheduler")
-
-    def send_ping(self):
-        # wait 15s more for ping back, if not received, close ws
-        self.scheduler.clear("kill-events")
-        self.kill_event = self.scheduler.every(15).seconds.do(self.kill_ws).tag("kill-events")
-
-        if self.is_connected:
-            self.send(json.dumps({"type": "ping"}))
-            print("Ping sent")
-
-
-    def kill_ws(self):
-        print("RIP")
-        if self.is_connected:
-            self.close()
-        return schedule.CancelJob
 
     def receive_json(self, content, **kwargs):
         """
@@ -149,10 +92,17 @@ class DaphneConsumer(JsonWebsocketConsumer):
             # Broadcast
             self.channel_layer.group_send(hash_key, { "text": textMessage })
         elif content.get('msg_type') == 'ping':
-            print("Ping back")
-            # Stop the connection killer
-            self.scheduler.cancel_job(self.kill_event)
+            print("Ping received")
+            self.send_json({
+                'type': 'ping'
+            })
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+            channel = connection.channel()
+
+            queue_name = self.scope['user'].username + '_brainga'
+            channel.queue_declare(queue=queue_name)
+            channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
 
 
     def ga_new_archs(self, event):
@@ -184,5 +134,3 @@ class DaphneConsumer(JsonWebsocketConsumer):
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Remove from the group on clean disconnect
         self.channel_layer.group_discard(hash_key, self.channel_name)
-        self.sched_stopper.set()
-        self.is_connected = False

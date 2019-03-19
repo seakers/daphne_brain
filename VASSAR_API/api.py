@@ -61,7 +61,7 @@ class VASSARClient():
         self.transport.close()
     
     def evaluateArchitecture(self, problem, bitString):
-        assignation_problems = ['SMAP', 'ClimateCentric']
+        assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
         partition_problems = ['Decadal2017Aerosols']
         if problem in assignation_problems:
             arch_formatted = self.client.evalBinaryInputArch(problem, bitString)

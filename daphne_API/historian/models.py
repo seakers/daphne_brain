@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Time, ForeignKey, Table, CheckConstraint
+from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, Time, Enum, ForeignKey, Table, \
+    CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
@@ -22,33 +23,34 @@ def create_tables(engine):
     """"""
     DeclarativeBase.metadata.create_all(engine)
 
-operators_table = Table('operators', DeclarativeBase.metadata,
-                        Column('agency_id', Integer, ForeignKey('agencies.id')),
-                        Column('mission_id', Integer, ForeignKey('missions.id')))
 
-designers_table = Table('designers', DeclarativeBase.metadata,
-                        Column('agency_id', Integer, ForeignKey('agencies.id')),
-                        Column('instrument_id', Integer, ForeignKey('instruments.id')))
+operators_table = Table('ceos_operators', DeclarativeBase.metadata,
+                        Column('agency_id', Integer, ForeignKey('ceos_agencies.id')),
+                        Column('mission_id', Integer, ForeignKey('ceos_missions.id')))
 
-type_of_instrument_table = Table('type_of_instrument', DeclarativeBase.metadata,
-                                 Column('instrument_id', Integer, ForeignKey('instruments.id')),
-                                 Column('instrument_type_id', Integer, ForeignKey('instrument_types.id')))
+designers_table = Table('ceos_designers', DeclarativeBase.metadata,
+                        Column('agency_id', Integer, ForeignKey('ceos_agencies.id')),
+                        Column('instrument_id', Integer, ForeignKey('ceos_instruments.id')))
 
-geometry_of_instrument_table = Table('geometry_of_instrument', DeclarativeBase.metadata,
-                                     Column('instrument_id', Integer, ForeignKey('instruments.id')),
-                                     Column('instrument_geometry_id', Integer, ForeignKey('geometry_types.id')))
+type_of_instrument_table = Table('ceos_type_of_instrument', DeclarativeBase.metadata,
+                                 Column('instrument_id', Integer, ForeignKey('ceos_instruments.id')),
+                                 Column('instrument_type_id', Integer, ForeignKey('ceos_instrument_types.id')))
 
-instruments_in_mission_table = Table('instruments_in_mission', DeclarativeBase.metadata,
-                                     Column('mission_id', Integer, ForeignKey('missions.id')),
-                                     Column('instrument_id', Integer, ForeignKey('instruments.id')))
+geometry_of_instrument_table = Table('ceos_geometry_of_instrument', DeclarativeBase.metadata,
+                                     Column('instrument_id', Integer, ForeignKey('ceos_instruments.id')),
+                                     Column('instrument_geometry_id', Integer, ForeignKey('ceos_geometry_types.id')))
 
-measurements_of_instrument_table = Table('measurements_of_instrument', DeclarativeBase.metadata,
-                                         Column('instrument_id', Integer, ForeignKey('instruments.id')),
-                                         Column('measurement_id', Integer, ForeignKey('measurements.id')))
+instruments_in_mission_table = Table('ceos_instruments_in_mission', DeclarativeBase.metadata,
+                                     Column('mission_id', Integer, ForeignKey('ceos_missions.id')),
+                                     Column('instrument_id', Integer, ForeignKey('ceos_instruments.id')))
 
-instrument_wavebands_table = Table('instrument_wavebands', DeclarativeBase.metadata,
-                                   Column('instrument_id', Integer, ForeignKey('instruments.id')),
-                                   Column('waveband_id', Integer, ForeignKey('wavebands.id')))
+measurements_of_instrument_table = Table('ceos_measurements_of_instrument', DeclarativeBase.metadata,
+                                         Column('instrument_id', Integer, ForeignKey('ceos_instruments.id')),
+                                         Column('measurement_id', Integer, ForeignKey('ceos_measurements.id')))
+
+instrument_wavebands_table = Table('ceos_instrument_wavebands', DeclarativeBase.metadata,
+                                   Column('instrument_id', Integer, ForeignKey('ceos_instruments.id')),
+                                   Column('waveband_id', Integer, ForeignKey('ceos_wavebands.id')))
 
 technologies = ('Absorption-band MW radiometer/spectrometer', 'Atmospheric lidar', 'Broad-band radiometer',
                 'Cloud and precipitation radar', 'Communications system', 'Data collection system',
@@ -68,7 +70,7 @@ technologies = ('Absorption-band MW radiometer/spectrometer', 'Atmospheric lidar
 
 class BroadMeasurementCategory(DeclarativeBase):
     """Sqlalchemy broad measurement categories model"""
-    __tablename__ = 'broad_measurement_categories'
+    __tablename__ = 'ceos_broad_measurement_categories'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -78,31 +80,31 @@ class BroadMeasurementCategory(DeclarativeBase):
 
 class MeasurementCategory(DeclarativeBase):
     """Sqlalchemy measurement categories model"""
-    __tablename__ = 'measurement_categories'
+    __tablename__ = 'ceos_measurement_categories'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
     description = Column('description', String)
-    broad_measurement_category_id = Column(Integer, ForeignKey('broad_measurement_categories.id'))
+    broad_measurement_category_id = Column(Integer, ForeignKey('ceos_broad_measurement_categories.id'))
     broad_measurement_category = relationship('BroadMeasurementCategory', back_populates='measurement_categories')
     measurements = relationship('Measurement', back_populates='measurement_category')
 
 
 class Measurement(DeclarativeBase):
     """Sqlalchemy measurements model"""
-    __tablename__ = 'measurements'
+    __tablename__ = 'ceos_measurements'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
     description = Column('description', String)
-    measurement_category_id = Column(Integer, ForeignKey('measurement_categories.id'))
+    measurement_category_id = Column(Integer, ForeignKey('ceos_measurement_categories.id'))
     measurement_category = relationship('MeasurementCategory', back_populates='measurements')
     instruments = relationship('Instrument', secondary=measurements_of_instrument_table, back_populates='measurements')
 
 
 class Agency(DeclarativeBase):
     """Sqlalchemy agencies model"""
-    __tablename__ = 'agencies'
+    __tablename__ = 'ceos_agencies'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -115,7 +117,7 @@ class Agency(DeclarativeBase):
 
 class Mission(DeclarativeBase):
     """Sqlalchemy missions model"""
-    __tablename__ = 'missions'
+    __tablename__ = 'ceos_missions'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -152,7 +154,7 @@ class Mission(DeclarativeBase):
 
 class InstrumentType(DeclarativeBase):
     """Sqlalchemy instrument types model"""
-    __tablename__ = 'instrument_types'
+    __tablename__ = 'ceos_instrument_types'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -162,7 +164,7 @@ class InstrumentType(DeclarativeBase):
 
 class GeometryType(DeclarativeBase):
     """Sqlalchemy geometry types model"""
-    __tablename__ = 'geometry_types'
+    __tablename__ = 'ceos_geometry_types'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -172,7 +174,7 @@ class GeometryType(DeclarativeBase):
 
 class Waveband(DeclarativeBase):
     """Sqlalchemy wavebands model"""
-    __tablename__ = 'wavebands'
+    __tablename__ = 'ceos_wavebands'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -183,7 +185,7 @@ class Waveband(DeclarativeBase):
 
 class Instrument(DeclarativeBase):
     """Sqlalchemy instruments model"""
-    __tablename__ = 'instruments'
+    __tablename__ = 'ceos_instruments'
 
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
@@ -214,7 +216,7 @@ class Instrument(DeclarativeBase):
 
 class TechTypeMostCommonOrbit(DeclarativeBase):
     """Sqlalchemy TechTypeMostCommonOrbit model"""
-    __tablename__ = 'techtype_most_common_orbits'
+    __tablename__ = 'ceos_techtype_most_common_orbits'
 
     id = Column(Integer, primary_key=True)
     techtype = Column('techype', String)
@@ -223,7 +225,7 @@ class TechTypeMostCommonOrbit(DeclarativeBase):
 
 class MeasurementMostCommonOrbit(DeclarativeBase):
     """Sqlalchemy MeasurementMostCommonOrbit model"""
-    __tablename__ = 'measurement_most_common_orbits'
+    __tablename__ = 'ceos_measurement_most_common_orbits'
 
     id = Column(Integer, primary_key=True)
     measurement = Column('measurement', String)

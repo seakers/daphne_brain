@@ -24,7 +24,7 @@ class Critic:
         self.context = context
         self.instruments_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
         self.orbits_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
-        self.assignation_problems = ['SMAP', 'ClimateCentric']
+        self.assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
         self.partition_problems = ['Decadal2017Aerosols']
 
     def get_missions_from_genome(self, problem_type, genome):
@@ -265,11 +265,15 @@ class Critic:
             res = self.missions_similarity(orbit_info, mission["instruments"], missions_database)
             if len(mission["instruments"]) > 0:
                 if res[0] < 6:
-                    historian_feedback.append("No past mission is similar to your satellite in orbit %s. Consider changing it." % \
-                                              mission["orbit"])
+                    historian_feedback.append("""I noticed that nobody has ever flown a satellite with these 
+                    instruments: {} in the {} orbit. This is great from an innovation standpoint, but be sure to check 
+                    the Expert for some reasons this might not be a good idea!"""
+                                              .format(", ".join([instr["name"] for instr in mission["instruments"]]),
+                                                      mission["orbit"]))
                 else:
-                    historian_feedback.append("A past mission is really similar to your design in orbit %s: %s. You can probably focus on other orbits for now." % \
-                                              (mission["orbit"], res[1].name))
+                    historian_feedback.append("""I found a mission that is similar to your design in orbit {}: {}.
+                    Would you like to see more information? Click <a target="_blank" href="http://database.eohandbook.com/database/missionsummary.aspx?missionID={}">here</a>"""
+                                              .format(mission["orbit"], res[1].name, res[1].id))
                     # +
                     # '<br>'.join(["Instrument similar to %s (score: %.2f)" % \
                     #    (i[0], i[2]) for i in self.instruments_match_dataset(res[1].instruments)]) + '.')
