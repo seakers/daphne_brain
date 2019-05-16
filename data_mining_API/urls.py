@@ -9,8 +9,9 @@ urlpatterns = [
     path('get-driving-features-with-generalization', views.GetDrivingFeaturesWithGeneralization.as_view()),
     path('get-marginal-driving-features', views.GetMarginalDrivingFeatures.as_view()),
 
-    # Generalization
+    # Generalization / simplification
     path('generalize-feature', views.GeneralizeFeature.as_view()),
+    path('simplify-feature-expression', views.SimplifyFeatureExpression.as_view()),
 
     # Clustering
     path('cluster-data', views.ClusterData.as_view()),

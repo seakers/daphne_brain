@@ -188,6 +188,13 @@ class DataMiningClient():
 
         return featuresWithDescription
 
+    def simplifyFeatureExpression(self, problem, expression):
+        try:
+            simplified_feature = self.client.simplifyFeatureExpression(problem, expression)
+        except Exception as e:
+            print('Exc in calling simplifyFeature(): '+str(e))
+
+        return simplified_feature
 
     def setProblemParameters(self, problem, params):
         try:
@@ -261,7 +268,7 @@ class DataMiningClient():
                 raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
         except Exception as e:
-            print('Exc in calling getTaxonomicScheme(): ' + str(e))
+            print('Exc in calling getProblemConceptHierarchy(): ' + str(e))
 
         return conceptHierarchy
 
