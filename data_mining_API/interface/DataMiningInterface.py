@@ -191,6 +191,14 @@ class Iface(object):
         """
         pass
 
+    def simplifyFeatureExpression(self, problem, expression):
+        """
+        Parameters:
+         - problem
+         - expression
+        """
+        pass
+
     def setAssigningProblemEntities(self, problem, entities):
         """
         Parameters:
@@ -864,6 +872,39 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesWithGeneralizationBinary failed: unknown result")
 
+    def simplifyFeatureExpression(self, problem, expression):
+        """
+        Parameters:
+         - problem
+         - expression
+        """
+        self.send_simplifyFeatureExpression(problem, expression)
+        return self.recv_simplifyFeatureExpression()
+
+    def send_simplifyFeatureExpression(self, problem, expression):
+        self._oprot.writeMessageBegin('simplifyFeatureExpression', TMessageType.CALL, self._seqid)
+        args = simplifyFeatureExpression_args()
+        args.problem = problem
+        args.expression = expression
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_simplifyFeatureExpression(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = simplifyFeatureExpression_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "simplifyFeatureExpression failed: unknown result")
+
     def setAssigningProblemEntities(self, problem, entities):
         """
         Parameters:
@@ -1016,6 +1057,7 @@ class Processor(Iface, TProcessor):
         self._processMap["computeAlgebraicTypicalityWithStringInput"] = Processor.process_computeAlgebraicTypicalityWithStringInput
         self._processMap["generalizeFeatureBinary"] = Processor.process_generalizeFeatureBinary
         self._processMap["getDrivingFeaturesWithGeneralizationBinary"] = Processor.process_getDrivingFeaturesWithGeneralizationBinary
+        self._processMap["simplifyFeatureExpression"] = Processor.process_simplifyFeatureExpression
         self._processMap["setAssigningProblemEntities"] = Processor.process_setAssigningProblemEntities
         self._processMap["setAssigningProblemGeneralizedConcepts"] = Processor.process_setAssigningProblemGeneralizedConcepts
         self._processMap["getAssigningProblemEntities"] = Processor.process_getAssigningProblemEntities
@@ -1423,6 +1465,29 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getDrivingFeaturesWithGeneralizationBinary", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_simplifyFeatureExpression(self, seqid, iprot, oprot):
+        args = simplifyFeatureExpression_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = simplifyFeatureExpression_result()
+        try:
+            result.success = self._handler.simplifyFeatureExpression(args.problem, args.expression)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("simplifyFeatureExpression", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -4598,6 +4663,139 @@ class getDrivingFeaturesWithGeneralizationBinary_result(object):
 all_structs.append(getDrivingFeaturesWithGeneralizationBinary_result)
 getDrivingFeaturesWithGeneralizationBinary_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [Feature, None], False), None, ),  # 0
+)
+
+
+class simplifyFeatureExpression_args(object):
+    """
+    Attributes:
+     - problem
+     - expression
+    """
+
+
+    def __init__(self, problem=None, expression=None,):
+        self.problem = problem
+        self.expression = expression
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.expression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('simplifyFeatureExpression_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.expression is not None:
+            oprot.writeFieldBegin('expression', TType.STRING, 2)
+            oprot.writeString(self.expression.encode('utf-8') if sys.version_info[0] == 2 else self.expression)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(simplifyFeatureExpression_args)
+simplifyFeatureExpression_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'expression', 'UTF8', None, ),  # 2
+)
+
+
+class simplifyFeatureExpression_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('simplifyFeatureExpression_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(simplifyFeatureExpression_result)
+simplifyFeatureExpression_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
 )
 
 

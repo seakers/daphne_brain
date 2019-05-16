@@ -31,10 +31,8 @@ class GetDrivingFeatures(APIView):
 
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
-        pass
 
     def post(self, request, format=None):
-        
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
@@ -89,10 +87,8 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
-        pass
 
     def post(self, request, format=None):
-        
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
@@ -231,7 +227,7 @@ class GetMarginalDrivingFeatures(APIView):
             return Response(output)
         
         except Exception as detail:
-            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            logger.exception('Exception in calling GetMarginalDrivingFeatures(): ' + detail)
             self.DataMiningClient.endConnection()
             return Response('')
 
@@ -279,6 +275,34 @@ class GeneralizeFeature(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
+class SimplifyFeatureExpression(APIView):
+
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+        pass
+
+    def post(self, request, format=None):
+        
+        try:
+            # Start data mining client
+            self.DataMiningClient.startConnection()
+
+            # Get problem name
+            problem = request.POST['problem']
+
+            # Get the expression
+            expression = request.POST['expression']
+
+            simplified_expression = self.DataMiningClient.simplifyFeatureExpression(problem, expression)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection() 
+            return Response(simplified_expression)
+        
+        except Exception as detail:
+            logger.exception('Exception in simplifying feature: ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
 
 class ClusterData(APIView):
 
@@ -674,6 +698,29 @@ class ExportTargetSelection(APIView):
             inputType = request.POST['input_type']
             filename = request.POST['name']
 
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+            # Get selected arch id's
+            selected = request.POST['selected']
+            selected = selected[1:-1]
+            selected_arch_ids = selected.split(',')
+            # Convert strings to ints
+            behavioral = []
+            for s in selected_arch_ids:
+                behavioral.append(int(s))
+
+            # Get non-selected arch id's
+            non_selected = request.POST['non_selected']
+            non_selected = non_selected[1:-1]
+            non_selected_arch_ids = non_selected.split(',')
+            # Convert strings to ints
+            non_behavioral = []
+            for s in non_selected_arch_ids:
+                non_behavioral.append(int(s))
+
+            # Load architecture data from the session info
+            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+
             import datetime
             timestamp = datetime.datetime.now().strftime("%y-%m-%d_%H-%M-%S")
 
@@ -686,29 +733,6 @@ class ExportTargetSelection(APIView):
             # Set the path of the file containing data
             file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
 
-            # Get selected arch id's
-            selected = request.POST['selected']
-            selected = selected[1:-1]
-            selected_arch_ids = selected.split(',')
-
-            # Convert strings to ints
-            behavioral = []
-            for s in selected_arch_ids:
-                behavioral.append(int(s))
-
-            # Get non-selected arch id's
-            non_selected = request.POST['non_selected']
-            non_selected = non_selected[1:-1]
-            non_selected_arch_ids = non_selected.split(',')
-
-            # Convert strings to ints
-            non_behavioral = []
-            for s in non_selected_arch_ids:
-                non_behavioral.append(int(s))
-
-            # Load architecture data from the session info
-            architectures = request.session['data']
-
             #########################################
             #########################################
             ### Write data file with labels
@@ -716,25 +740,26 @@ class ExportTargetSelection(APIView):
             with open(file_path, "w") as file:
 
                 content = []
-                for i, arch in enumerate(architectures):
+                for i, arch in enumerate(dataset):
                     line = []
 
-                    archID = arch['id']
                     label = None
-                    if archID in behavioral:
+                    if arch.id in behavioral:
                         label = "1"
                     else:
                         label = "0"
 
-                    inputs = arch['inputs']
+                    inputs = json.loads(arch.inputs);
+
                     inputString = ""
                     for val in inputs:
+                        print(val)
                         if val:
                             inputString += "1"
                         else:
                             inputString += "0"
 
-                    line.append(str(archID))
+                    line.append(str(arch.id))
                     line.append(str(label))
                     line.append(inputString)
                     content.append(",".join(line))    
@@ -747,7 +772,7 @@ class ExportTargetSelection(APIView):
             return Response('')
         
         except Exception:
-            logger.exception('Exception in importing feature data')
+            logger.exception('Exception in exporting target selection')
             return Response('')
 
 
@@ -798,35 +823,8 @@ class ImportFeatureData(APIView):
             params = None
             if os.path.isfile(filename_params):
                 # Open the file
-                with open(filename_params) as csvfile:
-
-                    # Read the file as a csv file
-                    read = csv.reader(csvfile, delimiter=',')
-
-                    paramNames = []
-                    params = {}
-
-                    # For each row, store the information
-                    for i, row in enumerate(read):
-                        if i == 0: # Check if the first line is a header
-                            if row[0].startswith("#"):
-                                for cell in row:
-                                    if cell.startswith("#"):
-                                        paramNames.append(cell[1:].strip())
-                                    else:
-                                        paramNames.append(cell.strip())
-                                continue
-
-                        # Get param name
-                        paramName = None
-                        if len(paramNames) != 0:
-                            paramName = paramNames[i - 1]
-                        else:
-                            paramName = "param" + str(i)
-
-                        params[paramName] = []
-                        for cell in row:    
-                            params[paramName].append(cell)
+                with open(filename_params) as f:
+                    params = json.loads(f.read())
 
             out['data'] = features
             out['params'] = params
