@@ -215,8 +215,8 @@ class DataMiningClient():
             if problem == "ClimateCentric":
                 params_ = self.client.getAssigningProblemEntities(problem)
                 params = {}
-                params['instrument_list'] = params_.leftSet
-                params['orbit_list'] = params_.rightSet
+                params['leftSet'] = params_.leftSet
+                params['rightSet'] = params_.rightSet
                 
             else:
                 raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
