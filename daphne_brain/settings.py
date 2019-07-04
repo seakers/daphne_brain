@@ -193,6 +193,12 @@ EDL_DATABASE = {
 # Session configuration
 # SESSION_ENGINE = "merge_session.merge_db"
 
+# Email
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = 'Daphne Admin <daphne@selva-research.com>'
+
 
 # Logging
 
