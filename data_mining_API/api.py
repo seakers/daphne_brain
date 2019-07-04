@@ -10,9 +10,8 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-from data_mining_API.interface import interface as DataMiningInterface
-from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, Feature, AssigningProblemParameters
-
+from data_mining_API.interface import DataMiningInterface
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, ContinuousInputArchitecture, Feature, AssigningProblemEntities, FlattenedConceptHierarchy
 
 from config.loader import ConfigurationLoader
 config = ConfigurationLoader().load()
@@ -55,23 +54,23 @@ class DataMiningClient():
         print('getDrivingFeatures')
         print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(all_archs)))
         
-        archs_formatted = []
+        _all_archs = []
         if inputType == "binary":
             for arch in all_archs:
-                archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.getDrivingFeaturesBinary(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
+                _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+            _features = self.client.getDrivingFeaturesBinary(problem, behavioral, non_behavioral, _all_archs, supp, conf, lift)
 
         elif inputType == "discrete":
             for arch in all_archs:
-                archs_formatted.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.getDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
+                _all_archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+            _features = self.client.getDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, _all_archs, supp, conf, lift)
+
+        else:
+            raise NotImplementedError("Unsupported input type: {0}".format(inputType))
 
         drivingFeatures = []
-        for df in drivingFeatures_formatted:
+        for df in _features:
             drivingFeatures.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics, 'complexity': df.complexity})
-
-        # except Exception as e:
-        #     print("Exc in getDrivingFeatures: " + str(e))
 
         return drivingFeatures
 
@@ -80,19 +79,31 @@ class DataMiningClient():
         print('getDrivingFeaturesEpsilonMOEA')
         print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
         
-        archs_formatted = []
+        _all_archs = []
         if inputType == "binary":
             for arch in all_archs:
-                archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.getDrivingFeaturesEpsilonMOEABinary(problem, behavioral, non_behavioral, archs_formatted)
+                _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+            _features = self.client.getDrivingFeaturesEpsilonMOEABinary(problem, behavioral, non_behavioral, _all_archs)
 
         elif inputType == "discrete":
             for arch in all_archs:
-                archs_formatted.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.getDrivingFeaturesEpsilonMOEADiscrete(problem, behavioral, non_behavioral, archs_formatted)
+                _all_archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+            _features = self.client.getDrivingFeaturesEpsilonMOEADiscrete(problem, behavioral, non_behavioral, _all_archs)
+
+        elif inputType == "continuous":
+            for arch in all_archs:
+                inputs = []
+                for i in arch['inputs']:
+                    if i is None:
+                        pass
+                    else:
+                        inputs.append(float(i))
+                        
+                _all_archs.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
+            _features = self.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, _all_archs)
 
         drivingFeatures = []
-        for df in drivingFeatures_formatted:
+        for df in _features:
             drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
 
         return drivingFeatures
@@ -102,67 +113,43 @@ class DataMiningClient():
         print('getDrivingFeatures')
         print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
         
-        archs_formatted = []
+        _all_archs = []
         if inputType == "binary":
             for arch in all_archs:
-                archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.getDrivingFeaturesWithGeneralizationBinary(problem, behavioral, non_behavioral, archs_formatted)
+                _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+            _features = self.client.getDrivingFeaturesWithGeneralizationBinary(problem, behavioral, non_behavioral, _all_archs)
 
         elif inputType == "discrete":
-            raise ValueError("Data mining with generalization not implemented for discrete input problem.")
+            raise NotImplementedError("Data mining with generalization not implemented for discrete input problem.")
 
         drivingFeatures = []
-        for df in drivingFeatures_formatted:
+        for df in _features:
             drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
 
         return drivingFeatures
     
-    def getDrivingFeaturesAutomated(self, problem, inputType, behavioral, non_behavioral, all_archs, supp, conf, lift):
-        # try:
-        print('getDrivingFeatures')
-        print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
-        
-        archs_formatted = []
-        if inputType == "binary":
-            for arch in all_archs:
-                archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.runAutomatedLocalSearchBinary(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
-
-        elif inputType == "discrete":
-            for arch in all_archs:
-                archs_formatted.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-            drivingFeatures_formatted = self.client.runAutomatedLocalSearchDiscrete(problem, behavioral, non_behavioral, archs_formatted, supp, conf, lift)
-
-        drivingFeatures = []
-        for df in drivingFeatures_formatted:
-            drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
-
-        # except Exception as e:
-        #     print("Exc in getDrivingFeatures: " + str(e))
-
-        return drivingFeatures
-        
     def getMarginalDrivingFeatures(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression,logicalConnective, supp, conf, lift):
         try:
             print('getMarginalDrivingFeatures')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
             
-            archs_formatted = []
+            _all_archs = []
             if inputType == "binary":
                 for arch in all_archs:
-                    archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, archs_formatted, 
+                    _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.client.getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, _all_archs, 
+
                                                                            featureExpression, logicalConnective, supp, conf, lift)
 
             elif inputType == "discrete":
                 for arch in all_archs:
-                    archs_formatted.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                drivingFeatures_formatted = self.client.getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, archs_formatted, 
+                    _all_archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.client.getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, _all_archs, 
                                                                            featureExpression, logicalConnective, supp, conf, lift)
                         
             drivingFeatures = []
             
-            for df in drivingFeatures_formatted:
+            for df in _features:
                 drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
                 
         except Exception as e:
@@ -170,116 +157,120 @@ class DataMiningClient():
 
         return drivingFeatures
 
-    def runGeneralizationLocalSearch(self, problem, inputType, behavioral, non_behavioral, all_archs, featureExpression):
+    def generalizeFeature(self, problem, inputType, behavioral, non_behavioral, all_archs, rootFeatureExpression, nodeFeatureExpression):
         try:
-            print('runGeneralizationLocalSearch')
+            print('running generalizeFeature()')
             print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(all_archs)))
             
-            archs_formatted = []
+            _all_archs = []
             if inputType == "binary":
                 for arch in all_archs:
-                    archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                drivingFeatures_formatted = self.client.runInputGeneralizationLocalSearchBinary(problem, behavioral, non_behavioral, 
-                                                                            archs_formatted, 
-                                                                           featureExpression)
-                
-            elif inputType == "discrete":
-                raise ValueError("Not implemented yet")
+                    _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
 
-            drivingFeatures = []
-            for df in drivingFeatures_formatted:
-                drivingFeatures.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
+                _featuresWithDescription = self.client.generalizeFeatureBinary(problem, behavioral, non_behavioral, _all_archs, 
+                                                                           rootFeatureExpression, nodeFeatureExpression)
+
+            elif inputType == "discrete":
+                raise NotImplementedError()
+                        
+            featuresWithDescription = []
+            
+            for feature in _featuresWithDescription:
+                featuresWithDescription.append({'id':feature.id,
+                    'name':feature.name,
+                    'expression':feature.expression,
+                    'metrics':feature.metrics, 
+                    'complexity':feature.complexity,
+                    'description':feature.description})
                 
         except Exception as e:
             print('Exc in calling getMarginalDrivingFeatures(): '+str(e))
 
-        return drivingFeatures
+        return featuresWithDescription
 
-
-    def runAutomatedLocalSearch(self, problem, input_type, behavioral, non_behavioral, all_archs,
-                                support_threshold, confidence_threshold, lift_threshold):
+    def simplifyFeatureExpression(self, problem, expression):
         try:
-            print('runAutomatedLocalSearch')
-            print(
-                'b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(all_archs)))
-
-            archs_formatted = []
-            if input_type == "binary":
-                for arch in all_archs:
-                    archs_formatted.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                drivingFeatures_formatted = self.client.runAutomatedLocalSearchBinary(problem,
-                                                                                      behavioral,
-                                                                                      non_behavioral,
-                                                                                      archs_formatted,
-                                                                                      support_threshold,
-                                                                                      confidence_threshold,
-                                                                                      lift_threshold)
-
-            elif input_type == "discrete":
-                for arch in all_archs:
-                    archs_formatted.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                drivingFeatures_formatted = self.client.runAutomatedLocalSearchDiscrete(problem,
-                                                                                        behavioral,
-                                                                                        non_behavioral,
-                                                                                        archs_formatted,
-                                                                                        support_threshold,
-                                                                                        confidence_threshold,
-                                                                                        lift_threshold)
-
-            drivingFeatures = []
-            for df in drivingFeatures_formatted:
-                drivingFeatures.append(
-                    {'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics,
-                     'complexity': df.complexity})
-
+            simplified_feature = self.client.simplifyFeatureExpression(problem, expression)
         except Exception as e:
-            print('Exc in calling getMarginalDrivingFeatures(): ' + str(e))
+            print('Exc in calling simplifyFeature(): '+str(e))
 
-        return drivingFeatures
+        return simplified_feature
 
     def setProblemParameters(self, problem, params):
         try:
             if problem == "ClimateCentric":
-                pass
+                entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
+                self.client.setAssigningProblemEntities(problem, entities)
 
             else:
-                raise ValueError("Unsupported problem formulation: {0}".format(problem))
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
         except Exception as e:
-            print('Exc in calling setProblemParameters(): '+str(e))
+            print('Exc in calling setProblemParameters(): ' + str(e))
+
 
     def getProblemParameters(self, problem):
         params = None
         try:
             if problem == "ClimateCentric":
-                params_ = self.client.getAssigningProblemParameters(problem)
+                params_ = self.client.getAssigningProblemEntities(problem)
                 params = {}
-                params['orbitList'] = params_.orbitList
-                params['instrumentList'] = params_.instrumentList
+                params['leftSet'] = params_.leftSet
+                params['rightSet'] = params_.rightSet
+                
             else:
-                raise ValueError("Unsupported problem formulation: {0}".format(problem))
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
         except Exception as e:
             print('Exc in calling getProblemParameters(): '+str(e))
 
         return params
 
-    def getTaxonomicScheme(self, problem, params):
-        scheme = None
+    def setProblemGeneralizedConcepts(self, problem, params):
+
         try:
             if problem == "ClimateCentric":
-                params = AssigningProblemParameters(params["orbitList"], params["instrumentList"])
-                scheme_ = self.client.getAssigningProblemTaxonomicScheme(problem, params)
-                scheme = {}
-                scheme['instanceMap'] = scheme_.instanceMap
-                scheme['superclassMap'] = scheme_.superclassMap
+
+                orbit_generalized_concepts = []
+                instrument_generalized_concepts = []
+
+                for concept in params['orbit_extended_list']:
+                    if concept in params['orbit_list']:
+                        pass
+                    else:
+                        orbit_generalized_concepts.append(concept)
+
+                for concept in params['instrument_extended_list']:
+                    if concept in params['instrument_list']:
+                        pass
+                    else:
+                        instrument_generalized_concepts.append(concept)
+
+                entities = AssigningProblemEntities(instrument_generalized_concepts, orbit_generalized_concepts)
+                self.client.setAssigningProblemGeneralizedConcepts(problem, entities)
+
             else:
-                raise ValueError("Unsupported problem formulation: {0}".format(problem))
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
         except Exception as e:
-            print('Exc in calling getTaxonomicScheme(): ' + str(e))
+            print('Exc in calling setProblemGeneralizedConcepts(): ' + str(e))
 
-        return scheme
+    def getProblemConceptHierarchy(self, problem, params):
+        conceptHierarchy = None
+        try:
+            if problem == "ClimateCentric":
+                params = AssigningProblemEntities(params["instrument_list"],params["orbit_list"])
+                conceptHierarhcy_ = self.client.getAssigningProblemConceptHierarchy(problem, params)
+                conceptHierarchy = {}
+                conceptHierarchy['instanceMap'] = conceptHierarhcy_.instanceMap
+                conceptHierarchy['superclassMap'] = conceptHierarhcy_.superclassMap
+            else:
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
+
+        except Exception as e:
+            print('Exc in calling getProblemConceptHierarchy(): ' + str(e))
+
+        return conceptHierarchy
 
     def convertToDNF(self, expression):
         try:
@@ -299,8 +290,8 @@ class DataMiningClient():
 
     def computeTypicality(self, inputs, expression):
         try:
-            arch_formatted = BinaryInputArchitecture(0, inputs, [])
-            typicality = self.client.computeAlgebraicTypicality(arch_formatted, expression)
+            _arch = BinaryInputArchitecture(0, inputs, [])
+            typicality = self.client.computeAlgebraicTypicality(_arch, expression)
 
         except Exception as e:
             print('Exc in calling computeComplexity(): '+str(e))
