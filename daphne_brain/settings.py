@@ -195,7 +195,7 @@ EDL_DATABASE = {
 
 # Email
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 DEFAULT_FROM_EMAIL = 'Daphne Admin <daphne@selva-research.com>'
 
