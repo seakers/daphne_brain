@@ -1,7 +1,7 @@
 import json
 import os
 
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from rest_framework.views import APIView
@@ -122,6 +122,24 @@ class Register(APIView):
         return Response({
             'status': 'registered'
         })
+
+
+class ResetPassword(APIView):
+    """
+    Send a reset password email
+    """
+    def post(self, request, format=None):
+        password_reset_form = PasswordResetForm(request.POST)
+        if password_reset_form.is_valid():
+            password_reset_form.save(request=request)
+
+            return Response({
+                'status': 'email sent'
+            })
+        else:
+            return Response({
+                'status': 'bad email'
+            })
 
 
 class CheckStatus(APIView):
