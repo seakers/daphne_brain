@@ -19,6 +19,8 @@ import os
 import json
 import csv
 
+from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, ContinuousInputArchitecture, Feature, AssigningProblemEntities, FlattenedConceptHierarchy
+
 # Print all paths included in sys.path
 # from pprint import pprint as p
 # p(sys.path)
@@ -38,7 +40,7 @@ class GetDrivingFeatures(APIView):
             self.DataMiningClient.startConnection()
 
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            
+
             # Get threshold values for the metrics
             supp = float(request.POST['supp'])
             conf = float(request.POST['conf'])
@@ -68,14 +70,31 @@ class GetDrivingFeatures(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeatures(problem, inputType, behavioral, non_behavioral,
-                                                                       dataset, supp, conf, lift)
 
-            output = drivingFeatures
+            print('getDrivingFeatures() called ... ')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
+        
+            _archs = []
+            if inputType == "binary":
+                for arch in dataset:
+                    _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getDrivingFeaturesBinary(problem, behavioral, non_behavioral, _archs, supp, conf, lift)
+
+            elif inputType == "discrete":
+                for arch in dataset:
+                    _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, _archs, supp, conf, lift)
+
+            else:
+                raise NotImplementedError("Unsupported input type: {0}".format(inputType))
+
+            features = []
+            for df in _features:
+                features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics, 'complexity': df.complexity})
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response(output)
+            return Response(features)
         
         except Exception as detail:
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
@@ -120,12 +139,39 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeaturesEpsilonMOEA(problem, inputType, behavioral, non_behavioral, dataset)
-            output = drivingFeatures
+            print('getDrivingFeaturesEpsilonMOEA() called ... ')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
+        
+            _archs = []
+            if inputType == "binary":
+                for arch in dataset:
+                    _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(problem, behavioral, non_behavioral, _archs)
+
+            elif inputType == "discrete":
+                for arch in dataset:
+                    _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEADiscrete(problem, behavioral, non_behavioral, _archs)
+
+            elif inputType == "continuous":
+                for arch in dataset:
+                    inputs = []
+                    for i in arch['inputs']:
+                        if i is None:
+                            pass
+                        else:
+                            inputs.append(float(i))
+                            
+                    _archs.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, _archs)
+
+            features = []
+            for df in _features:
+                features.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response(output)
+            return Response(features)
         
         except Exception as detail:
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
@@ -172,13 +218,25 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getDrivingFeaturesWithGeneralization(problem, inputType, behavioral, non_behavioral, dataset)
+            print('getDrivingFeaturesWithGeneralization() called ...')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
+            
+            _all_archs = []
+            if inputType == "binary":
+                for arch in dataset:
+                    _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getDrivingFeaturesWithGeneralizationBinary(problem, behavioral, non_behavioral, _all_archs)
 
-            output = drivingFeatures
+            elif inputType == "discrete":
+                raise NotImplementedError("Data mining with generalization not implemented for discrete input problem.")
+
+            features = []
+            for df in _features:
+                features.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics})
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response(output)
+            return Response(features)
         
         except Exception as detail:
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
@@ -218,13 +276,30 @@ class GetMarginalDrivingFeatures(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.getMarginalDrivingFeatures(problem, inputType, behavioral,non_behavioral,dataset,
-                                                                               featureExpression,logicalConnective, supp,conf,lift)            
-            output = drivingFeatures
+            print('getMarginalDrivingFeatures() called ... ')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
+                
+            _all_archs = []
+            if inputType == "binary":
+                for arch in dataset:
+                    _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, _all_archs, 
 
+                                                                           featureExpression, logicalConnective, supp, conf, lift)
+
+            elif inputType == "discrete":
+                for arch in dataset:
+                    _all_archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = self.DataMiningClient.client.getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, _all_archs, 
+                                                                           featureExpression, logicalConnective, supp, conf, lift)
+                        
+            features = []
+            for df in _features:
+                features.append({'id':df.id,'name':df.name,'expression':df.expression,'metrics':df.metrics, 'complexity':df.complexity})
+                    
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response(output)
+            return Response(features)
         
         except Exception as detail:
             logger.exception('Exception in calling GetMarginalDrivingFeatures(): ' + detail)
@@ -259,16 +334,33 @@ class GeneralizeFeature(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            drivingFeatures = self.DataMiningClient.generalizeFeature(problem, inputType, 
-                                                                behavioral,non_behavioral,
-                                                                dataset,
-                                                                rootFeatureExpression, nodeFeatureExpression)
+            print('generalizeFeature() called ... ')
+            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
 
-            output = drivingFeatures
+            _all_archs = []
+            if inputType == "binary":
+                for arch in dataset:
+                    _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+
+                _featuresWithDescription = self.client.generalizeFeatureBinary(problem, behavioral, non_behavioral, _all_archs, 
+                                                                           rootFeatureExpression, nodeFeatureExpression)
+
+            elif inputType == "discrete":
+                raise NotImplementedError()
+                        
+            featuresWithDescription = []
+            
+            for feature in _featuresWithDescription:
+                featuresWithDescription.append({'id':feature.id,
+                    'name':feature.name,
+                    'expression':feature.expression,
+                    'metrics':feature.metrics, 
+                    'complexity':feature.complexity,
+                    'description':feature.description})
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response(output)
+            return Response(featuresWithDescription)
         
         except Exception as detail:
             logger.exception('Exception in getDrivingFeatures: ' + detail)
@@ -292,8 +384,7 @@ class SimplifyFeatureExpression(APIView):
 
             # Get the expression
             expression = request.POST['expression']
-
-            simplified_expression = self.DataMiningClient.simplifyFeatureExpression(problem, expression)
+            simplified_feature = self.DataMiningClient.client.simplifyFeatureExpression(problem, expression)
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -427,7 +518,7 @@ class ConvertToDNF(APIView):
             
             # Get the expression
             expression = request.POST['expression']
-            dnf_expression = self.DataMiningClient.convertToDNF(expression)
+            dnf_expression = self.DataMiningClient.client.convertToDNF(expression)
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -452,7 +543,7 @@ class ConvertToCNF(APIView):
             
             # Get the expression
             expression = request.POST['expression']
-            cnf_expression = self.DataMiningClient.convertToCNF(expression)
+            cnf_expression = self.DataMiningClient.client.convertToCNF(expression)
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -487,7 +578,9 @@ class ComputeTypicality(APIView):
 
             # Get the expression
             expression = request.POST['expression']
-            typicality = self.DataMiningClient.computeTypicality(inputs, expression)
+
+            _arch = BinaryInputArchitecture(0, inputs, [])
+            typicality = self.DataMiningClient.client.computeAlgebraicTypicality(_arch, expression)
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -512,7 +605,7 @@ class ComputeComplexity(APIView):
             
             # Get the expression
             expression = request.POST['expression']
-            complexity = self.DataMiningClient.computeComplexity(expression)
+            complexity = self.DataMiningClient.client.computeComplexity(expression)
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -539,7 +632,7 @@ class ComputeComplexityOfFeatures(APIView):
             expressions = request.POST['expressions']
             expressions = json.loads(expressions)
 
-            complexity = self.DataMiningClient.computeComplexityOfFeatures(expressions)
+            complexity = self.DataMiningClient.client.computeComplexityOfFeatures(expressions)
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -563,7 +656,16 @@ class GetProblemParameters(APIView):
             self.DataMiningClient.startConnection()
             
             problem = request.POST['problem']
-            params = self.DataMiningClient.getProblemParameters(problem)
+
+            params = None
+            if problem == "ClimateCentric":
+                params_ = self.DataMiningClient.client.getAssigningProblemEntities(problem)
+                params = {}
+                params['leftSet'] = params_.leftSet
+                params['rightSet'] = params_.rightSet
+                
+            else:
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -588,7 +690,12 @@ class SetProblemParameters(APIView):
             problem = request.POST['problem']
             params = json.loads(request.POST['params'])
 
-            self.DataMiningClient.setProblemParameters(problem, params)
+            if problem == "ClimateCentric":
+                entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
+                self.DataMiningClient.client.setAssigningProblemEntities(problem, entities)
+
+            else:
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -612,7 +719,26 @@ class SetProblemGeneralizedConcepts(APIView):
             problem = request.POST['problem']
             params = json.loads(request.POST['params'])
 
-            self.DataMiningClient.setProblemGeneralizedConcepts(problem, params)
+            if problem == "ClimateCentric":
+                orbit_generalized_concepts = []
+                instrument_generalized_concepts = []
+
+                for concept in params['orbit_extended_list']:
+                    if concept in params['orbit_list']:
+                        pass
+                    else:
+                        orbit_generalized_concepts.append(concept)
+
+                for concept in params['instrument_extended_list']:
+                    if concept in params['instrument_list']:
+                        pass
+                    else:
+                        instrument_generalized_concepts.append(concept)
+
+                entities = AssigningProblemEntities(instrument_generalized_concepts, orbit_generalized_concepts)
+                self.DataMiningClient.client.setAssigningProblemGeneralizedConcepts(problem, entities)
+            else:
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
@@ -636,7 +762,15 @@ class getProblemConceptHierarchy(APIView):
             problem = request.POST['problem']
             params = json.loads(request.POST['params'])
 
-            conceptHierarchy = self.DataMiningClient.getProblemConceptHierarchy(problem, params)
+            conceptHierarchy = None
+            if problem == "ClimateCentric":
+                params = AssigningProblemEntities(params["instrument_list"],params["orbit_list"])
+                conceptHierarhcy_ = self.DataMiningClient.client.getAssigningProblemConceptHierarchy(problem, params)
+                conceptHierarchy = {}
+                conceptHierarchy['instanceMap'] = conceptHierarhcy_.instanceMap
+                conceptHierarchy['superclassMap'] = conceptHierarhcy_.superclassMap
+            else:
+                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
