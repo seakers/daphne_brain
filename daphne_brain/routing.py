@@ -6,6 +6,7 @@ from daphne_API.consumers import DaphneConsumer
 from anomaly_API.SARIMAX_AD import SARIMAX_AD
 from anomaly_API.KNN import adaptiveKNN
 from anomaly_API.I_Forest import iForest
+from data_mining_API.consumers import DataMiningConsumer
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties
@@ -25,7 +26,8 @@ application = ProtocolTypeRouter({
             path('api/experiment', ExperimentConsumer),
             path('api/anomaly/SARIMAX_AD', SARIMAX_AD),
             path('api/anomaly/adaptiveKNN', adaptiveKNN),
-            path('api/anomaly/iForest', iForest)
+            path('api/anomaly/iForest', iForest),
+            path('api/ifeed/data-mining', DataMiningConsumer),
         ]),
     ),
 

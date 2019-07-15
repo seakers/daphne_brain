@@ -15,11 +15,8 @@ from data_mining_API.interface import DataMiningInterface
 from config.loader import ConfigurationLoader
 config = ConfigurationLoader().load()
 
-
 class DataMiningClient():
-    
     def __init__(self):
-        
         port = config['data-mining']['port']
 
         # Make socket

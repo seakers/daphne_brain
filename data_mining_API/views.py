@@ -1,4 +1,5 @@
 import logging
+import threading
 
 # Get an instance of a logger
 from auth_API.helpers import get_or_create_user_information
@@ -6,12 +7,14 @@ from daphne_API.models import Design
 
 logger = logging.getLogger('data-mining')
 
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+import pika
 
 import numpy as np
 import sys
@@ -27,10 +30,8 @@ from data_mining_API.interface.ttypes import BinaryInputArchitecture, DiscreteIn
 
 from data_mining_API.api import DataMiningClient
 
-
 # Create your views here.
 class GetDrivingFeatures(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
 
@@ -103,7 +104,6 @@ class GetDrivingFeatures(APIView):
 
 
 class GetDrivingFeaturesEpsilonMOEA(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
 
@@ -180,7 +180,6 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
 
 class GetDrivingFeaturesWithGeneralization(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -243,9 +242,7 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
-
 class GetMarginalDrivingFeatures(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -306,7 +303,6 @@ class GetMarginalDrivingFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
-
 class GeneralizeFeature(APIView):
 
     def __init__(self):
@@ -314,11 +310,58 @@ class GeneralizeFeature(APIView):
         pass
 
     def post(self, request, format=None):
-        
+        # Start listening for redis inputs to share through websockets
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        channel = connection.channel()
+
+        sessionKey = request.session.session_key
+        print("Session key: {0}".format(sessionKey))
+
+        channel.queue_declare(queue=sessionKey + '_generalization')
+        channel.queue_purge(queue=sessionKey + '_generalization')
+
+        def callback(ch, method, properties, body):
+            thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            message = json.loads(body)
+
+            if message['type'] == 'search_started':
+                # Look for channel to send back to user
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                {
+                    'type': 'search.started',
+                })
+
+            if message['type'] == 'search_finished':
+                print('Ending the thread!')
+                channel.stop_consuming()
+
+                messageBack = dict()
+                messageBack['type'] = 'search.finished'
+
+                if 'features' in message:
+                    if message['features'] != None and len(message['features']) != 0: 
+                        print('Generalized features returned')
+
+                        messageBack['features'] = message['features']
+
+                # Look for channel to send back to user
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.send)(thread_user_info.channel_name, messageBack)
+
+
+        channel.basic_consume(callback,
+                              queue=sessionKey + '_generalization',
+                              no_ack=True)
+
+        thread = threading.Thread(target=channel.start_consuming)
+        thread.start()
+
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
 
+            # Get user information
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             
             # Get selected arch id's
@@ -329,6 +372,7 @@ class GeneralizeFeature(APIView):
             nodeFeatureExpression = request.POST['nodeFeatureExpression']    
 
             # Load architecture data from the session info
+            sessionKey = request.session.session_key
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
             problem = request.POST['problem']
@@ -342,7 +386,7 @@ class GeneralizeFeature(APIView):
                 for arch in dataset:
                     _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
 
-                _featuresWithDescription = self.client.generalizeFeatureBinary(problem, behavioral, non_behavioral, _all_archs, 
+                _featuresWithDescription = self.DataMiningClient.client.generalizeFeatureBinary(problem, sessionKey, behavioral, non_behavioral, _all_archs, 
                                                                            rootFeatureExpression, nodeFeatureExpression)
 
             elif inputType == "discrete":
@@ -363,7 +407,7 @@ class GeneralizeFeature(APIView):
             return Response(featuresWithDescription)
         
         except Exception as detail:
-            logger.exception('Exception in getDrivingFeatures: ' + detail)
+            logger.exception('Exception in getDrivingFeatures')
             self.DataMiningClient.endConnection()
             return Response('')
 
@@ -506,7 +550,6 @@ class GetCluster(APIView):
 
 
 class ConvertToDNF(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -531,7 +574,6 @@ class ConvertToDNF(APIView):
 
 
 class ConvertToCNF(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -556,7 +598,6 @@ class ConvertToCNF(APIView):
 
 
 class ComputeTypicality(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -593,7 +634,6 @@ class ComputeTypicality(APIView):
 
 
 class ComputeComplexity(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -618,7 +658,6 @@ class ComputeComplexity(APIView):
 
 
 class ComputeComplexityOfFeatures(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -645,7 +684,6 @@ class ComputeComplexityOfFeatures(APIView):
 
 
 class GetProblemParameters(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -678,7 +716,6 @@ class GetProblemParameters(APIView):
 
 
 class SetProblemParameters(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
 
@@ -686,7 +723,7 @@ class SetProblemParameters(APIView):
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
-            
+
             problem = request.POST['problem']
             params = json.loads(request.POST['params'])
 
@@ -707,7 +744,6 @@ class SetProblemParameters(APIView):
             return Response('')
 
 class SetProblemGeneralizedConcepts(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
 
@@ -750,7 +786,6 @@ class SetProblemGeneralizedConcepts(APIView):
             return Response('')
 
 class getProblemConceptHierarchy(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
 
@@ -794,7 +829,6 @@ def booleanArray2booleanString(booleanArray):
 
 
 class ImportTargetSelection(APIView):
-
     def post(self, request, format=None):
         try:
             filename = request.POST['filename']
@@ -825,7 +859,6 @@ class ImportTargetSelection(APIView):
 
 
 class ExportTargetSelection(APIView):
-
     def post(self, request, format=None):
         try:
             problem = request.POST['problem']
@@ -909,9 +942,7 @@ class ExportTargetSelection(APIView):
             logger.exception('Exception in exporting target selection')
             return Response('')
 
-
 class ImportFeatureData(APIView):
-
     def post(self, request, format=None):
         try:
             # Set the path of the file containing data
@@ -967,3 +998,29 @@ class ImportFeatureData(APIView):
         except Exception:
             logger.exception('Exception in importing feature data')
             return Response('')
+
+class StopSearch(APIView):
+    def __init__(self):
+        self.DataMiningClient = DataMiningClient()
+
+    def post(self, request, format=None):
+        try:
+            # Start connection with DataMiningClient
+            self.DataMiningClient.startConnection()
+
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            print("session key: {0}".format(request.session.session_key))
+
+            # Stop the generalization search
+            self.DataMiningClient.client.stopSearch(request.session.session_key)
+
+            # End the connection before return statement
+            self.DataMiningClient.endConnection()
+            return Response('Generalization stopped correctly!')
+
+        except Exception as detail:
+            logger.exception('Exception in StopSearch(): ' + str(detail))
+            self.DataMiningClient.endConnection()
+            return Response('')
+
+
