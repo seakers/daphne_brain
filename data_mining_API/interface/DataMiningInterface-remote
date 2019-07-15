@@ -33,19 +33,20 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getDrivingFeaturesEpsilonMOEADiscrete(string problem,  behavioral,  non_behavioral,  all_archs)')
     print('   getDrivingFeaturesContinuous(string problem,  behavioral,  non_behavioral,  all_archs, double supp, double conf, double lift)')
     print('   getDrivingFeaturesEpsilonMOEAContinuous(string problem,  behavioral,  non_behavioral,  all_archs)')
+    print('   generalizeFeatureBinary(string problem, string session,  behavioral,  non_behavioral,  all_archs, string rootfeatureExpression, string nodeFeatureExpression)')
+    print('   getDrivingFeaturesWithGeneralizationBinary(string problem,  behavioral,  non_behavioral,  all_archs)')
+    print('  string simplifyFeatureExpression(string problem, string expression)')
+    print('  int stopSearch(string session)')
     print('   computeComplexityOfFeatures(string problem,  expressions)')
     print('   computeAlgebraicTypicality(string problem, BinaryInputArchitecture arch, string feature)')
     print('  double computeComplexity(string problem, string expression)')
     print('  string convertToCNF(string expression)')
     print('  string convertToDNF(string expression)')
-    print('   computeAlgebraicTypicalityWithStringInput(string problem, string architecture, string feature)')
-    print('   generalizeFeatureBinary(string problem,  behavioral,  non_behavioral,  all_archs, string rootfeatureExpression, string nodeFeatureExpression)')
-    print('   getDrivingFeaturesWithGeneralizationBinary(string problem,  behavioral,  non_behavioral,  all_archs)')
-    print('  string simplifyFeatureExpression(string problem, string expression)')
     print('  bool setAssigningProblemEntities(string problem, AssigningProblemEntities entities)')
     print('  bool setAssigningProblemGeneralizedConcepts(string problem, AssigningProblemEntities generalizedConcepts)')
     print('  AssigningProblemEntities getAssigningProblemEntities(string problem)')
     print('  FlattenedConceptHierarchy getAssigningProblemConceptHierarchy(string problem, AssigningProblemEntities params)')
+    print('   computeAlgebraicTypicalityWithStringInput(string problem, string architecture, string feature)')
     print('')
     sys.exit(0)
 
@@ -179,6 +180,30 @@ elif cmd == 'getDrivingFeaturesEpsilonMOEAContinuous':
         sys.exit(1)
     pp.pprint(client.getDrivingFeaturesEpsilonMOEAContinuous(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
 
+elif cmd == 'generalizeFeatureBinary':
+    if len(args) != 7:
+        print('generalizeFeatureBinary requires 7 args')
+        sys.exit(1)
+    pp.pprint(client.generalizeFeatureBinary(args[0], args[1], eval(args[2]), eval(args[3]), eval(args[4]), args[5], args[6],))
+
+elif cmd == 'getDrivingFeaturesWithGeneralizationBinary':
+    if len(args) != 4:
+        print('getDrivingFeaturesWithGeneralizationBinary requires 4 args')
+        sys.exit(1)
+    pp.pprint(client.getDrivingFeaturesWithGeneralizationBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
+
+elif cmd == 'simplifyFeatureExpression':
+    if len(args) != 2:
+        print('simplifyFeatureExpression requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.simplifyFeatureExpression(args[0], args[1],))
+
+elif cmd == 'stopSearch':
+    if len(args) != 1:
+        print('stopSearch requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.stopSearch(args[0],))
+
 elif cmd == 'computeComplexityOfFeatures':
     if len(args) != 2:
         print('computeComplexityOfFeatures requires 2 args')
@@ -209,30 +234,6 @@ elif cmd == 'convertToDNF':
         sys.exit(1)
     pp.pprint(client.convertToDNF(args[0],))
 
-elif cmd == 'computeAlgebraicTypicalityWithStringInput':
-    if len(args) != 3:
-        print('computeAlgebraicTypicalityWithStringInput requires 3 args')
-        sys.exit(1)
-    pp.pprint(client.computeAlgebraicTypicalityWithStringInput(args[0], args[1], args[2],))
-
-elif cmd == 'generalizeFeatureBinary':
-    if len(args) != 6:
-        print('generalizeFeatureBinary requires 6 args')
-        sys.exit(1)
-    pp.pprint(client.generalizeFeatureBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4], args[5],))
-
-elif cmd == 'getDrivingFeaturesWithGeneralizationBinary':
-    if len(args) != 4:
-        print('getDrivingFeaturesWithGeneralizationBinary requires 4 args')
-        sys.exit(1)
-    pp.pprint(client.getDrivingFeaturesWithGeneralizationBinary(args[0], eval(args[1]), eval(args[2]), eval(args[3]),))
-
-elif cmd == 'simplifyFeatureExpression':
-    if len(args) != 2:
-        print('simplifyFeatureExpression requires 2 args')
-        sys.exit(1)
-    pp.pprint(client.simplifyFeatureExpression(args[0], args[1],))
-
 elif cmd == 'setAssigningProblemEntities':
     if len(args) != 2:
         print('setAssigningProblemEntities requires 2 args')
@@ -256,6 +257,12 @@ elif cmd == 'getAssigningProblemConceptHierarchy':
         print('getAssigningProblemConceptHierarchy requires 2 args')
         sys.exit(1)
     pp.pprint(client.getAssigningProblemConceptHierarchy(args[0], eval(args[1]),))
+
+elif cmd == 'computeAlgebraicTypicalityWithStringInput':
+    if len(args) != 3:
+        print('computeAlgebraicTypicalityWithStringInput requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.computeAlgebraicTypicalityWithStringInput(args[0], args[1], args[2],))
 
 else:
     print('Unrecognized method %s' % cmd)
