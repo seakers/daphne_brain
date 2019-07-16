@@ -21,7 +21,6 @@ class DataMiningConsumer(JsonWebsocketConsumer):
         Called when the websocket is handshaking as part of initial connection.
         """
         session_key = self.scope['session'].session_key
-        print("session key: {0}".format(session_key))
 
         # Accept the connection
         self.accept()
@@ -35,7 +34,6 @@ class DataMiningConsumer(JsonWebsocketConsumer):
 
         # Add to the group
         self.channel_layer.group_add(hash_key, self.channel_name)
-        print("channel_name: " + self.channel_name)
         self.send(json.dumps({'type': 'ws_connection_successful'}))
 
     def receive(self, text_data):
@@ -64,6 +62,10 @@ class DataMiningConsumer(JsonWebsocketConsumer):
 
         print("ws message received")
         print(content)
+
+    def problem_entities(self, event):
+        # print(event)
+        self.send(json.dumps(event))
 
     def search_started(self, event):
         print(event)

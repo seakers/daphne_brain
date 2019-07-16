@@ -35,24 +35,23 @@ class Iface(object):
         """
         pass
 
-    def getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
+    def getMarginalDrivingFeaturesBinary(self, session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
          - featureExpression
          - logical_connective
-         - supp
-         - conf
-         - lift
         """
         pass
 
-    def getDrivingFeaturesEpsilonMOEABinary(self, problem, behavioral, non_behavioral, all_archs):
+    def getDrivingFeaturesEpsilonMOEABinary(self, session, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
@@ -73,24 +72,23 @@ class Iface(object):
         """
         pass
 
-    def getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
+    def getMarginalDrivingFeaturesDiscrete(self, session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
          - featureExpression
          - logical_connective
-         - supp
-         - conf
-         - lift
         """
         pass
 
-    def getDrivingFeaturesEpsilonMOEADiscrete(self, problem, behavioral, non_behavioral, all_archs):
+    def getDrivingFeaturesEpsilonMOEADiscrete(self, session, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
@@ -121,11 +119,11 @@ class Iface(object):
         """
         pass
 
-    def generalizeFeatureBinary(self, problem, session, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression):
+    def generalizeFeatureBinary(self, session, problem, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression):
         """
         Parameters:
-         - problem
          - session
+         - problem
          - behavioral
          - non_behavioral
          - all_archs
@@ -134,9 +132,10 @@ class Iface(object):
         """
         pass
 
-    def getDrivingFeaturesWithGeneralizationBinary(self, problem, behavioral, non_behavioral, all_archs):
+    def getDrivingFeaturesWithGeneralizationBinary(self, session, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
@@ -144,9 +143,10 @@ class Iface(object):
         """
         pass
 
-    def simplifyFeatureExpression(self, problem, expression):
+    def simplifyFeatureExpression(self, session, problem, expression):
         """
         Parameters:
+         - session
          - problem
          - expression
         """
@@ -159,10 +159,9 @@ class Iface(object):
         """
         pass
 
-    def computeComplexityOfFeatures(self, problem, expressions):
+    def computeComplexityOfFeatures(self, expressions):
         """
         Parameters:
-         - problem
          - expressions
         """
         pass
@@ -176,10 +175,9 @@ class Iface(object):
         """
         pass
 
-    def computeComplexity(self, problem, expression):
+    def computeComplexity(self, expression):
         """
         Parameters:
-         - problem
          - expression
         """
         pass
@@ -198,32 +196,36 @@ class Iface(object):
         """
         pass
 
-    def setAssigningProblemEntities(self, problem, entities):
+    def setAssigningProblemEntities(self, session, problem, entities):
         """
         Parameters:
+         - session
          - problem
          - entities
         """
         pass
 
-    def setAssigningProblemGeneralizedConcepts(self, problem, generalizedConcepts):
+    def setAssigningProblemGeneralizedConcepts(self, session, problem, generalizedConcepts):
         """
         Parameters:
+         - session
          - problem
          - generalizedConcepts
         """
         pass
 
-    def getAssigningProblemEntities(self, problem):
+    def getAssigningProblemEntities(self, session, problem):
         """
         Parameters:
+         - session
          - problem
         """
         pass
 
-    def getAssigningProblemConceptHierarchy(self, problem, params):
+    def getAssigningProblemConceptHierarchy(self, session, problem, params):
         """
         Parameters:
+         - session
          - problem
          - params
         """
@@ -313,34 +315,30 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesBinary failed: unknown result")
 
-    def getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
+    def getMarginalDrivingFeaturesBinary(self, session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
          - featureExpression
          - logical_connective
-         - supp
-         - conf
-         - lift
         """
-        self.send_getMarginalDrivingFeaturesBinary(problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift)
+        self.send_getMarginalDrivingFeaturesBinary(session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective)
         return self.recv_getMarginalDrivingFeaturesBinary()
 
-    def send_getMarginalDrivingFeaturesBinary(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
+    def send_getMarginalDrivingFeaturesBinary(self, session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective):
         self._oprot.writeMessageBegin('getMarginalDrivingFeaturesBinary', TMessageType.CALL, self._seqid)
         args = getMarginalDrivingFeaturesBinary_args()
+        args.session = session
         args.problem = problem
         args.behavioral = behavioral
         args.non_behavioral = non_behavioral
         args.all_archs = all_archs
         args.featureExpression = featureExpression
         args.logical_connective = logical_connective
-        args.supp = supp
-        args.conf = conf
-        args.lift = lift
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -360,20 +358,22 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMarginalDrivingFeaturesBinary failed: unknown result")
 
-    def getDrivingFeaturesEpsilonMOEABinary(self, problem, behavioral, non_behavioral, all_archs):
+    def getDrivingFeaturesEpsilonMOEABinary(self, session, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
         """
-        self.send_getDrivingFeaturesEpsilonMOEABinary(problem, behavioral, non_behavioral, all_archs)
+        self.send_getDrivingFeaturesEpsilonMOEABinary(session, problem, behavioral, non_behavioral, all_archs)
         return self.recv_getDrivingFeaturesEpsilonMOEABinary()
 
-    def send_getDrivingFeaturesEpsilonMOEABinary(self, problem, behavioral, non_behavioral, all_archs):
+    def send_getDrivingFeaturesEpsilonMOEABinary(self, session, problem, behavioral, non_behavioral, all_archs):
         self._oprot.writeMessageBegin('getDrivingFeaturesEpsilonMOEABinary', TMessageType.CALL, self._seqid)
         args = getDrivingFeaturesEpsilonMOEABinary_args()
+        args.session = session
         args.problem = problem
         args.behavioral = behavioral
         args.non_behavioral = non_behavioral
@@ -440,34 +440,30 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesDiscrete failed: unknown result")
 
-    def getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
+    def getMarginalDrivingFeaturesDiscrete(self, session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
          - featureExpression
          - logical_connective
-         - supp
-         - conf
-         - lift
         """
-        self.send_getMarginalDrivingFeaturesDiscrete(problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift)
+        self.send_getMarginalDrivingFeaturesDiscrete(session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective)
         return self.recv_getMarginalDrivingFeaturesDiscrete()
 
-    def send_getMarginalDrivingFeaturesDiscrete(self, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective, supp, conf, lift):
+    def send_getMarginalDrivingFeaturesDiscrete(self, session, problem, behavioral, non_behavioral, all_archs, featureExpression, logical_connective):
         self._oprot.writeMessageBegin('getMarginalDrivingFeaturesDiscrete', TMessageType.CALL, self._seqid)
         args = getMarginalDrivingFeaturesDiscrete_args()
+        args.session = session
         args.problem = problem
         args.behavioral = behavioral
         args.non_behavioral = non_behavioral
         args.all_archs = all_archs
         args.featureExpression = featureExpression
         args.logical_connective = logical_connective
-        args.supp = supp
-        args.conf = conf
-        args.lift = lift
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -487,20 +483,22 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getMarginalDrivingFeaturesDiscrete failed: unknown result")
 
-    def getDrivingFeaturesEpsilonMOEADiscrete(self, problem, behavioral, non_behavioral, all_archs):
+    def getDrivingFeaturesEpsilonMOEADiscrete(self, session, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
         """
-        self.send_getDrivingFeaturesEpsilonMOEADiscrete(problem, behavioral, non_behavioral, all_archs)
+        self.send_getDrivingFeaturesEpsilonMOEADiscrete(session, problem, behavioral, non_behavioral, all_archs)
         return self.recv_getDrivingFeaturesEpsilonMOEADiscrete()
 
-    def send_getDrivingFeaturesEpsilonMOEADiscrete(self, problem, behavioral, non_behavioral, all_archs):
+    def send_getDrivingFeaturesEpsilonMOEADiscrete(self, session, problem, behavioral, non_behavioral, all_archs):
         self._oprot.writeMessageBegin('getDrivingFeaturesEpsilonMOEADiscrete', TMessageType.CALL, self._seqid)
         args = getDrivingFeaturesEpsilonMOEADiscrete_args()
+        args.session = session
         args.problem = problem
         args.behavioral = behavioral
         args.non_behavioral = non_behavioral
@@ -604,25 +602,25 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesEpsilonMOEAContinuous failed: unknown result")
 
-    def generalizeFeatureBinary(self, problem, session, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression):
+    def generalizeFeatureBinary(self, session, problem, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression):
         """
         Parameters:
-         - problem
          - session
+         - problem
          - behavioral
          - non_behavioral
          - all_archs
          - rootfeatureExpression
          - nodeFeatureExpression
         """
-        self.send_generalizeFeatureBinary(problem, session, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression)
+        self.send_generalizeFeatureBinary(session, problem, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression)
         return self.recv_generalizeFeatureBinary()
 
-    def send_generalizeFeatureBinary(self, problem, session, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression):
+    def send_generalizeFeatureBinary(self, session, problem, behavioral, non_behavioral, all_archs, rootfeatureExpression, nodeFeatureExpression):
         self._oprot.writeMessageBegin('generalizeFeatureBinary', TMessageType.CALL, self._seqid)
         args = generalizeFeatureBinary_args()
-        args.problem = problem
         args.session = session
+        args.problem = problem
         args.behavioral = behavioral
         args.non_behavioral = non_behavioral
         args.all_archs = all_archs
@@ -647,20 +645,22 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "generalizeFeatureBinary failed: unknown result")
 
-    def getDrivingFeaturesWithGeneralizationBinary(self, problem, behavioral, non_behavioral, all_archs):
+    def getDrivingFeaturesWithGeneralizationBinary(self, session, problem, behavioral, non_behavioral, all_archs):
         """
         Parameters:
+         - session
          - problem
          - behavioral
          - non_behavioral
          - all_archs
         """
-        self.send_getDrivingFeaturesWithGeneralizationBinary(problem, behavioral, non_behavioral, all_archs)
+        self.send_getDrivingFeaturesWithGeneralizationBinary(session, problem, behavioral, non_behavioral, all_archs)
         return self.recv_getDrivingFeaturesWithGeneralizationBinary()
 
-    def send_getDrivingFeaturesWithGeneralizationBinary(self, problem, behavioral, non_behavioral, all_archs):
+    def send_getDrivingFeaturesWithGeneralizationBinary(self, session, problem, behavioral, non_behavioral, all_archs):
         self._oprot.writeMessageBegin('getDrivingFeaturesWithGeneralizationBinary', TMessageType.CALL, self._seqid)
         args = getDrivingFeaturesWithGeneralizationBinary_args()
+        args.session = session
         args.problem = problem
         args.behavioral = behavioral
         args.non_behavioral = non_behavioral
@@ -684,18 +684,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getDrivingFeaturesWithGeneralizationBinary failed: unknown result")
 
-    def simplifyFeatureExpression(self, problem, expression):
+    def simplifyFeatureExpression(self, session, problem, expression):
         """
         Parameters:
+         - session
          - problem
          - expression
         """
-        self.send_simplifyFeatureExpression(problem, expression)
+        self.send_simplifyFeatureExpression(session, problem, expression)
         return self.recv_simplifyFeatureExpression()
 
-    def send_simplifyFeatureExpression(self, problem, expression):
+    def send_simplifyFeatureExpression(self, session, problem, expression):
         self._oprot.writeMessageBegin('simplifyFeatureExpression', TMessageType.CALL, self._seqid)
         args = simplifyFeatureExpression_args()
+        args.session = session
         args.problem = problem
         args.expression = expression
         args.write(self._oprot)
@@ -748,19 +750,17 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "stopSearch failed: unknown result")
 
-    def computeComplexityOfFeatures(self, problem, expressions):
+    def computeComplexityOfFeatures(self, expressions):
         """
         Parameters:
-         - problem
          - expressions
         """
-        self.send_computeComplexityOfFeatures(problem, expressions)
+        self.send_computeComplexityOfFeatures(expressions)
         return self.recv_computeComplexityOfFeatures()
 
-    def send_computeComplexityOfFeatures(self, problem, expressions):
+    def send_computeComplexityOfFeatures(self, expressions):
         self._oprot.writeMessageBegin('computeComplexityOfFeatures', TMessageType.CALL, self._seqid)
         args = computeComplexityOfFeatures_args()
-        args.problem = problem
         args.expressions = expressions
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -816,19 +816,17 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "computeAlgebraicTypicality failed: unknown result")
 
-    def computeComplexity(self, problem, expression):
+    def computeComplexity(self, expression):
         """
         Parameters:
-         - problem
          - expression
         """
-        self.send_computeComplexity(problem, expression)
+        self.send_computeComplexity(expression)
         return self.recv_computeComplexity()
 
-    def send_computeComplexity(self, problem, expression):
+    def send_computeComplexity(self, expression):
         self._oprot.writeMessageBegin('computeComplexity', TMessageType.CALL, self._seqid)
         args = computeComplexity_args()
-        args.problem = problem
         args.expression = expression
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -911,18 +909,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "convertToDNF failed: unknown result")
 
-    def setAssigningProblemEntities(self, problem, entities):
+    def setAssigningProblemEntities(self, session, problem, entities):
         """
         Parameters:
+         - session
          - problem
          - entities
         """
-        self.send_setAssigningProblemEntities(problem, entities)
+        self.send_setAssigningProblemEntities(session, problem, entities)
         return self.recv_setAssigningProblemEntities()
 
-    def send_setAssigningProblemEntities(self, problem, entities):
+    def send_setAssigningProblemEntities(self, session, problem, entities):
         self._oprot.writeMessageBegin('setAssigningProblemEntities', TMessageType.CALL, self._seqid)
         args = setAssigningProblemEntities_args()
+        args.session = session
         args.problem = problem
         args.entities = entities
         args.write(self._oprot)
@@ -944,18 +944,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "setAssigningProblemEntities failed: unknown result")
 
-    def setAssigningProblemGeneralizedConcepts(self, problem, generalizedConcepts):
+    def setAssigningProblemGeneralizedConcepts(self, session, problem, generalizedConcepts):
         """
         Parameters:
+         - session
          - problem
          - generalizedConcepts
         """
-        self.send_setAssigningProblemGeneralizedConcepts(problem, generalizedConcepts)
+        self.send_setAssigningProblemGeneralizedConcepts(session, problem, generalizedConcepts)
         return self.recv_setAssigningProblemGeneralizedConcepts()
 
-    def send_setAssigningProblemGeneralizedConcepts(self, problem, generalizedConcepts):
+    def send_setAssigningProblemGeneralizedConcepts(self, session, problem, generalizedConcepts):
         self._oprot.writeMessageBegin('setAssigningProblemGeneralizedConcepts', TMessageType.CALL, self._seqid)
         args = setAssigningProblemGeneralizedConcepts_args()
+        args.session = session
         args.problem = problem
         args.generalizedConcepts = generalizedConcepts
         args.write(self._oprot)
@@ -977,17 +979,19 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "setAssigningProblemGeneralizedConcepts failed: unknown result")
 
-    def getAssigningProblemEntities(self, problem):
+    def getAssigningProblemEntities(self, session, problem):
         """
         Parameters:
+         - session
          - problem
         """
-        self.send_getAssigningProblemEntities(problem)
+        self.send_getAssigningProblemEntities(session, problem)
         return self.recv_getAssigningProblemEntities()
 
-    def send_getAssigningProblemEntities(self, problem):
+    def send_getAssigningProblemEntities(self, session, problem):
         self._oprot.writeMessageBegin('getAssigningProblemEntities', TMessageType.CALL, self._seqid)
         args = getAssigningProblemEntities_args()
+        args.session = session
         args.problem = problem
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -1008,18 +1012,20 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getAssigningProblemEntities failed: unknown result")
 
-    def getAssigningProblemConceptHierarchy(self, problem, params):
+    def getAssigningProblemConceptHierarchy(self, session, problem, params):
         """
         Parameters:
+         - session
          - problem
          - params
         """
-        self.send_getAssigningProblemConceptHierarchy(problem, params)
+        self.send_getAssigningProblemConceptHierarchy(session, problem, params)
         return self.recv_getAssigningProblemConceptHierarchy()
 
-    def send_getAssigningProblemConceptHierarchy(self, problem, params):
+    def send_getAssigningProblemConceptHierarchy(self, session, problem, params):
         self._oprot.writeMessageBegin('getAssigningProblemConceptHierarchy', TMessageType.CALL, self._seqid)
         args = getAssigningProblemConceptHierarchy_args()
+        args.session = session
         args.problem = problem
         args.params = params
         args.write(self._oprot)
@@ -1172,7 +1178,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getMarginalDrivingFeaturesBinary_result()
         try:
-            result.success = self._handler.getMarginalDrivingFeaturesBinary(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.logical_connective, args.supp, args.conf, args.lift)
+            result.success = self._handler.getMarginalDrivingFeaturesBinary(args.session, args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.logical_connective)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1195,7 +1201,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getDrivingFeaturesEpsilonMOEABinary_result()
         try:
-            result.success = self._handler.getDrivingFeaturesEpsilonMOEABinary(args.problem, args.behavioral, args.non_behavioral, args.all_archs)
+            result.success = self._handler.getDrivingFeaturesEpsilonMOEABinary(args.session, args.problem, args.behavioral, args.non_behavioral, args.all_archs)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1241,7 +1247,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getMarginalDrivingFeaturesDiscrete_result()
         try:
-            result.success = self._handler.getMarginalDrivingFeaturesDiscrete(args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.logical_connective, args.supp, args.conf, args.lift)
+            result.success = self._handler.getMarginalDrivingFeaturesDiscrete(args.session, args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.featureExpression, args.logical_connective)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1264,7 +1270,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getDrivingFeaturesEpsilonMOEADiscrete_result()
         try:
-            result.success = self._handler.getDrivingFeaturesEpsilonMOEADiscrete(args.problem, args.behavioral, args.non_behavioral, args.all_archs)
+            result.success = self._handler.getDrivingFeaturesEpsilonMOEADiscrete(args.session, args.problem, args.behavioral, args.non_behavioral, args.all_archs)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1333,7 +1339,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = generalizeFeatureBinary_result()
         try:
-            result.success = self._handler.generalizeFeatureBinary(args.problem, args.session, args.behavioral, args.non_behavioral, args.all_archs, args.rootfeatureExpression, args.nodeFeatureExpression)
+            result.success = self._handler.generalizeFeatureBinary(args.session, args.problem, args.behavioral, args.non_behavioral, args.all_archs, args.rootfeatureExpression, args.nodeFeatureExpression)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1356,7 +1362,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getDrivingFeaturesWithGeneralizationBinary_result()
         try:
-            result.success = self._handler.getDrivingFeaturesWithGeneralizationBinary(args.problem, args.behavioral, args.non_behavioral, args.all_archs)
+            result.success = self._handler.getDrivingFeaturesWithGeneralizationBinary(args.session, args.problem, args.behavioral, args.non_behavioral, args.all_archs)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1379,7 +1385,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = simplifyFeatureExpression_result()
         try:
-            result.success = self._handler.simplifyFeatureExpression(args.problem, args.expression)
+            result.success = self._handler.simplifyFeatureExpression(args.session, args.problem, args.expression)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1425,7 +1431,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = computeComplexityOfFeatures_result()
         try:
-            result.success = self._handler.computeComplexityOfFeatures(args.problem, args.expressions)
+            result.success = self._handler.computeComplexityOfFeatures(args.expressions)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1471,7 +1477,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = computeComplexity_result()
         try:
-            result.success = self._handler.computeComplexity(args.problem, args.expression)
+            result.success = self._handler.computeComplexity(args.expression)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1540,7 +1546,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = setAssigningProblemEntities_result()
         try:
-            result.success = self._handler.setAssigningProblemEntities(args.problem, args.entities)
+            result.success = self._handler.setAssigningProblemEntities(args.session, args.problem, args.entities)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1563,7 +1569,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = setAssigningProblemGeneralizedConcepts_result()
         try:
-            result.success = self._handler.setAssigningProblemGeneralizedConcepts(args.problem, args.generalizedConcepts)
+            result.success = self._handler.setAssigningProblemGeneralizedConcepts(args.session, args.problem, args.generalizedConcepts)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1586,7 +1592,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getAssigningProblemEntities_result()
         try:
-            result.success = self._handler.getAssigningProblemEntities(args.problem)
+            result.success = self._handler.getAssigningProblemEntities(args.session, args.problem)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1609,7 +1615,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = getAssigningProblemConceptHierarchy_result()
         try:
-            result.success = self._handler.getAssigningProblemConceptHierarchy(args.problem, args.params)
+            result.success = self._handler.getAssigningProblemConceptHierarchy(args.session, args.problem, args.params)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1968,28 +1974,24 @@ getDrivingFeaturesBinary_result.thrift_spec = (
 class getMarginalDrivingFeaturesBinary_args(object):
     """
     Attributes:
+     - session
      - problem
      - behavioral
      - non_behavioral
      - all_archs
      - featureExpression
      - logical_connective
-     - supp
-     - conf
-     - lift
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, logical_connective=None, supp=None, conf=None, lift=None,):
+    def __init__(self, session=None, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, logical_connective=None,):
+        self.session = session
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
         self.featureExpression = featureExpression
         self.logical_connective = logical_connective
-        self.supp = supp
-        self.conf = conf
-        self.lift = lift
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2002,10 +2004,15 @@ class getMarginalDrivingFeaturesBinary_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.LIST:
                     self.behavioral = []
                     (_etype140, _size137) = iprot.readListBegin()
@@ -2015,7 +2022,7 @@ class getMarginalDrivingFeaturesBinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 4:
                 if ftype == TType.LIST:
                     self.non_behavioral = []
                     (_etype146, _size143) = iprot.readListBegin()
@@ -2025,7 +2032,7 @@ class getMarginalDrivingFeaturesBinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 5:
                 if ftype == TType.LIST:
                     self.all_archs = []
                     (_etype152, _size149) = iprot.readListBegin()
@@ -2036,29 +2043,14 @@ class getMarginalDrivingFeaturesBinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 5:
+            elif fid == 6:
                 if ftype == TType.STRING:
                     self.featureExpression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
-            elif fid == 6:
+            elif fid == 7:
                 if ftype == TType.STRING:
                     self.logical_connective = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 7:
-                if ftype == TType.DOUBLE:
-                    self.supp = iprot.readDouble()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 8:
-                if ftype == TType.DOUBLE:
-                    self.conf = iprot.readDouble()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 9:
-                if ftype == TType.DOUBLE:
-                    self.lift = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             else:
@@ -2071,50 +2063,42 @@ class getMarginalDrivingFeaturesBinary_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getMarginalDrivingFeaturesBinary_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.behavioral is not None:
-            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeFieldBegin('behavioral', TType.LIST, 3)
             oprot.writeListBegin(TType.I32, len(self.behavioral))
             for iter155 in self.behavioral:
                 oprot.writeI32(iter155)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.non_behavioral is not None:
-            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 4)
             oprot.writeListBegin(TType.I32, len(self.non_behavioral))
             for iter156 in self.non_behavioral:
                 oprot.writeI32(iter156)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.all_archs is not None:
-            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeFieldBegin('all_archs', TType.LIST, 5)
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter157 in self.all_archs:
                 iter157.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.featureExpression is not None:
-            oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
+            oprot.writeFieldBegin('featureExpression', TType.STRING, 6)
             oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
             oprot.writeFieldEnd()
         if self.logical_connective is not None:
-            oprot.writeFieldBegin('logical_connective', TType.STRING, 6)
+            oprot.writeFieldBegin('logical_connective', TType.STRING, 7)
             oprot.writeString(self.logical_connective.encode('utf-8') if sys.version_info[0] == 2 else self.logical_connective)
-            oprot.writeFieldEnd()
-        if self.supp is not None:
-            oprot.writeFieldBegin('supp', TType.DOUBLE, 7)
-            oprot.writeDouble(self.supp)
-            oprot.writeFieldEnd()
-        if self.conf is not None:
-            oprot.writeFieldBegin('conf', TType.DOUBLE, 8)
-            oprot.writeDouble(self.conf)
-            oprot.writeFieldEnd()
-        if self.lift is not None:
-            oprot.writeFieldBegin('lift', TType.DOUBLE, 9)
-            oprot.writeDouble(self.lift)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -2135,15 +2119,13 @@ class getMarginalDrivingFeaturesBinary_args(object):
 all_structs.append(getMarginalDrivingFeaturesBinary_args)
 getMarginalDrivingFeaturesBinary_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
-    (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
-    (6, TType.STRING, 'logical_connective', 'UTF8', None, ),  # 6
-    (7, TType.DOUBLE, 'supp', None, None, ),  # 7
-    (8, TType.DOUBLE, 'conf', None, None, ),  # 8
-    (9, TType.DOUBLE, 'lift', None, None, ),  # 9
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 4
+    (5, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 5
+    (6, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 6
+    (7, TType.STRING, 'logical_connective', 'UTF8', None, ),  # 7
 )
 
 
@@ -2219,6 +2201,7 @@ getMarginalDrivingFeaturesBinary_result.thrift_spec = (
 class getDrivingFeaturesEpsilonMOEABinary_args(object):
     """
     Attributes:
+     - session
      - problem
      - behavioral
      - non_behavioral
@@ -2226,7 +2209,8 @@ class getDrivingFeaturesEpsilonMOEABinary_args(object):
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+    def __init__(self, session=None, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+        self.session = session
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
@@ -2243,10 +2227,15 @@ class getDrivingFeaturesEpsilonMOEABinary_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.LIST:
                     self.behavioral = []
                     (_etype168, _size165) = iprot.readListBegin()
@@ -2256,7 +2245,7 @@ class getDrivingFeaturesEpsilonMOEABinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 4:
                 if ftype == TType.LIST:
                     self.non_behavioral = []
                     (_etype174, _size171) = iprot.readListBegin()
@@ -2266,7 +2255,7 @@ class getDrivingFeaturesEpsilonMOEABinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 5:
                 if ftype == TType.LIST:
                     self.all_archs = []
                     (_etype180, _size177) = iprot.readListBegin()
@@ -2287,26 +2276,30 @@ class getDrivingFeaturesEpsilonMOEABinary_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getDrivingFeaturesEpsilonMOEABinary_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.behavioral is not None:
-            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeFieldBegin('behavioral', TType.LIST, 3)
             oprot.writeListBegin(TType.I32, len(self.behavioral))
             for iter183 in self.behavioral:
                 oprot.writeI32(iter183)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.non_behavioral is not None:
-            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 4)
             oprot.writeListBegin(TType.I32, len(self.non_behavioral))
             for iter184 in self.non_behavioral:
                 oprot.writeI32(iter184)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.all_archs is not None:
-            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeFieldBegin('all_archs', TType.LIST, 5)
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter185 in self.all_archs:
                 iter185.write(oprot)
@@ -2331,10 +2324,11 @@ class getDrivingFeaturesEpsilonMOEABinary_args(object):
 all_structs.append(getDrivingFeaturesEpsilonMOEABinary_args)
 getDrivingFeaturesEpsilonMOEABinary_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 4
+    (5, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 5
 )
 
 
@@ -2637,28 +2631,24 @@ getDrivingFeaturesDiscrete_result.thrift_spec = (
 class getMarginalDrivingFeaturesDiscrete_args(object):
     """
     Attributes:
+     - session
      - problem
      - behavioral
      - non_behavioral
      - all_archs
      - featureExpression
      - logical_connective
-     - supp
-     - conf
-     - lift
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, logical_connective=None, supp=None, conf=None, lift=None,):
+    def __init__(self, session=None, problem=None, behavioral=None, non_behavioral=None, all_archs=None, featureExpression=None, logical_connective=None,):
+        self.session = session
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
         self.featureExpression = featureExpression
         self.logical_connective = logical_connective
-        self.supp = supp
-        self.conf = conf
-        self.lift = lift
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -2671,10 +2661,15 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.LIST:
                     self.behavioral = []
                     (_etype224, _size221) = iprot.readListBegin()
@@ -2684,7 +2679,7 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 4:
                 if ftype == TType.LIST:
                     self.non_behavioral = []
                     (_etype230, _size227) = iprot.readListBegin()
@@ -2694,7 +2689,7 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 5:
                 if ftype == TType.LIST:
                     self.all_archs = []
                     (_etype236, _size233) = iprot.readListBegin()
@@ -2705,29 +2700,14 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 5:
+            elif fid == 6:
                 if ftype == TType.STRING:
                     self.featureExpression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
-            elif fid == 6:
+            elif fid == 7:
                 if ftype == TType.STRING:
                     self.logical_connective = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 7:
-                if ftype == TType.DOUBLE:
-                    self.supp = iprot.readDouble()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 8:
-                if ftype == TType.DOUBLE:
-                    self.conf = iprot.readDouble()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 9:
-                if ftype == TType.DOUBLE:
-                    self.lift = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             else:
@@ -2740,50 +2720,42 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getMarginalDrivingFeaturesDiscrete_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.behavioral is not None:
-            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeFieldBegin('behavioral', TType.LIST, 3)
             oprot.writeListBegin(TType.I32, len(self.behavioral))
             for iter239 in self.behavioral:
                 oprot.writeI32(iter239)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.non_behavioral is not None:
-            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 4)
             oprot.writeListBegin(TType.I32, len(self.non_behavioral))
             for iter240 in self.non_behavioral:
                 oprot.writeI32(iter240)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.all_archs is not None:
-            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeFieldBegin('all_archs', TType.LIST, 5)
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter241 in self.all_archs:
                 iter241.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.featureExpression is not None:
-            oprot.writeFieldBegin('featureExpression', TType.STRING, 5)
+            oprot.writeFieldBegin('featureExpression', TType.STRING, 6)
             oprot.writeString(self.featureExpression.encode('utf-8') if sys.version_info[0] == 2 else self.featureExpression)
             oprot.writeFieldEnd()
         if self.logical_connective is not None:
-            oprot.writeFieldBegin('logical_connective', TType.STRING, 6)
+            oprot.writeFieldBegin('logical_connective', TType.STRING, 7)
             oprot.writeString(self.logical_connective.encode('utf-8') if sys.version_info[0] == 2 else self.logical_connective)
-            oprot.writeFieldEnd()
-        if self.supp is not None:
-            oprot.writeFieldBegin('supp', TType.DOUBLE, 7)
-            oprot.writeDouble(self.supp)
-            oprot.writeFieldEnd()
-        if self.conf is not None:
-            oprot.writeFieldBegin('conf', TType.DOUBLE, 8)
-            oprot.writeDouble(self.conf)
-            oprot.writeFieldEnd()
-        if self.lift is not None:
-            oprot.writeFieldBegin('lift', TType.DOUBLE, 9)
-            oprot.writeDouble(self.lift)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -2804,15 +2776,13 @@ class getMarginalDrivingFeaturesDiscrete_args(object):
 all_structs.append(getMarginalDrivingFeaturesDiscrete_args)
 getMarginalDrivingFeaturesDiscrete_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 4
-    (5, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 5
-    (6, TType.STRING, 'logical_connective', 'UTF8', None, ),  # 6
-    (7, TType.DOUBLE, 'supp', None, None, ),  # 7
-    (8, TType.DOUBLE, 'conf', None, None, ),  # 8
-    (9, TType.DOUBLE, 'lift', None, None, ),  # 9
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 4
+    (5, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 5
+    (6, TType.STRING, 'featureExpression', 'UTF8', None, ),  # 6
+    (7, TType.STRING, 'logical_connective', 'UTF8', None, ),  # 7
 )
 
 
@@ -2888,6 +2858,7 @@ getMarginalDrivingFeaturesDiscrete_result.thrift_spec = (
 class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
     """
     Attributes:
+     - session
      - problem
      - behavioral
      - non_behavioral
@@ -2895,7 +2866,8 @@ class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+    def __init__(self, session=None, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+        self.session = session
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
@@ -2912,10 +2884,15 @@ class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.LIST:
                     self.behavioral = []
                     (_etype252, _size249) = iprot.readListBegin()
@@ -2925,7 +2902,7 @@ class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 4:
                 if ftype == TType.LIST:
                     self.non_behavioral = []
                     (_etype258, _size255) = iprot.readListBegin()
@@ -2935,7 +2912,7 @@ class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 5:
                 if ftype == TType.LIST:
                     self.all_archs = []
                     (_etype264, _size261) = iprot.readListBegin()
@@ -2956,26 +2933,30 @@ class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getDrivingFeaturesEpsilonMOEADiscrete_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.behavioral is not None:
-            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeFieldBegin('behavioral', TType.LIST, 3)
             oprot.writeListBegin(TType.I32, len(self.behavioral))
             for iter267 in self.behavioral:
                 oprot.writeI32(iter267)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.non_behavioral is not None:
-            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 4)
             oprot.writeListBegin(TType.I32, len(self.non_behavioral))
             for iter268 in self.non_behavioral:
                 oprot.writeI32(iter268)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.all_archs is not None:
-            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeFieldBegin('all_archs', TType.LIST, 5)
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter269 in self.all_archs:
                 iter269.write(oprot)
@@ -3000,10 +2981,11 @@ class getDrivingFeaturesEpsilonMOEADiscrete_args(object):
 all_structs.append(getDrivingFeaturesEpsilonMOEADiscrete_args)
 getDrivingFeaturesEpsilonMOEADiscrete_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 4
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 4
+    (5, TType.LIST, 'all_archs', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 5
 )
 
 
@@ -3497,8 +3479,8 @@ getDrivingFeaturesEpsilonMOEAContinuous_result.thrift_spec = (
 class generalizeFeatureBinary_args(object):
     """
     Attributes:
-     - problem
      - session
+     - problem
      - behavioral
      - non_behavioral
      - all_archs
@@ -3507,9 +3489,9 @@ class generalizeFeatureBinary_args(object):
     """
 
 
-    def __init__(self, problem=None, session=None, behavioral=None, non_behavioral=None, all_archs=None, rootfeatureExpression=None, nodeFeatureExpression=None,):
-        self.problem = problem
+    def __init__(self, session=None, problem=None, behavioral=None, non_behavioral=None, all_archs=None, rootfeatureExpression=None, nodeFeatureExpression=None,):
         self.session = session
+        self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
         self.all_archs = all_archs
@@ -3527,12 +3509,12 @@ class generalizeFeatureBinary_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
@@ -3586,13 +3568,13 @@ class generalizeFeatureBinary_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('generalizeFeatureBinary_args')
-        if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
-            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
-            oprot.writeFieldEnd()
         if self.session is not None:
-            oprot.writeFieldBegin('session', TType.STRING, 2)
+            oprot.writeFieldBegin('session', TType.STRING, 1)
             oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.behavioral is not None:
             oprot.writeFieldBegin('behavioral', TType.LIST, 3)
@@ -3642,8 +3624,8 @@ class generalizeFeatureBinary_args(object):
 all_structs.append(generalizeFeatureBinary_args)
 generalizeFeatureBinary_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'session', 'UTF8', None, ),  # 2
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
     (3, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 3
     (4, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 4
     (5, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 5
@@ -3724,6 +3706,7 @@ generalizeFeatureBinary_result.thrift_spec = (
 class getDrivingFeaturesWithGeneralizationBinary_args(object):
     """
     Attributes:
+     - session
      - problem
      - behavioral
      - non_behavioral
@@ -3731,7 +3714,8 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
     """
 
 
-    def __init__(self, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+    def __init__(self, session=None, problem=None, behavioral=None, non_behavioral=None, all_archs=None,):
+        self.session = session
         self.problem = problem
         self.behavioral = behavioral
         self.non_behavioral = non_behavioral
@@ -3748,10 +3732,15 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.LIST:
                     self.behavioral = []
                     (_etype364, _size361) = iprot.readListBegin()
@@ -3761,7 +3750,7 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 4:
                 if ftype == TType.LIST:
                     self.non_behavioral = []
                     (_etype370, _size367) = iprot.readListBegin()
@@ -3771,7 +3760,7 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
-            elif fid == 4:
+            elif fid == 5:
                 if ftype == TType.LIST:
                     self.all_archs = []
                     (_etype376, _size373) = iprot.readListBegin()
@@ -3792,26 +3781,30 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getDrivingFeaturesWithGeneralizationBinary_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.behavioral is not None:
-            oprot.writeFieldBegin('behavioral', TType.LIST, 2)
+            oprot.writeFieldBegin('behavioral', TType.LIST, 3)
             oprot.writeListBegin(TType.I32, len(self.behavioral))
             for iter379 in self.behavioral:
                 oprot.writeI32(iter379)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.non_behavioral is not None:
-            oprot.writeFieldBegin('non_behavioral', TType.LIST, 3)
+            oprot.writeFieldBegin('non_behavioral', TType.LIST, 4)
             oprot.writeListBegin(TType.I32, len(self.non_behavioral))
             for iter380 in self.non_behavioral:
                 oprot.writeI32(iter380)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.all_archs is not None:
-            oprot.writeFieldBegin('all_archs', TType.LIST, 4)
+            oprot.writeFieldBegin('all_archs', TType.LIST, 5)
             oprot.writeListBegin(TType.STRUCT, len(self.all_archs))
             for iter381 in self.all_archs:
                 iter381.write(oprot)
@@ -3836,10 +3829,11 @@ class getDrivingFeaturesWithGeneralizationBinary_args(object):
 all_structs.append(getDrivingFeaturesWithGeneralizationBinary_args)
 getDrivingFeaturesWithGeneralizationBinary_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 2
-    (3, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 3
-    (4, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 4
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.LIST, 'behavioral', (TType.I32, None, False), None, ),  # 3
+    (4, TType.LIST, 'non_behavioral', (TType.I32, None, False), None, ),  # 4
+    (5, TType.LIST, 'all_archs', (TType.STRUCT, [BinaryInputArchitecture, None], False), None, ),  # 5
 )
 
 
@@ -3915,12 +3909,14 @@ getDrivingFeaturesWithGeneralizationBinary_result.thrift_spec = (
 class simplifyFeatureExpression_args(object):
     """
     Attributes:
+     - session
      - problem
      - expression
     """
 
 
-    def __init__(self, problem=None, expression=None,):
+    def __init__(self, session=None, problem=None, expression=None,):
+        self.session = session
         self.problem = problem
         self.expression = expression
 
@@ -3935,10 +3931,15 @@ class simplifyFeatureExpression_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.STRING:
                     self.expression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -3953,12 +3954,16 @@ class simplifyFeatureExpression_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('simplifyFeatureExpression_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.expression is not None:
-            oprot.writeFieldBegin('expression', TType.STRING, 2)
+            oprot.writeFieldBegin('expression', TType.STRING, 3)
             oprot.writeString(self.expression.encode('utf-8') if sys.version_info[0] == 2 else self.expression)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -3980,8 +3985,9 @@ class simplifyFeatureExpression_args(object):
 all_structs.append(simplifyFeatureExpression_args)
 simplifyFeatureExpression_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'expression', 'UTF8', None, ),  # 2
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'expression', 'UTF8', None, ),  # 3
 )
 
 
@@ -4169,13 +4175,11 @@ stopSearch_result.thrift_spec = (
 class computeComplexityOfFeatures_args(object):
     """
     Attributes:
-     - problem
      - expressions
     """
 
 
-    def __init__(self, problem=None, expressions=None,):
-        self.problem = problem
+    def __init__(self, expressions=None,):
         self.expressions = expressions
 
     def read(self, iprot):
@@ -4188,11 +4192,6 @@ class computeComplexityOfFeatures_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
                 if ftype == TType.LIST:
                     self.expressions = []
                     (_etype392, _size389) = iprot.readListBegin()
@@ -4212,12 +4211,8 @@ class computeComplexityOfFeatures_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('computeComplexityOfFeatures_args')
-        if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
-            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
-            oprot.writeFieldEnd()
         if self.expressions is not None:
-            oprot.writeFieldBegin('expressions', TType.LIST, 2)
+            oprot.writeFieldBegin('expressions', TType.LIST, 1)
             oprot.writeListBegin(TType.STRING, len(self.expressions))
             for iter395 in self.expressions:
                 oprot.writeString(iter395.encode('utf-8') if sys.version_info[0] == 2 else iter395)
@@ -4242,8 +4237,7 @@ class computeComplexityOfFeatures_args(object):
 all_structs.append(computeComplexityOfFeatures_args)
 computeComplexityOfFeatures_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'expressions', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (1, TType.LIST, 'expressions', (TType.STRING, 'UTF8', False), None, ),  # 1
 )
 
 
@@ -4472,13 +4466,11 @@ computeAlgebraicTypicality_result.thrift_spec = (
 class computeComplexity_args(object):
     """
     Attributes:
-     - problem
      - expression
     """
 
 
-    def __init__(self, problem=None, expression=None,):
-        self.problem = problem
+    def __init__(self, expression=None,):
         self.expression = expression
 
     def read(self, iprot):
@@ -4491,11 +4483,6 @@ class computeComplexity_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
                 if ftype == TType.STRING:
                     self.expression = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -4510,12 +4497,8 @@ class computeComplexity_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('computeComplexity_args')
-        if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
-            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
-            oprot.writeFieldEnd()
         if self.expression is not None:
-            oprot.writeFieldBegin('expression', TType.STRING, 2)
+            oprot.writeFieldBegin('expression', TType.STRING, 1)
             oprot.writeString(self.expression.encode('utf-8') if sys.version_info[0] == 2 else self.expression)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4537,8 +4520,7 @@ class computeComplexity_args(object):
 all_structs.append(computeComplexity_args)
 computeComplexity_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'expression', 'UTF8', None, ),  # 2
+    (1, TType.STRING, 'expression', 'UTF8', None, ),  # 1
 )
 
 
@@ -4847,12 +4829,14 @@ convertToDNF_result.thrift_spec = (
 class setAssigningProblemEntities_args(object):
     """
     Attributes:
+     - session
      - problem
      - entities
     """
 
 
-    def __init__(self, problem=None, entities=None,):
+    def __init__(self, session=None, problem=None, entities=None,):
+        self.session = session
         self.problem = problem
         self.entities = entities
 
@@ -4867,10 +4851,15 @@ class setAssigningProblemEntities_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.STRUCT:
                     self.entities = AssigningProblemEntities()
                     self.entities.read(iprot)
@@ -4886,12 +4875,16 @@ class setAssigningProblemEntities_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('setAssigningProblemEntities_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.entities is not None:
-            oprot.writeFieldBegin('entities', TType.STRUCT, 2)
+            oprot.writeFieldBegin('entities', TType.STRUCT, 3)
             self.entities.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4913,8 +4906,9 @@ class setAssigningProblemEntities_args(object):
 all_structs.append(setAssigningProblemEntities_args)
 setAssigningProblemEntities_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.STRUCT, 'entities', [AssigningProblemEntities, None], None, ),  # 2
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.STRUCT, 'entities', [AssigningProblemEntities, None], None, ),  # 3
 )
 
 
@@ -4981,12 +4975,14 @@ setAssigningProblemEntities_result.thrift_spec = (
 class setAssigningProblemGeneralizedConcepts_args(object):
     """
     Attributes:
+     - session
      - problem
      - generalizedConcepts
     """
 
 
-    def __init__(self, problem=None, generalizedConcepts=None,):
+    def __init__(self, session=None, problem=None, generalizedConcepts=None,):
+        self.session = session
         self.problem = problem
         self.generalizedConcepts = generalizedConcepts
 
@@ -5001,10 +4997,15 @@ class setAssigningProblemGeneralizedConcepts_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.STRUCT:
                     self.generalizedConcepts = AssigningProblemEntities()
                     self.generalizedConcepts.read(iprot)
@@ -5020,12 +5021,16 @@ class setAssigningProblemGeneralizedConcepts_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('setAssigningProblemGeneralizedConcepts_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.generalizedConcepts is not None:
-            oprot.writeFieldBegin('generalizedConcepts', TType.STRUCT, 2)
+            oprot.writeFieldBegin('generalizedConcepts', TType.STRUCT, 3)
             self.generalizedConcepts.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -5047,8 +5052,9 @@ class setAssigningProblemGeneralizedConcepts_args(object):
 all_structs.append(setAssigningProblemGeneralizedConcepts_args)
 setAssigningProblemGeneralizedConcepts_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.STRUCT, 'generalizedConcepts', [AssigningProblemEntities, None], None, ),  # 2
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.STRUCT, 'generalizedConcepts', [AssigningProblemEntities, None], None, ),  # 3
 )
 
 
@@ -5115,11 +5121,13 @@ setAssigningProblemGeneralizedConcepts_result.thrift_spec = (
 class getAssigningProblemEntities_args(object):
     """
     Attributes:
+     - session
      - problem
     """
 
 
-    def __init__(self, problem=None,):
+    def __init__(self, session=None, problem=None,):
+        self.session = session
         self.problem = problem
 
     def read(self, iprot):
@@ -5132,6 +5140,11 @@ class getAssigningProblemEntities_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
+                if ftype == TType.STRING:
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
                 if ftype == TType.STRING:
                     self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -5146,8 +5159,12 @@ class getAssigningProblemEntities_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getAssigningProblemEntities_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -5169,7 +5186,8 @@ class getAssigningProblemEntities_args(object):
 all_structs.append(getAssigningProblemEntities_args)
 getAssigningProblemEntities_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
 )
 
 
@@ -5237,12 +5255,14 @@ getAssigningProblemEntities_result.thrift_spec = (
 class getAssigningProblemConceptHierarchy_args(object):
     """
     Attributes:
+     - session
      - problem
      - params
     """
 
 
-    def __init__(self, problem=None, params=None,):
+    def __init__(self, session=None, problem=None, params=None,):
+        self.session = session
         self.problem = problem
         self.params = params
 
@@ -5257,10 +5277,15 @@ class getAssigningProblemConceptHierarchy_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                    self.session = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
+                if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
                 if ftype == TType.STRUCT:
                     self.params = AssigningProblemEntities()
                     self.params.read(iprot)
@@ -5276,12 +5301,16 @@ class getAssigningProblemConceptHierarchy_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('getAssigningProblemConceptHierarchy_args')
+        if self.session is not None:
+            oprot.writeFieldBegin('session', TType.STRING, 1)
+            oprot.writeString(self.session.encode('utf-8') if sys.version_info[0] == 2 else self.session)
+            oprot.writeFieldEnd()
         if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeFieldBegin('problem', TType.STRING, 2)
             oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
             oprot.writeFieldEnd()
         if self.params is not None:
-            oprot.writeFieldBegin('params', TType.STRUCT, 2)
+            oprot.writeFieldBegin('params', TType.STRUCT, 3)
             self.params.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -5303,8 +5332,9 @@ class getAssigningProblemConceptHierarchy_args(object):
 all_structs.append(getAssigningProblemConceptHierarchy_args)
 getAssigningProblemConceptHierarchy_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.STRUCT, 'params', [AssigningProblemEntities, None], None, ),  # 2
+    (1, TType.STRING, 'session', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'problem', 'UTF8', None, ),  # 2
+    (3, TType.STRUCT, 'params', [AssigningProblemEntities, None], None, ),  # 3
 )
 
 
