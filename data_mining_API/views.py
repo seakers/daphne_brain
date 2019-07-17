@@ -247,10 +247,8 @@ class GetDrivingFeaturesWithGeneralization(APIView):
 class GetMarginalDrivingFeatures(APIView):
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
-        pass
 
     def post(self, request, format=None):
-        
         try:
             # Start data mining client
             self.DataMiningClient.startConnection()
@@ -276,10 +274,51 @@ class GetMarginalDrivingFeatures(APIView):
                 
             _all_archs = []
             if inputType == "binary":
+
+                # Start listening for redis inputs to share through websockets
+                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+                channel = connection.channel()
+                channel.queue_declare(queue=sessionKey + '_localSearch')
+                channel.queue_purge(queue=sessionKey + '_localSearch')
+
+                def callback(ch, method, properties, body):
+                    thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                    message = json.loads(body)
+
+                    if message['type'] == 'search_started':
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                        {
+                            'type': 'search.started',
+                        })
+
+                    if message['type'] == 'search_finished':
+                        message['type'] = 'search.finished'
+                        message['searchMethod'] = 'localSearch'
+
+                        print('Ending the thread!')
+                        channel.stop_consuming()
+
+                        if 'features' in message:
+                            if message['features'] != None and len(message['features']) != 0: 
+                                print('Features from local search returned')
+
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
+
+                channel.basic_consume(callback,
+                                      queue=sessionKey + '_localSearch',
+                                      no_ack=True)
+                thread = threading.Thread(target=channel.start_consuming)
+                thread.start()
+
                 for arch in dataset:
                     _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = self.DataMiningClient.client.getMarginalDrivingFeaturesBinary(sessionKey, problem, behavioral, non_behavioral, _all_archs, 
+                self.DataMiningClient.client.getMarginalDrivingFeaturesBinary(sessionKey, problem, behavioral, non_behavioral, _all_archs, 
                                                                            featureExpression, logicalConnective)
+                _features = []
 
             elif inputType == "discrete":
                 for arch in dataset:
@@ -333,18 +372,16 @@ class GeneralizeFeature(APIView):
                 print('Ending the thread!')
                 channel.stop_consuming()
 
-                messageBack = dict()
-                messageBack['type'] = 'search.finished'
+                message['type'] = 'search.finished'
+                message['searchMethod'] = 'generalization'
 
                 if 'features' in message:
                     if message['features'] != None and len(message['features']) != 0: 
                         print('Generalized features returned')
 
-                        messageBack['features'] = message['features']
-
                 # Look for channel to send back to user
                 channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.send)(thread_user_info.channel_name, messageBack)
+                async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
         channel.basic_consume(callback,
                               queue=sessionKey + '_generalization',
@@ -380,25 +417,15 @@ class GeneralizeFeature(APIView):
                 for arch in dataset:
                     _all_archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
 
-                _featuresWithDescription = self.DataMiningClient.client.generalizeFeatureBinary(sessionKey, problem, behavioral, non_behavioral, _all_archs, 
+                self.DataMiningClient.client.generalizeFeatureBinary(sessionKey, problem, behavioral, non_behavioral, _all_archs, 
                                                                            rootFeatureExpression, nodeFeatureExpression)
 
             elif inputType == "discrete":
                 raise NotImplementedError()
-                        
-            featuresWithDescription = []
-            
-            for feature in _featuresWithDescription:
-                featuresWithDescription.append({'id':feature.id,
-                    'name':feature.name,
-                    'expression':feature.expression,
-                    'metrics':feature.metrics, 
-                    'complexity':feature.complexity,
-                    'description':feature.description})
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response(featuresWithDescription)
+            return Response(None)
         
         except Exception as detail:
             logger.exception('Exception in calling GeneralizeFeature()')
