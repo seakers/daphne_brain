@@ -72,8 +72,8 @@ class GetDrivingFeatures(APIView):
             inputType = request.POST['input_type']
 
 
-            print('getDrivingFeatures() called ... ')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
+            logger.debug('getDrivingFeatures() called ... ')
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
         
             _archs = []
             if inputType == "binary":
@@ -140,8 +140,8 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            print('getDrivingFeaturesEpsilonMOEA() called ... ')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
+            logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
         
             _archs = []
             if inputType == "binary":
@@ -219,8 +219,8 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            print('getDrivingFeaturesWithGeneralization() called ...')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
+            logger.debug('getDrivingFeaturesWithGeneralization() called ...')
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
             
             _all_archs = []
             if inputType == "binary":
@@ -269,8 +269,8 @@ class GetMarginalDrivingFeatures(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            print('getMarginalDrivingFeatures() called ... ')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
+            logger.debug('getMarginalDrivingFeatures() called ... ')
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
                 
             _all_archs = []
             if inputType == "binary":
@@ -297,12 +297,12 @@ class GetMarginalDrivingFeatures(APIView):
                         message['type'] = 'search.finished'
                         message['searchMethod'] = 'localSearch'
 
-                        print('Ending the thread!')
+                        logger.debug('Ending the thread!')
                         channel.stop_consuming()
 
                         if 'features' in message:
                             if message['features'] != None and len(message['features']) != 0: 
-                                print('Features from local search returned')
+                                logger.debug('Features from local search returned')
 
                         # Look for channel to send back to user
                         channel_layer = get_channel_layer()
@@ -351,7 +351,7 @@ class GeneralizeFeature(APIView):
         channel = connection.channel()
 
         sessionKey = request.session.session_key
-        print("GeneralizeFeature (session key: {0})".format(sessionKey))
+        logger.debug("GeneralizeFeature (session key: {0})".format(sessionKey))
 
         channel.queue_declare(queue=sessionKey + '_generalization')
         channel.queue_purge(queue=sessionKey + '_generalization')
@@ -369,7 +369,7 @@ class GeneralizeFeature(APIView):
                 })
 
             if message['type'] == 'search_finished':
-                print('Ending the thread!')
+                logger.debug('Ending the thread!')
                 channel.stop_consuming()
 
                 message['type'] = 'search.finished'
@@ -377,7 +377,7 @@ class GeneralizeFeature(APIView):
 
                 if 'features' in message:
                     if message['features'] != None and len(message['features']) != 0: 
-                        print('Generalized features returned')
+                        logger.debug('Generalized features returned')
 
                 # Look for channel to send back to user
                 channel_layer = get_channel_layer()
@@ -409,8 +409,8 @@ class GeneralizeFeature(APIView):
             problem = request.POST['problem']
             inputType = request.POST['input_type']
 
-            print('generalizeFeature() called ... ')
-            print('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
+            logger.debug('generalizeFeature() called ... ')
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral),len(non_behavioral),len(dataset)))
 
             _all_archs = []
             if inputType == "binary":
@@ -746,7 +746,7 @@ class SetProblemParameters(APIView):
         channel = connection.channel()
 
         sessionKey = request.session.session_key
-        print("SetProblemParameters (session key: {0})".format(sessionKey))
+        logger.debug("SetProblemParameters (session key: {0})".format(sessionKey))
 
         channel.queue_declare(queue=sessionKey + '_problemSetting')
         channel.queue_purge(queue=sessionKey + '_problemSetting')
@@ -754,6 +754,8 @@ class SetProblemParameters(APIView):
         def callback(ch, method, properties, body):
             thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             message = json.loads(body)
+
+            logger.debug("Problem parameters received: (session key: {0}, channel name: {1})".format(sessionKey, thread_user_info.channel_name))
 
             if message['type'] == 'entities':
                 message['type'] = 'problem.entities'
@@ -801,7 +803,7 @@ class SetProblemGeneralizedConcepts(APIView):
             self.DataMiningClient.startConnection()
 
             sessionKey = request.session.session_key
-            print("SetProblemGeneralizedConcepts (session key: {0})".format(sessionKey))
+            logger.debug("SetProblemGeneralizedConcepts (session key: {0})".format(sessionKey))
             
             problem = request.POST['problem']
             params = json.loads(request.POST['params'])
@@ -1061,7 +1063,7 @@ class StopSearch(APIView):
             self.DataMiningClient.startConnection()
 
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            print("StopSearch (session key: {0})".format(request.session.session_key))
+            logger.debug("StopSearch (session key: {0})".format(request.session.session_key))
 
             # Stop the generalization search
             self.DataMiningClient.client.stopSearch(sessionKey)

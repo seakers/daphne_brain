@@ -214,7 +214,7 @@ LOGGING = {
         },
         'standard': {
             'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'datefmt' : "%Y/%m/%d %H:%M:%S"
         },
     },
     'handlers': {
@@ -256,7 +256,7 @@ LOGGING = {
         },        
         'data-mining': {
             'handlers': ['file','console'],
-            'level': 'ERROR',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'debugging': {
