@@ -13,6 +13,9 @@ urlpatterns = [
     path('generalize-feature', views.GeneralizeFeature.as_view()),
     path('simplify-feature-expression', views.SimplifyFeatureExpression.as_view()),
 
+    # Stop search
+    path('stop-search', views.StopSearch.as_view()),
+
     # Clustering
     path('cluster-data', views.ClusterData.as_view()),
     path('get-cluster', views.GetCluster.as_view()),
