@@ -256,7 +256,7 @@ LOGGING = {
         },        
         'data-mining': {
             'handlers': ['file','console'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': True,
         },
         'debugging': {
