@@ -290,11 +290,11 @@ class GetMarginalDrivingFeatures(APIView):
                         channel_layer = get_channel_layer()
                         async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                         {
-                            'type': 'search.started',
+                            'type': 'data.mining.search.started',
                         })
 
                     if message['type'] == 'search_finished':
-                        message['type'] = 'search.finished'
+                        message['type'] = 'data.mining.search.finished'
                         message['searchMethod'] = 'localSearch'
 
                         logger.debug('Ending the thread!')
@@ -365,14 +365,14 @@ class GeneralizeFeature(APIView):
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                 {
-                    'type': 'search.started',
+                    'type': 'data.mining.search.started',
                 })
 
             if message['type'] == 'search_finished':
                 logger.debug('Ending the thread!')
                 channel.stop_consuming()
 
-                message['type'] = 'search.finished'
+                message['type'] = 'data.mining.search.finished'
                 message['searchMethod'] = 'generalization'
 
                 if 'features' in message:
@@ -755,10 +755,10 @@ class SetProblemParameters(APIView):
             thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             message = json.loads(body)
 
-            logger.debug("Problem parameters received: (session key: {0}, channel name: {1})".format(sessionKey, thread_user_info.channel_name))
+            logger.debug("Problem parameters received: (session key: {0})".format(sessionKey))
 
             if message['type'] == 'entities':
-                message['type'] = 'problem.entities'
+                message['type'] = 'data.mining.problem.entities'
 
                 # Look for channel to send back to user
                 channel_layer = get_channel_layer()

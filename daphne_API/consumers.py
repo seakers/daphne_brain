@@ -125,6 +125,18 @@ class DaphneConsumer(JsonWebsocketConsumer):
         print(event)
         self.send(json.dumps(event))
 
+    def data_mining_problem_entities(self, event):
+        print(event)
+        self.send(json.dumps(event))
+
+    def data_mining_search_started(self, event):
+        print(event)
+        self.send(json.dumps(event))
+
+    def data_mining_search_finished(self, event):
+        print(event)
+        self.send(json.dumps(event))
+
     def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
