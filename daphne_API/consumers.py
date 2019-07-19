@@ -134,7 +134,7 @@ class DaphneConsumer(JsonWebsocketConsumer):
         self.send(json.dumps(event))
 
     def data_mining_search_finished(self, event):
-        print(event)
+        # print(event)
         self.send(json.dumps(event))
 
     def disconnect(self, code):
