@@ -222,7 +222,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR + '/logs/daphne.log',
-            'formatter': 'simple',
+            'formatter': 'standard',
         },
         'console':{
             'level':'DEBUG',
