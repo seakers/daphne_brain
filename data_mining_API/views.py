@@ -299,6 +299,7 @@ class GetMarginalDrivingFeatures(APIView):
 
                         logger.debug('Ending the thread!')
                         channel.stop_consuming()
+                        channel.close()
 
                         if 'features' in message:
                             if message['features'] != None and len(message['features']) != 0: 
@@ -371,6 +372,7 @@ class GeneralizeFeature(APIView):
             if message['type'] == 'search_finished':
                 logger.debug('Ending the thread!')
                 channel.stop_consuming()
+                channel.close()
 
                 message['type'] = 'data.mining.search.finished'
                 message['searchMethod'] = 'generalization'
