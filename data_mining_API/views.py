@@ -709,6 +709,8 @@ class GetProblemParameters(APIView):
         self.DataMiningClient = DataMiningClient()
 
     def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
         try:
             sessionKey = request.session.session_key
 
@@ -723,6 +725,10 @@ class GetProblemParameters(APIView):
                 params = {}
                 params['leftSet'] = params_.leftSet
                 params['rightSet'] = params_.rightSet
+
+                conceptHierarhcy_ = self.DataMiningClient.client.getAssigningProblemConceptHierarchy(sessionKey, problem, AssigningProblemEntities(params['leftSet'], params['rightSet']))
+                params['instanceMap'] = conceptHierarhcy_.instanceMap
+                params['superclassMap'] = conceptHierarhcy_.superclassMap
                 
             else:
                 raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
