@@ -341,7 +341,6 @@ class GetMarginalDrivingFeatures(APIView):
             return Response('')
 
 class GeneralizeFeature(APIView):
-
     def __init__(self):
         self.DataMiningClient = DataMiningClient()
         pass
@@ -356,6 +355,11 @@ class GeneralizeFeature(APIView):
 
         channel.queue_declare(queue=sessionKey + '_generalization')
         channel.queue_purge(queue=sessionKey + '_generalization')
+
+        try:
+            userInitiated = request.POST['userInitiated'] 
+        except KeyError:
+            userInitiated = None
 
         def callback(ch, method, properties, body):
             thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
@@ -376,6 +380,7 @@ class GeneralizeFeature(APIView):
 
                 message['type'] = 'data.mining.search.finished'
                 message['searchMethod'] = 'generalization'
+                message['userInitiated'] = userInitiated
 
                 if 'features' in message:
                     if message['features'] != None and len(message['features']) != 0: 
