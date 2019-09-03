@@ -56,7 +56,7 @@ def get_user_information(session, user):
         if session.session_key is None:
             session.create()
         session = Session.objects.get(session_key=session.session_key)
-        userinfo_qs = UserInformation.objects.filter(session__exact=session)
+        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key)
 
     if len(userinfo_qs) == 1:
         return userinfo_qs[0]
