@@ -2,49 +2,46 @@ import json
 import os
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.contrib import learn
+import keras
+from keras.engine.saving import model_from_json
+from keras.preprocessing.text import tokenizer_from_json
 
 from daphne_API import data_helpers, qa_pipeline
 from daphne_API.errors import ParameterMissingError
 from daphne_API.models import EOSSContext, UserInformation
+import daphne_brain.settings
 
 
 def classify_command(command):
     cleaned_command = data_helpers.clean_str(command)
 
-    # Map data into vocabulary
-    vocab_path = os.path.join("./daphne_API/models/general/vocab")
-    vocab_processor = learn.preprocessing.VocabularyProcessor.restore(vocab_path)
-    x_test = np.array(list(vocab_processor.transform([cleaned_command])))
+    with keras.backend.get_session().graph.as_default():
+        # Map data into vocabulary
+        model_folder_path = os.path.join(os.getcwd(), "daphne_API", "models", daphne_brain.settings.ACTIVE_MODULES[0], "general")
+        vocab_path = os.path.join(model_folder_path, "tokenizer.json")
+        with open(vocab_path, mode="r") as tokenizer_json:
+            tokenizer = tokenizer_from_json(tokenizer_json.read())
+        # load json and create model
+        model_path = os.path.join(model_folder_path, "model.json")
+        with open(model_path, mode="r") as model_json:
+            loaded_model = model_from_json(model_json.read())
+        # load weights into new model
+        weights_path = os.path.join(model_folder_path, "model.h5")
+        loaded_model.load_weights(weights_path)
+        print("Loaded model from disk")
 
-    print("\nEvaluating...\n")
+        x = tokenizer.texts_to_sequences([cleaned_command])
+        expected_input_length = loaded_model.layers[0].input_shape[1]
+        x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+        print("\nEvaluating...\n")
 
-    # Evaluation
-    # ==================================================
-    checkpoint_file = tf.train.latest_checkpoint("./daphne_API/models/general/")
-    graph = tf.Graph()
-    with graph.as_default():
-        session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
-        sess = tf.Session(config=session_conf)
-        with sess.as_default():
-            # Load the saved meta graph and restore variables
-            saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
-            saver.restore(sess, checkpoint_file)
-
-            # Get the placeholders from the graph by name
-            input_x = graph.get_operation_by_name("input_x").outputs[0]
-            # input_y = graph.get_operation_by_name("input_y").outputs[0]
-            dropout_keep_prob = graph.get_operation_by_name("dropout_keep_prob").outputs[0]
-
-            # Tensors we want to evaluate
-            logits = graph.get_operation_by_name("output/logits").outputs[0]
-
-            # get the prediction
-            result_logits = sess.run(logits, {input_x: x_test, dropout_keep_prob: 1.0})
-            prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
-
-    return prediction[0]
+        # Evaluation
+        # ==================================================
+        # evaluate loaded model on test data
+        loaded_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
+        result_logits = loaded_model.predict(x)
+        prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
+        return prediction[0]
 
 
 def error_answers(missing_param):
