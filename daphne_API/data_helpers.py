@@ -15,6 +15,7 @@ def clean_str(spacy_doc):
         tokens.append(token.lemma_)
     return " ".join(tokens)
 
+
 def get_label_using_logits(logits, top_number=1):
     logits = np.ndarray.tolist(logits)
     predicted_labels = []
