@@ -32,7 +32,7 @@ class ImportData(APIView):
             user_path = request.user.username if request.data['load_user_files'] == 'true' != '' else 'default'
             problem = request.data['problem']
             filename = request.data['filename']
-            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "EOSS", "data", "datasets", user_path,
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", user_path,
                                      problem, filename)
 
             input_num = int(request.data['input_num'])
@@ -126,8 +126,8 @@ class SaveData(APIView):
                 # Set the path of the file where the data will be saved
                 user_path = request.user.username
                 filename = request.data['filename']
-                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "EOSS", "data", "datasets",
-                                         user_path, problem, filename)
+                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", user_path, problem,
+                                         filename)
 
                 # input_num = int(request.data['input_num'])
                 # input_type = request.data['input_type']
@@ -181,8 +181,8 @@ class DownloadData(APIView):
                 # Set the path of the file where the data will be saved
                 user_path = request.user.username
                 filename = request.query_params['filename']
-                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "EOSS", "data", "datasets",
-                                         user_path, problem, filename)
+                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", user_path, problem,
+                                         filename)
 
                 # Create the HttpResponse object with the appropriate CSV header.
                 csv_data = open(file_path, "r").read()
@@ -215,14 +215,12 @@ class DatasetList(APIView):
 
         # Set the path of the file containing data
         problem = request.data['problem']
-        default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "EOSS", "data", "datasets", 'default',
-                                    problem)
+        default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", 'default', problem)
         default_datasets.extend(os.listdir(default_path))
 
         if request.user.is_authenticated:
             username = request.user.username
-            user_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "EOSS", "data", "datasets", username,
-                                     problem)
+            user_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", username, problem)
             user_datasets.extend(os.listdir(user_path))
 
         response_data = {

@@ -95,9 +95,9 @@ class StartGA(APIView):
                         print('Ending the thread!')
                         channel.stop_consuming()
 
-                channel.basic_consume(callback,
-                                      queue=request.user.username + '_gabrain',
-                                      no_ack=True)
+                channel.basic_consume(queue=request.user.username + '_gabrain',
+                                      on_message_callback=callback,
+                                      auto_ack=True)
 
                 thread = threading.Thread(target=channel.start_consuming)
                 thread.start()
