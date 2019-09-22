@@ -1,7 +1,7 @@
 import json
 
 from EOSS.explorer.diversifier import activate_diversifier
-from dialogue.models import Design, EOSSContext
+from EOSS.models import EOSSContext, Design
 
 
 def add_design(design, eosscontext: EOSSContext, active: bool):

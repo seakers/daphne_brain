@@ -10,7 +10,7 @@ EOSS/analyst/.ipynb_checkpoints/
 EOSS/analyst/data/
 *.pyc
 db.sqlite3
-daphne_API/models
+dialogue/models
 /logs/daphne.log
 venv/
 venv_linux/

@@ -6,18 +6,17 @@ import keras
 from keras.engine.saving import model_from_json
 from keras.preprocessing.text import tokenizer_from_json
 
-from daphne_API import data_helpers, qa_pipeline
-from daphne_API.errors import ParameterMissingError
-from dialogue.models import UserInformation
-import daphne_brain.settings
+from dialogue import qa_pipeline, data_helpers
+from dialogue.errors import ParameterMissingError
+from daphne_context.models import UserInformation
 
 
-def classify_command(command):
+def classify_command(command, daphne_version):
     cleaned_command = data_helpers.clean_str(command)
 
     with keras.backend.get_session().graph.as_default():
         # Map data into vocabulary
-        model_folder_path = os.path.join(os.getcwd(), "daphne_API", "models", daphne_brain.settings.ACTIVE_MODULES[0], "general")
+        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
         vocab_path = os.path.join(model_folder_path, "tokenizer.json")
         with open(vocab_path, mode="r") as tokenizer_json:
             tokenizer = tokenizer_from_json(tokenizer_json.read())
@@ -53,9 +52,9 @@ def error_answers(missing_param):
 
 
 def not_allowed_condition(context: UserInformation, command_class, command_type):
-    if len(context.eosscontext.allowedcommand_set.all()) == 0:
+    if len(context.allowedcommand_set.all()) == 0:
         return False
-    for allowed_command in context.eosscontext.allowedcommand_set.all():
+    for allowed_command in context.allowedcommand_set.all():
         if command_class == allowed_command.command_type and command_type == str(allowed_command.command_descriptor):
             return False
     return True
@@ -71,12 +70,12 @@ def not_allowed_answers():
 
 def command(processed_command, command_class, condition_name, context: UserInformation):
     # Classify the question, obtaining a question type
-    question_type = qa_pipeline.classify(processed_command, command_class)
+    question_type = qa_pipeline.classify(processed_command, context.daphne_version, command_class)
     print(question_type)
     if not_allowed_condition(context, condition_name, str(question_type)):
         return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type
-    information = qa_pipeline.load_type_info(question_type, command_class)
+    information = qa_pipeline.load_type_info(question_type, context.daphne_version, command_class)
     # Extract required and optional parameters
     try:
         data = qa_pipeline.extract_data(processed_command, information["params"], context)
@@ -87,7 +86,7 @@ def command(processed_command, command_class, condition_name, context: UserInfor
     data = qa_pipeline.augment_data(data, context)
     # Query the database
     if information["type"] == "db_query":
-        results = qa_pipeline.query(information["query"], data)
+        results = qa_pipeline.query(information["query"], data, command_class)
     elif information["type"] == "run_function":
         results = qa_pipeline.run_function(information["function"], data, context)
     else:
@@ -101,7 +100,7 @@ def command(processed_command, command_class, condition_name, context: UserInfor
 
 def think_response(context: UserInformation):
     # TODO: Make this intelligent, e.g. hook this to a rule based engine
-    db_answer = context.eosscontext.answer_set.all()[:1].get()
+    db_answer = context.answer_set.all()[:1].get()
     frontend_answer = {
         "voice_answer": db_answer.voice_answer,
         "visual_answer_type": json.loads(db_answer.visual_answer_type),

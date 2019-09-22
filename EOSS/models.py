@@ -1,6 +1,6 @@
 from django.db import models
 
-from dialogue.models import UserInformation
+from daphne_context.models import UserInformation
 
 
 # Context for EOSS Users

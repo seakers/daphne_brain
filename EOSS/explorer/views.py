@@ -10,13 +10,13 @@ import time
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from EOSS.data.problems import assignation_problems, partition_problems
+from EOSS.data.problem_specific import assignation_problems, partition_problems
+from EOSS.models import Design
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from auth_API.helpers import get_or_create_user_information
 from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back
 from EOSS.data.design_helpers import add_design
-from dialogue.models import Design
 
 # Get an instance of a logger
 logger = logging.getLogger('EOSS.explorer')

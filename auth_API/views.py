@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
 from auth_API.helpers import get_or_create_user_information
-from dialogue.models import UserInformation
+from daphne_context.models import UserInformation
 
 
 class Login(APIView):
@@ -108,10 +108,12 @@ class Register(APIView):
             user = User.objects.create_user(username, email, password1)
             user.save()
             # Create folders in the server structure
-            os.mkdir('./daphne_API/data/' + username)
+            folder_name = os.path.join(os.getcwd(), "EOSS", "data", "datasets", username)
+            os.mkdir(folder_name)
             problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2"]
             for problem in problem_list:
-                os.mkdir('./daphne_API/data/' + username + '/' + problem)
+                subfolder_name = os.path.join(folder_name, problem)
+                os.mkdir(subfolder_name)
         except ValueError:
             return Response({
                 'status': 'registration_error',

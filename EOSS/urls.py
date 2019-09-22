@@ -8,5 +8,5 @@ urlpatterns = [
     path('critic/', include('EOSS.critic.urls')),
     path('data/', include('EOSS.data.urls')),
     path('settings/', include('EOSS.settings.urls')),
-    path('dialogue/', include('EOSS.urls')),
+    path('dialogue/', include('EOSS.dialogue.urls')),
 ]
