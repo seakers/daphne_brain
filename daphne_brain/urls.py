@@ -19,13 +19,14 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 
 urlpatterns = [
-    path('api/auth/', include('auth_API.urls')),
-    path('api/daphne/', include('daphne_API.urls')),
+    path('api/eoss/', include('EOSS.urls')),
+    path('api/edl/', include('EDL.urls')),
+    path('api/at/', include('AT.urls')),
     path('api/ifeed/', include('iFEED_API.urls')),
-    path('api/vassar/', include('VASSAR_API.urls')),
-    path('api/critic/', include('critic_API.urls')),
-    path('api/data-mining/', include('data_mining_API.urls')),
     path('api/experiment/', include('experiment_API.urls')),
+    path('api/auth/', include('auth_API.urls')),
+
+    path('api/daphne/', include('daphne_API.urls')),
     path('api/anomaly/', include('anomaly_API.urls')),
 
     path('server/accounts/', include('django.contrib.auth.urls')),

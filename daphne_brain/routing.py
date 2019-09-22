@@ -28,5 +28,4 @@ application = ProtocolTypeRouter({
             path('api/anomaly/iForest', iForest),
         ]),
     ),
-
 })

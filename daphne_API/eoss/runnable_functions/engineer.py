@@ -1,8 +1,9 @@
 import json
 import logging
-from VASSAR_API.api import VASSARClient
+
+from EOSS.vassar.api import VASSARClient
 from daphne_API import problem_specific
-from daphne_API.models import UserInformation
+from dialogue.models import UserInformation
 
 logger = logging.getLogger('VASSAR')
 
@@ -13,18 +14,18 @@ def get_architecture_scores(design_id, designs, context: UserInformation):
 
     try:
         # Start connection with VASSAR
-        client.startConnection()
+        client.start_connection()
         num_design_id = int(design_id)
         scores = client.client.getArchitectureScoreExplanation(context.eosscontext.problem,
                                                                    json.loads(designs[num_design_id].inputs))
 
         # End the connection before return statement
-        client.endConnection()
+        client.end_connection()
         return scores
 
     except Exception:
         logger.exception('Exception in loading architecture score information')
-        client.endConnection()
+        client.end_connection()
         return None
 
 
@@ -34,7 +35,7 @@ def get_panel_scores(design_id, designs, panel, context: UserInformation):
 
     try:
         # Start connection with VASSAR
-        client.startConnection()
+        client.start_connection()
         num_design_id = int(design_id)
         stakeholders_to_excel = {
             "atmospheric": "ATM",
@@ -53,12 +54,12 @@ def get_panel_scores(design_id, designs, panel, context: UserInformation):
                                                               panel_code)
 
         # End the connection before return statement
-        client.endConnection()
+        client.end_connection()
         return panel_scores
 
     except Exception:
         logger.exception('Exception in loading panel score information')
-        client.endConnection()
+        client.end_connection()
         return None
 
 
@@ -68,19 +69,19 @@ def get_objective_scores(design_id, designs, objective, context: UserInformation
 
     try:
         # Start connection with VASSAR
-        client.startConnection()
+        client.start_connection()
         num_design_id = int(design_id)
         objective_scores = client.client.getObjectiveScoreExplanation(context.eosscontext.problem,
                                                                       json.loads(designs[num_design_id].inputs),
                                                                       objective)
 
         # End the connection before return statement
-        client.endConnection()
+        client.end_connection()
         return objective_scores
 
     except Exception:
         logger.exception('Exception in loading objective score information')
-        client.endConnection()
+        client.end_connection()
         return None
 
 
@@ -90,16 +91,16 @@ def get_instruments_for_objective(objective, context: UserInformation):
 
     try:
         # Start connection with VASSAR
-        client.startConnection()
+        client.start_connection()
         instruments = client.client.getInstrumentsForObjective(context.eosscontext.problem, objective)
 
         # End the connection before return statement
-        client.endConnection()
+        client.end_connection()
         return instruments
 
     except Exception:
         logger.exception('Exception in loading related instruments to an objective')
-        client.endConnection()
+        client.end_connection()
         return None
 
 
@@ -109,7 +110,7 @@ def get_instruments_for_stakeholder(stakeholder, context: UserInformation):
 
     try:
         # Start connection with VASSAR
-        client.startConnection()
+        client.start_connection()
         stakeholders_to_excel = {
             "atmospheric": "ATM",
             "oceanic": "OCE",
@@ -124,12 +125,12 @@ def get_instruments_for_stakeholder(stakeholder, context: UserInformation):
         stakeholder_instruments = client.client.getInstrumentsForPanel(context.eosscontext.problem, panel_code)
 
         # End the connection before return statement
-        client.endConnection()
+        client.end_connection()
         return stakeholder_instruments
 
     except Exception:
         logger.exception('Exception in loading related instruments to a panel')
-        client.endConnection()
+        client.end_connection()
         return None
 
 

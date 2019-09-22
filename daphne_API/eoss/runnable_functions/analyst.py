@@ -1,7 +1,7 @@
 import logging
 
 from daphne_API.eoss.runnable_functions.helpers import feature_expression_to_string
-from data_mining_API.api import DataMiningClient
+from EOSS.data_mining.api import DataMiningClient
 
 logger = logging.getLogger('VASSAR')
 

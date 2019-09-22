@@ -6,7 +6,7 @@ import yaml
 
 from daphne_API import ScorecardDataFrameFuncs
 from daphne_API.MatEngine_object import eng1
-from daphne_API.models import UserInformation
+from dialogue.models import UserInformation
 
 
 def load_mat_files(mission_name, mat_file, context: UserInformation):
