@@ -2,7 +2,7 @@ import json
 from string import Template
 
 from daphne_API.critic.critic import Critic
-from daphne_API.models import Design, UserInformation
+from dialogue.models import Design, UserInformation
 
 
 def active_engineer_response(user_info: UserInformation, inputs):

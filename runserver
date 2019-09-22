@@ -1,2 +1,0 @@
-#!/bin/bash
-PASSWORD="" SECRET_KEY="iufdifd87142p7t39h397nggn8jpiewongi12345hflds,.-po" USER="postgres" PASSWORD="postgres" python manage.py runserver

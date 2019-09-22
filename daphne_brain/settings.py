@@ -24,7 +24,7 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
 
 USE_X_FORWARDED_HOST = True
 
@@ -34,7 +34,6 @@ ACTIVE_MODULES = ['EOSS']
 EDL_PATH = '/Users/ssantini/Desktop/'
 
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,10 +41,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_API',
     'daphne_API',
-    'data_mining_API',
+    'EOSS.analyst',
     'experiment_API',
     'iFEED_API',
-    'VASSAR_API',
+    'EOSS.engineer',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -143,7 +142,7 @@ CSRF_TRUSTED_ORIGINS = (
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'America/New_York'
+TIME_ZONE = 'America/Chicago'
 
 USE_I18N = True
 
@@ -161,8 +160,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG":{
-            "hosts":[("localhost",6379)],
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
         }
     },
 }
@@ -213,8 +212,8 @@ LOGGING = {
             'format': '[%(asctime)s] - %(name)s - %(levelname)s - %(message)s'
         },
         'standard': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%Y/%m/%d %H:%M:%S"
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%Y/%m/%d %H:%M:%S"
         },
     },
     'handlers': {
@@ -224,9 +223,9 @@ LOGGING = {
             'filename': BASE_DIR + '/logs/daphne.log',
             'formatter': 'standard',
         },
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
             'formatter': 'standard',
         },
         'null': {
@@ -235,37 +234,37 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'iFEED': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'VASSAR': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'critic': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },        
         'data-mining': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'debugging': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
         },
         'config': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },

@@ -14,9 +14,8 @@ from daphne_API import data_helpers
 import daphne_API.historian.models as models
 import daphne_API.data_extractors as extractors
 import daphne_API.data_processors as processors
-import daphne_API.runnable_functions as run_func
 from daphne_API.errors import ParameterMissingError
-from daphne_API.models import UserInformation
+from dialogue.models import UserInformation
 
 import daphne_brain.settings
 

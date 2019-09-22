@@ -8,11 +8,11 @@ from sqlalchemy.orm import sessionmaker
 
 import daphne_API.historian.models as models
 import daphne_API.problem_specific as problem_specific
-from VASSAR_API.api import VASSARClient
+from EOSS.engineer import VASSARClient
 from daphne_API.eoss.runnable_functions.helpers import get_feature_unsatisfied, get_feature_satisfied, \
     feature_expression_to_string
-from daphne_API.models import UserInformation, Design
-from data_mining_API.api import DataMiningClient
+from dialogue.models import UserInformation, Design
+from EOSS.data_mining.api import DataMiningClient
 
 
 class Critic:
@@ -139,7 +139,7 @@ class Critic:
         problem = self.context.eosscontext.problem
         inputs = json.loads(design.inputs)
         client = VASSARClient(port)
-        client.startConnection()
+        client.start_connection()
 
         result_list = None
         if problem in self.assignation_problems:
@@ -147,7 +147,7 @@ class Critic:
         elif problem in self.partition_problems:
             result_list = client.client.getCritiqueDiscreteInputArch(problem, inputs)
 
-        client.endConnection()
+        client.end_connection()
 
         result = []
         for advice in result_list:
@@ -196,7 +196,7 @@ class Critic:
         problem = self.context.eosscontext.problem
         port = self.context.eosscontext.vassar_port
         client = VASSARClient(port)
-        client.startConnection()
+        client.start_connection()
 
         archs = None
         advices = []
@@ -228,7 +228,7 @@ class Critic:
 
             # TODO: Add the delta code for discrete architectures
 
-        client.endConnection()
+        client.end_connection()
         result = []
         for advice in advices:
             result.append({

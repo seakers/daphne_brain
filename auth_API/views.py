@@ -1,7 +1,7 @@
 import json
 import os
 
-from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
+from django.contrib.auth.forms import PasswordResetForm
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from rest_framework.views import APIView
@@ -9,9 +9,8 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
-from auth_API.helpers import get_user_information, get_or_create_user_information
-from daphne_API.daphne_fields import daphne_fields
-from daphne_API.models import UserInformation
+from auth_API.helpers import get_or_create_user_information
+from dialogue.models import UserInformation
 
 
 class Login(APIView):

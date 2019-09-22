@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext, \
+from dialogue.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext, \
     ExperimentContext
 from django.contrib.sessions.models import Session
 

@@ -1,10 +1,5 @@
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-import daphne_API.command_processing as command_processing
-from daphne_brain.nlp_object import nlp
-import daphne_API.command_lists as command_lists
 
 import pandas as pd
 import numpy as np

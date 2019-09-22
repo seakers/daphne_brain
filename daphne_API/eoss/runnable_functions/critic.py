@@ -1,9 +1,7 @@
-import json
 import logging
 
-from VASSAR_API.api import VASSARClient
 from daphne_API.critic.critic import Critic
-from daphne_API.models import UserInformation
+from dialogue.models import UserInformation
 
 logger = logging.getLogger('VASSAR')
 
