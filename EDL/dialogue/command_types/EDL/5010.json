@@ -1,0 +1,40 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "edl_mat_param", "type": "edl_mat_param", "options": "", "mandatory": true, "from_context": false },
+    { "name": "edl_mat_param2", "type": "edl_mat_param", "options": "", "mandatory": true, "from_context": false },
+    { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "from_context": true, "context": "edlcontext", "subcontext": "" ,"mandatory": true },
+    { "name": "current_mat_file_for_print", "type": "edl_mat_file", "options": "", "from_context": true, "context": "edlcontext", "subcontext": "", "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.plot_from_matfile('${current_mat_file}','${edl_mat_param}', '${edl_mat_param2}',context)",
+    "results":[
+      {
+        "result_type": "list",
+        "result_fields": {
+        "plot_elem": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+  {
+    "type": "list",
+    "begin": "",
+    "repeat": "",
+    "end":""
+  }
+  ],
+  "visual_response": [
+    {
+      "type": "plot_vars",
+      "title": "Title of plot",
+      "item_template": "{ \"x\": ${plot_elem}[0], \"y\": ${plot_elem}[1], \"extra_info\": {\"output_case\": ${plot_elem}[2]} }",
+      "x_axis_template": "${edl_mat_param}",
+      "y_axis_template": "${edl_mat_param2}"
+
+    }
+  ]
+}

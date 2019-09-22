@@ -8,12 +8,11 @@ import json
 import csv
 from random import *
 
-
+from EOSS.models import Design
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 
 from auth_API.helpers import get_or_create_user_information
-from dialogue.models import Design
 
 # Get an instance of a logger
 logger = logging.getLogger('iFEED')

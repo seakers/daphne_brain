@@ -1,12 +1,11 @@
 import json
-import pandas as pd
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from daphne_brain.nlp_object import nlp
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
-from dialogue.models import Answer, AllowedCommand
+from daphne_context.models import Answer, AllowedCommand
 
 
 class Command(APIView):
@@ -22,7 +21,7 @@ class Command(APIView):
         processed_command = nlp(request.data['command'].strip().lower())
 
         # Classify the command, obtaining a command type
-        command_types = command_processing.classify_command(processed_command)
+        command_types = command_processing.classify_command(processed_command, self.daphne_version)
 
         # Define context and see if it was already defined for this session
         user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
@@ -53,26 +52,3 @@ class Command(APIView):
         frontend_response = command_processing.think_response(user_info)
 
         return Response({'response': frontend_response})
-
-
-class ImportDataEDLSTATS(APIView):
-    """ Imports data from a csv file. To be deprecated in the future.
-
-    Request Args:
-        filename: Name of the sample data file
-
-    Returns:
-        data: Json string with the read data
-        columns: array with the columns of the data
-
-    """
-
-
-    def post(self, request, format=None):
-
-        # Set the path of the file containing data
-        file_path = '/Users/ssantini/Desktop/Code_Daphne/daphne_brain/daphne_API/' + request.data['filename']
-
-        data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
-
-        return Response(data)

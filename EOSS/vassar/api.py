@@ -24,7 +24,7 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-from EOSS.data.problems import assignation_problems, partition_problems
+from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.interface import VASSARInterface
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 

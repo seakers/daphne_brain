@@ -12,8 +12,8 @@ from rest_framework.response import Response
 
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, \
     ContinuousInputArchitecture, AssigningProblemEntities
+from EOSS.models import Design
 from auth_API.helpers import get_or_create_user_information
-from dialogue.models import Design
 from EOSS.data_mining.api import DataMiningClient
 
 # Get an instance of a logger
