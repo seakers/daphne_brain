@@ -2,11 +2,15 @@ from channels.auth import AuthMiddlewareStack
 from django.urls import path
 from channels.routing import ProtocolTypeRouter, URLRouter
 
-from EOSS.consumers import EOSSConsumer
-from AT.SARIMAX_AD import SARIMAX_AD
-from AT.KNN import adaptiveKNN
-from AT.I_Forest import iForest
 from daphne_brain import settings
+
+if "EOSS" in settings.ACTIVE_MODULES:
+    from EOSS.consumers import EOSSConsumer
+if "AT" in settings.ACTIVE_MODULES:
+    from AT.SARIMAX_AD import SARIMAX_AD
+    from AT.KNN import adaptiveKNN
+    from AT.I_Forest import iForest
+
 from experiment_API.consumers import ExperimentConsumer
 
 # The channel routing defines what connections get handled by what consumers,
