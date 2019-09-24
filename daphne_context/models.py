@@ -25,12 +25,20 @@ class UserInformation(models.Model):
         unique_together = ("session", "user")
 
 
-# An answer from Daphne
-class Answer(models.Model):
+# Daphne conversations
+class DialogueHistory(models.Model):
     user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
-    voice_answer = models.TextField()
-    visual_answer_type = models.TextField()
-    visual_answer = models.TextField()
+
+    voice_message = models.TextField()
+    visual_message_type = models.TextField()
+    visual_message = models.TextField()
+
+    WRITERS = (
+        ('user', 'Human'),
+        ('daphne', 'Machine'),
+    )
+    writer = models.CharField(max_length=40, choices=WRITERS)
+    date = models.DateTimeField()
 
 
 # Experiment Context (to perform experiments with human subjects and Daphne)

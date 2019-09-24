@@ -1,3 +1,4 @@
+import datetime
 import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -5,7 +6,7 @@ from rest_framework.response import Response
 from daphne_brain.nlp_object import nlp
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import Answer, AllowedCommand
+from daphne_context.models import DialogueHistory, AllowedCommand
 
 
 class Command(APIView):
@@ -26,8 +27,14 @@ class Command(APIView):
         # Define context and see if it was already defined for this session
         user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
 
+        DialogueHistory.objects.create(user_information=user_info,
+                                       voice_message=request.data["command"],
+                                       visual_message_type="[\"text\"]",
+                                       visual_message="[\"" + request.data["command"] + "\"]",
+                                       writer="user",
+                                       date=datetime.datetime.utcnow())
+
         # Remove all past answers related to this user
-        Answer.objects.filter(user_information__exact=user_info).delete()
         AllowedCommand.objects.filter(user_information__exact=user_info).delete()
 
         if 'allowed_commands' in request.data:
@@ -44,11 +51,39 @@ class Command(APIView):
 
             answer = command_processing.command(processed_command, command_class,
                                                 condition_name, user_info)
-            Answer.objects.create(user_information=user_info,
-                                  voice_answer=answer["voice_answer"],
-                                  visual_answer_type=json.dumps(answer["visual_answer_type"]),
-                                  visual_answer=json.dumps(answer["visual_answer"]))
+            DialogueHistory.objects.create(user_information=user_info,
+                                           voice_message=answer["voice_answer"],
+                                           visual_message_type=json.dumps(answer["visual_answer_type"]),
+                                           visual_message=json.dumps(answer["visual_answer"]),
+                                           writer="daphne",
+                                           date=datetime.datetime.utcnow())
 
         frontend_response = command_processing.think_response(user_info)
 
         return Response({'response': frontend_response})
+
+
+class Dialogue(APIView):
+    """
+    Get the last 50 messages (by default)
+    """
+    daphne_version = ""
+
+    def get(self, request, format=None):
+        # Define context and see if it was already defined for this session
+        user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+
+        last_dialogue = user_info.dialoguehistory_set.order_by("-date")[:50]
+
+        response_json = {
+            "dialogue_pieces": [
+                {
+                    "voice_message": piece.voice_message,
+                    "visual_message_type": json.loads(piece.visual_message_type),
+                    "visual_message": json.loads(piece.visual_message),
+                    "writer": piece.writer
+                } for piece in last_dialogue
+            ]
+        }
+
+        return Response(response_json)
