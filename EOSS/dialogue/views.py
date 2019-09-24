@@ -4,13 +4,17 @@ from rest_framework.response import Response
 from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 import EOSS.dialogue.command_lists as command_lists
-from dialogue.views import Command
+from dialogue.views import Command, Dialogue
 
 
 class EOSSCommand(Command):
     daphne_version = "EOSS"
     command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian']
     condition_names = ['ifeed', 'analyst', 'critic', 'historian']
+
+
+class EOSSHistory(Dialogue):
+    daphne_version = "EOSS"
 
 
 class CommandList(APIView):

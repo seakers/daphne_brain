@@ -100,10 +100,11 @@ def command(processed_command, command_class, condition_name, context: UserInfor
 
 def think_response(context: UserInformation):
     # TODO: Make this intelligent, e.g. hook this to a rule based engine
-    db_answer = context.answer_set.all()[:1].get()
+    db_answer = context.dialoguehistory_set.order_by("-date")[:1].get()
     frontend_answer = {
-        "voice_answer": db_answer.voice_answer,
-        "visual_answer_type": json.loads(db_answer.visual_answer_type),
-        "visual_answer": json.loads(db_answer.visual_answer)
+        "voice_message": db_answer.voice_message,
+        "visual_message_type": json.loads(db_answer.visual_message_type),
+        "visual_message": json.loads(db_answer.visual_message),
+        "writer": "daphne",
     }
     return frontend_answer

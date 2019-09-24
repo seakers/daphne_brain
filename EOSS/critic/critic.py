@@ -200,9 +200,9 @@ class Critic:
             archs = client.run_local_search(problem, json.loads(design.inputs))
 
             for arch in archs:
-                new_outputs = arch.outputs
+                new_outputs = arch["outputs"]
 
-                new_design_inputs = arch.inputs
+                new_design_inputs = arch["inputs"]
                 diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
                 advice = [get_advices_from_bit_string_diff(diff)]
 
