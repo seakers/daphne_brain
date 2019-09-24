@@ -216,7 +216,7 @@ def get_dialogue_functions(daphne_version):
 
 def run_function(function_info, data, context: UserInformation):
     # Load the functions that must be run
-    dialogue_functions = get_response_helpers(context.daphne_version)
+    dialogue_functions = get_dialogue_functions(context.daphne_version)
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)
