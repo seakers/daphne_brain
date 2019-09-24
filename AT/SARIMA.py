@@ -22,7 +22,7 @@ class AD_SARIMA(APIView):
                 return Response({"error": "ci_alpha must be in range (0,1)"})
 
         # Loads The data
-        data = pd.read_csv('anomaly_API/Data/sample.csv',
+        data = pd.read_csv('AT/Data/sample.csv',
                            parse_dates=True,
                            index_col='timestamp')
 

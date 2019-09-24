@@ -63,7 +63,7 @@ def HTM_AD(Data='Test',
 
     if Data == 'Test':  # If there is not data available, simply loads the temperature benchmark dataset
         # Import data
-        Data = pd.read_csv('anomaly_API/Data/sample.csv',
+        Data = pd.read_csv('AT/Data/sample.csv',
                            parse_dates=True,
                            index_col='timestamp')
         Data = Data.resample('H').bfill().interpolate()
