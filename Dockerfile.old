@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED 1
 ENV USER=""
 ENV PASSWORD=""
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./anomaly_API ./anomaly_API
+COPY ./AT ./AT
 COPY ./auth_API ./auth_API
 COPY ./critic_API ./critic_API
 COPY ./daphne_API ./daphne_API

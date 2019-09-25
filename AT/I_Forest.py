@@ -108,7 +108,7 @@ class iForest(JsonWebsocketConsumer):
         if 'data' in content:
             data = pd.read_json(content['data'], orient='records').set_index('timestamp')
         else:
-            data = pd.read_csv('anomaly_API/Data/sample_3.csv', parse_dates=True, index_col='timestamp')
+            data = pd.read_csv('AT/Data/sample_3.csv', parse_dates=True, index_col='timestamp')
         if 't' in content:  # Number of trees
             t = content['t']
         else:

@@ -12,7 +12,7 @@ class CheckSeasonality(APIView):
 
         data = pd.read_json(request.data['data'], orient='records').set_index('timestamp')
         #
-        # data = pd.read_csv('anomaly_API/Data/sample.csv', parse_dates=True, index_col='timestamp')
+        # data = pd.read_csv('AT/Data/sample.csv', parse_dates=True, index_col='timestamp')
 
         if 'variable' in request.data:
             variable = request.data['variable']
