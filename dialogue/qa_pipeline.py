@@ -76,6 +76,9 @@ def get_extract_functions(daphne_version):
     if daphne_version == "EDL":
         from EDL.dialogue.data_extractors import extract_function
         return extract_function
+    if daphne_version == "AT":
+        from AT.dialogue.data_extractors import extract_function
+        return extract_function
 
 
 def get_process_functions(daphne_version):
@@ -84,6 +87,9 @@ def get_process_functions(daphne_version):
         return process_function
     if daphne_version == "EDL":
         from EDL.dialogue.data_processors import process_function
+        return process_function
+    if daphne_version == "AT":
+        from AT.dialogue.data_processors import process_function
         return process_function
 
 
@@ -138,6 +144,8 @@ def augment_data(data, context: UserInformation):
     if context.daphne_version == "EOSS":
         data['designs'] = context.eosscontext.design_set.all()
     if context.daphne_version == "EDL":
+        pass
+    if context.daphne_version == "AT":
         pass
 
     #if 'behavioral' in context:
@@ -211,6 +219,9 @@ def get_dialogue_functions(daphne_version):
         return dialogue_functions
     if daphne_version == "EDL":
         import EDL.dialogue.dialogue_functions as dialogue_functions
+        return dialogue_functions
+    if daphne_version == "AT":
+        import AT.dialogue.dialogue_functions as dialogue_functions
         return dialogue_functions
 
 
