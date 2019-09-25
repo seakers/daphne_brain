@@ -24,7 +24,7 @@ class adaptiveKNN(JsonWebsocketConsumer):
             data = pd.read_json(content['data'], orient='records').set_index('timestamp')
         else:
             # Read Sample CSV
-            data = pd.read_csv('anomaly_API/Data/sample_3.csv', parse_dates=True, index_col='timestamp')
+            data = pd.read_csv('AT/Data/sample_3.csv', parse_dates=True, index_col='timestamp')
 
         if 'k' in content:  # Number of nearest Neighbors
             k = content['k']

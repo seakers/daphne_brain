@@ -48,7 +48,7 @@ class ImportData(APIView):
     def post(self, request, format=None):
 
         # Set the path of the file containing data
-        file_path = 'anomaly_API/Data/' + request.data['filename']
+        file_path = 'AT/Data/' + request.data['filename']
 
         data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
 
@@ -69,7 +69,7 @@ class ImportDatabase(APIView):
 
     def post(self, request, format=None):
 
-        filePath = 'anomaly_API/Databases/' + request.data['filename']
+        filePath = 'AT/Databases/' + request.data['filename']
 
         data = pd.read_csv(filePath, parse_dates=True)
 

@@ -33,7 +33,7 @@ class ADWindowedStats(APIView):
         if 'data' in request.data:
             data = pd.read_json(request.data['data'], orient='records').set_index('timestamp')
         else:
-            data = pd.read_csv('anomaly_API/Time series example/sample.csv', parse_dates=True,
+            data = pd.read_csv('AT/Time series example/sample.csv', parse_dates=True,
                                index_col='timestamp')
 
         # If there is an specified variable choose this one. Chooses the first variable on the dataset by default

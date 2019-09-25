@@ -1,3 +1,4 @@
+from django.urls import path, include
 from django.urls import path
 
 from AT import SARIMA, WGAUSS, views
@@ -29,5 +30,7 @@ urlpatterns = [
     path('analysis/MethodsAgreement', AnomalyDetectionAgreements.AgreementMethods.as_view(), name='MethodsAgreement'),
     path('analysis/Correlations', Correlations.Correlation.as_view(), name='Correlations'),
     path('analysis/CountAnomalies', CountAnomalies.CountAnomalies.as_view(), name='CountAnomalies'),
-    path('analysis/DiagnoseAnomalies', DiagnoseAnomalies.DiagnoseAnomalies.as_view(), name='DiagnoseAnomalies')
+    path('analysis/DiagnoseAnomalies', DiagnoseAnomalies.DiagnoseAnomalies.as_view(), name='DiagnoseAnomalies'),
+    path('dialogue/', include('AT.dialogue.urls')),
 ]
+
