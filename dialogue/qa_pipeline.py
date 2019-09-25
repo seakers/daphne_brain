@@ -220,6 +220,9 @@ def get_dialogue_functions(daphne_version):
     if daphne_version == "EDL":
         import EDL.dialogue.dialogue_functions as dialogue_functions
         return dialogue_functions
+    if daphne_version == "AT":
+        import AT.dialogue.dialogue_functions as dialogue_functions
+        return dialogue_functions
 
 
 def run_function(function_info, data, context: UserInformation):
