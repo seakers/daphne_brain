@@ -1,0 +1,3 @@
+threshold,example,battery,temperature
+lower,450,370,755
+upper,550,430,765
