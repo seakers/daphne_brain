@@ -1,0 +1,32 @@
+{
+  "type": "run_function",
+  "params": [],
+  "function":
+  {
+    "run_template": "dialogue_functions.find_last_anomaly()",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "variable": "item[\"variable\"]",
+          "type": "item[\"type\"]",
+          "timestamp": "item[\"timestamp\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The following anomalies were found: ",
+      "repeat": "${variable} was ${type} threshold at ${timestamp}.",
+      "end": ""
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "single",
+      "content": "Read me"
+    }
+  ]
+}

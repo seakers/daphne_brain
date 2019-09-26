@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-rese
 USE_X_FORWARDED_HOST = True
 
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
-ACTIVE_MODULES = ['EOSS']
+ACTIVE_MODULES = ['AT']
 
 EDL_PATH = '/Users/ssantini/Desktop/'
 
