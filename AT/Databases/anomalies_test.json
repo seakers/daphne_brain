@@ -1,0 +1,10 @@
+{
+  "low_pressure":
+  [
+    {"name": "Low cabin pressure", "cause": "gas leak", "timestamp": 300}
+  ]
+  "high_temperature":
+  [
+    {"name": "High cabin temperature", "cause": "radiator failure", "timestamp": 350}
+  ]
+}
