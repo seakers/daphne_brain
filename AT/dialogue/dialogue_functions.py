@@ -1,4 +1,6 @@
 import pandas as pd
+import json
+import os
 
 
 def find_last_anomaly():
@@ -35,3 +37,9 @@ def find_last_anomaly():
         row = row - 1
 
     return variables, types, timestamp
+
+def retrieve_anomaly_test(anomaly_name):
+    # Open the anomalies_test.json
+    json.loads("C:/Users/Michael/Documents/repos/daphne_brain/AT/Databases/anomalies_test.json")
+    anomaly = anomalies_test[str(anomaly_name)]
+    return anomaly
