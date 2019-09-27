@@ -2,12 +2,11 @@
   "type": "run_function",
   "params":
   [
-    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": true, "context": "edlcontext", "subcontext": "" },
     { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context": false }
   ],
   "function":
   {
-    "run_template": "run_func.edl.get_scorecard_post_results('${current_scorecard}', '${edl_metric_names}', context)",
+    "run_template": "run_func.edl.get_scorecard_post_results('None', '${edl_metric_names}', context)",
     "results":[
     {
         "result_type": "list",

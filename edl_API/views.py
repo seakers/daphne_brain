@@ -9,17 +9,52 @@ from rest_framework.response import Response
 from daphne_API.background_search import send_archs_from_queue_to_main_dataset, send_archs_back
 from daphne_brain.nlp_object import nlp
 import daphne_API.command_processing as command_processing
-from auth_API.helpers import get_or_create_user_information
+from auth_API.helpers import get_or_create_user_information, get_user_information
 from daphne_API.models import Design, Answer, AllowedCommand
 import daphne_API.command_lists as command_lists
-from VASSAR_API.api import VASSARClient
+
 
 # from daphne_API.MatEngine_object import eng1
 # print(eng1)
 # eng1.desktop(nargout=0)  # open engine
+from edl_API import sensitivity_analysis
+
+
+class MetricsOfInterest(APIView):
+    def get(self, request, format=None):
+        user_info = get_user_information(request.session, request.user)
+        return Response({ "metrics_list": json.loads(user_info.edlcontext.current_metrics_of_interest)})
+
+
+class SensitivityAnalysis(APIView):
+    def post(self, request, format=None):
+        user_info = get_user_information(request.session, request.user)
+        metric_name = request.data['metric_name']
+        sub_df = sensitivity_analysis.run_SA(metric_name, user_info)
+        p_vals = (sub_df['p_vals']).tolist()
+        input_name = (sub_df['metric_name']).tolist()
+        input_descr = (sub_df['description']).tolist()
+        input_label = (sub_df['label']).tolist()
+        input_model = (sub_df['model']).tolist()
+        distance = (sub_df['distance']).tolist()
+        return Response({"pvals": p_vals, "input_name": input_name, "input_description": input_descr,
+                         "input_label": input_label, "input_model": input_model, "distance": distance})
+
+
+class ImportDataAvail(APIView):
+    def post(self, request, format = None):
+        user_info = get_user_information(request.session, request.user)
+
+        file_to_load = request.data['filename']
+        file_to_load = file_to_load
+        user_info.edlcontext.current_mat_file = os.path.join('/Users/ssantini/Code/Code_Daphne/daphne_brain/edl_API/EDLData/', file_to_load)
+        user_info.edlcontext.current_mat_file_for_print = file_to_load
+        user_info.edlcontext.save()
+        return Response({'file_status': 'file loaded !'})
 
 
 class Command(APIView):
+
     """
     Process a command
     """
@@ -255,29 +290,6 @@ class ClearSession(APIView):
                 del request.session[field]
 
         return Response({})
-
-
-class ImportDataEDLSTATS(APIView):
-    """ Imports data from a csv file. To be deprecated in the future.
-
-    Request Args:
-        filename: Name of the sample data file
-
-    Returns:
-        data: Json string with the read data
-        columns: array with the columns of the data
-
-    """
-
-
-    def post(self, request, format=None):
-
-        # Set the path of the file containing data
-        file_path = '/Users/ssantini/Code/Code_Daphne/daphne_brain/daphne_API/' + request.data['filename']
-
-        data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
-
-        return Response(data)
 
 
 class SetProblem(APIView):

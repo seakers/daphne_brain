@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/data-mining/', include('data_mining_API.urls')),
     path('api/experiment/', include('experiment_API.urls')),
     path('api/anomaly/', include('anomaly_API.urls')),
+    path('api/edl/', include('edl_API.urls')),
 
     path('server/admin/', admin.site.urls),
     path('server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
