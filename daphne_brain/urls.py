@@ -17,21 +17,25 @@ from django.urls import path, include
 from django.contrib import admin
 from rest_framework.urlpatterns import format_suffix_patterns
 
+from daphne_brain import settings
 
-urlpatterns = [
-    path('api/auth/', include('auth_API.urls')),
-    path('api/daphne/', include('daphne_API.urls')),
+urlpatterns = []
+if "EOSS" in settings.ACTIVE_MODULES:
+    urlpatterns.append(path('api/eoss/', include('EOSS.urls')))
+if "EDL" in settings.ACTIVE_MODULES:
+    urlpatterns.append(path('api/edl/', include('EDL.urls')))
+if "AT" in settings.ACTIVE_MODULES:
+    urlpatterns.append(path('api/at/', include('AT.urls')))
+urlpatterns.extend([
     path('api/ifeed/', include('iFEED_API.urls')),
-    path('api/vassar/', include('VASSAR_API.urls')),
-    path('api/critic/', include('critic_API.urls')),
-    path('api/data-mining/', include('data_mining_API.urls')),
     path('api/experiment/', include('experiment_API.urls')),
-    path('api/anomaly/', include('anomaly_API.urls')),
-    path('api/edl/', include('edl_API.urls')),
+    path('api/auth/', include('auth_API.urls')),
+
+    path('server/accounts/', include('django.contrib.auth.urls')),
 
     path('server/admin/', admin.site.urls),
     path('server/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-]
+])
 
 urlpatterns = format_suffix_patterns(urlpatterns)
 

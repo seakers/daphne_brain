@@ -1,0 +1,32 @@
+{
+  "type": "run_function",
+  "params": [],
+  "function":
+  {
+    "run_template": "dialogue_functions.analyst.data_mining_run(data['designs'], data['behavioral'], data['non_behavioral'], context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "adv_type": "item[\"type\"]",
+          "advice": "item[\"advice\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The driving features of the target designs are: ",
+      "repeat": "${advice}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The driving features of the target designs are: ",
+      "item_template": "<b>${advice}"
+    }
+  ]
+}

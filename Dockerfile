@@ -1,21 +1,21 @@
-FROM python:3.6
-WORKDIR /usr/src/app
-COPY requirements.txt ./
-ENV PYTHONUNBUFFERED 1
-ENV USER=""
-ENV PASSWORD=""
-RUN pip install --no-cache-dir -r requirements.txt
-COPY ./anomaly_API ./anomaly_API
-COPY ./auth_API ./auth_API
-COPY ./critic_API ./critic_API
-COPY ./daphne_API ./daphne_API
-COPY ./daphne_brain ./daphne_brain
-COPY ./data_mining_API ./data_mining_API
-COPY ./experiment_API ./experiment_API
-COPY ./iFEED_API ./iFEED_API
-COPY ./merge_session ./merge_session
-COPY ./VASSAR_API ./VASSAR_API
-COPY manage.py ./
-RUN python manage.py migrate --run-syncdb
-RUN python manage.py collectstatic --clear --noinput
+FROM python:3.7-slim-stretch
+
+# The working directory where daphne_brain is placed is /usr/src/app/daphne_brain
+WORKDIR /usr/src/app/daphne_brain
+
+
+# Copy everything in the daphne_brain directory to /usr/src/app/daphne_brain
+COPY ./. /usr/src/app/daphne_brain/.
+
+
+# Update apt-get package manager -- Install daphne_brain dependencies
+RUN apt-get -y update &&\
+    apt-get -y upgrade &&\
+    apt-get -y install build-essential manpages-dev &&\
+    pip3 install --no-cache-dir -r ./requirements.txt
+
+
+# Commands to start daphne_brain
+RUN python3 manage.py migrate --run-syncdb &&\
+    python3 manage.py collectstatic --clear --noinput
 CMD daphne -b 0.0.0.0 -p 8001 daphne_brain.asgi:application
