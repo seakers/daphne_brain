@@ -1,5 +1,5 @@
 [
-	{"metric":"Number of Cases Run","type":"Size","units":"N/A","calculation":"ans = output_case","direction":">","yellow":2000,"red":500,"evalString":"length(ans)"},
+	{"metric":"Number of Cases Run","type":"Size","units":"N/A","calculation":"ans = output_case","direction":">","yellow":2000,"red":500,"x":"length(ans)"},
 	{"metric":"Any Failed Spec Criteria","type":"Scalar","units":"%","calculation":"ans = percent( flagfail_fail_fesn > 0 )","direction":"<=","yellow":0,"red":0.1,"evalString":"ans"},
 	{"metric":"Flagged for Any Reason","type":"Scalar","units":"%","calculation":"ans = percent( flagfail_flag1_fesn + flagfail_flag2_fesn > 0 )","direction":"<=","yellow":0,"red":0.1,"evalString":"ans"},
 	{"metric":"Time from cruise stage separation to flyway exceeded","type":"Scalar","units":"%","calculation":"ans = percent( time_fly - time_t0 + 60 > 19*60 )","direction":"<=","yellow":0,"red":0.1,"evalString":"ans"},

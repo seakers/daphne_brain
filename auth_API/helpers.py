@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext
+from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext, EDLContextScorecards
 from merge_session.merge_db import MergeSession
 
 
@@ -34,7 +34,10 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         engineer_context.save()
 
         edl_context = EDLContext(user_information=user_info, current_mat_file="", current_mat_file_for_print="",
-                                  current_scorecard_file="", current_scorecard="")
+                                  current_scorecard_file="", current_scorecard_path="", selected_case=-1,
+                                 current_mission="", current_metrics_of_interest="")
+
+
         edl_context.save()
 
         return user_info
