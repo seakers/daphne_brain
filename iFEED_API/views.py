@@ -1,23 +1,18 @@
 import logging
-import os
-import csv
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
-import numpy as np
-import sys,os
+import os
 import json
 import csv
-import hashlib
-import datetime
 from random import *
 
-
+from EOSS.models import Design
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 
+from auth_API.helpers import get_or_create_user_information
 
 # Get an instance of a logger
 logger = logging.getLogger('iFEED')
@@ -43,47 +38,50 @@ class ImportData(APIView):
         architectures: a list of python dict containing the basic architecture information.
         
     """
+
     def post(self, request, format=None):
-        try:
-            logger.debug('iFEED import data HTTP request')
+        try:    
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            user_info.eosscontext.last_arch_id = 0
 
             # Set the path of the file containing data
-            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', request.POST['file_path'])
-            
-            inputType = request.POST['input_type']
-            inputNum = int(request.POST['input_num'])
-            outputNum = int(request.POST['output_num'])
+            filename = request.POST['file_path']
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
+
             problem = request.POST['problem']
-
-            self.archID = 0
-
+            
+            input_type = request.POST['input_type']
+            input_num = int(request.POST['input_num'])
+            output_num = int(request.POST['output_num'])
+            
             # Open the file
             with open(file_path) as csvfile:
-                # Read the file as a csv file
-                read = csv.reader(csvfile, delimiter=',')
+                Design.objects.filter(eosscontext__exact=user_info.eosscontext).delete()
 
-                self.architectures = []
+                architectures = []
+                architectures_json = []
 
                 inputs_unique_set = set()
+
+                # Check if there exists a header
+                has_header = csv.Sniffer().has_header(csvfile.read(1024))
+                csvfile.seek(0)
+
+                # Read the file as a csv file
+                reader = csv.reader(csvfile, delimiter=',')
+
                 # For each row, store the information
-                for ind, row in enumerate(read):
-                    if ind == 0: # Check if the first line is a header
-                        header = False
-                        for cell in row:
-                            if not is_number(cell) and cell != "": 
-                                # If one of the entries is not a number or an empty string
-                                # First line is a header
-                                header = True
-                                break
-                        if header:
-                            continue
+                for row in reader:
+                    if has_header:
+                        has_header = False
+                        continue
 
                     inputs = []
                     outputs = []
 
-                    if problem == "constellation":
+                    if problem == "Constellation_10":
                         # Filter out outliers
-                         
+
                         if float(row[40]) > 22000: # mean_resp
                             continue
                         elif float(row[41]) > 93000: # latency
@@ -93,49 +91,56 @@ class ImportData(APIView):
                                 continue
 
                     # Import inputs
-                    for i in range(inputNum):
-                        if inputType == "binary": 
+                    for i in range(input_num):
+                        if input_type == 'binary':
                             # Assumes that there is only one column for the inputs
                             inputs = self.booleanString2booleanArray(row[i])
-                        elif inputType == "discrete":
-                            inp = row[i]
-                            inp = int(inp)
-                            inputs.append(inp)
-                        else:
+
+                        elif input_type == 'discrete':
+                            inputs.append(int(row[i]))
+
+                        elif input_type == 'continuous': # continuous variable input
+
                             inp = row[i]
                             if inp == "":
-                                inp = -1
+                                inp = None
+                            elif inp == "null":
+                                inp = None
                             else:
                                 inp = float(inp)
                             inputs.append(inp)
+                        else:
+                            raise ValueError('Unknown input type: {0}'.format(input_type))
 
-                    for i in range(outputNum):
-                        out = row[i + inputNum]
+
+                    for i in range(output_num):
+                        out = row[i + input_num]
                         if out == "":
                             out = 0
                         else:
                             out = float(out)
                         outputs.append(out)
 
-                    hashedInput = hash(tuple(inputs))
-                    if hashedInput not in inputs_unique_set:
-                        self.architectures.append({'id':self.archID, 'inputs':inputs, 'outputs':outputs})
-                        self.archID += 1
-                        inputs_unique_set.add(hashedInput)
-                    else:
-                        #print(hashedInput)
-                        pass
+                    hashed_input = hash(tuple(inputs))
+                    if hashed_input not in inputs_unique_set:
+                        architectures.append(Design(id=user_info.eosscontext.last_arch_id,
+                                                    eosscontext=user_info.eosscontext,
+                                                    inputs=json.dumps(inputs),
+                                                    outputs=json.dumps(outputs)))
+                        architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
+                        user_info.eosscontext.last_arch_id += 1
+                        inputs_unique_set.add(hashed_input)
 
             # Define context and see if it was already defined for this session
-            request.session['data'] = self.architectures
-            request.session['archID'] = self.archID
-            request.session.modified = True
-
-            return Response(self.architectures)
+            Design.objects.bulk_create(architectures)
+            user_info.eosscontext.problem = problem
+            user_info.eosscontext.dataset_name = filename
+            user_info.eosscontext.save()
+            user_info.save()
+            return Response(architectures_json)
         
         except Exception:
-            logger.exception('Exception in importing data for iFEED')
-            return Response('')
+            raise ValueError("There has been an error when parsing the architectures")
 
     def booleanString2booleanArray(self, booleanString):
         return [b == "1" for b in booleanString]

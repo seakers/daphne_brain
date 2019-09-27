@@ -1,8 +1,10 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext, EDLContextScorecards
-from merge_session.merge_db import MergeSession
+from EDL.models import EDLContext
+from EOSS.models import EOSSContext, ActiveContext, EngineerContext
+from daphne_context.models import UserInformation, ExperimentContext
+from django.contrib.sessions.models import Session
 
 
 def create_user_information(session_key=None, username=None, version='EOSS'):
@@ -13,7 +15,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         if username is not None and session_key is None:
             user_info = UserInformation(user=User.objects.get(username=username), daphne_version=version)
         elif session_key is not None and username is None:
-            user_info = UserInformation(session=MergeSession.objects.get(session_key=session_key),
+            user_info = UserInformation(session=Session.objects.get(session_key=session_key),
                                         daphne_version=version)
         else:
             raise Exception("Unexpected input for create_user_information")
@@ -22,8 +24,8 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         user_info.save()
 
         # Create the EOSS Context and its children
-        eoss_context = EOSSContext(user_information=user_info, problem='', dataset_name='', last_arch_id=0,
-                                   selected_arch_id=-1, added_archs_count=0, vassar_port=9090)
+        eoss_context = EOSSContext(user_information=user_info, problem='', dataset_name='', dataset_user=False,
+                                   last_arch_id=0, selected_arch_id=-1, added_archs_count=0, vassar_port=9090)
         eoss_context.save()
 
         active_context = ActiveContext(eosscontext=eoss_context, show_background_search_feedback=False,
@@ -33,11 +35,13 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         engineer_context = EngineerContext(eosscontext=eoss_context, vassar_instrument='', instrument_parameter='')
         engineer_context.save()
 
+        experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
+                                               current_state="")
+        experiment_context.save()
+
         edl_context = EDLContext(user_information=user_info, current_mat_file="", current_mat_file_for_print="",
-                                  current_scorecard_file="", current_scorecard_path="", selected_case=-1,
+                                 current_scorecard_file="", current_scorecard_path="", selected_case=-1,
                                  current_mission="", current_metrics_of_interest="")
-
-
         edl_context.save()
 
         return user_info
@@ -53,8 +57,8 @@ def get_user_information(session, user):
         # If no session exists, create one here
         if session.session_key is None:
             session.create()
-        session = MergeSession.objects.get(session_key=session.session_key)
-        userinfo_qs = UserInformation.objects.filter(session__exact=session)
+        session = Session.objects.get(session_key=session.session_key)
+        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key)
 
     if len(userinfo_qs) == 1:
         return userinfo_qs[0]

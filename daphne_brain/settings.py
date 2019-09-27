@@ -24,37 +24,41 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
+
+USE_X_FORWARDED_HOST = True
 
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
-ACTIVE_MODULES = ['EDL']
+ACTIVE_MODULES = ['EOSS']
 
 EDL_PATH = '/Users/ssantini/Code/'
-
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'channels',
+    'corsheaders',
+    'daphne_context',
+    'EOSS',
+    'EDL',
+    'AT',
     'auth_API',
-    'daphne_API',
-    'data_mining_API',
     'experiment_API',
     'iFEED_API',
-    'VASSAR_API',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'merge_session'
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'daphne_brain.tamu_subdomains_session.TamuSubdomainsSessionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,8 +94,12 @@ WSGI_APPLICATION = 'daphne_brain.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'daphne',
+        'USER': os.environ['USER'],
+        'PASSWORD': os.environ['PASSWORD'],
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -114,13 +122,28 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# CORS & CSRF
+
+CORS_ORIGIN_WHITELIST = (
+    'http://daphne.engr.tamu.edu',
+    'http://localhost:8080'
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+CSRF_TRUSTED_ORIGINS = (
+    'http://daphne.engr.tamu.edu',
+    'http://localhost:8080'
+)
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'America/New_York'
+TIME_ZONE = 'America/Chicago'
 
 USE_I18N = True
 
@@ -138,8 +161,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG":{
-            "hosts":[("localhost",6379)],
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
         }
     },
 }
@@ -154,7 +177,7 @@ ALCHEMY_DATABASE = {
     'port': '5432',
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
-    'database': 'ceos'
+    'database': 'daphne'
 }
 
 EDL_DATABASE = {
@@ -168,7 +191,13 @@ EDL_DATABASE = {
 
 
 # Session configuration
-SESSION_ENGINE = "merge_session.merge_db"
+# SESSION_ENGINE = "merge_session.merge_db"
+
+# Email
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = 'Daphne Admin <daphne@selva-research.com>'
 
 
 # Logging
@@ -184,8 +213,8 @@ LOGGING = {
             'format': '[%(asctime)s] - %(name)s - %(levelname)s - %(message)s'
         },
         'standard': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%Y/%m/%d %H:%M:%S"
         },
     },
     'handlers': {
@@ -193,11 +222,11 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR + '/logs/daphne.log',
-            'formatter': 'simple',
+            'formatter': 'standard',
         },
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
             'formatter': 'standard',
         },
         'null': {
@@ -206,37 +235,37 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'iFEED': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'VASSAR': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'critic': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },        
         'data-mining': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
         'debugging': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
         },
         'config': {
-            'handlers': ['file','console'],
+            'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
