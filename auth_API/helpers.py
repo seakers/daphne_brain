@@ -32,9 +32,6 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                        check_for_diversity=False, show_arch_suggestions=False)
         active_context.save()
 
-        engineer_context = EngineerContext(eosscontext=eoss_context, vassar_instrument='', instrument_parameter='')
-        engineer_context.save()
-
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
                                                current_state="")
         experiment_context.save()
