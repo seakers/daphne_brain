@@ -1,13 +1,15 @@
 import logging
 
 from EOSS.critic.critic import Critic
+from EOSS.models import EOSSContext
 from daphne_context.models import UserInformation
 
 logger = logging.getLogger('EOSS.critic')
 
 
-def general_call(design_id, designs, context: UserInformation):
-    critic = Critic(context)
+def general_call(design_id, designs, context):
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    critic = Critic(eosscontext)
 
     try:
         this_design = None

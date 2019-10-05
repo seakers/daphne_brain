@@ -4,6 +4,9 @@ from django.db import models
 
 
 # General user information class
+from rest_framework import serializers
+
+
 class UserInformation(models.Model):
     # Primary key tuple
     session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True)
@@ -39,6 +42,20 @@ class DialogueHistory(models.Model):
     )
     writer = models.CharField(max_length=40, choices=WRITERS)
     date = models.DateTimeField()
+
+
+class DialogueContext(models.Model):
+    dialogue_history = models.OneToOneField(DialogueHistory, on_delete=models.CASCADE)
+
+    is_clarifying_input = models.BooleanField()
+    clarifying_role = models.IntegerField(null=True)
+    clarifying_commands = models.TextField(null=True)
+
+
+class DialogueContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DialogueContext
+        fields = '__all__'
 
 
 # Experiment Context (to perform experiments with human subjects and Daphne)
