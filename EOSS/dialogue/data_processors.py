@@ -30,3 +30,4 @@ process_function["vassar_instrument"] = not_processed
 process_function["vassar_measurement"] = not_processed
 process_function["vassar_stakeholder"] = not_processed
 process_function["objective"] = not_processed
+process_function["subobjective"] = not_processed
