@@ -6,6 +6,7 @@ import pandas
 import EOSS.historian.models as earth_models
 from EOSS.data import problem_specific
 from EOSS.models import EOSSContext
+from EOSS.vassar.api import VASSARClient
 from daphne_context.models import UserInformation
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index, crop_list
 
@@ -102,16 +103,24 @@ def extract_vassar_stakeholder(processed_question, number_of_features, user_info
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
 
-def extract_vassar_objective(processed_question, number_of_features, context: EOSSContext):
-    options = ["ATM" + str(i) for i in range(1, 10)]
-    options.extend(["OCE" + str(i) for i in range(1, 10)])
-    options.extend(["TER" + str(i) for i in range(1, 10)])
-    options.extend(["WEA" + str(i) for i in range(1, 10)])
-    options.extend(["CLI" + str(i) for i in range(1, 10)])
-    options.extend(["ECO" + str(i) for i in range(1, 10)])
-    options.extend(["WAT" + str(i) for i in range(1, 10)])
-    options.extend(["HEA" + str(i) for i in range(1, 10)])
-    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+def extract_vassar_objective(processed_question, number_of_features, user_information: UserInformation):
+    port = user_information.eosscontext.vassar_port
+    vassar_client = VASSARClient(port)
+    vassar_client.start_connection()
+    objectives = vassar_client.get_objective_list(user_information.eosscontext.problem)
+    objectives = [objective.lower() for objective in objectives]
+    vassar_client.end_connection()
+    return sorted_list_of_features_by_index(processed_question, objectives, number_of_features)
+
+
+def extract_vassar_subobjective(processed_question, number_of_features, user_information: UserInformation):
+    port = user_information.eosscontext.vassar_port
+    vassar_client = VASSARClient(port)
+    vassar_client.start_connection()
+    subobjectives = vassar_client.get_subobjective_list(user_information.eosscontext.problem)
+    subobjectives = [subobjective.lower() for subobjective in subobjectives]
+    vassar_client.end_connection()
+    return sorted_list_of_features_by_index(processed_question, subobjectives, number_of_features)
 
 
 extract_function = {}
@@ -127,3 +136,4 @@ extract_function["vassar_instrument"] = extract_vassar_instrument
 extract_function["vassar_measurement"] = extract_vassar_measurement
 extract_function["vassar_stakeholder"] = extract_vassar_stakeholder
 extract_function["objective"] = extract_vassar_objective
+extract_function["subobjective"] = extract_vassar_subobjective

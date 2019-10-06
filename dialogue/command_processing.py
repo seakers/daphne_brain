@@ -92,13 +92,13 @@ def get_top_types(logits, daphne_version, module_name, top_number):
 
 def error_answers(objective, missing_param):
     return {
-        'voice_answer': 'I interpreted that you are trying to ' + objective + '. I can\'t do this because I\'m missing '
-                        'a ' + missing_param + ' parameter. If you think I\'m not doing the correct thing, please '
-                        'report this to someone.',
+        'voice_answer': 'Sorry, but I can\'t answer your question. I interpreted that you are trying to ' + objective +
+                        '. I can\'t do this because a ' + missing_param + ' parameter doesn\'t have a valid value. If '
+                        'you think I\'m not doing the correct thing, please report this to someone.',
         'visual_answer_type': ['text'],
-        'visual_answer': ['I interpreted that you are trying to ' + objective + '. I can\'t do this because I\'m missing '
-                          'a ' + missing_param + ' parameter. If you think I\'m not doing the correct thing, please '
-                          'report this to someone.']
+        'visual_answer': ['Sorry, but I can\'t answer your question. I interpreted that you are trying to ' + objective +
+                          '. I can\'t do this because a ' + missing_param + ' parameter doesn\'t have a valid value. If '
+                          'you think I\'m not doing the correct thing, please report this to someone.']
     }
 
 

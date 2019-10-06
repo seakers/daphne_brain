@@ -196,7 +196,7 @@ class Critic:
         archs = None
         advices = []
         if problem in assignation_problems:
-            archs = client.run_local_search(problem, json.loads(design.inputs))
+            archs = client.run_local_search(problem, json.loads(design))
 
             for arch in archs:
                 new_outputs = arch["outputs"]

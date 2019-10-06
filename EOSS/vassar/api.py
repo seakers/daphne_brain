@@ -57,22 +57,29 @@ class VASSARClient:
 
     def get_instrument_list(self, problem):
         return self.client.getInstrumentList(problem)
+
+    def get_objective_list(self, problem):
+        return self.client.getObjectiveList(problem)
+
+    def get_subobjective_list(self, problem):
+        return self.client.getSubobjectiveList(problem)
     
-    def evaluate_architecture(self, problem, bit_string):
+    def evaluate_architecture(self, problem, inputs):
         if problem in assignation_problems:
-            arch_formatted = self.client.evalBinaryInputArch(problem, bit_string)
+            arch_formatted = self.client.evalBinaryInputArch(problem, inputs)
         elif problem in partition_problems:
-            arch_formatted = self.client.evalDiscreteInputArch(problem, bit_string)
+            arch_formatted = self.client.evalDiscreteInputArch(problem, inputs)
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
         arch = {'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs}
         return arch
 
-    def run_local_search(self, problem, bit_string):
+    def run_local_search(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
-            archs_formatted = self.client.runLocalSearchBinaryInput(problem, bit_string)
+            archs_formatted = self.client.runLocalSearchBinaryInput(problem, thrift_arch)
         elif problem in partition_problems:
-            archs_formatted = self.client.runLocalSearchDiscreteInput(problem, bit_string)
+            archs_formatted = self.client.runLocalSearchDiscreteInput(problem, thrift_arch)
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
         archs = []
@@ -88,6 +95,10 @@ class VASSARClient:
             return DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
+
+    def get_architecture_score_explanation(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        return self.client.getArchitectureScoreExplanation(problem, thrift_arch)
 
     def get_arch_science_information(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
