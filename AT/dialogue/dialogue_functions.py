@@ -41,5 +41,10 @@ def find_last_anomaly():
 def retrieve_anomaly_test(anomaly_name):
     # Open the anomalies_test.json
     json.loads("C:/Users/Michael/Documents/repos/daphne_brain/AT/Databases/anomalies_test.json")
-    anomaly = anomalies_test[str(anomaly_name)]
+    anomaly_cause = anomalies[anomaly_name]["cause"]
+    anomaly_timestamp = anomalies[anomaly_name]["timestamp"]
+    print(anomaly_name)
+    print(anomaly_cause)
+    print(anomaly_timestamp)
+    anomaly = anomalies[anomaly_name]
     return anomaly
