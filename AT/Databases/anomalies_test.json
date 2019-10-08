@@ -1,10 +1,17 @@
 {
-  "low_pressure":
-  [
-    {"name": "Low cabin pressure", "cause": "gas leak", "timestamp": 300}
-  ]
-  "high_temperature":
-  [
-    {"name": "High cabin temperature", "cause": "radiator failure", "timestamp": 350}
-  ]
+  "anomalies":
+  {
+    "low cabin pressure":
+    {
+      "name": "Low Cabin Pressure",
+      "cause": "Hull Leakage",
+      "timestamp": "300"
+    },
+    "high cabin temperature":
+    {
+      "name": "High Cabin Temperature",
+      "cause": "Failed radiator",
+      "timestamp": "315"
+    }
+  }
 }

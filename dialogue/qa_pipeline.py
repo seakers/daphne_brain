@@ -19,7 +19,8 @@ def classify(question, daphne_version, module_name):
 
     with keras.backend.get_session().graph.as_default():
         # Map data into vocabulary
-        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
+        # model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
+        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
         vocab_path = os.path.join(model_folder_path, "tokenizer.json")
         with open(vocab_path, mode="r") as tokenizer_json:
             tokenizer = tokenizer_from_json(tokenizer_json.read())
