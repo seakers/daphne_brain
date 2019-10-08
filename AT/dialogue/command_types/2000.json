@@ -11,7 +11,8 @@
       {
         "result_type": "single",
         "result_fields": {
-          "cause": "anomaly[\"cause\"]"
+          "cause": "anomaly[\"cause\"]",
+          "timestamp": "anomaly[\"timestamp\"]"
         }
       }
     ]
