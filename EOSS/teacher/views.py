@@ -16,9 +16,12 @@ from EOSS.data.design_helpers import add_design
 
 
 # --> Will return information on the Features subject
+# --> We will need a DataMiningClient, used in analyst/views.py
 class GetSubjectFeatures(APIView):
     def post(self, request, format=None):
-        return 0
+        test_data = request.data['fricken_key']
+        print(test_data)
+        return Response({'list': 'test'})
 
 
 
@@ -28,9 +31,10 @@ class GetSubjectFeatures(APIView):
 
 
 # --> Will return information on the Sensitivities subject --> Ask Samalis
+# --> We will need a DataMiningClient, used in analyst/views.py
 class GetSubjectSensitivities(APIView):
     def post(self, request, format=None):
-        return 0
+        return Response({'list': 'test'})
 
 
 
@@ -38,18 +42,20 @@ class GetSubjectSensitivities(APIView):
 
 
 # --> Will return information on the Objective Space subject
+# --> Call VASSAR
 class GetSubjectObjectiveSpace(APIView):
     def post(self, request, format=None):
-        return 0
+        return Response({'list': 'test'})
 
 
 
 
 
 # --> Will return information on the Design Space subject
+# --> Call VASSAR
 class GetSubjectDesignSpace(APIView):
     def post(self, request, format=None):
-        return 0
+        return Response({'list': 'test'})
 
 
 
