@@ -10,6 +10,7 @@ if "AT" in settings.ACTIVE_MODULES:
     from AT.SARIMAX_AD import SARIMAX_AD
     from AT.KNN import adaptiveKNN
     from AT.I_Forest import iForest
+    from AT.consumers import ATConsumer
 
 from experiment_API.consumers import ExperimentConsumer
 
@@ -23,9 +24,10 @@ if "EOSS" in settings.ACTIVE_MODULES:
     ws_routes.append(path('api/eoss/ws', EOSSConsumer))
 if "AT" in settings.ACTIVE_MODULES:
     ws_routes.extend([
-        path('api/anomaly/SARIMAX_AD', SARIMAX_AD),
-        path('api/anomaly/adaptiveKNN', adaptiveKNN),
-        path('api/anomaly/iForest', iForest),
+        path('api/at/SARIMAX_AD', SARIMAX_AD),
+        path('api/at/adaptiveKNN', adaptiveKNN),
+        path('api/at/iForest', iForest),
+        path('api/at/ws', ATConsumer)
     ])
 ws_routes.extend([
     path('api/experiment', ExperimentConsumer),
