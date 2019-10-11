@@ -19,14 +19,17 @@
     {
       "type": "list",
       "begin": "The following anomalies were found: ",
-      "repeat": "${variable} was ${type} threshold at ${timestamp}.",
-      "end": ""
+      "repeat": "${variable} was ${type} threshold at ${timestamp}",
+      "end": "."
     }
   ],
   "visual_response": [
     {
-      "type": "single",
-      "content": "Read me"
+      "type": "text",
+      "from": "list",
+      "begin": "The following anomalies were found: ",
+      "repeat": "${variable} was ${type} threshold at ${timestamp}",
+      "end": "."
     }
   ]
 }
