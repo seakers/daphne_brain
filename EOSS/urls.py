@@ -1,6 +1,8 @@
 from django.urls import path, include
 
 urlpatterns = [
+    path('teacher/', include('EOSS.teacher.urls')),
+
     path('engineer/', include('EOSS.engineer.urls')),
     path('analyst/', include('EOSS.analyst.urls')),
     path('explorer/', include('EOSS.explorer.urls')),
