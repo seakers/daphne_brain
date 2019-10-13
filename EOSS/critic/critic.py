@@ -136,11 +136,10 @@ class Critic:
         # Criticize architecture (based on rules)
         port = self.context.vassar_port
         problem = self.context.problem
-        inputs = json.loads(design.inputs)
         client = VASSARClient(port)
         client.start_connection()
 
-        result_list = client.critique_architecture(problem, inputs)
+        result_list = client.critique_architecture(problem, design)
 
         client.end_connection()
 

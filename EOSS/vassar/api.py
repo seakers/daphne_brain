@@ -141,11 +141,12 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
-    def critique_architecture(self, problem, bit_string):
+    def critique_architecture(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
-            return self.client.getCritiqueBinaryInputArch(problem, bit_string)
+            return self.client.getCritiqueBinaryInputArch(problem, thrift_arch)
         elif problem in partition_problems:
-            return self.client.getCritiqueDiscreteInputArch(problem, bit_string)
+            return self.client.getCritiqueDiscreteInputArch(problem, thrift_arch)
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
