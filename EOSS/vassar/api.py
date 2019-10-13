@@ -63,6 +63,12 @@ class VASSARClient:
 
     def get_subobjective_list(self, problem):
         return self.client.getSubobjectiveList(problem)
+
+    def get_instruments_for_objective(self, problem, objective):
+        return self.client.getInstrumentsForObjective(problem, objective)
+
+    def get_instruments_for_panel(self, problem, panel):
+        return self.client.getInstrumentsForPanel(problem, panel)
     
     def evaluate_architecture(self, problem, inputs):
         if problem in assignation_problems:
@@ -99,6 +105,14 @@ class VASSARClient:
     def get_architecture_score_explanation(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
         return self.client.getArchitectureScoreExplanation(problem, thrift_arch)
+
+    def get_panel_score_explanation(self, problem, arch, panel):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        return self.client.getPanelScoreExplanation(problem, thrift_arch, panel)
+
+    def get_objective_score_explanation(self, problem, arch, objective):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
 
     def get_arch_science_information(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
