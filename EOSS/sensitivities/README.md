@@ -1,3 +1,5 @@
-# Sensitivity Service
+# Sensitivity Service API
 
-This service finds sensitive design decisions in the current problem Daphne is evaluating
+This directory contains the Sensitivity Service API
+
+Detailed instructions on how to call the API and set up the Sensitivity Service will come soon
