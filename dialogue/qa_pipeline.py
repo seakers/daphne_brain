@@ -144,6 +144,7 @@ def augment_data(data, user_information: UserInformation):
     data['now'] = datetime.datetime.utcnow()
     if user_information.daphne_version == "EOSS":
         data['designs'] = user_information.eosscontext.design_set.all()
+        data['problem'] = user_information.eosscontext.problem
     if user_information.daphne_version == "EDL":
         pass
     if user_information.daphne_version == "AT":

@@ -7,7 +7,7 @@
   "objective": "get information about the score of an architecture given by an ID",
   "function":
   {
-    "run_template": "dialogue_functions.engineer.get_architecture_scores('${design_id}'[1:], data['designs'], context)",
+    "run_template": "dialogue_functions.engineer.get_architecture_scores(${design_id}, data['designs'], context)",
     "results": [
       {
         "result_type": "list",
