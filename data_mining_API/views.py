@@ -309,9 +309,8 @@ class GetMarginalDrivingFeatures(APIView):
                         channel_layer = get_channel_layer()
                         async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
-                channel.basic_consume(callback,
-                                      queue=sessionKey + '_localSearch',
-                                      no_ack=True)
+                channel.basic_consume(queue=sessionKey + '_localSearch',
+                                      on_message_callback=callback)
                 thread = threading.Thread(target=channel.start_consuming)
                 thread.start()
 
@@ -390,9 +389,8 @@ class GeneralizeFeature(APIView):
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
-        channel.basic_consume(callback,
-                              queue=sessionKey + '_generalization',
-                              no_ack=True)
+        channel.basic_consume(queue=sessionKey + '_generalization',
+                              on_message_callback=callback)
         thread = threading.Thread(target=channel.start_consuming)
         thread.start()
 
@@ -777,9 +775,8 @@ class SetProblemParameters(APIView):
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
-        channel.basic_consume(callback,
-                              queue=sessionKey + '_problemSetting',
-                              no_ack=True)
+        channel.basic_consume(queue=sessionKey + '_problemSetting',
+                              on_message_callback=callback)
         thread = threading.Thread(target=channel.start_consuming)
         thread.start()
 
