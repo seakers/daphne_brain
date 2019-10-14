@@ -56,6 +56,8 @@ def classify(question, daphne_version, module_name):
 def load_type_info(question_type, daphne_version, module_name):
     type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
                                   str(question_type) + '.json')
+    print(str(question_type)) #FIXME
+    print(str(type_info_file))
     with open(type_info_file, 'r') as file:
         type_info = json.load(file)
     information = {}
@@ -165,6 +167,11 @@ def get_query_model(command_class):
         return models, session
     if command_class == "EDL":
         import EDL.data.model as models
+        engine = models.db_connect()
+        session = sessionmaker(bind=engine)()
+        return models, session
+    if command_class == "AT": #FIXME
+        import AT.model as models
         engine = models.db_connect()
         session = sessionmaker(bind=engine)()
         return models, session
