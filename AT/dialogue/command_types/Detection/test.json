@@ -2,9 +2,9 @@
   "type": "run_function",
   "params":
   [
-    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true },
+    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
   ],
-  "template":
+  "function":
   {
     "run_template": "dialogue_functions.AT.retrieve_anomaly_test(${anomaly})",
     "results": [

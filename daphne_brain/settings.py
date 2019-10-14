@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-rese
 USE_X_FORWARDED_HOST = True
 
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
-ACTIVE_MODULES = ['EOSS']
+ACTIVE_MODULES = ['AT']
 
 EDL_PATH = '/Users/ssantini/Desktop/'
 
@@ -189,6 +189,15 @@ EDL_DATABASE = {
     'database': 'edldatabase'
 }
 
+ECLSS_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'localhost',
+    'port': '5432',
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
+    'database': 'eclss'
+}
+
 
 # Session configuration
 # SESSION_ENGINE = "merge_session.merge_db"
@@ -253,7 +262,7 @@ LOGGING = {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
-        },        
+        },
         'data-mining': {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
