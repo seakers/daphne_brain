@@ -19,8 +19,6 @@ import pprint
 
 
 
-
-
 def main():
     pp = pprint.PrettyPrinter(indent=2)
 
@@ -44,22 +42,11 @@ def main():
 
 
     # --> Take the samples and their evaluations and analyze them
+    pp.pprint(Y)
+    print(len(Y))
+    print(len(param_values))
     Si = sobol.analyze(problem, Y)
-    pp.pprint(Si)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #pp.pprint(Si)
 
 
 if __name__ == '__main__':
