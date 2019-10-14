@@ -991,6 +991,10 @@ class ExportTargetSelection(APIView):
                     line.append(str(arch.id))
                     line.append(str(label))
                     line.append(inputString)
+
+                    outputs = json.loads(arch.outputs)
+                    line.append(str(outputs[0]))
+                    line.append(str(outputs[1]))
                     content.append(",".join(line))    
 
                 file.write("\n".join(content))
