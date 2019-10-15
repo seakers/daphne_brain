@@ -5,7 +5,7 @@ import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from auth_API.helpers import get_or_create_user_information
-from daphne_API.models import ExperimentStage, ExperimentContext
+from daphne_context.models import ExperimentContext
 
 # Get an instance of a logger
 logger = logging.getLogger('experiment')

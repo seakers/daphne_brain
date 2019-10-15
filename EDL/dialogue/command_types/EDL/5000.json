@@ -1,0 +1,38 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true,"from_context":false},
+    { "name": "parameter", "type": "parameter", "options": "", "mandatory": true, "from_context":false}
+  ],
+  "query":
+  {
+    "always": "session.query(models.Mission, models.Entry, models.ParachuteDescent, models.ParachuteDeployConditions, models.BackshellSeparation, models.HeatShield, models.ParachuteDescentSensing, models.PoweredDescent, models.Touchdown).join(models.Entry).join(models.ParachuteDescent).join(models.ParachuteDeployConditions).join(models.BackshellSeparation).join(models.HeatShield).join(models.ParachuteDescentSensing).join(models.PoweredDescent).join(models.Touchdown).filter(models.Mission.name.ilike('%${mission}%'))",
+    "opt": [],
+    "end": "",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "parameter_result": "row.${parameter}",
+           "parameter_unit": "row.${parameter}_unit if hasattr(row, '${parameter}_unit'.split('.')[0]) and hasattr(getattr(row, '${parameter}_unit'.split('.')[0]), '${parameter}_unit'.split('.')[1]) else ''"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "For mission ${mission} the ${parameter} is ${parameter_result} ${parameter_unit}."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "For mission ${mission} the ${parameter} is ${parameter_result} ${parameter_unit}."
+    }
+  ]
+}
+
+

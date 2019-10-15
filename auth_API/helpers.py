@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext, \
-    ExperimentContext
+from EDL.models import EDLContext
+from EOSS.models import EOSSContext, ActiveContext, EngineerContext
+from daphne_context.models import UserInformation, ExperimentContext
 from django.contrib.sessions.models import Session
 
 
@@ -34,12 +35,12 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         engineer_context = EngineerContext(eosscontext=eoss_context, vassar_instrument='', instrument_parameter='')
         engineer_context.save()
 
-        experiment_context = ExperimentContext(eosscontext=eoss_context, is_running=False, experiment_id=-1,
+        experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
                                                current_state="")
         experiment_context.save()
 
         edl_context = EDLContext(user_information=user_info, current_mat_file="", current_mat_file_for_print="",
-                                  current_scorecard_file="", current_scorecard="")
+                                 current_scorecard_file="", current_scorecard="")
         edl_context.save()
 
         return user_info
