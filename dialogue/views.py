@@ -46,7 +46,7 @@ class Command(APIView):
                                                   command_descriptor=command_number)
 
         # If this a choice between three options, check the one the user chose and go on with that
-        if context["dialogue"]["is_clarifying_input"]:
+        if "is_clarifying_input" in context["dialogue"] and context["dialogue"]["is_clarifying_input"]:
             user_choice = request.data['command'].strip().lower()
             choices = json.loads(context["dialogue"]["clarifying_commands"])
             if user_choice == "first":
