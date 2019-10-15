@@ -1,0 +1,21 @@
+FROM python:3.6
+WORKDIR /usr/src/app
+COPY requirements.txt ./
+ENV PYTHONUNBUFFERED 1
+ENV USER=""
+ENV PASSWORD=""
+RUN pip install --no-cache-dir -r requirements.txt
+COPY ./AT ./AT
+COPY ./auth_API ./auth_API
+COPY ./critic_API ./critic_API
+COPY ./daphne_API ./daphne_API
+COPY ./daphne_brain ./daphne_brain
+COPY ./data_mining_API ./data_mining_API
+COPY ./experiment_API ./experiment_API
+COPY ./iFEED_API ./iFEED_API
+COPY ./merge_session ./merge_session
+COPY ./VASSAR_API ./VASSAR_API
+COPY manage.py ./
+RUN python manage.py migrate --run-syncdb
+RUN python manage.py collectstatic --clear --noinput
+CMD daphne -b 0.0.0.0 -p 8001 daphne_brain.asgi:application

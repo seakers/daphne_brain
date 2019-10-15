@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from daphne_API.models import UserInformation, EOSSContext, ActiveContext, EngineerContext, EDLContext, \
-    ExperimentContext
+from EDL.models import EDLContext
+from EOSS.models import EOSSContext, ActiveContext, EngineerContext
+from daphne_context.models import UserInformation, ExperimentContext
 from django.contrib.sessions.models import Session
 
 
@@ -31,15 +32,12 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                        check_for_diversity=False, show_arch_suggestions=False)
         active_context.save()
 
-        engineer_context = EngineerContext(eosscontext=eoss_context, vassar_instrument='', instrument_parameter='')
-        engineer_context.save()
-
-        experiment_context = ExperimentContext(eosscontext=eoss_context, is_running=False, experiment_id=-1,
+        experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
                                                current_state="")
         experiment_context.save()
 
         edl_context = EDLContext(user_information=user_info, current_mat_file="", current_mat_file_for_print="",
-                                  current_scorecard_file="", current_scorecard="")
+                                 current_scorecard_file="", current_scorecard="")
         edl_context.save()
 
         return user_info
@@ -56,7 +54,7 @@ def get_user_information(session, user):
         if session.session_key is None:
             session.create()
         session = Session.objects.get(session_key=session.session_key)
-        userinfo_qs = UserInformation.objects.filter(session__exact=session)
+        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key)
 
     if len(userinfo_qs) == 1:
         return userinfo_qs[0]

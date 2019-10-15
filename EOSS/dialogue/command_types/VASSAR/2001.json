@@ -1,0 +1,36 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "design_id", "type": "design_id", "options": "", "from_context": false, "mandatory": true },
+    { "name": "subobjective", "type": "subobjective", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "get information about the data products that satisfy the requirements for a subobjective for a design with a certain ID",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_satisfying_data_products(${design_id}, data['designs'], '${subobjective}', context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "data_product": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The following are some data products that satisfy completely subobjective ${subobjective} of ${design_id}. You can get more information in the details page. ",
+      "repeat": "${data_product}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The following are some data products that satisfy completely subobjective ${subobjective} of ${design_id}. You can get more information in the <a target=\"_blank\" href=\"details.html?archID=${design_id}&problem=${problem}\">details page</a>.",
+      "item_template": "${data_product}"
+    }
+  ]
+}

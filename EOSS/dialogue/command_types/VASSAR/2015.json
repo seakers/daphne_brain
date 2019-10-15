@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "objective", "type": "objective", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "list all instruments that can improve a certain objective",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_instruments_for_objective('${objective}', context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "instrument_name": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The following instruments improve objective ${objective}: ",
+      "repeat": "${instrument_name}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The following instruments improve objective ${objective}: ",
+      "item_template": "${instrument_name}"
+    }
+  ]
+}

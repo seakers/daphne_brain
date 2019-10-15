@@ -1,28 +1,18 @@
 import logging
-import os
-import csv
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
-import numpy as np
-import sys
 import os
 import json
 import csv
-import hashlib
-import datetime
 from random import *
 
-
+from EOSS.models import Design
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 
 from auth_API.helpers import get_or_create_user_information
-from daphne_API.models import Design, Answer, AllowedCommand
-
-
 
 # Get an instance of a logger
 logger = logging.getLogger('iFEED')

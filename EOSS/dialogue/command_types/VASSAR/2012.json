@@ -1,0 +1,37 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context_path": ["screen"], "mandatory": true }
+  ],
+  "objective": "get information about the score of the currently selected architecture",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_architecture_scores(${selected_arch_id}, data['designs'], context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "obj_name": "item.objective_name",
+          "obj_value": "str(\"%.2f\" % round(item.satisfaction,2))",
+          "obj_weight": "str(\"%.2f\" % round(item.weight,2))"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The reasons for the score of the selected design (${selected_arch_id}) are: ",
+      "repeat": "stakeholder ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The reasons for the score of the selected design (${selected_arch_id}) are: ",
+      "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+    }
+  ]
+}
