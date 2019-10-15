@@ -16,6 +16,7 @@ datamining_commands = [
 
 analyst_commands = [
     ('2000', 'Why does design ${design_id} have this science benefit?'),
+    ('2008', 'What is the ${instrument_parameter} of ${vassar_instrument}?'),
     ('2012', 'Why does this design have this science benefit?'),
     ('2013', 'Explain the stakeholder ${analyst_stakeholder} science benefit for this design.'),
     ('2014', 'Explain the objective ${analyst_objective} science benefit for this design.'),

@@ -7,15 +7,15 @@ from daphne_context.models import UserInformation
 
 
 def active_engineer_response(user_info: UserInformation, inputs):
-    modified_design = Design(inputs=json.dumps(inputs), outputs="")
-    critic = Critic(user_info)
+    modified_design = Design(inputs=json.dumps(inputs), outputs="[]")
+    critic = Critic(user_info.eosscontext)
     suggestion_list = critic.expert_critic(modified_design)
     return suggestion_list
 
 
 def active_historian_response(user_info: UserInformation, inputs):
-    modified_design = Design(inputs=json.dumps(inputs), outputs="")
-    critic = Critic(user_info)
+    modified_design = Design(inputs=json.dumps(inputs), outputs="[]")
+    critic = Critic(user_info.eosscontext)
     suggestion_list = critic.historian_critic(modified_design)
     return suggestion_list
 

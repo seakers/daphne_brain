@@ -7,6 +7,7 @@
     { "name": "year2", "type": "year", "options": "end", "from_context": false, "mandatory": false },
     { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
   ],
+  "canonical_form": "Which missions [from <space_agency>] can measure <ceos_measurement> [between <year1> and <year2>]?",
   "query":
   {
     "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%')))",
