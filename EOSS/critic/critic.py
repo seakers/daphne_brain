@@ -11,21 +11,20 @@ import EOSS.data.problem_specific as problem_specific
 from EOSS.analyst.helpers import get_feature_unsatisfied, get_feature_satisfied, \
     feature_expression_to_string
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-from EOSS.models import Design
+from EOSS.models import Design, EOSSContext
 from EOSS.vassar.api import VASSARClient
-from daphne_context.models import UserInformation
 from EOSS.data_mining.api import DataMiningClient
 
 
 class Critic:
 
-    def __init__(self, context: UserInformation):
+    def __init__(self, context: EOSSContext):
         # Connect to the CEOS database
         self.engine = models.db_connect()
         self.session = sessionmaker(bind=self.engine)()
         self.context = context
-        self.instruments_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
-        self.orbits_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
+        self.instruments_dataset = problem_specific.get_instrument_dataset(context.problem)
+        self.orbits_dataset = problem_specific.get_orbit_dataset(context.problem)
 
     def get_missions_from_genome(self, problem_type, genome):
         missions = []
@@ -135,13 +134,12 @@ class Critic:
 
     def expert_critic(self, design):
         # Criticize architecture (based on rules)
-        port = self.context.eosscontext.vassar_port
-        problem = self.context.eosscontext.problem
-        inputs = json.loads(design.inputs)
+        port = self.context.vassar_port
+        problem = self.context.problem
         client = VASSARClient(port)
         client.start_connection()
 
-        result_list = client.critique_architecture(problem, inputs)
+        result_list = client.critique_architecture(problem, design)
 
         client.end_connection()
 
@@ -189,20 +187,20 @@ class Critic:
 
         original_outputs = json.loads(design.outputs)
         original_inputs = json.loads(design.inputs)
-        problem = self.context.eosscontext.problem
-        port = self.context.eosscontext.vassar_port
+        problem = self.context.problem
+        port = self.context.vassar_port
         client = VASSARClient(port)
         client.start_connection()
 
         archs = None
         advices = []
         if problem in assignation_problems:
-            archs = client.run_local_search(problem, json.loads(design.inputs))
+            archs = client.run_local_search(problem, json.loads(design))
 
             for arch in archs:
-                new_outputs = arch.outputs
+                new_outputs = arch["outputs"]
 
-                new_design_inputs = arch.inputs
+                new_design_inputs = arch["inputs"]
                 diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
                 advice = [get_advices_from_bit_string_diff(diff)]
 
@@ -236,7 +234,7 @@ class Critic:
     def historian_critic(self, design):
         historian_feedback = []
 
-        problem = self.context.eosscontext.problem
+        problem = self.context.problem
         if problem in assignation_problems:
             problem_type = 'binary'
         elif problem in partition_problems:
@@ -286,7 +284,7 @@ class Critic:
         result = []
         client = DataMiningClient()
 
-        problem = self.context.eosscontext.problem
+        problem = self.context.problem
         if problem in assignation_problems:
             problem_type = 'binary'
         elif problem in partition_problems:
@@ -305,7 +303,7 @@ class Critic:
             behavioral = []
             non_behavioral = []
 
-            dataset = Design.objects.filter(eosscontext_id__exact=self.context.eosscontext.id).all()
+            dataset = Design.objects.filter(eosscontext_id__exact=self.context.id).all()
 
             if len(dataset) < 10:
                 raise ValueError("Could not run data mining: the number of samples is less than 10")
