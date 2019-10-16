@@ -69,7 +69,7 @@ class Command(APIView):
             new_dialogue_contexts = self.create_dialogue_contexts()
             dialogue_turn = command_processing.answer_command(processed_command, choice, command_class,
                                                               condition_name, user_info, context,
-                                                              new_dialogue_contexts)
+                                                              new_dialogue_contexts, request.session)
             self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
 
         else:
@@ -96,7 +96,7 @@ class Command(APIView):
                     new_dialogue_contexts = self.create_dialogue_contexts()
                     dialogue_turn = command_processing.answer_command(processed_command, command_type, command_class,
                                                                       condition_name, user_info, context,
-                                                                      new_dialogue_contexts)
+                                                                      new_dialogue_contexts, request.session)
                     self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
                 elif max_value > 0.90:
                     command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
