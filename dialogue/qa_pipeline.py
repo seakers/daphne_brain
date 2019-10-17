@@ -8,6 +8,8 @@ import keras
 from keras.engine.saving import model_from_json
 from keras_preprocessing.text import tokenizer_from_json
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
+from sqlalchemy import or_
 
 from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError

@@ -4,6 +4,7 @@
   [
     { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "know which missions were built by a certain space agency",
   "query":
   {
     "always": "session.query(models.Mission).filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))",
