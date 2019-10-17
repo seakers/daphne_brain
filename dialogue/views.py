@@ -74,7 +74,7 @@ class Command(APIView):
 
         else:
             # Preprocess the command
-            processed_command = nlp(request.data['command'].strip().lower())
+            processed_command = nlp(request.data['command'].strip())
 
             # Classify the command, obtaining a command type
             command_roles = command_processing.classify_command_role(processed_command, self.daphne_version)
