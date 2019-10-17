@@ -49,8 +49,8 @@ def extract_space_agency(processed_question, number_of_features, user_informatio
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
-    agencies = [' ' + agency.name.strip().lower() for agency in session.query(earth_models.Agency).all()]
-    return sorted_list_of_features_by_index(processed_question, agencies, number_of_features)
+    agencies = [' ' + agency.name.strip() for agency in session.query(earth_models.Agency).all()]
+    return sorted_list_of_features_by_index(processed_question, agencies, number_of_features, case_sensitive=True)
 
 
 def extract_date(processed_question, number_of_features, user_information: UserInformation):

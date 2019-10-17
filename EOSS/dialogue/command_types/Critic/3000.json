@@ -7,7 +7,7 @@
   "objective": "criticize an architecture given by an ID",
   "function":
   {
-    "run_template": "dialogue_functions.critic.general_call('${design_id}', data['designs'], context)",
+    "run_template": "dialogue_functions.critic.general_call(${design_id}, data['designs'], data['session_key'], context)",
     "results": [
       {
         "result_type": "list",
@@ -21,7 +21,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The advice I have for design (${design_id}) is: ",
+      "begin": "The advice I have for design ${design_id} is: ",
       "repeat": "${adv_type}: ${advice}",
       "end": "."
     }
@@ -29,7 +29,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The advice I have for design (${design_id}) is: ",
+      "begin": "The advice I have for design ${design_id} is: ",
       "item_template": "<b>${adv_type}</b>: ${advice}"
     }
   ]

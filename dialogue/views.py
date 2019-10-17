@@ -69,12 +69,12 @@ class Command(APIView):
             new_dialogue_contexts = self.create_dialogue_contexts()
             dialogue_turn = command_processing.answer_command(processed_command, choice, command_class,
                                                               condition_name, user_info, context,
-                                                              new_dialogue_contexts)
+                                                              new_dialogue_contexts, request.session)
             self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
 
         else:
             # Preprocess the command
-            processed_command = nlp(request.data['command'].strip().lower())
+            processed_command = nlp(request.data['command'].strip())
 
             # Classify the command, obtaining a command type
             command_roles = command_processing.classify_command_role(processed_command, self.daphne_version)
@@ -96,7 +96,7 @@ class Command(APIView):
                     new_dialogue_contexts = self.create_dialogue_contexts()
                     dialogue_turn = command_processing.answer_command(processed_command, command_type, command_class,
                                                                       condition_name, user_info, context,
-                                                                      new_dialogue_contexts)
+                                                                      new_dialogue_contexts, request.session)
                     self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
                 elif max_value > 0.90:
                     command_types = command_processing.get_top_types(command_predictions, self.daphne_version,

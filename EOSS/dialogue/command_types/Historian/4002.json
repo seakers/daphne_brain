@@ -7,6 +7,7 @@
     { "name": "year2", "type": "year", "options": "end", "from_context": false, "mandatory": false },
     { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
   ],
+  "objective": "know which instruments can take a certain measurement",
   "query":
   {
     "always": "session.query(models.Instrument.name).join(models.Mission, models.Instrument.missions).group_by(models.Instrument.name).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%')))",

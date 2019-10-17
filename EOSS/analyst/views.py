@@ -784,7 +784,7 @@ class SetProblemParameters(APIView):
             problem = request.data['problem']
             params = json.loads(request.data['params'])
 
-            if problem == "ClimateCentric":
+            if problem == "ClimateCentric" or problem == "SMAP":
                 entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
                 self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
 

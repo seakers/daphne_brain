@@ -8,6 +8,8 @@ import keras
 from keras.engine.saving import model_from_json
 from keras_preprocessing.text import tokenizer_from_json
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
+from sqlalchemy import or_
 
 from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError
@@ -140,8 +142,9 @@ def extract_data(processed_question, params, user_information: UserInformation, 
     return extracted_data
 
 
-def augment_data(data, user_information: UserInformation):
+def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
+    data['session_key'] = session.session_key
     if user_information.daphne_version == "EOSS":
         data['designs'] = user_information.eosscontext.design_set.all()
         data['problem'] = user_information.eosscontext.problem
@@ -150,10 +153,6 @@ def augment_data(data, user_information: UserInformation):
     if user_information.daphne_version == "AT":
         pass
 
-    #if 'behavioral' in context:
-    #    data['behavioral'] = context['behavioral']
-    #if 'non_behavioral' in context:
-    #    data['non_behavioral'] = context['non_behavioral']
     # TODO: Add useful information from context if needed
     return data
 

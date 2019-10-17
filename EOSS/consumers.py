@@ -41,7 +41,8 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'active_engineer':
             message = {}
             if user_info.eosscontext.activecontext.show_arch_suggestions:
-                suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'),
+                                                                            self.scope['session'].session_key)
                 suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
                 message = {
                     'voice_message': 'The Live Recommender System has the following suggestions for your modified '
@@ -83,7 +84,8 @@ class EOSSConsumer(DaphneConsumer):
 
         elif content.get('msg_type') == 'active_historian':
             if user_info.eosscontext.activecontext.show_arch_suggestions:
-                suggestion_list = live_recommender.active_historian_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.active_historian_response(user_info, content.get('genome'),
+                                                                             self.scope['session'].session_key)
                 suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
                 self.send_json({
                     'type': 'active.live_suggestion',
