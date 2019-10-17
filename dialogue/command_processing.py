@@ -120,10 +120,10 @@ def not_allowed_answers():
 
 
 def answer_command(processed_command, question_type, command_class, condition_name, user_info: UserInformation,
-                   context, new_dialogue_contexts):
+                   context, new_dialogue_contexts, session):
     # Create a DialogueContext for the user to fill
     answer = command(processed_command, question_type, command_class, condition_name, user_info, context,
-                     new_dialogue_contexts)
+                     new_dialogue_contexts, session)
     dialogue_history = DialogueHistory.objects.create(user_information=user_info,
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
@@ -182,7 +182,7 @@ def not_answerable(context: UserInformation):
 
 
 def command(processed_command, question_type, command_class, condition_name, user_information: UserInformation, context,
-            new_dialogue_contexts):
+            new_dialogue_contexts, session):
     if not_allowed_condition(user_information, condition_name, str(question_type)):
         return not_allowed_answers()
     daphne_version = user_information.daphne_version
@@ -195,7 +195,7 @@ def command(processed_command, question_type, command_class, condition_name, use
         print(error)
         return error_answers(information["objective"], error.missing_param)
     # Add extra parameters to data
-    data = qa_pipeline.augment_data(data, user_information)
+    data = qa_pipeline.augment_data(data, user_information, session)
     # Query the database
     if information["type"] == "db_query":
         results = qa_pipeline.query(information["query"], data, command_class)

@@ -11,6 +11,7 @@ import EOSS.data.problem_specific as problem_specific
 from EOSS.analyst.helpers import get_feature_unsatisfied, get_feature_satisfied, \
     feature_expression_to_string
 from EOSS.data.problem_specific import assignation_problems, partition_problems
+from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from EOSS.models import Design, EOSSContext
 from EOSS.vassar.api import VASSARClient
 from EOSS.data_mining.api import DataMiningClient
@@ -18,13 +19,14 @@ from EOSS.data_mining.api import DataMiningClient
 
 class Critic:
 
-    def __init__(self, context: EOSSContext):
+    def __init__(self, context: EOSSContext, session_key):
         # Connect to the CEOS database
         self.engine = models.db_connect()
         self.session = sessionmaker(bind=self.engine)()
         self.context = context
         self.instruments_dataset = problem_specific.get_instrument_dataset(context.problem)
         self.orbits_dataset = problem_specific.get_orbit_dataset(context.problem)
+        self.session_key = session_key
 
     def get_missions_from_genome(self, problem_type, genome):
         missions = []
@@ -195,7 +197,7 @@ class Critic:
         archs = None
         advices = []
         if problem in assignation_problems:
-            archs = client.run_local_search(problem, json.loads(design))
+            archs = client.run_local_search(problem, design)
 
             for arch in archs:
                 new_outputs = arch["outputs"]
@@ -218,7 +220,7 @@ class Critic:
                 advice = "".join(advice)
                 advices.append(advice)
         elif problem in partition_problems:
-            archs = client.run_local_search(problem, json.loads(design.inputs))
+            archs = client.run_local_search(problem, design.inputs)
 
             # TODO: Add the delta code for discrete architectures
 
@@ -326,9 +328,24 @@ class Critic:
                         non_behavioral.append(temp[i][0])
 
             # Extract feature
-            # features = client.getDrivingFeatures(behavioral, non_behavioral, designs, support_threshold, confidence_threshold, lift_threshold)
-            features = client.runAutomatedLocalSearch(problem, problem_type, behavioral, non_behavioral, dataset,
-                                                      support_threshold, confidence_threshold, lift_threshold)
+            _archs = []
+            if problem_type == "binary":
+                for arch in dataset:
+                    _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = client.client.getDrivingFeaturesEpsilonMOEABinary(self.session_key, problem, behavioral,
+                                                                              non_behavioral, _archs)
+
+            elif problem_type == "discrete":
+                for arch in dataset:
+                    _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = client.client.getDrivingFeaturesEpsilonMOEADiscrete(self.session_key, problem, behavioral,
+                                                                                non_behavioral, _archs)
+            else:
+                raise ValueError("Problem type not implemented")
+
+            features = []
+            for df in _features:
+                features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics})
 
             advices = []
             if not len(features) == 0:

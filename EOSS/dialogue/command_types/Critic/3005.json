@@ -7,7 +7,7 @@
   "objective": "criticize the architecture you're designing",
   "function":
   {
-    "run_template": "dialogue_functions.critic.general_call('${selected_arch_id}', data['designs'], context)",
+    "run_template": "dialogue_functions.critic.general_call(${selected_arch_id}, data['designs'], data['session_key'], context)",
     "results": [
       {
         "result_type": "list",
