@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from daphne_brain.nlp_object import nlp
+from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, AllowedCommand, DialogueContext

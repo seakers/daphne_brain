@@ -10,70 +10,57 @@ from keras.preprocessing.text import tokenizer_from_json
 from dialogue import qa_pipeline, data_helpers
 from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation, DialogueHistory, DialogueContext
+from dialogue.nn_models import nn_models
 
 
 def classify_command_role(command, daphne_version):
     cleaned_command = data_helpers.clean_str(command)
 
-    with keras.backend.get_session().graph.as_default():
-        # Map data into vocabulary
-        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
-        vocab_path = os.path.join(model_folder_path, "tokenizer.json")
-        with open(vocab_path, mode="r") as tokenizer_json:
-            tokenizer = tokenizer_from_json(tokenizer_json.read())
-        # load json and create model
-        model_path = os.path.join(model_folder_path, "model.json")
-        with open(model_path, mode="r") as model_json:
-            loaded_model = model_from_json(model_json.read())
-        # load weights into new model
-        weights_path = os.path.join(model_folder_path, "model.h5")
-        loaded_model.load_weights(weights_path)
-        print("Loaded model from disk")
+    # Get model
+    loaded_model = nn_models[daphne_version]["general"]
 
-        x = tokenizer.texts_to_sequences([cleaned_command])
-        expected_input_length = loaded_model.layers[0].input_shape[1]
-        x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-        print("\nEvaluating...\n")
+    # Map data into vocabulary
+    model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
+    vocab_path = os.path.join(model_folder_path, "tokenizer.json")
+    with open(vocab_path, mode="r") as tokenizer_json:
+        tokenizer = tokenizer_from_json(tokenizer_json.read())
 
-        # Evaluation
-        # ==================================================
-        # evaluate loaded model on test data
-        loaded_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
-        result_logits = loaded_model.predict(x)
-        prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
-        return prediction[0]
+    x = tokenizer.texts_to_sequences([cleaned_command])
+    expected_input_length = loaded_model.layers[0].input_shape[1]
+    x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+    print("\nEvaluating...\n")
+
+    # Evaluation
+    # ==================================================
+    # evaluate loaded model on test data
+    result_logits = loaded_model.predict(x)
+    prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
+    return prediction[0]
 
 
 def command_type_predictions(processed_command, daphne_version, module_name):
     cleaned_question = data_helpers.clean_str(processed_command)
 
-    with keras.backend.get_session().graph.as_default():
-        # Map data into vocabulary
-        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
-        vocab_path = os.path.join(model_folder_path, "tokenizer.json")
-        with open(vocab_path, mode="r") as tokenizer_json:
-            tokenizer = tokenizer_from_json(tokenizer_json.read())
-        # load json and create model
-        model_path = os.path.join(model_folder_path, "model.json")
-        with open(model_path, mode="r") as model_json:
-            loaded_model = model_from_json(model_json.read())
-        # load weights into new model
-        weights_path = os.path.join(model_folder_path, "model.h5")
-        loaded_model.load_weights(weights_path)
-        print("Loaded model from disk")
+    # Get model
+    loaded_model = nn_models[daphne_version][module_name]
 
-        x = tokenizer.texts_to_sequences([cleaned_question])
-        expected_input_length = loaded_model.layers[0].input_shape[1]
-        x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-        print("\nEvaluating...\n")
+    # Map data into vocabulary
+    model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
+    vocab_path = os.path.join(model_folder_path, "tokenizer.json")
+    with open(vocab_path, mode="r") as tokenizer_json:
+        tokenizer = tokenizer_from_json(tokenizer_json.read())
 
-        # Evaluation
-        # ==================================================
-        # evaluate loaded model on test data
-        loaded_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
-        result_logits = loaded_model.predict(x)
+    x = tokenizer.texts_to_sequences([cleaned_question])
+    expected_input_length = loaded_model.layers[0].input_shape[1]
+    x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+    print("\nEvaluating...\n")
 
-        return result_logits
+    # Evaluation
+    # ==================================================
+    # evaluate loaded model on test data
+    result_logits = loaded_model.predict(x)
+
+    return result_logits
 
 
 def get_top_types(logits, daphne_version, module_name, top_number):
