@@ -56,8 +56,6 @@ def classify(question, daphne_version, module_name):
 def load_type_info(question_type, daphne_version, module_name):
     type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
                                   str(question_type) + '.json')
-    print(str(question_type)) #FIXME
-    print(str(type_info_file))
     with open(type_info_file, 'r') as file:
         type_info = json.load(file)
     information = {}
@@ -109,7 +107,7 @@ def extract_data(processed_question, params, context: UserInformation):
     # Count how many non-context params of each type are needed
     for param in params:
         if not param["from_context"]:
-            print(processed_question)
+            print(processed_question) #FIXME
             if param["type"] in number_of_features:
                 number_of_features[param["type"]] += 1
             else:
@@ -170,8 +168,8 @@ def get_query_model(command_class):
         engine = models.db_connect()
         session = sessionmaker(bind=engine)()
         return models, session
-    if command_class == "AT": #FIXME
-        import AT.model as models
+    if command_class == "Diagnosis": #FIXME
+        import AT.diagnosis.models as models
         engine = models.db_connect()
         session = sessionmaker(bind=engine)()
         return models, session

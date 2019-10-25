@@ -71,7 +71,6 @@ def not_allowed_answers():
 def command(processed_command, command_class, condition_name, context: UserInformation):
     # Classify the question, obtaining a question type
     question_type = qa_pipeline.classify(processed_command, context.daphne_version, command_class)
-    print(question_type)
     if not_allowed_condition(context, condition_name, str(question_type)):
         return not_allowed_answers()
     # Load list of required and optional parameters from question, query and response format for question type

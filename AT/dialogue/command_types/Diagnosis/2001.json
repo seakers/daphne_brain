@@ -6,14 +6,14 @@
   ],
   "query":
   {
-    "always": "session.query(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == $(anomaly_id))",
+    "always": "session.query(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",
     "opt": [],
     "end": "",
     "results": [
       {
         "result_type": "single",
         "result_fields": {
-          "description": "row.description_of_anomaly"
+          "description": "row.description"
         }
       }
     ]
@@ -21,11 +21,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "Anomaly $(anomaly_id) Description: $(description)"
+      "template": "Anomaly ${anomaly_id} Description: ${description}"
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "Anomaly $(anomaly_id) Description: $(description)"
+      "template": "Anomaly ${anomaly_id} Description: ${description}"
+    }
+  ]
+}
