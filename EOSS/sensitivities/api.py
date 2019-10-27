@@ -65,6 +65,8 @@ def format_s2_data(s2_data, orbits, instruments):
 
 
 
+
+
 # --> sensitivities: list of n sensitivities where n = number of parameters
 # --> condition: num_return < len(sensitivities)
 # --> returns list of [orbit, sensor, sensitivity] with strongest first order sensitivities
@@ -75,8 +77,20 @@ def max_sensitivities_s1(sensitivities, orbits, instruments, num_return=3):
     temp_sensitivities = sensitivities[:]
     for x in range(num_return):
         min_val = min(temp_sensitivities)
-        min_indicies.append(sensitivities.index(min_val))
-        temp_sensitivities.remove(min_val)
+        max_val = max(temp_sensitivities)
+        if abs(min_val) > abs(max_val):
+            min_indicies.append(sensitivities.index(min_val))
+            temp_sensitivities.remove(min_val)
+        else:
+            min_indicies.append(sensitivities.index(max_val))
+            temp_sensitivities.remove(max_val)
+
+    # for x in range(num_return):
+    #     min_val = min(temp_sensitivities)
+    #     min_indicies.append(sensitivities.index(min_val))
+    #     temp_sensitivities.remove(min_val)
+
+
 
     for x in range(num_return):
         counter = 0
@@ -88,15 +102,8 @@ def max_sensitivities_s1(sensitivities, orbits, instruments, num_return=3):
     return list_values
 
 
-# --> sensitivities: list of n sensitivities where n = number of parameters
-# --> condition: num_return < len(sensitivities)
-# --> returns list of [orbit, sensor, orbit, sensor sensitivity] with strongest second order sensitivities
-def max_sensitivities_s2(sensitivities, orbits, instruments, num_return=3):
-    # --> Turn everything into a list
-    sensitivities = list(sensitivities)
-    for x in range(sensitivities):
-        sensitivities[x] = list(sensitivities[x])
-    return 0
+
+
 
 
 # This class is the API for the Sensitivities Service
@@ -106,15 +113,12 @@ class SensitivitiesClient:
         self.counter = 0
 
 
-    def assignation_sensitivities(self, arch_dict_list, orbits, instruments):
+    def assignation_sensitivities(self, arch_dict_list, orbits, instruments, vassar_port, problem):
         # --> Create the Sensitivity Service
-        analyzer = AssignationAnalysis(arch_dict_list)
+        analyzer = AssignationAnalysis(arch_dict_list, vassar_port, problem)
 
         # --> Get Sensitivity Results
         science_sensitivities, cost_sensitivities = analyzer.sobol_analysis()
-
-        print("Science S1", science_sensitivities['S1'])
-        print("Science S2", science_sensitivities['S2'])
 
         # --> Format Sensitivity Results
         science_data = format_sensitivities(science_sensitivities, orbits, instruments)
