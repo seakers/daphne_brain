@@ -15,5 +15,8 @@ urlpatterns = [
     path('get-objective-group-information', views.GetObjectiveGroupInformation.as_view()),
 
     # --> Design Space
-    path('get-subject-design-space', views.GetSubjectDesignSpace.as_view())
+    path('get-subject-design-space', views.GetSubjectDesignSpace.as_view()),
+
+    # --> Proactive Mode
+    path('set-proactive-mode', views.SetProactiveMode.as_view())
 ]
