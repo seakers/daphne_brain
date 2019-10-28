@@ -4,18 +4,18 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
 
+import threading
+from queue import Queue
 
 from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data.design_helpers import add_design
 
-
 # --> Import VASSAR Service, Sensitivities Service
 from EOSS.sensitivities.api import SensitivitiesClient
 from EOSS.vassar.api import VASSARClient
 from EOSS.models import EOSSContext, Design
-
 
 # --> Import the user information so we can get the architectures
 from auth_API.helpers import get_or_create_user_information
@@ -23,29 +23,74 @@ from auth_API.helpers import get_or_create_user_information
 # --> Import the problem types
 from EOSS.data.problem_specific import assignation_problems, partition_problems
 
-
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
 
 from EOSS.explorer.objective_space_evaluator import teacher_evaluate_objective_space
 
+from .teacher_agent import teacher_thread
 
 
+class SetProactiveMode(APIView):
+    # --> For each current session, we will have a teacher object as long as that session
+    # has a teacher agent window open with "Proactive" set to true...
+    # --> This teacher object will be a thread running a proactive teacher
+    # --> Later, if the user is registered, the teacher agent will pull that user's ability parameter from a database
+    teachersDict = {}
 
+    def post(self, request, format=None):
+
+        # --> Get Daphne user information
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        print("USER INFO", user_info.session, user_info.user)
+
+        # --> Get the Problem Name
+        problem = request.data['problem']
+
+        # --> Determine the setting for Proactive Mode
+        mode = request.data['proactiveMode']
+
+        # --> Proactive Mode: enabled - create a teacher for this session
+        if mode == 'enabled':
+            print('--> Teacher request for', user_info.session)
+            if user_info not in self.teachersDict:
+                print("--> Request approved for", user_info.session)
+                communication_queue = Queue()
+                user_thread = threading.Thread(target=teacher_thread,
+                                               args=(communication_queue,
+                                                     user_info.session,
+                                                     user_info.user,
+                                                     user_info.channel_name))
+                user_thread.start()
+                self.teachersDict[user_info.session] = (user_thread, communication_queue)
+            else:
+                print('--> Request denied, Teacher already assigned')
+
+        # --> Proactive Mode: disabled - remove a teacher for this session
+        elif mode == 'disabled':
+            print('--> Teacher return request for', user_info.session)
+            if user_info.session in self.teachersDict:
+                print("--> Request approved for", user_info.session)
+                thread_to_join = (self.teachersDict[user_info.session])[0]
+                communication_queue = (self.teachersDict[user_info.session])[1]
+                communication_queue.put('stop fam')
+                thread_to_join.join()
+                del self.teachersDict[user_info.session]
+                print("Thread Killed")
+            else:
+                print('--> Request denied, no teacher to return')
+
+
+        print('\n')
+        print("Teachers Online", self.teachersDict, "\n")
+        return Response({'list': 'test'})
 
 
 # --> Will return information on the Features subject
 # --> We will need a DataMiningClient, used in analyst/views.py
 class GetSubjectFeatures(APIView):
     def post(self, request, format=None):
-        test_data = request.data['fricken_key']
-        print(test_data)
         return Response({'list': 'test'})
-
-
-
-
-
 
 
 # --> Will return information on the Design Space subject
@@ -91,8 +136,6 @@ class GetSubjectDesignSpace(APIView):
         return Response({'level_one_analysis': level_one_analysis, 'level_two_analysis': level_two_analysis})
 
 
-
-
 # --> Will return information on the Sensitivities subject --> Ask Samalis
 # --> We will need a DataMiningClient, used in analyst/views.py
 class GetSubjectSensitivities(APIView):
@@ -107,7 +150,7 @@ class GetSubjectSensitivities(APIView):
         port = user_info.eosscontext.vassar_port
 
         # --> Get the Problem Name
-        #problem = request.data['problem']
+        # problem = request.data['problem']
         problem = user_info.eosscontext.problem
 
         # --> Get the Problem Orbits
@@ -144,15 +187,6 @@ class GetSubjectSensitivities(APIView):
         return Response(results)
 
 
-
-
-
-
-
-
-
-
-
 # --> Will return information on the Objective Space subject
 # --> Call VASSAR
 class GetSubjectObjectiveSpace(APIView):
@@ -182,13 +216,10 @@ class GetSubjectObjectiveSpace(APIView):
         plotData = request.data['plotData']
         plotDataJson = json.loads(plotData)
 
-
         objectiveSpaceInformation = teacher_evaluate_objective_space(plotDataJson)
         return_data = json.dumps(objectiveSpaceInformation)
 
         return Response(return_data)
-
-
 
 
 class GetObjectiveGroupInformation(APIView):
@@ -206,21 +237,10 @@ class GetObjectiveGroupInformation(APIView):
         # --> Get the Problem Name
         problem = request.data['problem']
 
-
         groupData = request.data['groupData']
         groupData = json.loads(groupData)
         print(groupData)
 
         # --> VASSAR local search will take a list of bools
 
-
-
-
         return Response({})
-
-
-
-
-
-
-
