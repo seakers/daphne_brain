@@ -1,6 +1,7 @@
 from django.db import models
+from rest_framework import serializers
 
-from daphne_context.models import UserInformation
+from daphne_context.models import UserInformation, DialogueContext
 
 
 # Context for EOSS Users
@@ -20,6 +21,12 @@ class EOSSContext(models.Model):
     vassar_port = models.IntegerField()
 
 
+class EOSSContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSSContext
+        fields = '__all__'
+
+
 # Context for Active Parts of Daphne
 class ActiveContext(models.Model):
     eosscontext = models.OneToOneField(EOSSContext, on_delete=models.CASCADE)
@@ -32,13 +39,35 @@ class ActiveContext(models.Model):
     # The list of designs in the queue is contained in model Design
 
 
+class ActiveContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActiveContext
+        fields = '__all__'
+
+
+class EOSSDialogueContext(models.Model):
+    dialoguecontext = models.OneToOneField(DialogueContext, on_delete=models.CASCADE)
+
+
+class EOSSDialogueContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EOSSDialogueContext
+        fields = '__all__'
+
+
 class EngineerContext(models.Model):
-    eosscontext = models.OneToOneField(EOSSContext, on_delete=models.CASCADE)
+    eossdialoguecontext = models.OneToOneField(EOSSDialogueContext, on_delete=models.CASCADE)
 
     # Context that is used for those questions related with the engineer skill
-    vassar_instrument = models.TextField()
-    instrument_parameter = models.TextField()
-    vassar_measurement = models.TextField()
+    vassar_instrument = models.TextField(null=True)
+    instrument_parameter = models.TextField(null=True)
+    vassar_measurement = models.TextField(null=True)
+
+
+class EngineerContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EngineerContext
+        fields = '__all__'
 
 
 # A design can be part of either a dataset in the EOSSContext or a queue for the active background search

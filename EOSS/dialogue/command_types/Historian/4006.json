@@ -4,6 +4,7 @@
   [
     { "name": "technology", "type": "technology", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "know what orbit is the most common for a certain technology",
   "query":
   {
     "always": "session.query(models.TechTypeMostCommonOrbit).filter(models.TechTypeMostCommonOrbit.techtype.ilike('%${technology}%'))",

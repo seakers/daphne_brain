@@ -1,9 +1,11 @@
+import datetime
 import json
 
 import pika
 import schedule
 
 from auth_API.helpers import get_user_information
+from daphne_context.models import DialogueHistory
 
 from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
@@ -37,27 +39,53 @@ class EOSSConsumer(DaphneConsumer):
                 getattr(user_info, subcontext_name).save()
             user_info.save()
         elif content.get('msg_type') == 'active_engineer':
+            message = {}
             if user_info.eosscontext.activecontext.show_arch_suggestions:
-                suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.active_engineer_response(user_info, content.get('genome'),
+                                                                            self.scope['session'].session_key)
                 suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
-                self.send_json({
-                    'type': 'active.live_suggestion',
-                    'agent': 'engineer',
-                    'suggestion_list': suggestion_list
-                })
+                message = {
+                    'voice_message': 'The Live Recommender System has the following suggestions for your modified '
+                                    'architecture.',
+                    'visual_message_type': ['list'],
+                    'visual_message': [
+                        {
+                            'begin': 'The Live Recommender System has the following suggestions for your modified '
+                                     'architecture: ',
+                            'list': suggestion_list
+                        }
+                    ],
+                    "writer": "daphne",
+                }
             else:
-                self.send_json({
-                                'type': 'active.notification',
-                                'notification': {
-                                    'title': 'Live Recommender System',
-                                    'message': 'The Live Recommender System has some suggestions for your modified architecture, but you have chosen to not show them. Do you want to see them now?',
-                                    'setting': 'show_arch_suggestions'
-                                }
-                              })
+                message = {
+                    'voice_message': 'The Live Recommender System has some suggestions for your modified architecture, '
+                                    'but you have chosen to not show them. Do you want to see them now?',
+                    'visual_message_type': ['active_message'],
+                    'visual_message': [
+                        {
+                            'message': 'The Live Recommender System has some suggestions for your modified architecture, '
+                                       'but you have chosen to not show them. Do you want to see them now?',
+                            'setting': 'show_arch_suggestions'
+                        }
+                    ],
+                    "writer": "daphne",
+                }
+            DialogueHistory.objects.create(user_information=user_info,
+                                           voice_message=message["voice_message"],
+                                           visual_message_type=json.dumps(message["visual_message_type"]),
+                                           visual_message=json.dumps(message["visual_message"]),
+                                           writer="daphne",
+                                           date=datetime.datetime.utcnow())
+            self.send_json({
+                    'type': 'active.message',
+                    'message': message
+                })
 
         elif content.get('msg_type') == 'active_historian':
             if user_info.eosscontext.activecontext.show_arch_suggestions:
-                suggestion_list = live_recommender.active_historian_response(user_info, content.get('genome'))
+                suggestion_list = live_recommender.active_historian_response(user_info, content.get('genome'),
+                                                                             self.scope['session'].session_key)
                 suggestion_list = live_recommender.parse_suggestions_list(suggestion_list)
                 self.send_json({
                     'type': 'active.live_suggestion',
