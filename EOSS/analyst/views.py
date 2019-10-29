@@ -303,8 +303,7 @@ class GetMarginalDrivingFeatures(APIView):
                         async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
                 channel.basic_consume(queue=session_key + '_localSearch',
-                                      on_message_callback=callback,
-                                      auto_ack=True)
+                                      on_message_callback=callback)
                 thread = threading.Thread(target=channel.start_consuming)
                 thread.start()
 
@@ -386,8 +385,7 @@ class GeneralizeFeature(APIView):
                 async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
         channel.basic_consume(queue=session_key + '_generalization',
-                              on_message_callback=callback,
-                              auto_ack=True)
+                              on_message_callback=callback)
         thread = threading.Thread(target=channel.start_consuming)
         thread.start()
 
@@ -775,8 +773,7 @@ class SetProblemParameters(APIView):
                 async_to_sync(channel_layer.send)(thread_user_info.channel_name, message)
 
         channel.basic_consume(queue=session_key + '_problemSetting',
-                              on_message_callback=callback,
-                              auto_ack=True)
+                              on_message_callback=callback)
         thread = threading.Thread(target=channel.start_consuming)
         thread.start()
 
@@ -787,7 +784,7 @@ class SetProblemParameters(APIView):
             problem = request.data['problem']
             params = json.loads(request.data['params'])
 
-            if problem == "ClimateCentric":
+            if problem == "ClimateCentric" or problem == "SMAP":
                 entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
                 self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
 
@@ -997,7 +994,12 @@ class ExportTargetSelection(APIView):
 
                     line.append(str(arch.id))
                     line.append(str(label))
+
                     line.append(input_string)
+
+                    outputs = json.loads(arch.outputs)
+                    line.append(str(outputs[0]))
+                    line.append(str(outputs[1]))
                     content.append(",".join(line))    
 
                 file.write("\n".join(content))
