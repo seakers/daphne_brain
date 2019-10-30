@@ -5,9 +5,10 @@
     { "name": "agent", "type": "agent", "options": "", "from_context": false, "mandatory": true },
     { "name": "design_id", "type": "design_id", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "get an agent to criticize an architecture given by an ID",
   "function":
   {
-    "run_template": "dialogue_functions.critic.specific_call('${design_id}', '${agent}', data['designs'])",
+    "run_template": "dialogue_functions.critic.specific_call(${design_id}, '${agent}', data['designs'], data['session_key'])",
     "results": [
       {
         "result_type": "list",
