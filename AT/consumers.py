@@ -34,8 +34,20 @@ class ATConsumer(DaphneConsumer):
                     setattr(getattr(user_info, subcontext_name), key, value)
                 getattr(user_info, subcontext_name).save()
             user_info.save()
+        elif content.get('msg_type') == 'ping':
+            # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+            channel = connection.channel()
+
+            queue_name = self.scope['user'].username + '_brainga'
+            channel.queue_declare(queue=queue_name)
+            channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
 
     def console_text(self, event):
-        print(event['type'])
-        self.send(json.dumps(event['text']))
+        # print(event['type'])
+        self.send(json.dumps(event))
+
+    def telemetry_update(self, event):
+        # print(event['type'])
+        self.send(json.dumps(event))
 
