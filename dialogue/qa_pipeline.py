@@ -8,48 +8,43 @@ import keras
 from keras.engine.saving import model_from_json
 from keras_preprocessing.text import tokenizer_from_json
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
+from sqlalchemy import or_
 
 from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation
+from dialogue.nn_models import nn_models
 
 
 def classify(question, daphne_version, module_name):
     cleaned_question = data_helpers.clean_str(question)
 
-    with keras.backend.get_session().graph.as_default():
-        # Map data into vocabulary
-        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
-        vocab_path = os.path.join(model_folder_path, "tokenizer.json")
-        with open(vocab_path, mode="r") as tokenizer_json:
-            tokenizer = tokenizer_from_json(tokenizer_json.read())
-        # load json and create model
-        model_path = os.path.join(model_folder_path, "model.json")
-        with open(model_path, mode="r") as model_json:
-            loaded_model = model_from_json(model_json.read())
-        # load weights into new model
-        weights_path = os.path.join(model_folder_path, "model.h5")
-        loaded_model.load_weights(weights_path)
-        print("Loaded model from disk")
+    # Get model
+    loaded_model = nn_models[daphne_version][module_name]
+    # Map data into vocabulary
+    model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
+    vocab_path = os.path.join(model_folder_path, "tokenizer.json")
+    with open(vocab_path, mode="r") as tokenizer_json:
+        tokenizer = tokenizer_from_json(tokenizer_json.read())
 
-        x = tokenizer.texts_to_sequences([cleaned_question])
-        expected_input_length = loaded_model.layers[0].input_shape[1]
-        x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-        print("\nEvaluating...\n")
+    x = tokenizer.texts_to_sequences([cleaned_question])
+    expected_input_length = loaded_model.layers[0].input_shape[1]
+    x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+    print("\nEvaluating...\n")
 
-        # Evaluation
-        # ==================================================
-        # evaluate loaded model on test data
-        loaded_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
-        result_logits = loaded_model.predict(x)
-        prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
+    # Evaluation
+    # ==================================================
+    # evaluate loaded model on test data
+    result_logits = loaded_model.predict(x)
+    prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
 
-        named_labels = []
-        type_info_folder = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name)
-        for filename in sorted(os.listdir(type_info_folder)):
-            specific_label = int(filename.split('.', 1)[0])
-            named_labels.append(specific_label)
-        return named_labels[prediction[0][0]]
+    named_labels = []
+    type_info_folder = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name)
+    for filename in sorted(os.listdir(type_info_folder)):
+        specific_label = int(filename.split('.', 1)[0])
+        named_labels.append(specific_label)
+    return named_labels[prediction[0][0]]
 
 
 def load_type_info(question_type, daphne_version, module_name):
@@ -60,6 +55,7 @@ def load_type_info(question_type, daphne_version, module_name):
     information = {}
     information["type"] = type_info["type"]
     information["params"] = type_info["params"]
+    information["objective"] = type_info["objective"]
     if type_info["type"] == "db_query":
         information["query"] = type_info["query"]
     elif type_info["type"] == "run_function":
@@ -93,15 +89,15 @@ def get_process_functions(daphne_version):
         return process_function
 
 
-def extract_data(processed_question, params, context: UserInformation):
+def extract_data(processed_question, params, user_information: UserInformation, context):
     """ Extract the features from the processed question, with a correcting factor """
     number_of_features = {}
     extracted_raw_data = {}
     extracted_data = {}
 
     # Get the right extractors and processors
-    extract_function = get_extract_functions(context.daphne_version)
-    process_function = get_process_functions(context.daphne_version)
+    extract_function = get_extract_functions(user_information.daphne_version)
+    process_function = get_process_functions(user_information.daphne_version)
 
     # Count how many non-context params of each type are needed
     for param in params:
@@ -113,19 +109,18 @@ def extract_data(processed_question, params, context: UserInformation):
                 number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
     for type, num in number_of_features.items():
-        extracted_raw_data[type] = extract_function[type](processed_question, num, context)
+        extracted_raw_data[type] = extract_function[type](processed_question, num, user_information)
     # For each parameter check if it's needed and apply postprocessing;
     for param in params:
         extracted_param = None
         if param["from_context"]:
-            try:
-                subcontext = context
-                if param["context"] is not "":
-                    subcontext = getattr(subcontext, param["context"])
-                if param["subcontext"] is not "":
-                    subcontext = getattr(subcontext, param["subcontext"])
-                extracted_param = getattr(subcontext, param["name"])
-            except AttributeError:
+            subcontext = context
+            if len(param["context_path"]) > 0:
+                for step in param["context_path"]:
+                    subcontext = subcontext[step]
+            if param["name"] in subcontext:
+                extracted_param = subcontext[param["name"]]
+            else:
                 if param["mandatory"]:
                     raise ParameterMissingError(param["type"])
         else:
@@ -135,23 +130,22 @@ def extract_data(processed_question, params, context: UserInformation):
                 # If param is needed but not detected return error with type of parameter
                 raise ParameterMissingError(param["type"])
         if extracted_param is not None:
-            extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"], context)
+            extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"],
+                                                                            user_information)
     return extracted_data
 
 
-def augment_data(data, context: UserInformation):
+def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
-    if context.daphne_version == "EOSS":
-        data['designs'] = context.eosscontext.design_set.all()
-    if context.daphne_version == "EDL":
+    data['session_key'] = session.session_key
+    if user_information.daphne_version == "EOSS":
+        data['designs'] = user_information.eosscontext.design_set.all()
+        data['problem'] = user_information.eosscontext.problem
+    if user_information.daphne_version == "EDL":
         pass
-    if context.daphne_version == "AT":
+    if user_information.daphne_version == "AT":
         pass
 
-    #if 'behavioral' in context:
-    #    data['behavioral'] = context['behavioral']
-    #if 'non_behavioral' in context:
-    #    data['non_behavioral'] = context['non_behavioral']
     # TODO: Add useful information from context if needed
     return data
 
@@ -225,9 +219,9 @@ def get_dialogue_functions(daphne_version):
         return dialogue_functions
 
 
-def run_function(function_info, data, context: UserInformation):
+def run_function(function_info, data, daphne_version, context, new_dialogue_contexts):
     # Load the functions that must be run
-    dialogue_functions = get_dialogue_functions(context.daphne_version)
+    dialogue_functions = get_dialogue_functions(daphne_version)
     # Run the function and save the results
     run_template = Template(function_info["run_template"])
     run_command = run_template.substitute(data)

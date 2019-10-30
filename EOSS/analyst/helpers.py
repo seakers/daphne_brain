@@ -10,7 +10,8 @@ logger = logging.getLogger('VASSAR')
 
 def base_feature_expression_to_string(feature_expression, is_critique=False, context=None):
     try:
-        e = feature_expression[1:-1]
+        e = remove_outer_parentheses(feature_expression)
+        e = e[1:-1]
         out = None
 
         feature_type = e.split("[")[0]
@@ -22,8 +23,8 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         instrument_indices = arg_split[1]
         numbers = arg_split[2]
 
-        orbit_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
-        instrument_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
+        orbit_dataset = problem_specific.get_orbit_dataset(context.problem)
+        instrument_dataset = problem_specific.get_instrument_dataset(context.problem)
 
         orbit_names = []
         if orbit_indices:
@@ -123,7 +124,7 @@ def get_feature_satisfied(expression, design, context):
             individual_features = [expression]
 
         for feat in individual_features:
-            satisfied = apply_base_filter(feat, design, context)
+            satisfied = apply_preset_filter(feat, design, context)
             if satisfied:
                 out.append(feat)
         return "&&".join(out)
@@ -147,23 +148,28 @@ def get_feature_unsatisfied(expression, design, context):
             individual_features = [expression]
 
         for feat in individual_features:
-            satisfied = apply_base_filter(feat, design, context)
+            satisfied = apply_preset_filter(feat, design, context)
             if not satisfied:
                 out.append(feat)
         return "&&".join(out)
 
 
-def apply_base_filter(filter_expression, design, context):
-    expression = filter_expression
+def apply_preset_filter(filter_expression, design, context):
+    expression = remove_outer_parentheses(filter_expression)
 
     # Preset filter: {presetName[orbits;instruments;numbers]}
     if expression[0] == "{" and expression[-1] == "}":
         expression = expression[1:-1]
 
-    orbit_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
-    instrument_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
-    norb = len(orbit_dataset)
-    ninstr = len(instrument_dataset)
+    flip = False
+    if expression[0] == '~':
+        flip = True
+        expression = expression[1:]
+
+    orbit_dataset = problem_specific.get_orbit_dataset(context.problem)
+    instrument_dataset = problem_specific.get_instrument_dataset(context.problem)
+    num_orbits = len(orbit_dataset)
+    num_instruments = len(instrument_dataset)
     feature_type = expression.split("[")[0]
     arguments = expression.split("[")[1]
     arguments = arguments[:-1]
@@ -182,8 +188,8 @@ def apply_base_filter(filter_expression, design, context):
                 return False
             out = False
             instr = int(instr)
-            for i in range(norb):
-                if inputs[ninstr * i + instr]:
+            for i in range(num_orbits):
+                if inputs[num_instruments * i + instr]:
                     out = True
                     break
 
@@ -192,8 +198,8 @@ def apply_base_filter(filter_expression, design, context):
                 return False
             out = True
             instr = int(instr)
-            for i in range(norb):
-                if inputs[ninstr * i + instr]:
+            for i in range(num_orbits):
+                if inputs[num_instruments * i + instr]:
                     out = False
                     break
 
@@ -206,14 +212,14 @@ def apply_base_filter(filter_expression, design, context):
                 instruments = instr.split(",")
                 for instrument in instruments:
                     temp = int(instrument)
-                    if inputs[orbit * ninstr + temp] is False:
+                    if inputs[orbit * num_instruments + temp] is False:
                         out = False
                         break
             else:
                 # Single instrument
                 instrument = int(instr)
                 out = False
-                if inputs[orbit * ninstr + instrument]:
+                if inputs[orbit * num_instruments + instrument]:
                     out = True
 
         elif feature_type == "notInOrbit":
@@ -225,24 +231,24 @@ def apply_base_filter(filter_expression, design, context):
                 instruments = instr.split(",")
                 for instrument in instruments:
                     temp = int(instrument)
-                    if inputs[orbit * ninstr + temp] is True:
+                    if inputs[orbit * num_instruments + temp] is True:
                         out = False
                         break
             else:
                 # Single instrument
                 instrument = int(instr)
                 out = True
-                if inputs[orbit * ninstr + instrument]:
+                if inputs[orbit * num_instruments + instrument]:
                     out = False
 
         elif feature_type == "together":
             out = False
             instruments = instr.split(",")
-            for i in range(norb):
+            for i in range(num_orbits):
                 found = True
                 for j in range(len(instruments)):
                     temp = int(instruments[j])
-                    if inputs[i * ninstr + temp] is False:
+                    if inputs[i * num_instruments + temp] is False:
                         found = False
 
                 if found:
@@ -252,11 +258,11 @@ def apply_base_filter(filter_expression, design, context):
         elif feature_type == "separate":
             out = True
             instruments = instr.split(",")
-            for i in range(norb):
+            for i in range(num_orbits):
                 found = False
                 for j in range(len(instruments)):
                     temp = int(instruments[j])
-                    if inputs[i * ninstr + temp] is True:
+                    if inputs[i * num_instruments + temp] is True:
                         if found:
                             out = False
                             break
@@ -269,8 +275,8 @@ def apply_base_filter(filter_expression, design, context):
             out = True
             orbit = int(orbit)
 
-            for i in range(ninstr):
-                if inputs[orbit * ninstr + i]:
+            for i in range(num_instruments):
+                if inputs[orbit * num_instruments + i]:
                     out = False
                     break
 
@@ -279,13 +285,62 @@ def apply_base_filter(filter_expression, design, context):
             out = False
             numb = int(numb)
 
-            for i in range(norb):
-                for j in range(ninstr):
-                    if inputs[i * ninstr + j]:
+            for i in range(num_orbits):
+                for j in range(num_instruments):
+                    if inputs[i * num_instruments + j]:
                         count += 1
                         break
 
             if numb == count:
+                out = True
+
+        elif feature_type == 'subsetOfInstruments':
+            count = 0
+            instruments = instr.split(",")
+            numbers = numb.split(',')
+            orbit = int(orbit)
+            out = False
+
+            for instrument in instruments:
+                temp = int(instrument)
+                if inputs[orbit * num_instruments + temp]:
+                    count += 1
+
+            if len(numbers) == 1:
+                if count > int(numbers[0]):
+                    out = True
+            else:
+                if count >= int(numbers[0]) and count <= int(numbers[1]):
+                    out = True
+
+        elif feature_type == 'numOfInstruments':
+            count = 0
+            out = False
+            numb = int(numb)
+
+            if orbit == "":
+                # num of instruments across all orbits
+                if instr == "":
+                    # num of specified instrument
+                    for i in range(num_orbits):
+                        for j in range(num_instruments):
+                            if inputs[i * num_instruments+j]:
+                                count += 1
+                else:
+                    instr = int(instr)
+                    # num of all instruments
+                    for i in range(num_orbits):
+                        if inputs[i * num_instruments+instr]:
+                            count += 1
+
+            else:
+                orbit = int(orbit)
+                # number of instruments in a specified orbit
+                for i in range(num_instruments):
+                    if inputs[orbit * num_instruments+i]:
+                        count += 1
+
+            if count == numb:
                 out = True
 
         else:
@@ -294,4 +349,41 @@ def apply_base_filter(filter_expression, design, context):
     except Exception as e:
         raise ValueError("Exe in applying the base filter: " + str(e))
 
-    return out
+    if flip:
+        return not out
+    else:
+        return out
+
+
+def remove_outer_parentheses(expression, **kwargs):
+    if "outer_level" in kwargs:
+        new_outer_level = kwargs["outer_level"]
+    else:
+        new_outer_level = 0
+
+    clean_expression = expression
+
+    has_outer = clean_expression[0] == '('
+    while has_outer:
+        level = 1
+        for i in range(1, len(clean_expression)-1):
+            if clean_expression[i] == '(':
+                level += 1
+            elif clean_expression[i] == ')':
+                level -= 1
+
+            if level == 0:
+                has_outer = False
+
+        if has_outer:
+            clean_expression = clean_expression[1:-1]
+            has_outer = clean_expression[0] == '('
+            new_outer_level += 1
+
+    if "outer_level" in kwargs:
+        return {
+            "expression": clean_expression,
+            "level": new_outer_level
+        }
+    else:
+        return clean_expression

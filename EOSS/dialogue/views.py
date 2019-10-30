@@ -1,16 +1,83 @@
+import json
+from collections import OrderedDict
+
+from django.core import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from EOSS.models import EOSSContext, EOSSContextSerializer, ActiveContextSerializer, EOSSDialogueContextSerializer, \
+    EngineerContextSerializer, EOSSDialogueContext, EngineerContext
 from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 import EOSS.dialogue.command_lists as command_lists
-from dialogue.views import Command
+from daphne_context.models import UserInformation, DialogueContext, DialogueContextSerializer
+from dialogue.views import Command, Dialogue
 
 
 class EOSSCommand(Command):
     daphne_version = "EOSS"
     command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian']
     condition_names = ['ifeed', 'analyst', 'critic', 'historian']
+
+    def get_current_context(self, user_info: UserInformation):
+        context = {}
+
+        # First encode the constant context (visual)
+        screen_context_serializer = EOSSContextSerializer(user_info.eosscontext)
+        active_context_serializer = ActiveContextSerializer(user_info.eosscontext.activecontext)
+        screen_context = screen_context_serializer.data
+        screen_context["activecontext"] = active_context_serializer.data
+        context["screen"] = screen_context
+
+        # Then encode the temporal context
+        # 1. Get the last 5 DialogueContext
+        dialogue_contexts = DialogueContext.objects.order_by("-dialogue_history__date")[:5]
+        # 2. Generate the JSON for each of them
+        dialogue_contexts_dict = [
+            self.generate_eoss_dialogue_context(dialogue_context) for dialogue_context in dialogue_contexts
+        ]
+        # 3. Merge the JSONs starting by the newest
+        if len(dialogue_contexts_dict) > 0:
+            merged_dialogue_contexts = dialogue_contexts_dict[0]
+            for idx in range(len(dialogue_contexts_dict)-1):
+                pass
+        else:
+            merged_dialogue_contexts = {}
+        # 4. Add the merged JSON to the context object
+        context["dialogue"] = merged_dialogue_contexts
+        return context
+
+    def generate_eoss_dialogue_context(self, dialogue_context: DialogueContext):
+        dialogue_context_serializer = DialogueContextSerializer(dialogue_context)
+        dialogue_context_dict = dialogue_context_serializer.data
+        if hasattr(dialogue_context, "eossdialoguecontext"):
+            eossdialogue_context_serializer = EOSSDialogueContextSerializer(dialogue_context.eossdialoguecontext)
+            engineer_context_serializer = EngineerContextSerializer(dialogue_context.eossdialoguecontext.engineercontext)
+            dialogue_context_dict["eossdialoguecontext"] = eossdialogue_context_serializer.data
+            dialogue_context_dict["eossdialoguecontext"]["engineercontext"] = engineer_context_serializer.data
+        return dialogue_context_dict
+
+    def create_dialogue_contexts(self):
+        dialogue_context = DialogueContext(is_clarifying_input=False)
+        eossdialogue_context = EOSSDialogueContext()
+        engineer_context = EngineerContext()
+        contexts = OrderedDict()
+        contexts["dialogue_context"] = dialogue_context
+        contexts["eossdialogue_context"] = eossdialogue_context
+        contexts["engineer_context"] = engineer_context
+        return contexts
+
+    def save_dialogue_contexts(self, dialogue_contexts, dialogue_turn):
+        dialogue_contexts["dialogue_context"].dialogue_history = dialogue_turn
+        dialogue_contexts["dialogue_context"].save()
+        dialogue_contexts["eossdialogue_context"].dialoguecontext = dialogue_contexts["dialogue_context"]
+        dialogue_contexts["eossdialogue_context"].save()
+        dialogue_contexts["engineer_context"].eossdialoguecontext = dialogue_contexts["eossdialogue_context"]
+        dialogue_contexts["engineer_context"].save()
+
+
+class EOSSHistory(Dialogue):
+    daphne_version = "EOSS"
 
 
 class CommandList(APIView):
