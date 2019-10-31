@@ -1,12 +1,10 @@
 import datetime
 import json
 import os
+import pickle
 from string import Template
 
 import numpy as np
-import keras
-from keras.engine.saving import model_from_json
-from keras_preprocessing.text import tokenizer_from_json
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from sqlalchemy import or_
@@ -24,12 +22,12 @@ def classify(question, daphne_version, module_name):
     loaded_model = nn_models[daphne_version][module_name]
     # Map data into vocabulary
     model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
-    vocab_path = os.path.join(model_folder_path, "tokenizer.json")
-    with open(vocab_path, mode="r") as tokenizer_json:
-        tokenizer = tokenizer_from_json(tokenizer_json.read())
+    vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
+    with open(vocab_path, 'rb') as handle:
+        tokenizer = pickle.load(handle)
 
     x = tokenizer.texts_to_sequences([cleaned_question])
-    expected_input_length = loaded_model.layers[0].input_shape[1]
+    expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
     print("\nEvaluating...\n")
 
