@@ -18,5 +18,7 @@ urlpatterns = [
     path('get-subject-design-space', views.GetSubjectDesignSpace.as_view()),
 
     # --> Proactive Mode
-    path('set-proactive-mode', views.SetProactiveMode.as_view())
+    path('set-proactive-mode', views.SetProactiveMode.as_view()),
+    path('clear-teacher-user-data', views.ClearTeacherUserData.as_view())
+
 ]
