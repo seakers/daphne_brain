@@ -3,9 +3,11 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
+from time import sleep
 
 import threading
 from queue import Queue
+from channels.layers import get_channel_layer
 
 from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.api import VASSARClient
@@ -30,6 +32,19 @@ from EOSS.explorer.objective_space_evaluator import teacher_evaluate_objective_s
 
 from .teacher_agent import teacher_thread
 
+from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
+
+
+
+class ClearTeacherUserData(APIView):
+    def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        ArchitecturesClicked.objects.all().filter(user_information=user_info).delete()
+        ArchitecturesUpdated.objects.all().filter(user_information=user_info).delete()
+        ArchitecturesEvaluated.objects.all().filter(user_information=user_info).delete()
+        return Response({'list': 'test'})
+
+
 
 class SetProactiveMode(APIView):
     # --> For each current session, we will have a teacher object as long as that session
@@ -42,35 +57,39 @@ class SetProactiveMode(APIView):
 
         # --> Get Daphne user information
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        print("USER INFO", user_info.session, user_info.user)
+        print("\n--> USER INFO", user_info.session, user_info.user)
+
 
         # --> Get the Problem Name
         problem = request.data['problem']
+
+        # --> Get the channel layer
+        channel_layer = get_channel_layer()
 
         # --> Determine the setting for Proactive Mode
         mode = request.data['proactiveMode']
 
         # --> Proactive Mode: enabled - create a teacher for this session
         if mode == 'enabled':
-            print('--> Teacher request for', user_info.session)
-            if user_info not in self.teachersDict:
+            print('--> Teacher request')
+            if user_info.session not in self.teachersDict:
                 print("--> Request approved for", user_info.session)
                 communication_queue = Queue()
                 user_thread = threading.Thread(target=teacher_thread,
-                                               args=(communication_queue,
-                                                     user_info.session,
-                                                     user_info.user,
-                                                     user_info.channel_name))
+                                               args=(request, communication_queue,
+                                                     user_info,
+                                                     channel_layer))
                 user_thread.start()
+                sleep(0.1)
                 self.teachersDict[user_info.session] = (user_thread, communication_queue)
             else:
                 print('--> Request denied, Teacher already assigned')
 
         # --> Proactive Mode: disabled - remove a teacher for this session
         elif mode == 'disabled':
-            print('--> Teacher return request for', user_info.session)
+            print('--> Teacher request')
             if user_info.session in self.teachersDict:
-                print("--> Request approved for", user_info.session)
+                print("--> Request approved")
                 thread_to_join = (self.teachersDict[user_info.session])[0]
                 communication_queue = (self.teachersDict[user_info.session])[1]
                 communication_queue.put('stop fam')

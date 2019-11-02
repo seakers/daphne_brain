@@ -8,6 +8,8 @@ from auth_API.helpers import get_user_information
 from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
 
+from EOSS.models import ArchitecturesClicked, ArchitecturesUpdated, ArchitecturesEvaluated
+
 
 class EOSSConsumer(DaphneConsumer):
     scheduler = schedule.Scheduler()
@@ -81,6 +83,34 @@ class EOSSConsumer(DaphneConsumer):
             queue_name = self.scope['user'].username + '_brainga'
             channel.queue_declare(queue=queue_name)
             channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
+
+
+        # --> Messages for TeacherAgent Context into Tables
+        elif content.get('msg_type') == 'teacher_clicked_arch':
+            content = content.get('teacher_context')    # --> Dict
+            entry = ArchitecturesClicked(user_information=user_info, arch_clicked=json.dumps(content))
+            entry.save()
+        elif content.get('msg_type') == 'teacher_clicked_arch_update':
+            content = content.get('teacher_context')  # --> List
+            entry = ArchitecturesUpdated(user_information=user_info, arch_updated=json.dumps(content))
+            entry.save()
+        elif content.get('msg_type') == 'teacher_evaluated_arch':
+            content = content.get('teacher_context')  # --> Dict
+            entry = ArchitecturesEvaluated(user_information=user_info, arch_evaluated=json.dumps(content))
+            entry.save()
+
+
+
+
+
+    def teacher_design_space(self, event):
+        self.send(json.dumps(event))
+    def teacher_objective_space(self, event):
+        self.send(json.dumps(event))
+    def teacher_sensitivities(self, event):
+        self.send(json.dumps(event))
+    def teacher_features(self, event):
+        self.send(json.dumps(event))
 
     def ga_new_archs(self, event):
         print(event)
