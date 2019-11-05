@@ -5,7 +5,7 @@ import os
 def find_last_anomaly():
     # Read and store the (false) telemetry feed and thresholds .csv files
 
-    filename = os.path.join(os.getcwd(), 'AT', 'Databases', 'telemetry_feed.csv')
+    filename = os.path.join(os.getcwd(), 'AT', 'Databases', 'telemetry_feed_values.csv')
     tf_data = pd.read_csv(filename)
     filename = os.path.join(os.getcwd(), 'AT', 'Databases', 'telemetry_feed_thresholds.csv')
     tf_thresholds = pd.read_csv(filename)
@@ -47,7 +47,7 @@ def show_measurement(data):
     answer['dataframe'] = None
     answer['thresholds'] =None
 
-    filename = os.path.join(os.getcwd(), 'AT', 'Databases', 'telemetry_feed.csv')
+    filename = os.path.join(os.getcwd(), 'AT', 'Databases', 'telemetry_feed_values.csv')
     tf_data = pd.read_csv(filename)
     filename = os.path.join(os.getcwd(), 'AT', 'Databases', 'telemetry_feed_thresholds.csv')
     tf_thresholds = pd.read_csv(filename)

@@ -6,6 +6,10 @@ from auth_API.helpers import get_user_information
 
 from daphne_ws.consumers import DaphneConsumer
 
+from channels.layers import get_channel_layer
+from auth_API.helpers import get_or_create_user_information
+from asgiref.sync import async_to_sync
+
 
 class ATConsumer(DaphneConsumer):
     scheduler = schedule.Scheduler()
@@ -36,18 +40,24 @@ class ATConsumer(DaphneConsumer):
             user_info.save()
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-            channel = connection.channel()
+            # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+            # channel = connection.channel()
+            #
+            # queue_name = 'thread_queue'
+            # channel.queue_declare(queue=queue_name)
+            # channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
 
-            queue_name = self.scope['user'].username + '_brainga'
-            channel.queue_declare(queue=queue_name)
-            channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
+            channel_layer = get_channel_layer()
+            # async_to_sync(channel_layer.send)('superpotato')
+
+            pass
 
     def console_text(self, event):
-        # print(event['type'])
         self.send(json.dumps(event))
 
     def telemetry_update(self, event):
-        # print(event['type'])
+        self.send(json.dumps(event))
+
+    def initialize_telemetry(self, event):
         self.send(json.dumps(event))
 
