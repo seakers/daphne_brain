@@ -1,0 +1,4 @@
+parameter,example,battery,pressure
+nominal,500,400,760
+low_threshold,450,370,755
+high_threshold,550,430,765
