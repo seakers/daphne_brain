@@ -15,6 +15,7 @@ class EOSSConsumer(DaphneConsumer):
     scheduler = schedule.Scheduler()
     sched_stopper = None
     kill_event = None
+    daphne_version = "EOSS"
 
     ##### WebSocket event handlers
 

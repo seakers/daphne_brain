@@ -5,6 +5,7 @@ import json
 from auth_API.helpers import get_user_information
 
 from daphne_ws.consumers import DaphneConsumer
+from queue import Queue
 
 from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
@@ -15,8 +16,13 @@ class ATConsumer(DaphneConsumer):
     scheduler = schedule.Scheduler()
     sched_stopper = None
     kill_event = None
+    daphne_version = "AT"
 
     ##### WebSocket event handlers
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.queue = Queue()
 
     def receive_json(self, content, **kwargs):
         """
@@ -39,17 +45,7 @@ class ATConsumer(DaphneConsumer):
                 getattr(user_info, subcontext_name).save()
             user_info.save()
         elif content.get('msg_type') == 'ping':
-            # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
-            # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-            # channel = connection.channel()
-            #
-            # queue_name = 'thread_queue'
-            # channel.queue_declare(queue=queue_name)
-            # channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
-
-            channel_layer = get_channel_layer()
-            # async_to_sync(channel_layer.send)('superpotato')
-
+            self.queue.put('ping')
             pass
 
     def console_text(self, event):
@@ -60,4 +56,7 @@ class ATConsumer(DaphneConsumer):
 
     def initialize_telemetry(self, event):
         self.send(json.dumps(event))
+
+    def create_queue(self, event):
+        self.queue = event['queue']
 
