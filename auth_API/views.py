@@ -177,3 +177,12 @@ class CheckStatus(APIView):
         else:
             response['is_logged_in'] = False
         return Response(response)
+
+
+class GenerateSession(APIView):
+    """
+    Simply generate a session for the user (solves a ton of bugs)
+    """
+    def post(self, request, format=None):
+        request.session.save()
+        return Response("Session generated")
