@@ -119,7 +119,7 @@ def answer_command(processed_command, question_type, command_class, condition_na
     return dialogue_history
 
 
-def choose_command(command_types, daphne_version, command_class, context: UserInformation):
+def choose_command(command_types, daphne_version, command_role, command_class, context: UserInformation):
     # Load information on the three commands
     answer = {
         'voice_answer': 'I\'m not confident enough in my interpretation of your question. Please help me by choosing'
@@ -144,6 +144,7 @@ def choose_command(command_types, daphne_version, command_class, context: UserIn
                                                       date=datetime.datetime.utcnow())
     DialogueContext.objects.create(dialogue_history=dialogue_history,
                                    is_clarifying_input=True,
+                                   clarifying_role=command_role,
                                    clarifying_commands=json.dumps(command_types))
 
 
