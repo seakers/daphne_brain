@@ -1,37 +1,17 @@
-import logging
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
 from time import sleep
-
 import threading
 from queue import Queue
 from channels.layers import get_channel_layer
-
-from EOSS.data.problem_specific import assignation_problems, partition_problems
-from EOSS.vassar.api import VASSARClient
-from auth_API.helpers import get_or_create_user_information
-from EOSS.data.design_helpers import add_design
-
-# --> Import VASSAR Service, Sensitivities Service
 from EOSS.sensitivities.api import SensitivitiesClient
-from EOSS.vassar.api import VASSARClient
-from EOSS.models import EOSSContext, Design
-
-# --> Import the user information so we can get the architectures
 from auth_API.helpers import get_or_create_user_information
-
-# --> Import the problem types
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
-
 from EOSS.explorer.objective_space_evaluator import teacher_evaluate_objective_space
-
 from .teacher_agent import teacher_thread
-
 from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
 
 
@@ -148,15 +128,14 @@ class GetSubjectDesignSpace(APIView):
         level_one_analysis = evaluate_design_space_level_one(arch_dict_list, orbits, instruments)
         level_two_analysis = evaluate_design_space_level_two(arch_dict_list, orbits, instruments)
 
-        print("Level 1", level_one_analysis)
-        for key in level_two_analysis:
-            print("Level 2", level_two_analysis[key])
+        # print("Level 1", level_one_analysis)
+        # for key in level_two_analysis:
+        #     print("Level 2", level_two_analysis[key])
 
         return Response({'level_one_analysis': level_one_analysis, 'level_two_analysis': level_two_analysis})
 
 
 # --> Will return information on the Sensitivities subject --> Ask Samalis
-# --> We will need a DataMiningClient, used in analyst/views.py
 class GetSubjectSensitivities(APIView):
     def post(self, request, format=None):
         print("Getting Subject Sensitivities!!!")
@@ -206,8 +185,6 @@ class GetSubjectSensitivities(APIView):
         return Response(results)
 
 
-# --> Will return information on the Objective Space subject
-# --> Call VASSAR
 class GetSubjectObjectiveSpace(APIView):
     def post(self, request, format=None):
         print("Getting Objective Space Information!!!")

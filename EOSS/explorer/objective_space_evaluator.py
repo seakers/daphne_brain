@@ -21,8 +21,11 @@ def teacher_evaluate_objective_space(plotDataJson, pareto_rank_range=11):
     for pareto_rank in range(pareto_rank_range):
         temp_list = []
         for arch in plotDataJson:
-            if arch['paretoRanking'] <= pareto_rank:
-                temp_list.append(arch)
+            try:
+                if arch['paretoRanking'] <= pareto_rank:
+                    temp_list.append(arch)
+            except:
+                print("This design doesn't have a pareto ranking")
         considered_architectures[pareto_rank] = temp_list
 
 
