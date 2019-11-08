@@ -10,7 +10,9 @@ from thrift.protocol import TBinaryProtocol
 from EOSS.data_mining.interface import DataMiningInterface
 
 from config.loader import ConfigurationLoader
+
 config = ConfigurationLoader().load()
+
 
 class DataMiningClient():
     def __init__(self):
@@ -18,16 +20,16 @@ class DataMiningClient():
 
         # Make socket
         self.transport = TSocket.TSocket('localhost', port)
-    
+
         # Buffering is critical. Raw sockets are very slow
         self.transport = TTransport.TBufferedTransport(self.transport)
-    
+
         # Wrap in a protocol
         self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
-        
+
         # Create a client to use the protocol encoder
         self.client = DataMiningInterface.Client(self.protocol)
-    
+
     def startConnection(self):
         # Connect
         self.transport.open()
@@ -35,7 +37,7 @@ class DataMiningClient():
     def endConnection(self):
         # Close
         self.transport.close()
-        
+
     def ping(self):
         self.client.ping()
         print('ping()')
