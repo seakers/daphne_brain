@@ -1,7 +1,7 @@
 import json
 import logging
 
-from thrift.Thrift import TException
+from thrift.Thrift import TException, TApplicationException
 
 from EOSS.vassar.api import VASSARClient
 from EOSS.data import problem_specific
@@ -263,3 +263,48 @@ def get_measurement_requirement_followup(vassar_measurement, instrument_paramete
     target_value = requirement["thresholds"][1:-1].split(',')[0]
     return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' for subobjective ' \
            + requirement["subobjective"] + ' is ' + threshold + ' and its target value is ' + target_value + '.'
+
+
+def get_cost_explanation(design_id, designs, context):
+    try:
+        # Start connection with VASSAR
+        port = context["screen"]["vassar_port"]
+        client = VASSARClient(port)
+        client.start_connection()
+
+        # Get the correct architecture
+        arch = designs[design_id]
+        problem = context["screen"]["problem"]
+
+        cost_explanation = client.get_arch_cost_information(problem, arch)
+
+        # End the connection before return statement
+        client.end_connection()
+
+        def budgets_to_json(explanation):
+            json_list = []
+            for exp in explanation:
+                json_exp = {
+                    'orbit_name': exp.orbit_name,
+                    'payload': exp.payload,
+                    'launch_vehicle': exp.launch_vehicle,
+                    'total_mass': exp.total_mass,
+                    'total_power': exp.total_power,
+                    'total_cost': exp.total_cost,
+                    'mass_budget': exp.mass_budget,
+                    'power_budget': exp.power_budget,
+                    'cost_budget': exp.cost_budget
+                }
+                json_list.append(json_exp)
+            return json_list
+
+        json_explanation = budgets_to_json(cost_explanation)
+        for explanation in json_explanation:
+            explanation["subcosts"] = [type + ": $" + str("%.2f" % round(number, 2)) + 'M' for type, number in explanation["cost_budget"].items()]
+
+        return json_explanation
+
+    except TApplicationException as exc:
+        logger.exception('Exception when retrieving information from the current architecture!')
+        client.end_connection()
+        raise exc
