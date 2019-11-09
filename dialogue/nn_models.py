@@ -1,6 +1,6 @@
 import os
 
-from tensorflow_core.keras.models import load_model
+from tensorflow.keras.models import load_model
 
 nn_models = {
     "EOSS": {},
