@@ -116,6 +116,7 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             for s in selected_arch_ids:
                 behavioral.append(int(s))
 
+
             # Get non-selected arch id's
             non_selected = request.data['non_selected']
             non_selected = non_selected[1:-1]
@@ -132,8 +133,7 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
-            logger.debug(
-                'b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
 
             _archs = []
             if input_type == "binary":
@@ -798,9 +798,9 @@ class SetProblemParameters(APIView):
                 raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
-            self.DataMiningClient.endConnection() 
+            self.DataMiningClient.endConnection()
             return Response()
-        
+
         except Exception as detail:
             logger.exception('Exception in SetProblemParameters: ' + str(detail))
             self.DataMiningClient.endConnection()

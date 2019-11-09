@@ -4,18 +4,16 @@ from queue import Queue
 import random
 from time import sleep
 import math
-
 from asgiref.sync import async_to_sync
-
 from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
+from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, ContinuousInputArchitecture, AssigningProblemEntities
 from EOSS.explorer.objective_space_evaluator import teacher_evaluate_objective_space
-
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-
 from EOSS.sensitivities.api import SensitivitiesClient
-
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
+from EOSS.data_mining.api import DataMiningClient
+from EOSS.models import Design
 
 
 # --> This function will be the proactive teacher agent
@@ -40,8 +38,6 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     for arch in user_info.eosscontext.design_set.all():
         temp_dict = {'id': arch.id, 'inputs': json.loads(arch.inputs), 'outputs': json.loads(arch.outputs)}
         arch_dict_list.append(temp_dict)
-    print("DESIGNS")
-    print(arch_dict_list)
 
     # --> Design Space
     level_one_analysis = evaluate_design_space_level_one(arch_dict_list, orbits, instruments)
@@ -55,7 +51,9 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     objective_space_science = objectiveSpaceInformation['0']
     objective_space_cost = objectiveSpaceInformation['1']
     objective_space_science_5 = objective_space_science['5']
-    print(objective_space_science_5)
+
+    # --> Driving Features: pareto ranking 5
+    features = get_driving_features_epsilon_moea(request, user_info)
 
 
     # --> Set initial user information
@@ -91,7 +89,11 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     four_evals_counter = num_evaluated
     four_evals = False
 
+    five_evals_counter = num_evaluated
+    five_evals = False
+
     sensitivity_info_given = False
+    feature_info_given = False
     design_space_info_given = False
     objective_space_info_given = False
 
@@ -137,10 +139,13 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
         if num_evaluated - four_evals_counter >= 4:
             four_evals = True
             four_evals_counter = num_evaluated
+        if num_evaluated - five_evals_counter >= 5:
+            five_evals = True
+            five_evals_counter = num_evaluated
 
-        print("Architectures Clicked ---", len(archs_clicked))
-        print("Architecture Updates ----", len(arch_updates))
-        print("Architectures Evaluated -", len(archs_evaluated))
+        # print("Architectures Clicked ---", len(archs_clicked))
+        # print("Architecture Updates ----", len(arch_updates))
+        # print("Architectures Evaluated -", len(archs_evaluated))
 
 
 
@@ -253,9 +258,26 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
         # -----------------------------------------------------------------------------------------Feature Functionality
         # async_to_sync(channel_layer.send)(channel_name, {'type': 'teacher.features'})
-        # --> I have information about driving design features, would you like to learn more?
-        # --> Yes: display chart with short explanation
-        # --> No: Ok, more information can be found in the teacher window under features
+        # [{'id': 0, 'name': '({notInOrbit[2;1;]})', 'expression': '({notInOrbit[2;1;]})','metrics': [0.12024048096192384, 1.2608439316095343, 0.1566579634464752, 0.967741935483871]}]
+
+        # Feature Plot!
+        if five_evals and not feature_info_given:
+            async_to_sync(channel_layer.send)(channel_name, {
+                        'type': 'teacher.features',
+                        'name': 'displayFeatureInformation',
+                        'data': features,
+                    })
+            feature_info_given = True
+
+
+        # Feature Question!
+
+
+
+        # Feature Suggestion?
+
+
+
         # --------------------------------------------------------------------------------------------------------------
 
 
@@ -272,9 +294,60 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
         two_evals = False
         three_evals = False
         four_evals = False
-        sleep(1)
+        sleep(0.5)
 
     print('--> Teacher thread has finished')
+
+
+
+
+
+
+def get_driving_features_epsilon_moea(request, user_info):
+    client = DataMiningClient()
+    client.startConnection()
+
+    session_key = request.session.session_key
+    problem = request.data['problem']
+    input_type = request.data['input_type']
+
+    # --> All architectures
+    dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+
+    # --> Get architectures in the pareto front with ranking 5: list of dictionaries
+    plotData = request.data['plotData']
+    plotDataJson = json.loads(plotData)
+
+    designs_low_ranking = []
+    designs_low_ranking_id = []
+    designs_high_ranking = []
+    designs_high_ranking_id = []
+    for design in plotDataJson:
+        if design['paretoRanking'] <= 5:
+            designs_low_ranking.append(design)
+            designs_low_ranking_id.append(int(design['id']))
+        else:
+            designs_high_ranking.append(design)
+            designs_high_ranking_id.append(int(design['id']))
+
+
+    _archs = []
+    if input_type == 'binary':
+        for arch in dataset:
+            _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+        _features = client.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
+    elif input_type == 'discrete':
+        for arch in dataset:
+            _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+        _features = client.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
+
+
+    features = []
+    for df in _features:
+        features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics})
+
+    client.endConnection()
+    return features
 
 
 
