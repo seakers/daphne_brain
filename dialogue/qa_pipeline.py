@@ -308,6 +308,19 @@ def build_answers(voice_response_templates, visual_response_templates, results, 
             for item in result:
                 visual_answer["list"].append(item_template.substitute(item))
             answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "multilist":
+            answers["visual_answer_type"].append("multilist")
+            visual_answer = {}
+            begin_template = Template(visual_response_templates[index]["begin"])
+            visual_answer["begin"] = begin_template.substitute(complete_data)
+            visual_answer["list"] = []
+            item_template = Template(visual_response_templates[index]["item_template"])
+            for item in result:
+                visual_answer["list"].append({
+                    "text": item_template.substitute(item),
+                    "subitems": eval(Template(visual_response_templates[index]["subitems"]).substitute(item))
+                })
+            answers["visual_answer"].append(visual_answer)
         elif visual_response_templates[index]["type"] == "timeline_plot":
             answers["visual_answer_type"].append("timeline_plot")
             visual_answer = {}

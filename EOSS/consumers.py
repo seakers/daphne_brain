@@ -64,11 +64,7 @@ class EOSSConsumer(DaphneConsumer):
         print(event)
         self.send_json(event)
 
-    def active_notification(self, event):
-        print(event)
-        self.send_json(event)
-
-    def active_modification(self, event):
+    def active_message(self, event):
         print(event)
         self.send_json(event)
 
