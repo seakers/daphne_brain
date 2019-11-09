@@ -17,7 +17,7 @@ def send_archs_back(channel_layer, channel_name, archs):
 
 
 def send_archs_from_queue_to_main_dataset(context):
-    background_queue_qs = Design.objects.filter(activecontext_id__exact=context.eosscontext.activecontext.id)
+    background_queue_qs = Design.objects.filter(activecontext_id__exact=context.eosscontext.activecontext.id).order_by('id')
     arch_list = []
     for design in background_queue_qs.all():
         design.activecontext = None
