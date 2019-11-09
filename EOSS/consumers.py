@@ -89,7 +89,6 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'teacher_clicked_arch':
             content = content.get('teacher_context')    # --> Dict
             entry = ArchitecturesClicked(user_information=user_info, arch_clicked=json.dumps(content))
-            print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDdddd")
             entry.save()
         elif content.get('msg_type') == 'teacher_clicked_arch_update':
             content = content.get('teacher_context')  # --> List
