@@ -137,7 +137,7 @@ def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
     data['session_key'] = session.session_key
     if user_information.daphne_version == "EOSS":
-        data['designs'] = user_information.eosscontext.design_set.all()
+        data['designs'] = user_information.eosscontext.design_set.order_by('id').all()
         data['problem'] = user_information.eosscontext.problem
     if user_information.daphne_version == "EDL":
         pass
