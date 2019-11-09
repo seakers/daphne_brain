@@ -152,3 +152,20 @@ class Dialogue(APIView):
         }
 
         return Response(response_json)
+
+
+class ClearHistory(APIView):
+    """
+    Clear all past dialogue
+    """
+    daphne_version = ""
+
+    def post(self, request, format=None):
+        # Define context and see if it was already defined for this session
+        user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+
+        user_info.dialoguehistory_set.all().delete()
+
+        return Response({
+            "result": "Dialogue deleted successfully"
+        })
