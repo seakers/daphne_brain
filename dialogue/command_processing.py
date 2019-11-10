@@ -1,11 +1,9 @@
 import datetime
 import json
 import os
+import pickle
 
 import numpy as np
-import keras
-from keras.engine.saving import model_from_json
-from keras.preprocessing.text import tokenizer_from_json
 
 from dialogue import qa_pipeline, data_helpers
 from dialogue.errors import ParameterMissingError
@@ -21,12 +19,12 @@ def classify_command_role(command, daphne_version):
 
     # Map data into vocabulary
     model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
-    vocab_path = os.path.join(model_folder_path, "tokenizer.json")
-    with open(vocab_path, mode="r") as tokenizer_json:
-        tokenizer = tokenizer_from_json(tokenizer_json.read())
+    vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
+    with open(vocab_path, 'rb') as handle:
+        tokenizer = pickle.load(handle)
 
     x = tokenizer.texts_to_sequences([cleaned_command])
-    expected_input_length = loaded_model.layers[0].input_shape[1]
+    expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
     print("\nEvaluating...\n")
 
@@ -46,12 +44,12 @@ def command_type_predictions(processed_command, daphne_version, module_name):
 
     # Map data into vocabulary
     model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
-    vocab_path = os.path.join(model_folder_path, "tokenizer.json")
-    with open(vocab_path, mode="r") as tokenizer_json:
-        tokenizer = tokenizer_from_json(tokenizer_json.read())
+    vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
+    with open(vocab_path, 'rb') as handle:
+        tokenizer = pickle.load(handle)
 
     x = tokenizer.texts_to_sequences([cleaned_question])
-    expected_input_length = loaded_model.layers[0].input_shape[1]
+    expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
     print("\nEvaluating...\n")
 
@@ -121,7 +119,7 @@ def answer_command(processed_command, question_type, command_class, condition_na
     return dialogue_history
 
 
-def choose_command(command_types, daphne_version, command_class, context: UserInformation):
+def choose_command(command_types, daphne_version, command_role, command_class, context: UserInformation):
     # Load information on the three commands
     answer = {
         'voice_answer': 'I\'m not confident enough in my interpretation of your question. Please help me by choosing'
@@ -146,6 +144,7 @@ def choose_command(command_types, daphne_version, command_class, context: UserIn
                                                       date=datetime.datetime.utcnow())
     DialogueContext.objects.create(dialogue_history=dialogue_history,
                                    is_clarifying_input=True,
+                                   clarifying_role=command_role,
                                    clarifying_commands=json.dumps(command_types))
 
 

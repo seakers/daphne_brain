@@ -1,0 +1,38 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context_path": ["screen"], "mandatory": true }
+  ],
+  "objective": "explain where the current design's cost comes from",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_cost_explanation(${selected_arch_id}, data['designs'], context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "orbit": "item[\"orbit_name\"]",
+          "total_cost": "\"$$\" + str(\"%.2f\" % round(item[\"total_cost\"],2)) + \"M\"",
+          "subcosts": "item[\"subcosts\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The cost for the current design (${selected_arch_id}) for each orbit is: ",
+      "repeat": "${orbit}: ${total_cost}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "multilist",
+      "begin": "The cost for the current design (${selected_arch_id}) for each orbit comes from: ",
+      "item_template": "${orbit}: ${total_cost}",
+      "subitems": "item[\"subcosts\"]"
+    }
+  ]
+}

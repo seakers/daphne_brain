@@ -102,7 +102,8 @@ class Command(APIView):
                 elif max_value > 0.90:
                     command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
                                                                      command_class, top_number=3)
-                    command_processing.choose_command(command_types, self.daphne_version, command_class, user_info)
+                    command_processing.choose_command(command_types, self.daphne_version, command_role, command_class,
+                                                      user_info)
                 else:
                     command_processing.not_answerable(user_info)
 
@@ -151,3 +152,20 @@ class Dialogue(APIView):
         }
 
         return Response(response_json)
+
+
+class ClearHistory(APIView):
+    """
+    Clear all past dialogue
+    """
+    daphne_version = ""
+
+    def post(self, request, format=None):
+        # Define context and see if it was already defined for this session
+        user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+
+        user_info.dialoguehistory_set.all().delete()
+
+        return Response({
+            "result": "Dialogue deleted successfully"
+        })
