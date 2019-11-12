@@ -2,8 +2,9 @@ from django.contrib.auth.models import User
 from django.db import transaction
 
 from EDL.models import EDLContext
-from EOSS.models import EOSSContext, ActiveContext, EngineerContext
-from daphne_context.models import UserInformation, ExperimentContext
+from EOSS.models import EOSSContext, ActiveContext
+from experiment.models import ExperimentContext
+from daphne_context.models import UserInformation
 from django.contrib.sessions.models import Session
 
 

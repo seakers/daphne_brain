@@ -5,23 +5,24 @@ import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import ExperimentContext
 
 # Get an instance of a logger
+from experiment.models import ExperimentContext
+
 logger = logging.getLogger('experiment')
 
 
 def stage_type(id, stage_num):
     if id % 2 == 0:
         if stage_num == 0:
-            return 'daphne_traditional'
+            return 'daphne_assistant'
         else:
-            return 'daphne_new'
+            return 'daphne_peer'
     else:
         if stage_num == 0:
-            return 'daphne_new'
+            return 'daphne_peer'
         else:
-            return 'daphne_traditional'
+            return 'daphne_assistant'
 
 
 # Create your views here.
@@ -30,7 +31,7 @@ class StartExperiment(APIView):
     def get(self, request, format=None):
 
         # Check for experiments folder
-        results_dir = './experiment_API/results'
+        results_dir = './experiment/results'
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
 
@@ -120,7 +121,7 @@ class FinishExperiment(APIView):
         experiment_context = user_info.eosscontext.experimentcontext
 
         # Save experiment results to file
-        with open('./experiment_API/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
+        with open('./experiment/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
             json_experiment = {
                 "experiment_id": experiment_context.experiment_id,
                 "current_state": json.loads(experiment_context.current_state),
