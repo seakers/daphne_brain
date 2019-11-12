@@ -37,11 +37,8 @@ class SetProactiveMode(APIView):
 
         # --> Get Daphne user information
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        print("\n--> USER INFO", user_info.session, user_info.user)
-
-
-        # --> Get the Problem Name
-        problem = request.data['problem']
+        user_session = user_info.session
+        print("\n--> USER INFO", user_session, user_info.user)
 
         # --> Get the channel layer
         channel_layer = get_channel_layer()
@@ -52,8 +49,8 @@ class SetProactiveMode(APIView):
         # --> Proactive Mode: enabled - create a teacher for this session
         if mode == 'enabled':
             print('--> Teacher request')
-            if user_info.session not in self.teachersDict:
-                print("--> Request approved for", user_info.session)
+            if user_session not in self.teachersDict:
+                print("--> Request approved for", user_session)
                 communication_queue = Queue()
                 user_thread = threading.Thread(target=teacher_thread,
                                                args=(request, communication_queue,
@@ -61,21 +58,24 @@ class SetProactiveMode(APIView):
                                                      channel_layer))
                 user_thread.start()
                 sleep(0.1)
-                self.teachersDict[user_info.session] = (user_thread, communication_queue)
+                self.teachersDict[user_session] = (user_thread, communication_queue)
             else:
                 print('--> Request denied, Teacher already assigned')
 
         # --> Proactive Mode: disabled - remove a teacher for this session
         elif mode == 'disabled':
             print('--> Teacher request')
-            if user_info.session in self.teachersDict:
+            if user_session in self.teachersDict:
                 print("--> Request approved")
-                thread_to_join = (self.teachersDict[user_info.session])[0]
-                communication_queue = (self.teachersDict[user_info.session])[1]
+                thread_to_join = (self.teachersDict[user_session])[0]
+                communication_queue = (self.teachersDict[user_session])[1]
                 communication_queue.put('stop fam')
                 thread_to_join.join()
-                del self.teachersDict[user_info.session]
                 print("Thread Killed")
+                if user_session in self.teachersDict:
+                    del self.teachersDict[user_session]
+                    print("")
+
             else:
                 print('--> Request denied, no teacher to return')
 
