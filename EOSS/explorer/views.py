@@ -15,7 +15,8 @@ from EOSS.models import Design
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from auth_API.helpers import get_or_create_user_information
-from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back
+from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back, \
+    generate_background_search_message
 from EOSS.data.design_helpers import add_design
 
 # Get an instance of a logger
@@ -66,14 +67,11 @@ class StartGA(APIView):
                         background_queue_qs = Design.objects.filter(
                             activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
                         if background_queue_qs.count() >= 10:
+                            ws_message = generate_background_search_message(thread_user_info)
                             async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                               {
-                                                                  'type': 'active.notification',
-                                                                  'notification': {
-                                                                      'title': 'Background search results',
-                                                                      'message': 'The background search has found more than 10 architectures, but you have chosen to not show them. Do you want to see them now?',
-                                                                      'setting': 'show_background_search_feedback'
-                                                                  }
+                                                                  'type': 'active.message',
+                                                                  'message': ws_message
                                                               })
                         if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
                             back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
