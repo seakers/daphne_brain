@@ -2,11 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context": "eosscontext", "subcontext": "", "mandatory": true }
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context_path": ["screen"], "mandatory": true }
   ],
+  "objective": "criticize the architecture you're designing",
   "function":
   {
-    "run_template": "dialogue_functions.critic.general_call('${selected_arch_id}', data['designs'], context)",
+    "run_template": "dialogue_functions.critic.general_call(${selected_arch_id}, data['designs'], data['session_key'], context)",
     "results": [
       {
         "result_type": "list",

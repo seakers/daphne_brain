@@ -4,6 +4,7 @@
   [
     { "name": "mission", "type": "mission", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "know when a mission was launched",
   "query":
   {
     "always": "session.query(models.Mission).filter(models.Mission.name.ilike('%${mission}%'))",

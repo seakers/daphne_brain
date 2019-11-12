@@ -1,27 +1,25 @@
 import logging
 
 from EOSS.critic.critic import Critic
-from daphne_context.models import UserInformation
+from EOSS.models import EOSSContext
 
 logger = logging.getLogger('EOSS.critic')
 
 
-def general_call(design_id, designs, context: UserInformation):
-    critic = Critic(context)
+def general_call(design_id, designs, session_key, context):
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    critic = Critic(eosscontext, session_key)
 
     try:
         this_design = None
-        num_design_id = int(design_id)
 
         for design in designs:
-            if num_design_id == design.id:
+            if design_id == design.id:
                 this_design = design
                 break
 
         if this_design is None:
             raise ValueError("Design id {} not found in the database".format(design_id))
-        else:
-            pass
 
         critic_results = []
 
@@ -45,24 +43,35 @@ def general_call(design_id, designs, context: UserInformation):
         return None
 
 
-def specific_call(design_id, agent, designs, context: UserInformation):
-    critic = Critic(context)
+def specific_call(design_id, agent, designs, session_key, context):
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    critic = Critic(eosscontext, session_key)
     try:
         result = []
         result_arr = []
-        num_design_id = int(design_id[1:])
+
+        this_design = None
+
+        for design in designs:
+            if design_id == design.id:
+                this_design = design
+                break
+
+        if this_design is None:
+            raise ValueError("Design id {} not found in the database".format(design_id))
+
         if agent == 'expert':
             # Criticize architecture (based on rules)
-            result_arr = critic.expert_critic(designs[num_design_id])
+            result_arr = critic.expert_critic(this_design)
         elif agent == 'historian':
             # Criticize architecture (based on database)
-            result_arr = critic.historian_critic(designs[num_design_id])
+            result_arr = critic.historian_critic(this_design)
         elif agent == 'analyst':
             # Criticize architecture (based on database)
-            result_arr = critic.analyst_critic(designs[num_design_id])
+            result_arr = critic.analyst_critic(this_design)
         elif agent == 'explorer':
             # Criticize architecture (based on database)
-            result_arr = critic.explorer_critic(designs[num_design_id])
+            result_arr = critic.explorer_critic(this_design)
         # Send response
         return result_arr
 

@@ -5,6 +5,7 @@
     { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
     { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
   ],
+  "objective": "see a timeline of missions that take a certain measurement",
   "query":
   {
     "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%')))",
