@@ -4,7 +4,7 @@ import json
 from channels.generic.websocket import JsonWebsocketConsumer
 
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import ExperimentAction
+from experiment.models import ExperimentAction
 
 
 class ExperimentConsumer(JsonWebsocketConsumer):
