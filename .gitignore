@@ -18,3 +18,6 @@ dialogue/models
 /logs/daphne.log
 venv/
 venv_linux/
+
+EOSS/migrations
+daphne_context/migrations

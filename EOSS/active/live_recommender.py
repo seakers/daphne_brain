@@ -52,6 +52,7 @@ def generate_engineer_message(user_info, genome, session_key):
                                    visual_message=json.dumps(message["visual_message"]),
                                    writer="daphne",
                                    date=datetime.datetime.utcnow())
+    return message
 
 
 def active_historian_response(user_info: UserInformation, inputs, session_key):
@@ -93,13 +94,13 @@ def generate_historian_message(user_info, genome, session_key):
            ],
            "writer": "daphne",
         }
-
     DialogueHistory.objects.create(user_information=user_info,
                                    voice_message=message["voice_message"],
                                    visual_message_type=json.dumps(message["visual_message_type"]),
                                    visual_message=json.dumps(message["visual_message"]),
                                    writer="daphne",
                                    date=datetime.datetime.utcnow())
+    return message
 
 
 def parse_suggestions_list(raw_list):
