@@ -1,4 +1,5 @@
 import pika
+import json
 
 from auth_API.helpers import get_user_information
 
@@ -35,7 +36,8 @@ class EOSSConsumer(DaphneConsumer):
                                                                  self.scope['session'].session_key)
             self.send_json({
                     'type': 'active.message',
-                    'message': message
+                    'message': message,
+                    'from': 'active_engineer',
                 })
 
         elif content.get('msg_type') == 'active_historian':
@@ -43,7 +45,8 @@ class EOSSConsumer(DaphneConsumer):
                                                                   self.scope['session'].session_key)
             self.send_json({
                 'type': 'active.message',
-                'message': message
+                'message': message,
+                'from': 'active_historian',
             })
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)

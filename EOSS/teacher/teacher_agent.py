@@ -50,6 +50,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     objectiveSpaceInformation = teacher_evaluate_objective_space(plotDataJson)
     objective_space_science = objectiveSpaceInformation['0']
     objective_space_cost = objectiveSpaceInformation['1']
+    objective_space_science_1 = objective_space_science['1']
     objective_space_science_5 = objective_space_science['5']
 
     # --> Driving Features: pareto ranking 5
@@ -91,6 +92,8 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
     five_evals_counter = num_evaluated
     five_evals = False
+
+    send_message = False
 
     sensitivity_info_given = False
     feature_info_given = False
@@ -153,7 +156,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
         # ------------------------------------------------------------------------------------------------- Design Space
         # --> Design space plot
-        if four_evals and not design_space_info_given:
+        if four_evals and not design_space_info_given and send_message:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.design_space',
                         'name': 'displayDesignSpaceInformation',
@@ -167,7 +170,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             design_space_info_given = True
 
         # --> Design prediction question
-        if three_evals:
+        if three_evals and send_message:
             rand = random.random()
             if rand > 0.5:
                 first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
@@ -216,7 +219,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
         # -------------------------------------------------------------------------------------Sensitivity Functionality
         # --> Display sensitivity plot
-        if two_evals and not sensitivity_info_given:
+        if two_evals and not sensitivity_info_given and send_message:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.sensitivities',
                         'name': 'displaySensitivityInformation',
@@ -240,7 +243,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.objective_space',
                         'name': 'displayObjectiveSpaceInformation',
-                        'data': objective_space_science_5,
+                        'data': objective_space_science_1,
                         'speak': 'ping',
                         "voice_message": "",
                         "visual_message_type": ["objective_space_plot"],
@@ -261,7 +264,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
         # [{'id': 0, 'name': '({notInOrbit[2;1;]})', 'expression': '({notInOrbit[2;1;]})','metrics': [0.12024048096192384, 1.2608439316095343, 0.1566579634464752, 0.967741935483871]}]
 
         # Feature Plot!
-        if five_evals and not feature_info_given:
+        if five_evals and not feature_info_given and send_message:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.features',
                         'name': 'displayFeatureInformation',
@@ -323,12 +326,16 @@ def get_driving_features_epsilon_moea(request, user_info):
     designs_high_ranking = []
     designs_high_ranking_id = []
     for design in plotDataJson:
-        if design['paretoRanking'] <= 5:
-            designs_low_ranking.append(design)
-            designs_low_ranking_id.append(int(design['id']))
-        else:
-            designs_high_ranking.append(design)
-            designs_high_ranking_id.append(int(design['id']))
+        try:
+            if design['paretoRanking'] <= 5:
+                designs_low_ranking.append(design)
+                designs_low_ranking_id.append(int(design['id']))
+            else:
+                designs_high_ranking.append(design)
+                designs_high_ranking_id.append(int(design['id']))
+        except:
+            continue
+
 
 
     _archs = []
@@ -396,6 +403,22 @@ def generate_design_prediction_question(designs, orbits, instruments):
 
     return first_design_dict, second_design_dict, correct_answer, question
 
+def get_design_orbit_instrument_combinations(orbits, instruments, design):
+    inputs = design['inputs']
+    combinations = []
+
+    for index in range(len(inputs)):
+        if inputs[index] is True:
+            combinations.append(get_orbit_instrument_from_index(orbits, instruments, index))
+
+    return combinations
+
+def get_orbit_instrument_from_index(orbits, instruments, index):
+    total_combinations = len(orbits) * len(instruments)
+    orbit_index = math.floor(index / len(instruments))
+    instrument_index = index - (orbit_index * len(instruments))
+    return [orbits[orbit_index], instruments[instrument_index]]
+
 def generate_sensitivity_question(sensitivities):
     rand = random.random()
     objective = ''
@@ -431,22 +454,6 @@ def generate_sensitivity_question(sensitivities):
 
 
     return first_choice_info, second_choice_info, correct_answer, question
-
-def get_design_orbit_instrument_combinations(orbits, instruments, design):
-    inputs = design['inputs']
-    combinations = []
-
-    for index in range(len(inputs)):
-        if inputs[index] is True:
-            combinations.append(get_orbit_instrument_from_index(orbits, instruments, index))
-
-    return combinations
-
-def get_orbit_instrument_from_index(orbits, instruments, index):
-    total_combinations = len(orbits) * len(instruments)
-    orbit_index = math.floor(index / len(instruments))
-    instrument_index = index - (orbit_index * len(instruments))
-    return [orbits[orbit_index], instruments[instrument_index]]
 
 def get_orbits(request):
     # --> Get the Problem Orbits
