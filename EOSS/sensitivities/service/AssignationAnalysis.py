@@ -1,17 +1,9 @@
 # --> Sample Functions
 from SALib.sample import saltelli
 from SALib.sample import sobol_sequence
-
-
-# --> VASSAR for the latin hypercube sampling
 from EOSS.vassar.api import VASSARClient
-
-# --> Evaluates sample functions
 from SALib.test_functions import Ishigami
-
-# --> Analyze functions with results
 from SALib.analyze import sobol
-
 from pyDOE import lhs
 
 
@@ -89,9 +81,7 @@ class AssignationAnalysis:
 
 
     def latin_hypercube_sampling(self):
-        print("------------------------------------")
-
-
+        # print("------------------------------------")
 
         num_inputs = self.get_num_inputs()
         d_value = (2 * num_inputs + 2)
@@ -114,19 +104,17 @@ class AssignationAnalysis:
             architectures.append(arch_row)
 
 
-        # Start connection with VASSAR to evaluate architectures
         # client = VASSARClient(self.vassar_port)
         # client.start_connection()
-
+        #
         # test = client.evaluate_architecture(self.problem, architectures[0])
+        # print("VASSAR Evaluated Architecture ------")
         # print(test)
 
-        # for arch in architectures:
-        #     client.evaluate_architecture(self.problem, arch)
 
 
         #print(architectures)
-        print("------------------------------------")
+        # print("------------------------------------")
 
 
 
@@ -141,8 +129,7 @@ class AssignationAnalysis:
         science_sensitivities = sobol.analyze(problem, science_list)
         cost_sensitivities = sobol.analyze(problem, cost_list)
 
-
-        test = self.latin_hypercube_sampling()
+        # test = self.latin_hypercube_sampling()
 
 
         # --> Return the science and cost sensitivities
