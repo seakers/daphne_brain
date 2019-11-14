@@ -10,7 +10,7 @@ from auth_API.helpers import get_or_create_user_information
 from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
-from EOSS.explorer.objective_space_evaluator import teacher_evaluate_objective_space
+from EOSS.explorer.objective_space_evaluator import evaluate_objective_space
 from .teacher_agent import teacher_thread
 from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
 
@@ -57,7 +57,6 @@ class SetProactiveMode(APIView):
                                                      user_info,
                                                      channel_layer))
                 user_thread.start()
-                sleep(0.1)
                 self.teachersDict[user_session] = (user_thread, communication_queue)
             else:
                 print('--> Request denied, Teacher already assigned')
@@ -212,7 +211,7 @@ class GetSubjectObjectiveSpace(APIView):
         plotData = request.data['plotData']
         plotDataJson = json.loads(plotData)
 
-        objectiveSpaceInformation = teacher_evaluate_objective_space(plotDataJson)
+        objectiveSpaceInformation = evaluate_objective_space(plotDataJson)
         return_data = json.dumps(objectiveSpaceInformation)
 
         return Response(return_data)

@@ -14,7 +14,7 @@ from EOSS.models import EOSSContext, Design
 # --> Objective: (0 --> Science), (1 --> Cost)
 # --> This function will compute a maximum of 10 crowding distance groups for pareto rankings 0 - 10
 # --> This will be done for science and cost! So a total of 22 datasets
-def teacher_evaluate_objective_space(plotDataJson, pareto_rank_range=11):
+def evaluate_objective_space(plotDataJson, pareto_rank_range=11):
     print("Evaluating Objective Space")
 
     considered_architectures = {}
