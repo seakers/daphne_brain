@@ -28,7 +28,7 @@ symptom_to_action = Table('eclss_symptom_to_action',  DeclarativeBase.metadata,
 symptom_to_cause = Table('eclss_symptom_to_cause',   DeclarativeBase.metadata,
                          Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
                          Column('causeid', Integer, ForeignKey('eclss_cause.id')))
-symptom_to_component = Table('eclss_symptom_to_related_components',   DeclarativeBase.metadata,
+symptom_to_component = Table('eclss_symptoms_to_related_components',   DeclarativeBase.metadata,
                              Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
                              Column('componentsid', Integer, ForeignKey('eclss_related_components.id')))
 symptom_to_risk = Table('eclss_symptom_to_risk',   DeclarativeBase.metadata,
