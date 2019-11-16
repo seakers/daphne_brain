@@ -45,8 +45,8 @@ class StartExperiment(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         # Ensure experiment is started again
-        ExperimentContext.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
-        experiment_context = ExperimentContext(eosscontext=user_info.eosscontext, is_running=False, experiment_id=-1,
+        user_info.experimentcontext.delete()
+        experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
                                                current_state="")
         experiment_context.save()
 
@@ -55,11 +55,13 @@ class StartExperiment(APIView):
         # Specific to current experiment
         experiment_context.experimentstage_set.all().delete()
         experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
-                                       start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
-                                       end_state="")
+                                                      start_date=datetime.datetime.now(),
+                                                      end_date=datetime.datetime.now(),
+                                                      end_state="")
         experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
-                                       start_date=datetime.datetime.now(), end_date=datetime.datetime.now(),
-                                       end_state="")
+                                                      start_date=datetime.datetime.now(),
+                                                      end_date=datetime.datetime.now(),
+                                                      end_state="")
 
         # Save experiment started on database
         experiment_context.is_running = True
@@ -78,7 +80,7 @@ class StartStage(APIView):
 
     def get(self, request, stage, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        experiment_context = user_info.eosscontext.experimentcontext
+        experiment_context = user_info.experimentcontext
         experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[stage]
         experiment_stage.start_date = datetime.datetime.utcnow()
         experiment_stage.save()
@@ -92,7 +94,7 @@ class FinishStage(APIView):
 
     def get(self, request, stage, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        experiment_context = user_info.eosscontext.experimentcontext
+        experiment_context = user_info.experimentcontext
         experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[stage]
         experiment_stage.end_date = datetime.datetime.utcnow()
         experiment_stage.end_state = experiment_context.current_state
@@ -107,8 +109,8 @@ class ReloadExperiment(APIView):
 
     def get(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        if hasattr(user_info.eosscontext, 'experimentcontext'):
-            experiment_context = user_info.eosscontext.experimentcontext
+        if hasattr(user_info, 'experimentcontext'):
+            experiment_context = user_info.experimentcontext
             if experiment_context.is_running:
                 return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
         return Response({ 'is_running': False })
@@ -118,7 +120,7 @@ class FinishExperiment(APIView):
 
     def get(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        experiment_context = user_info.eosscontext.experimentcontext
+        experiment_context = user_info.experimentcontext
 
         # Save experiment results to file
         with open('./experiment/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:

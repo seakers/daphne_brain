@@ -24,7 +24,7 @@ class ExperimentConsumer(JsonWebsocketConsumer):
 
         # Get an updated session store
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'EOSS')
-        experiment_context = user_info.eosscontext.experimentcontext
+        experiment_context = user_info.experimentcontext
 
         if content.get('msg_type') == 'add_action':
             experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[content['stage']]

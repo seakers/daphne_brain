@@ -66,7 +66,7 @@ class StartGA(APIView):
 
                         background_queue_qs = Design.objects.filter(
                             activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
-                        if background_queue_qs.count() >= 10:
+                        if background_queue_qs.count() == 10:
                             ws_message = generate_background_search_message(thread_user_info)
                             async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                               {
