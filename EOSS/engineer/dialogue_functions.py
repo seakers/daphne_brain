@@ -18,7 +18,7 @@ def get_architecture_scores(design_id, designs, context):
         # Start connection with VASSAR
         client.start_connection()
         scores = client.get_architecture_score_explanation(context["screen"]["problem"],
-                                                           designs.get(design_id=design_id))
+                                                           designs.get(id=design_id))
 
         # End the connection before return statement
         client.end_connection()
@@ -38,7 +38,7 @@ def get_satisfying_data_products(design_id, designs, subobjective, context):
         # Start connection with VASSAR
         client.start_connection()
         subobjective_explanation = client.get_subscore_details(context["screen"]["problem"],
-                                                               designs.get(design_id=design_id),
+                                                               designs.get(id=design_id),
                                                                subobjective.upper())
         satisfying_data_products = [subobjective_explanation.taken_by[i] for i, x in enumerate(subobjective_explanation.scores) if x == 1.0][:5]
         # End the connection before return statement
@@ -59,7 +59,7 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
         # Start connection with VASSAR
         client.start_connection()
         subobjective_explanation = client.get_subscore_details(context["screen"]["problem"],
-                                                               designs.get(design_id=design_id),
+                                                               designs.get(id=design_id),
                                                                subobjective.upper())
         if max(subobjective_explanation.scores) < 1.:
             unsatisfied_data_products = [subobjective_explanation.taken_by[i] for i, x in enumerate(subobjective_explanation.scores) if x < 1.0]
@@ -103,7 +103,7 @@ def get_panel_scores(design_id, designs, panel, context):
 
         panel_code = stakeholders_to_excel[panel.lower()]
         panel_scores = client.get_panel_score_explanation(context["screen"]["problem"],
-                                                          designs.get(design_id=design_id),
+                                                          designs.get(id=design_id),
                                                           panel_code)
 
         # End the connection before return statement
@@ -124,7 +124,7 @@ def get_objective_scores(design_id, designs, objective, context):
         # Start connection with VASSAR
         client.start_connection()
         objective_scores = client.get_objective_score_explanation(context["screen"]["problem"],
-                                                                  designs.get(design_id=design_id),
+                                                                  designs.get(id=design_id),
                                                                   objective.upper())
 
         # End the connection before return statement
@@ -278,7 +278,7 @@ def get_cost_explanation(design_id, designs, context):
         client.start_connection()
 
         # Get the correct architecture
-        arch = designs.get(design_id=design_id)
+        arch = designs.get(id=design_id)
         problem = context["screen"]["problem"]
 
         cost_explanation = client.get_arch_cost_information(problem, arch)

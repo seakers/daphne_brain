@@ -22,7 +22,7 @@ engineer_commands = [
     ('2014', 'Explain the objective ${engineer_objective} science benefit for this design.'),
     ('2016', 'Which instruments improve the science score for stakeholder ${engineer_stakeholder}?'),
     ('2015', 'Which instruments improve the science score for objective ${engineer_objective}?'),
-    ('2008', 'What is the ${analyst_instrument_parameter} of ${analyst_instrument}?'),
+    ('2008', 'What is the ${engineer_instrument_parameter} of ${engineer_instrument}?'),
 ]
 
 analyst_commands = [
