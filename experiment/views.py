@@ -45,7 +45,8 @@ class StartExperiment(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         # Ensure experiment is started again
-        user_info.experimentcontext.delete()
+        if hasattr(user_info, 'experimentcontext'):
+            user_info.experimentcontext.delete()
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
                                                current_state="")
         experiment_context.save()
