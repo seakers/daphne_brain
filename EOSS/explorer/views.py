@@ -28,12 +28,52 @@ class StartGA(APIView):
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
+                # Start connection with VASSAR
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                port = user_info.eosscontext.vassar_port
+                client = VASSARClient(port)
+                client.start_connection()
+
+                problem = request.data['problem']
+
+                # Restart archs queue before starting the GA again
+                Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
+                user_info.eosscontext.last_arch_id = user_info.eosscontext.design_set.count()
+                user_info.eosscontext.save()
+
+                # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
+                thrift_list = []
+                inputs_unique_set = set()
+
+                if problem in assignation_problems:
+                    for arch in user_info.eosscontext.design_set.all():
+                        thrift_list.append(
+                            BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                        hashed_input = hash(tuple(json.loads(arch.inputs)))
+                        inputs_unique_set.add(hashed_input)
+                elif problem in partition_problems:
+                    for arch in user_info.eosscontext.design_set.all():
+                        thrift_list.append(
+                            DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                        hashed_input = hash(tuple(json.loads(arch.inputs)))
+                        inputs_unique_set.add(hashed_input)
+                else:
+                    raise ValueError('Unrecognized problem type: {0}'.format(problem))
+
+                if user_info.eosscontext.ga_id is not None:
+                    client.stop_ga(user_info.eosscontext.ga_id)
+                ga_id = client.start_ga(problem, request.user.username, thrift_list)
+                user_info.eosscontext.ga_id = ga_id
+                user_info.eosscontext.save()
+
+                # End the connection before return statement
+                client.end_connection()
+
                 # Start listening for redis inputs to share through websockets
                 connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
                 channel = connection.channel()
 
-                channel.queue_declare(queue=request.user.username + '_gabrain')
-                channel.queue_purge(queue=request.user.username + '_gabrain')
+                channel.queue_declare(queue=ga_id + '_gabrain')
 
                 def callback(ch, method, properties, body):
                     thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
@@ -49,14 +89,13 @@ class StartGA(APIView):
                             hashed_input = hash(tuple(arch['inputs']))
                             if hashed_input not in inputs_unique_set:
                                 full_arch = {
-                                    'id': thread_user_info.eosscontext.last_arch_id,
                                     'inputs': arch['inputs'],
                                     'outputs': arch['outputs']
                                 }
                                 if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
-                                    add_design(full_arch, thread_user_info.eosscontext, False)
+                                    full_arch = add_design(full_arch, request.session, request.user, False)
                                 else:
-                                    add_design(full_arch, thread_user_info.eosscontext, True)
+                                    full_arch = add_design(full_arch, request.session, request.user, True)
                                 send_back.append(full_arch)
                                 inputs_unique_set.add(hashed_input)
                                 thread_user_info.save()
@@ -93,52 +132,12 @@ class StartGA(APIView):
                         print('Ending the thread!')
                         channel.stop_consuming()
 
-                channel.basic_consume(queue=request.user.username + '_gabrain',
+                channel.basic_consume(queue=ga_id + '_gabrain',
                                       on_message_callback=callback,
                                       auto_ack=True)
 
                 thread = threading.Thread(target=channel.start_consuming)
                 thread.start()
-
-                # Start connection with VASSAR
-                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                port = user_info.eosscontext.vassar_port
-                client = VASSARClient(port)
-                client.start_connection()
-
-                problem = request.data['problem']
-
-                # Restart archs queue before starting the GA again
-                Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
-                user_info.eosscontext.last_arch_id = user_info.eosscontext.design_set.count()
-                user_info.eosscontext.save()
-
-                # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
-                thrift_list = []
-                inputs_unique_set = set()
-
-                if problem in assignation_problems:
-                    for arch in user_info.eosscontext.design_set.all():
-                        thrift_list.append(
-                            BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                        hashed_input = hash(tuple(json.loads(arch.inputs)))
-                        inputs_unique_set.add(hashed_input)
-                elif problem in partition_problems:
-                    for arch in user_info.eosscontext.design_set.all():
-                        thrift_list.append(
-                            DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                        hashed_input = hash(tuple(json.loads(arch.inputs)))
-                        inputs_unique_set.add(hashed_input)
-                else:
-                    raise ValueError('Unrecognized problem type: {0}'.format(problem))
-
-                client.stop_ga(problem, request.user.username)
-                while client.is_ga_running(problem):
-                    time.sleep(0.1)
-                client.start_ga(problem, request.user.username, thrift_list)
-
-                # End the connection before return statement
-                client.end_connection()
 
                 return Response({
                     "status": 'GA started correctly!'
@@ -170,12 +169,10 @@ class StopGA(APIView):
                 client = VASSARClient(port)
                 client.start_connection()
 
-                problem = request.data['problem']
-
                 # Call the GA stop function on Engineer
-                client.stop_ga(problem, request.user.username)
-                while client.is_ga_running(problem):
-                    time.sleep(0.1)
+                client.stop_ga(user_info.eosscontext.ga_id)
+                user_info.eosscontext.ga_id = None
+                user_info.eosscontext.save()
 
                 # End the connection before return statement
                 client.end_connection()
@@ -209,8 +206,7 @@ class CheckGA(APIView):
                 client = VASSARClient(port)
                 client.start_connection()
 
-                problem = request.data['problem']
-                status = client.is_ga_running(problem)
+                status = client.is_ga_running(user_info.eosscontext.ga_id)
 
                 # End the connection before return statement
                 client.end_connection()

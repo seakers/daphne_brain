@@ -31,26 +31,29 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'active_engineer':
             message = live_recommender.generate_engineer_message(user_info, content.get('genome'),
                                                                  self.scope['session'].session_key)
-            self.send_json({
-                    'type': 'active.message',
-                    'message': message
-                })
+            if message:
+                self.send_json({
+                        'type': 'active.message',
+                        'message': message
+                    })
 
         elif content.get('msg_type') == 'active_historian':
             message = live_recommender.generate_historian_message(user_info, content.get('genome'),
                                                                   self.scope['session'].session_key)
-            self.send_json({
-                'type': 'active.message',
-                'message': message
-            })
+            if message:
+                self.send_json({
+                    'type': 'active.message',
+                    'message': message
+                })
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
             channel = connection.channel()
 
-            queue_name = self.scope['user'].username + '_brainga'
-            channel.queue_declare(queue=queue_name)
-            channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
+            if user_info.eosscontext.ga_id is not None:
+                queue_name = user_info.eosscontext.ga_id + '_brainga'
+                channel.queue_declare(queue=queue_name)
+                channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
 
     def ga_new_archs(self, event):
         print(event)
