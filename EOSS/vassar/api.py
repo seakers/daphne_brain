@@ -150,29 +150,20 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
-    def stop_ga(self, problem, username):
-        if problem in assignation_problems:
-            self.client.stopGABinaryInput(username)
-        elif problem in partition_problems:
-            self.client.stopGADiscreteInput(username)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
+    def stop_ga(self, ga_id):
+        return self.client.stopGA(ga_id)
 
-    def is_ga_running(self, problem):
-        if problem in assignation_problems:
-            return self.client.isGABinaryInputRunning()
-        elif problem in partition_problems:
-            return self.client.isGADiscreteInputRunning()
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
+    def is_ga_running(self, ga_id):
+        return self.client.isGARunning(ga_id)
 
     def start_ga(self, problem, username, thrift_list):
         if problem in assignation_problems:
-            self.client.startGABinaryInput(problem, thrift_list, username)
+            ga_id = self.client.startGABinaryInput(problem, thrift_list, username)
         elif problem in partition_problems:
-            self.client.startGADiscreteInput(problem, thrift_list, username)
+            ga_id = self.client.startGADiscreteInput(problem, thrift_list, username)
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
+        return ga_id
 
     def ping(self):
         self.client.ping()
