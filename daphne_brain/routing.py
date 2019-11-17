@@ -11,7 +11,7 @@ if "AT" in settings.ACTIVE_MODULES:
     from AT.KNN import adaptiveKNN
     from AT.I_Forest import iForest
 
-from experiment_API.consumers import ExperimentConsumer
+from experiment.consumers import ExperimentConsumer
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties

@@ -11,12 +11,7 @@ def general_call(design_id, designs, session_key, context):
     critic = Critic(eosscontext, session_key)
 
     try:
-        this_design = None
-
-        for design in designs:
-            if design_id == design.id:
-                this_design = design
-                break
+        this_design = designs.get(id=design_id)
 
         if this_design is None:
             raise ValueError("Design id {} not found in the database".format(design_id))
@@ -50,12 +45,7 @@ def specific_call(design_id, agent, designs, session_key, context):
         result = []
         result_arr = []
 
-        this_design = None
-
-        for design in designs:
-            if design_id == design.id:
-                this_design = design
-                break
+        this_design = designs.get(id=design_id)
 
         if this_design is None:
             raise ValueError("Design id {} not found in the database".format(design_id))
