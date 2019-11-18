@@ -39,5 +39,5 @@ class ExperimentConsumer(JsonWebsocketConsumer):
                 experiment_context.current_state = json.dumps(content['state'])
                 experiment_context.save()
                 self.send_json({
-                    "state": content["state"]
+                    "state": json.loads(experiment_context.current_state)
                 })
