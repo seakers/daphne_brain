@@ -27,24 +27,25 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     print('----> channel name:', channel_name)
     print('--------------------------', '\n')
 
-
-    orbits = get_orbits(request)
-    instruments = get_instruments(request)
-    sensitivity_info = get_sensitivity_information(user_info, request)
-
-
-    # --> All architectures
+    # --> Architectures
     arch_dict_list = []
     for arch in user_info.eosscontext.design_set.all():
         temp_dict = {'id': arch.id, 'inputs': json.loads(arch.inputs), 'outputs': json.loads(arch.outputs)}
         arch_dict_list.append(temp_dict)
+
+    # --> Orbits : Instruments
+    orbits = get_orbits(request)
+    instruments = get_instruments(request)
+
+    # --> Sensitivities
+    sensitivity_info = get_sensitivity_information(user_info, request)
 
     # --> Design Space
     level_one_analysis = evaluate_design_space_level_one(arch_dict_list, orbits, instruments)
     level_two_analysis = evaluate_design_space_level_two(arch_dict_list, orbits, instruments)
     design_space_info = {'level_one_analysis': level_one_analysis, 'level_two_analysis': level_two_analysis}
 
-    # --> Objective Space: we will use pareto ranking of 5 for science
+    # --> Objective Space
     plotData = request.data['plotData']
     plotDataJson = json.loads(plotData)
     objectiveSpaceInformation = evaluate_objective_space(plotDataJson)
@@ -53,8 +54,11 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     objective_space_science_1 = objective_space_science['1']
     objective_space_science_5 = objective_space_science['5']
 
-    # --> Driving Features: pareto ranking 5
+    # --> Features
     features = get_driving_features_epsilon_moea(request, user_info)
+    features.sort(key=lambda feature: feature['score'])
+    top_features = features[:5]
+    features.sort(key=lambda feature: feature['overall'])
 
 
     # --> Set initial user information
@@ -93,24 +97,32 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     five_evals_counter = num_evaluated
     five_evals = False
 
-    send_message = False
-
     sensitivity_info_given = False
     feature_info_given = False
     design_space_info_given = False
     objective_space_info_given = False
 
+    send_message = False
 
-    generate_design_prediction_question(arch_dict_list, orbits, instruments)
+    question_given = False
+
+
+
+    # generate_design_prediction_question(arch_dict_list, orbits, instruments)
+
+
 
 
 
     thought_iteration = 0
+    seconds = 0
     while thread_queue.empty():
 
         # --> 5 seconds after previous thought iteration
         thought_iteration = thought_iteration + 1
-        print("\nTeacher thought iteration", thought_iteration)
+        if thought_iteration % 100 == 0:
+            seconds = seconds + 1
+            print("Second:", seconds)
 
         # --> Get all relevant information from the database
         archs_clicked_data = ArchitecturesClicked.objects.all().filter(user_information=user_info)
@@ -146,80 +158,92 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             five_evals = True
             five_evals_counter = num_evaluated
 
-        # print("Architectures Clicked ---", len(archs_clicked))
-        # print("Architecture Updates ----", len(arch_updates))
-        # print("Architectures Evaluated -", len(archs_evaluated))
-
-
-
-
+        # ---------------------------------------------------------------------------------Objective Space Functionality
+        if thought_iteration == 2000:
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.objective_space',
+                'name': 'displayObjectiveSpaceInformation',
+                'data': objective_space_science_1,
+                'speak': 'ping',
+                "voice_message": "",
+                "visual_message_type": ["objective_space_plot"],
+                "visual_message": [""],
+                "writer": "daphne"
+            })
+            objective_space_info_given = True
 
         # ------------------------------------------------------------------------------------------------- Design Space
-        # --> Design space plot
-        if one_evals and not design_space_info_given and send_message:
+        if thought_iteration == 4000:
             async_to_sync(channel_layer.send)(channel_name, {
-                        'type': 'teacher.design_space',
-                        'name': 'displayDesignSpaceInformation',
-                        'data': design_space_info,
-                        'speak': 'ping',
-                        "voice_message": 'testing',
-                        "visual_message_type": ["design_space_plot"],
-                        "visual_message": ["ping"],
-                        "writer": "daphne"
-                    })
+                'type': 'teacher.design_space',
+                'name': 'displayDesignSpaceInformation',
+                'data': design_space_info,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["design_space_plot"],
+                "visual_message": ["ping"],
+                "writer": "daphne"
+            })
             design_space_info_given = True
 
-        # --> Design prediction question
-        if three_evals and send_message:
+        # ----------------------------------------------------------------------------------------------------- Question
+        if thought_iteration % 6000 == 0:
             rand = random.random()
-            if rand > 0.5:
-                first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
+            if rand < 0.33:
+                first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(
+                    arch_dict_list, orbits, instruments)
                 async_to_sync(channel_layer.send)(channel_name, {
-                            'type': 'teacher.design_space',
-                            'name': 'designQuestion',
-                            'data': None,
-                            'speak': 'ping',
-                            "voice_message": 'testing',
-                            "visual_message_type": ["question_template"],
-                            "visual_message": ["ping"],
-                            "first_choice": first_choice_info,
-                            "second_choice": second_choice_info,
-                            "correct_answer": correct_answer,
-                            "question": question,
-                            "writer": "daphne"
-                        })
-            else:
-                first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info)
+                    'type': 'teacher.design_space',
+                    'name': 'designQuestion',
+                    'data': None,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["question_template"],
+                    "visual_message": ["ping"],
+                    "first_choice": first_choice_info,
+                    "second_choice": second_choice_info,
+                    "correct_answer": correct_answer,
+                    "question": question,
+                    "writer": "daphne"
+                })
+            elif rand < .66:
+                first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(
+                    sensitivity_info)
                 first_choice = first_choice_info[0] + ' - ' + first_choice_info[1]
                 second_choice = second_choice_info[0] + ' - ' + second_choice_info[1]
-                second_choice_revealed = second_choice_info[0] + ' - ' + second_choice_info[1] + '  Sensitivity: ' + str(second_choice_info[2])
-                first_choice_revealed = first_choice_info[0] + ' - ' + first_choice_info[1] + '  Sensitivity: ' + str(first_choice_info[2])
+                second_choice_revealed = second_choice_info[0] + ' - ' + second_choice_info[
+                    1] + '  Sensitivity: ' + str(second_choice_info[2])
+                first_choice_revealed = first_choice_info[0] + ' - ' + first_choice_info[
+                    1] + '  Sensitivity: ' + str(first_choice_info[2])
                 async_to_sync(channel_layer.send)(channel_name, {
-                            'type': 'teacher.sensitivities',
-                            'name': 'sensitivityQuestion',
-                            'data': None,
-                            'speak': 'ping',
-                            "voice_message": 'testing',
-                            "visual_message_type": ["question_template"],
-                            "visual_message": ["ping"],
-                            "first_choice": first_choice,
-                            "second_choice": second_choice,
-                            "first_choice_revealed": first_choice_revealed,
-                            "second_choice_revealed": second_choice_revealed,
-                            "correct_answer": correct_answer,
-                            "question": question,
-                            "writer": "daphne"
-                        })
-
-
-        # --------------------------------------------------------------------------------------------------------------
-
-
-
+                    'type': 'teacher.sensitivities',
+                    'name': 'sensitivityQuestion',
+                    'data': None,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["question_template"],
+                    "visual_message": ["ping"],
+                    "first_choice": first_choice,
+                    "second_choice": second_choice,
+                    "first_choice_revealed": first_choice_revealed,
+                    "second_choice_revealed": second_choice_revealed,
+                    "correct_answer": correct_answer,
+                    "question": question,
+                    "writer": "daphne"
+                })
+            else:
+                feature_choices, answer = generate_feature_question(features)
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.features',
+                    'name': 'featureQuestion',
+                    'first_choice': feature_choices[0],
+                    'second_choice': feature_choices[1],
+                    'correct_answer': answer,
+                    'question': 'Which of the two features better describes the Pareto Front?',
+                })
 
         # -------------------------------------------------------------------------------------Sensitivity Functionality
-        # --> Display sensitivity plot
-        if one_evals and not sensitivity_info_given and send_message:
+        if thought_iteration == 9000:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.sensitivities',
                         'name': 'displaySensitivityInformation',
@@ -231,73 +255,25 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                         "writer": "daphne"
                     })
             sensitivity_info_given = True
-        # --------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-        # ---------------------------------------------------------------------------------Objective Space Functionality
-        if one_evals and not objective_space_info_given and send_message:
-            async_to_sync(channel_layer.send)(channel_name, {
-                        'type': 'teacher.objective_space',
-                        'name': 'displayObjectiveSpaceInformation',
-                        'data': objective_space_science_1,
-                        'speak': 'ping',
-                        "voice_message": "",
-                        "visual_message_type": ["objective_space_plot"],
-                        "visual_message": [""],
-                        "writer": "daphne"
-                    })
-            objective_space_info_given = True
-        # --------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
 
         # -----------------------------------------------------------------------------------------Feature Functionality
-        # async_to_sync(channel_layer.send)(channel_name, {'type': 'teacher.features'})
-        # [{'id': 0, 'name': '({notInOrbit[2;1;]})', 'expression': '({notInOrbit[2;1;]})','metrics': [0.12024048096192384, 1.2608439316095343, 0.1566579634464752, 0.967741935483871]}]
-
-        # Feature Plot!
-        if one_evals and not feature_info_given:
+        if thought_iteration == 15000:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.features',
                         'name': 'displayFeatureInformation',
-                        'data': features,
+                        'data': top_features,
                     })
             feature_info_given = True
 
 
-        # Feature Question!
 
 
-
-        # Feature Suggestion?
-
-
-
-        # --------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-        # --> COMBINE: I have informaiton about sensitive design elements and driving features, would you like to learn more?
 
         one_evals = False
         two_evals = False
         three_evals = False
         four_evals = False
-        sleep(0.5)
+        sleep(0.01)
 
     print('--> Teacher thread has finished')
 
@@ -305,60 +281,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
 
 
-
-def get_driving_features_epsilon_moea(request, user_info):
-    client = DataMiningClient()
-    client.startConnection()
-
-    session_key = request.session.session_key
-    problem = request.data['problem']
-    input_type = request.data['input_type']
-
-    # --> All architectures
-    dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
-
-    # --> Get architectures in the pareto front with ranking 5: list of dictionaries
-    plotData = request.data['plotData']
-    plotDataJson = json.loads(plotData)
-
-    designs_low_ranking = []
-    designs_low_ranking_id = []
-    designs_high_ranking = []
-    designs_high_ranking_id = []
-    for design in plotDataJson:
-        try:
-            if design['paretoRanking'] <= 0:
-                designs_low_ranking.append(design)
-                designs_low_ranking_id.append(int(design['id']))
-            else:
-                designs_high_ranking.append(design)
-                designs_high_ranking_id.append(int(design['id']))
-        except:
-            continue
-
-
-
-    _archs = []
-    if input_type == 'binary':
-        for arch in dataset:
-            _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-        _features = client.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
-    elif input_type == 'discrete':
-        for arch in dataset:
-            _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-        _features = client.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
-
-
-    features = []
-    for df in _features:
-        features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics})
-
-    client.endConnection()
-    return features
-
-
-
-
+# --> Questions
 
 def generate_design_prediction_question(designs, orbits, instruments):
     objectives = ['lower cost', 'higher science']
@@ -368,9 +291,18 @@ def generate_design_prediction_question(designs, orbits, instruments):
     objective = 'higher science'
 
     question = 'Which design will produce a ' + objective + ' value?'
+
+    # --> Sort designs by cost
+    designs.sort(key=lambda design: design['outputs'][1])
     first_design = random.choice(designs)
-    designs.remove(first_design)
-    second_design = random.choice(designs)
+    first_design_index = designs.index(first_design)
+    second_design_index = 0
+    if (first_design_index+1) < len(designs):
+        second_design_index = first_design_index + 1
+    else:
+        second_design_index = first_design_index - 1
+    second_design = designs[second_design_index]
+
 
     correct_answer = 0
     if objective == 'lower cost':
@@ -402,22 +334,6 @@ def generate_design_prediction_question(designs, orbits, instruments):
         second_design_dict[key].append(inst)
 
     return first_design_dict, second_design_dict, correct_answer, question
-
-def get_design_orbit_instrument_combinations(orbits, instruments, design):
-    inputs = design['inputs']
-    combinations = []
-
-    for index in range(len(inputs)):
-        if inputs[index] is True:
-            combinations.append(get_orbit_instrument_from_index(orbits, instruments, index))
-
-    return combinations
-
-def get_orbit_instrument_from_index(orbits, instruments, index):
-    total_combinations = len(orbits) * len(instruments)
-    orbit_index = math.floor(index / len(instruments))
-    instrument_index = index - (orbit_index * len(instruments))
-    return [orbits[orbit_index], instruments[instrument_index]]
 
 def generate_sensitivity_question(sensitivities):
     rand = random.random()
@@ -454,6 +370,109 @@ def generate_sensitivity_question(sensitivities):
 
 
     return first_choice_info, second_choice_info, correct_answer, question
+
+def generate_feature_question(features):
+    num_features = len(features)
+    first_feature = random.choice(features)
+    first_feature_index = features.index(first_feature)
+    features.remove(first_feature)
+    second_feature = random.choice(features)
+    second_feature_index = features.index(second_feature)
+    correct_choice = 0
+    if first_feature['overall'] < second_feature['overall']:
+        correct_choice = 1
+    else:
+        correct_choice = 0
+    print("Feature Question")
+    print("First", first_feature)
+    print("Second", second_feature)
+    print(correct_choice)
+    return [first_feature, second_feature], correct_choice
+
+
+
+
+
+
+def get_driving_features_epsilon_moea(request, user_info, pareto=0):
+    client = DataMiningClient()
+    client.startConnection()
+
+    session_key = request.session.session_key
+    problem = request.data['problem']
+    input_type = request.data['input_type']
+
+    # --> All architectures
+    dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+
+    # --> Get architectures in the pareto front with ranking 5: list of dictionaries
+    plotData = request.data['plotData']
+    plotDataJson = json.loads(plotData)
+
+    designs_low_ranking = []
+    designs_low_ranking_id = []
+    designs_high_ranking = []
+    designs_high_ranking_id = []
+    for design in plotDataJson:
+        try:
+            if design['paretoRanking'] <= pareto:
+                designs_low_ranking.append(design)
+                designs_low_ranking_id.append(int(design['id']))
+            else:
+                designs_high_ranking.append(design)
+                designs_high_ranking_id.append(int(design['id']))
+        except:
+            continue
+
+
+
+    _archs = []
+    if input_type == 'binary':
+        for arch in dataset:
+            _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+        _features = client.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
+    elif input_type == 'discrete':
+        for arch in dataset:
+            _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+        _features = client.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
+
+
+    features = []
+    for df in _features:
+        fm = df.metrics
+        cov = fm[2] * 100
+        sen = fm[3] * 100
+        distance_value = abs(fm[2] - fm[3])
+        overall = cov * cov + sen * sen
+        features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics, 'score': distance_value, 'overall': overall})
+
+    client.endConnection()
+    features.sort(key=lambda feature: feature['score'])
+    top_features = features[:5]
+
+    return features
+
+
+
+
+
+def get_design_orbit_instrument_combinations(orbits, instruments, design):
+    inputs = design['inputs']
+    combinations = []
+
+    for index in range(len(inputs)):
+        if inputs[index] is True:
+            combinations.append(get_orbit_instrument_from_index(orbits, instruments, index))
+
+    return combinations
+
+def get_orbit_instrument_from_index(orbits, instruments, index):
+    total_combinations = len(orbits) * len(instruments)
+    orbit_index = math.floor(index / len(instruments))
+    instrument_index = index - (orbit_index * len(instruments))
+    return [orbits[orbit_index], instruments[instrument_index]]
+
+
 
 def get_orbits(request):
     # --> Get the Problem Orbits
