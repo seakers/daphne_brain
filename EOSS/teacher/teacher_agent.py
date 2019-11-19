@@ -159,7 +159,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             five_evals_counter = num_evaluated
 
         # ---------------------------------------------------------------------------------Objective Space Functionality
-        if thought_iteration == 2000:
+        if thought_iteration == 3000:
             async_to_sync(channel_layer.send)(channel_name, {
                 'type': 'teacher.objective_space',
                 'name': 'displayObjectiveSpaceInformation',
@@ -171,20 +171,6 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                 "writer": "daphne"
             })
             objective_space_info_given = True
-
-        # ------------------------------------------------------------------------------------------------- Design Space
-        if thought_iteration == 4000:
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'teacher.design_space',
-                'name': 'displayDesignSpaceInformation',
-                'data': design_space_info,
-                'speak': 'ping',
-                "voice_message": 'testing',
-                "visual_message_type": ["design_space_plot"],
-                "visual_message": ["ping"],
-                "writer": "daphne"
-            })
-            design_space_info_given = True
 
         # ----------------------------------------------------------------------------------------------------- Question
         if thought_iteration % 6000 == 0:
@@ -242,8 +228,22 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                     'question': 'Which of the two features better describes the Pareto Front?',
                 })
 
-        # -------------------------------------------------------------------------------------Sensitivity Functionality
+        # ------------------------------------------------------------------------------------------------- Design Space
         if thought_iteration == 9000:
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.design_space',
+                'name': 'displayDesignSpaceInformation',
+                'data': design_space_info,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["design_space_plot"],
+                "visual_message": ["ping"],
+                "writer": "daphne"
+            })
+            design_space_info_given = True
+
+        # -------------------------------------------------------------------------------------Sensitivity Functionality
+        if thought_iteration == 15000:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.sensitivities',
                         'name': 'displaySensitivityInformation',
@@ -257,7 +257,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             sensitivity_info_given = True
 
         # -----------------------------------------------------------------------------------------Feature Functionality
-        if thought_iteration == 15000:
+        if thought_iteration == 18000:
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.features',
                         'name': 'displayFeatureInformation',
