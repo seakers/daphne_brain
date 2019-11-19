@@ -448,7 +448,6 @@ def get_driving_features_epsilon_moea(request, user_info, pareto=0):
 
     client.endConnection()
     features.sort(key=lambda feature: feature['score'])
-    top_features = features[:5]
 
     return features
 

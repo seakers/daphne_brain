@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
-from time import sleep
 import threading
 from queue import Queue
 from channels.layers import get_channel_layer
@@ -11,9 +10,8 @@ from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
 from EOSS.explorer.objective_space_evaluator import evaluate_objective_space
-from .teacher_agent import teacher_thread
+from .teacher_agent import teacher_thread, get_driving_features_epsilon_moea
 from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
-
 
 
 class ClearTeacherUserData(APIView):
@@ -23,7 +21,6 @@ class ClearTeacherUserData(APIView):
         ArchitecturesUpdated.objects.all().filter(user_information=user_info).delete()
         ArchitecturesEvaluated.objects.all().filter(user_information=user_info).delete()
         return Response({'list': 'test'})
-
 
 
 class SetProactiveMode(APIView):
@@ -84,15 +81,16 @@ class SetProactiveMode(APIView):
         return Response({'list': 'test'})
 
 
-# --> Will return information on the Features subject
-# --> We will need a DataMiningClient, used in analyst/views.py
 class GetSubjectFeatures(APIView):
     def post(self, request, format=None):
-        return Response({'list': 'test'})
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        features = get_driving_features_epsilon_moea(request, user_info)
+        features.sort(key=lambda feature: feature['score'])
+        top_features = features[:5]
+        return_data = json.dumps(top_features)
+        return Response(return_data)
 
 
-# --> Will return information on the Design Space subject
-# --> Call VASSAR
 class GetSubjectDesignSpace(APIView):
     def post(self, request, format=None):
         print("Getting Subject DesignSpace!!!")
@@ -134,7 +132,6 @@ class GetSubjectDesignSpace(APIView):
         return Response({'level_one_analysis': level_one_analysis, 'level_two_analysis': level_two_analysis})
 
 
-# --> Will return information on the Sensitivities subject --> Ask Samalis
 class GetSubjectSensitivities(APIView):
     def post(self, request, format=None):
         print("Getting Subject Sensitivities!!!")
@@ -190,9 +187,6 @@ class GetSubjectObjectiveSpace(APIView):
 
         # --> Get Daphne user information
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-
-        # --> Get the Problem Name
-        problem = request.data['problem']
 
         # --> Get the Problem Orbits
         orbits = request.data['orbits']
