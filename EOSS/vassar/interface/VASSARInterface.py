@@ -162,7 +162,20 @@ class Iface(object):
         """
         pass
 
-    def isGABinaryInputRunning(self):
+    def isGARunning(self, id):
+        """
+        Parameters:
+         - id
+
+        """
+        pass
+
+    def stopGA(self, id):
+        """
+        Parameters:
+         - id
+
+        """
         pass
 
     def startGABinaryInput(self, problem, dataset, username):
@@ -175,9 +188,11 @@ class Iface(object):
         """
         pass
 
-    def stopGABinaryInput(self, username):
+    def startGADiscreteInput(self, problem, dataset, username):
         """
         Parameters:
+         - problem
+         - dataset
          - username
 
         """
@@ -207,27 +222,6 @@ class Iface(object):
          - problem
          - arch
          - subobj
-
-        """
-        pass
-
-    def isGADiscreteInputRunning(self):
-        pass
-
-    def startGADiscreteInput(self, problem, dataset, username):
-        """
-        Parameters:
-         - problem
-         - dataset
-         - username
-
-        """
-        pass
-
-    def stopGADiscreteInput(self, username):
-        """
-        Parameters:
-         - username
 
         """
         pass
@@ -805,18 +799,24 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getObjectiveScoreExplanation failed: unknown result")
 
-    def isGABinaryInputRunning(self):
-        self.send_isGABinaryInputRunning()
-        return self.recv_isGABinaryInputRunning()
+    def isGARunning(self, id):
+        """
+        Parameters:
+         - id
 
-    def send_isGABinaryInputRunning(self):
-        self._oprot.writeMessageBegin('isGABinaryInputRunning', TMessageType.CALL, self._seqid)
-        args = isGABinaryInputRunning_args()
+        """
+        self.send_isGARunning(id)
+        return self.recv_isGARunning()
+
+    def send_isGARunning(self, id):
+        self._oprot.writeMessageBegin('isGARunning', TMessageType.CALL, self._seqid)
+        args = isGARunning_args()
+        args.id = id
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
 
-    def recv_isGABinaryInputRunning(self):
+    def recv_isGARunning(self):
         iprot = self._iprot
         (fname, mtype, rseqid) = iprot.readMessageBegin()
         if mtype == TMessageType.EXCEPTION:
@@ -824,12 +824,44 @@ class Client(Iface):
             x.read(iprot)
             iprot.readMessageEnd()
             raise x
-        result = isGABinaryInputRunning_result()
+        result = isGARunning_result()
         result.read(iprot)
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "isGABinaryInputRunning failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "isGARunning failed: unknown result")
+
+    def stopGA(self, id):
+        """
+        Parameters:
+         - id
+
+        """
+        self.send_stopGA(id)
+        return self.recv_stopGA()
+
+    def send_stopGA(self, id):
+        self._oprot.writeMessageBegin('stopGA', TMessageType.CALL, self._seqid)
+        args = stopGA_args()
+        args.id = id
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_stopGA(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = stopGA_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "stopGA failed: unknown result")
 
     def startGABinaryInput(self, problem, dataset, username):
         """
@@ -867,24 +899,28 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "startGABinaryInput failed: unknown result")
 
-    def stopGABinaryInput(self, username):
+    def startGADiscreteInput(self, problem, dataset, username):
         """
         Parameters:
+         - problem
+         - dataset
          - username
 
         """
-        self.send_stopGABinaryInput(username)
-        return self.recv_stopGABinaryInput()
+        self.send_startGADiscreteInput(problem, dataset, username)
+        return self.recv_startGADiscreteInput()
 
-    def send_stopGABinaryInput(self, username):
-        self._oprot.writeMessageBegin('stopGABinaryInput', TMessageType.CALL, self._seqid)
-        args = stopGABinaryInput_args()
+    def send_startGADiscreteInput(self, problem, dataset, username):
+        self._oprot.writeMessageBegin('startGADiscreteInput', TMessageType.CALL, self._seqid)
+        args = startGADiscreteInput_args()
+        args.problem = problem
+        args.dataset = dataset
         args.username = username
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
 
-    def recv_stopGABinaryInput(self):
+    def recv_startGADiscreteInput(self):
         iprot = self._iprot
         (fname, mtype, rseqid) = iprot.readMessageBegin()
         if mtype == TMessageType.EXCEPTION:
@@ -892,12 +928,12 @@ class Client(Iface):
             x.read(iprot)
             iprot.readMessageEnd()
             raise x
-        result = stopGABinaryInput_result()
+        result = startGADiscreteInput_result()
         result.read(iprot)
         iprot.readMessageEnd()
         if result.success is not None:
             return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "stopGABinaryInput failed: unknown result")
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "startGADiscreteInput failed: unknown result")
 
     def getArchScienceInformationBinaryInput(self, problem, arch):
         """
@@ -1002,100 +1038,6 @@ class Client(Iface):
         if result.success is not None:
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getSubscoreDetailsBinaryInput failed: unknown result")
-
-    def isGADiscreteInputRunning(self):
-        self.send_isGADiscreteInputRunning()
-        return self.recv_isGADiscreteInputRunning()
-
-    def send_isGADiscreteInputRunning(self):
-        self._oprot.writeMessageBegin('isGADiscreteInputRunning', TMessageType.CALL, self._seqid)
-        args = isGADiscreteInputRunning_args()
-        args.write(self._oprot)
-        self._oprot.writeMessageEnd()
-        self._oprot.trans.flush()
-
-    def recv_isGADiscreteInputRunning(self):
-        iprot = self._iprot
-        (fname, mtype, rseqid) = iprot.readMessageBegin()
-        if mtype == TMessageType.EXCEPTION:
-            x = TApplicationException()
-            x.read(iprot)
-            iprot.readMessageEnd()
-            raise x
-        result = isGADiscreteInputRunning_result()
-        result.read(iprot)
-        iprot.readMessageEnd()
-        if result.success is not None:
-            return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "isGADiscreteInputRunning failed: unknown result")
-
-    def startGADiscreteInput(self, problem, dataset, username):
-        """
-        Parameters:
-         - problem
-         - dataset
-         - username
-
-        """
-        self.send_startGADiscreteInput(problem, dataset, username)
-        return self.recv_startGADiscreteInput()
-
-    def send_startGADiscreteInput(self, problem, dataset, username):
-        self._oprot.writeMessageBegin('startGADiscreteInput', TMessageType.CALL, self._seqid)
-        args = startGADiscreteInput_args()
-        args.problem = problem
-        args.dataset = dataset
-        args.username = username
-        args.write(self._oprot)
-        self._oprot.writeMessageEnd()
-        self._oprot.trans.flush()
-
-    def recv_startGADiscreteInput(self):
-        iprot = self._iprot
-        (fname, mtype, rseqid) = iprot.readMessageBegin()
-        if mtype == TMessageType.EXCEPTION:
-            x = TApplicationException()
-            x.read(iprot)
-            iprot.readMessageEnd()
-            raise x
-        result = startGADiscreteInput_result()
-        result.read(iprot)
-        iprot.readMessageEnd()
-        if result.success is not None:
-            return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "startGADiscreteInput failed: unknown result")
-
-    def stopGADiscreteInput(self, username):
-        """
-        Parameters:
-         - username
-
-        """
-        self.send_stopGADiscreteInput(username)
-        return self.recv_stopGADiscreteInput()
-
-    def send_stopGADiscreteInput(self, username):
-        self._oprot.writeMessageBegin('stopGADiscreteInput', TMessageType.CALL, self._seqid)
-        args = stopGADiscreteInput_args()
-        args.username = username
-        args.write(self._oprot)
-        self._oprot.writeMessageEnd()
-        self._oprot.trans.flush()
-
-    def recv_stopGADiscreteInput(self):
-        iprot = self._iprot
-        (fname, mtype, rseqid) = iprot.readMessageBegin()
-        if mtype == TMessageType.EXCEPTION:
-            x = TApplicationException()
-            x.read(iprot)
-            iprot.readMessageEnd()
-            raise x
-        result = stopGADiscreteInput_result()
-        result.read(iprot)
-        iprot.readMessageEnd()
-        if result.success is not None:
-            return result.success
-        raise TApplicationException(TApplicationException.MISSING_RESULT, "stopGADiscreteInput failed: unknown result")
 
     def getArchScienceInformationDiscreteInput(self, problem, arch):
         """
@@ -1222,15 +1164,13 @@ class Processor(Iface, TProcessor):
         self._processMap["getArchitectureScoreExplanation"] = Processor.process_getArchitectureScoreExplanation
         self._processMap["getPanelScoreExplanation"] = Processor.process_getPanelScoreExplanation
         self._processMap["getObjectiveScoreExplanation"] = Processor.process_getObjectiveScoreExplanation
-        self._processMap["isGABinaryInputRunning"] = Processor.process_isGABinaryInputRunning
+        self._processMap["isGARunning"] = Processor.process_isGARunning
+        self._processMap["stopGA"] = Processor.process_stopGA
         self._processMap["startGABinaryInput"] = Processor.process_startGABinaryInput
-        self._processMap["stopGABinaryInput"] = Processor.process_stopGABinaryInput
+        self._processMap["startGADiscreteInput"] = Processor.process_startGADiscreteInput
         self._processMap["getArchScienceInformationBinaryInput"] = Processor.process_getArchScienceInformationBinaryInput
         self._processMap["getArchCostInformationBinaryInput"] = Processor.process_getArchCostInformationBinaryInput
         self._processMap["getSubscoreDetailsBinaryInput"] = Processor.process_getSubscoreDetailsBinaryInput
-        self._processMap["isGADiscreteInputRunning"] = Processor.process_isGADiscreteInputRunning
-        self._processMap["startGADiscreteInput"] = Processor.process_startGADiscreteInput
-        self._processMap["stopGADiscreteInput"] = Processor.process_stopGADiscreteInput
         self._processMap["getArchScienceInformationDiscreteInput"] = Processor.process_getArchScienceInformationDiscreteInput
         self._processMap["getArchCostInformationDiscreteInput"] = Processor.process_getArchCostInformationDiscreteInput
         self._processMap["getSubscoreDetailsDiscreteInput"] = Processor.process_getSubscoreDetailsDiscreteInput
@@ -1618,13 +1558,13 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_isGABinaryInputRunning(self, seqid, iprot, oprot):
-        args = isGABinaryInputRunning_args()
+    def process_isGARunning(self, seqid, iprot, oprot):
+        args = isGARunning_args()
         args.read(iprot)
         iprot.readMessageEnd()
-        result = isGABinaryInputRunning_result()
+        result = isGARunning_result()
         try:
-            result.success = self._handler.isGABinaryInputRunning()
+            result.success = self._handler.isGARunning(args.id)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1636,7 +1576,30 @@ class Processor(Iface, TProcessor):
             logging.exception('Unexpected exception in handler')
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("isGABinaryInputRunning", msg_type, seqid)
+        oprot.writeMessageBegin("isGARunning", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_stopGA(self, seqid, iprot, oprot):
+        args = stopGA_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = stopGA_result()
+        try:
+            result.success = self._handler.stopGA(args.id)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("stopGA", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -1664,13 +1627,13 @@ class Processor(Iface, TProcessor):
         oprot.writeMessageEnd()
         oprot.trans.flush()
 
-    def process_stopGABinaryInput(self, seqid, iprot, oprot):
-        args = stopGABinaryInput_args()
+    def process_startGADiscreteInput(self, seqid, iprot, oprot):
+        args = startGADiscreteInput_args()
         args.read(iprot)
         iprot.readMessageEnd()
-        result = stopGABinaryInput_result()
+        result = startGADiscreteInput_result()
         try:
-            result.success = self._handler.stopGABinaryInput(args.username)
+            result.success = self._handler.startGADiscreteInput(args.problem, args.dataset, args.username)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -1682,7 +1645,7 @@ class Processor(Iface, TProcessor):
             logging.exception('Unexpected exception in handler')
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("stopGABinaryInput", msg_type, seqid)
+        oprot.writeMessageBegin("startGADiscreteInput", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -1752,75 +1715,6 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("getSubscoreDetailsBinaryInput", msg_type, seqid)
-        result.write(oprot)
-        oprot.writeMessageEnd()
-        oprot.trans.flush()
-
-    def process_isGADiscreteInputRunning(self, seqid, iprot, oprot):
-        args = isGADiscreteInputRunning_args()
-        args.read(iprot)
-        iprot.readMessageEnd()
-        result = isGADiscreteInputRunning_result()
-        try:
-            result.success = self._handler.isGADiscreteInputRunning()
-            msg_type = TMessageType.REPLY
-        except TTransport.TTransportException:
-            raise
-        except TApplicationException as ex:
-            logging.exception('TApplication exception in handler')
-            msg_type = TMessageType.EXCEPTION
-            result = ex
-        except Exception:
-            logging.exception('Unexpected exception in handler')
-            msg_type = TMessageType.EXCEPTION
-            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("isGADiscreteInputRunning", msg_type, seqid)
-        result.write(oprot)
-        oprot.writeMessageEnd()
-        oprot.trans.flush()
-
-    def process_startGADiscreteInput(self, seqid, iprot, oprot):
-        args = startGADiscreteInput_args()
-        args.read(iprot)
-        iprot.readMessageEnd()
-        result = startGADiscreteInput_result()
-        try:
-            result.success = self._handler.startGADiscreteInput(args.problem, args.dataset, args.username)
-            msg_type = TMessageType.REPLY
-        except TTransport.TTransportException:
-            raise
-        except TApplicationException as ex:
-            logging.exception('TApplication exception in handler')
-            msg_type = TMessageType.EXCEPTION
-            result = ex
-        except Exception:
-            logging.exception('Unexpected exception in handler')
-            msg_type = TMessageType.EXCEPTION
-            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("startGADiscreteInput", msg_type, seqid)
-        result.write(oprot)
-        oprot.writeMessageEnd()
-        oprot.trans.flush()
-
-    def process_stopGADiscreteInput(self, seqid, iprot, oprot):
-        args = stopGADiscreteInput_args()
-        args.read(iprot)
-        iprot.readMessageEnd()
-        result = stopGADiscreteInput_result()
-        try:
-            result.success = self._handler.stopGADiscreteInput(args.username)
-            msg_type = TMessageType.REPLY
-        except TTransport.TTransportException:
-            raise
-        except TApplicationException as ex:
-            logging.exception('TApplication exception in handler')
-            msg_type = TMessageType.EXCEPTION
-            result = ex
-        except Exception:
-            logging.exception('Unexpected exception in handler')
-            msg_type = TMessageType.EXCEPTION
-            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
-        oprot.writeMessageBegin("stopGADiscreteInput", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -4118,8 +4012,16 @@ getObjectiveScoreExplanation_result.thrift_spec = (
 )
 
 
-class isGABinaryInputRunning_args(object):
+class isGARunning_args(object):
+    """
+    Attributes:
+     - id
 
+    """
+
+
+    def __init__(self, id=None,):
+        self.id = id
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -4130,6 +4032,11 @@ class isGABinaryInputRunning_args(object):
             (fname, ftype, fid) = iprot.readFieldBegin()
             if ftype == TType.STOP:
                 break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -4139,7 +4046,11 @@ class isGABinaryInputRunning_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('isGABinaryInputRunning_args')
+        oprot.writeStructBegin('isGARunning_args')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.STRING, 1)
+            oprot.writeString(self.id.encode('utf-8') if sys.version_info[0] == 2 else self.id)
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -4156,12 +4067,14 @@ class isGABinaryInputRunning_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(isGABinaryInputRunning_args)
-isGABinaryInputRunning_args.thrift_spec = (
+all_structs.append(isGARunning_args)
+isGARunning_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'id', 'UTF8', None, ),  # 1
 )
 
 
-class isGABinaryInputRunning_result(object):
+class isGARunning_result(object):
     """
     Attributes:
      - success
@@ -4195,7 +4108,7 @@ class isGABinaryInputRunning_result(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('isGABinaryInputRunning_result')
+        oprot.writeStructBegin('isGARunning_result')
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.BOOL, 0)
             oprot.writeBool(self.success)
@@ -4216,9 +4129,132 @@ class isGABinaryInputRunning_result(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(isGABinaryInputRunning_result)
-isGABinaryInputRunning_result.thrift_spec = (
+all_structs.append(isGARunning_result)
+isGARunning_result.thrift_spec = (
     (0, TType.BOOL, 'success', None, None, ),  # 0
+)
+
+
+class stopGA_args(object):
+    """
+    Attributes:
+     - id
+
+    """
+
+
+    def __init__(self, id=None,):
+        self.id = id
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('stopGA_args')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.STRING, 1)
+            oprot.writeString(self.id.encode('utf-8') if sys.version_info[0] == 2 else self.id)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(stopGA_args)
+stopGA_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'id', 'UTF8', None, ),  # 1
+)
+
+
+class stopGA_result(object):
+    """
+    Attributes:
+     - success
+
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.I32:
+                    self.success = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('stopGA_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.I32, 0)
+            oprot.writeI32(self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(stopGA_result)
+stopGA_result.thrift_spec = (
+    (0, TType.I32, 'success', None, None, ),  # 0
 )
 
 
@@ -4338,8 +4374,8 @@ class startGABinaryInput_result(object):
             if ftype == TType.STOP:
                 break
             if fid == 0:
-                if ftype == TType.I32:
-                    self.success = iprot.readI32()
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             else:
@@ -4353,8 +4389,8 @@ class startGABinaryInput_result(object):
             return
         oprot.writeStructBegin('startGABinaryInput_result')
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.I32, 0)
-            oprot.writeI32(self.success)
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -4374,19 +4410,23 @@ class startGABinaryInput_result(object):
         return not (self == other)
 all_structs.append(startGABinaryInput_result)
 startGABinaryInput_result.thrift_spec = (
-    (0, TType.I32, 'success', None, None, ),  # 0
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
 )
 
 
-class stopGABinaryInput_args(object):
+class startGADiscreteInput_args(object):
     """
     Attributes:
+     - problem
+     - dataset
      - username
 
     """
 
 
-    def __init__(self, username=None,):
+    def __init__(self, problem=None, dataset=None, username=None,):
+        self.problem = problem
+        self.dataset = dataset
         self.username = username
 
     def read(self, iprot):
@@ -4400,6 +4440,22 @@ class stopGABinaryInput_args(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
+                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.dataset = []
+                    (_etype233, _size230) = iprot.readListBegin()
+                    for _i234 in range(_size230):
+                        _elem235 = DiscreteInputArchitecture()
+                        _elem235.read(iprot)
+                        self.dataset.append(_elem235)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
                     self.username = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
@@ -4412,9 +4468,20 @@ class stopGABinaryInput_args(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('stopGABinaryInput_args')
+        oprot.writeStructBegin('startGADiscreteInput_args')
+        if self.problem is not None:
+            oprot.writeFieldBegin('problem', TType.STRING, 1)
+            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
+            oprot.writeFieldEnd()
+        if self.dataset is not None:
+            oprot.writeFieldBegin('dataset', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRUCT, len(self.dataset))
+            for iter236 in self.dataset:
+                iter236.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
         if self.username is not None:
-            oprot.writeFieldBegin('username', TType.STRING, 1)
+            oprot.writeFieldBegin('username', TType.STRING, 3)
             oprot.writeString(self.username.encode('utf-8') if sys.version_info[0] == 2 else self.username)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4433,14 +4500,16 @@ class stopGABinaryInput_args(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(stopGABinaryInput_args)
-stopGABinaryInput_args.thrift_spec = (
+all_structs.append(startGADiscreteInput_args)
+startGADiscreteInput_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'username', 'UTF8', None, ),  # 1
+    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'dataset', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 2
+    (3, TType.STRING, 'username', 'UTF8', None, ),  # 3
 )
 
 
-class stopGABinaryInput_result(object):
+class startGADiscreteInput_result(object):
     """
     Attributes:
      - success
@@ -4461,8 +4530,8 @@ class stopGABinaryInput_result(object):
             if ftype == TType.STOP:
                 break
             if fid == 0:
-                if ftype == TType.I32:
-                    self.success = iprot.readI32()
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
             else:
@@ -4474,10 +4543,10 @@ class stopGABinaryInput_result(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('stopGABinaryInput_result')
+        oprot.writeStructBegin('startGADiscreteInput_result')
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.I32, 0)
-            oprot.writeI32(self.success)
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -4495,9 +4564,9 @@ class stopGABinaryInput_result(object):
 
     def __ne__(self, other):
         return not (self == other)
-all_structs.append(stopGABinaryInput_result)
-stopGABinaryInput_result.thrift_spec = (
-    (0, TType.I32, 'success', None, None, ),  # 0
+all_structs.append(startGADiscreteInput_result)
+startGADiscreteInput_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
 )
 
 
@@ -4599,11 +4668,11 @@ class getArchScienceInformationBinaryInput_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype233, _size230) = iprot.readListBegin()
-                    for _i234 in range(_size230):
-                        _elem235 = SubscoreInformation()
-                        _elem235.read(iprot)
-                        self.success.append(_elem235)
+                    (_etype240, _size237) = iprot.readListBegin()
+                    for _i241 in range(_size237):
+                        _elem242 = SubscoreInformation()
+                        _elem242.read(iprot)
+                        self.success.append(_elem242)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -4620,8 +4689,8 @@ class getArchScienceInformationBinaryInput_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter236 in self.success:
-                iter236.write(oprot)
+            for iter243 in self.success:
+                iter243.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4744,11 +4813,11 @@ class getArchCostInformationBinaryInput_result(object):
             if fid == 0:
                 if ftype == TType.LIST:
                     self.success = []
-                    (_etype240, _size237) = iprot.readListBegin()
-                    for _i241 in range(_size237):
-                        _elem242 = MissionCostInformation()
-                        _elem242.read(iprot)
-                        self.success.append(_elem242)
+                    (_etype247, _size244) = iprot.readListBegin()
+                    for _i248 in range(_size244):
+                        _elem249 = MissionCostInformation()
+                        _elem249.read(iprot)
+                        self.success.append(_elem249)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -4765,8 +4834,8 @@ class getArchCostInformationBinaryInput_result(object):
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
-            for iter243 in self.success:
-                iter243.write(oprot)
+            for iter250 in self.success:
+                iter250.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -4937,389 +5006,6 @@ class getSubscoreDetailsBinaryInput_result(object):
 all_structs.append(getSubscoreDetailsBinaryInput_result)
 getSubscoreDetailsBinaryInput_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [SubobjectiveDetails, None], None, ),  # 0
-)
-
-
-class isGADiscreteInputRunning_args(object):
-
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('isGADiscreteInputRunning_args')
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(isGADiscreteInputRunning_args)
-isGADiscreteInputRunning_args.thrift_spec = (
-)
-
-
-class isGADiscreteInputRunning_result(object):
-    """
-    Attributes:
-     - success
-
-    """
-
-
-    def __init__(self, success=None,):
-        self.success = success
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 0:
-                if ftype == TType.BOOL:
-                    self.success = iprot.readBool()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('isGADiscreteInputRunning_result')
-        if self.success is not None:
-            oprot.writeFieldBegin('success', TType.BOOL, 0)
-            oprot.writeBool(self.success)
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(isGADiscreteInputRunning_result)
-isGADiscreteInputRunning_result.thrift_spec = (
-    (0, TType.BOOL, 'success', None, None, ),  # 0
-)
-
-
-class startGADiscreteInput_args(object):
-    """
-    Attributes:
-     - problem
-     - dataset
-     - username
-
-    """
-
-
-    def __init__(self, problem=None, dataset=None, username=None,):
-        self.problem = problem
-        self.dataset = dataset
-        self.username = username
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 1:
-                if ftype == TType.STRING:
-                    self.problem = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
-                if ftype == TType.LIST:
-                    self.dataset = []
-                    (_etype247, _size244) = iprot.readListBegin()
-                    for _i248 in range(_size244):
-                        _elem249 = DiscreteInputArchitecture()
-                        _elem249.read(iprot)
-                        self.dataset.append(_elem249)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 3:
-                if ftype == TType.STRING:
-                    self.username = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('startGADiscreteInput_args')
-        if self.problem is not None:
-            oprot.writeFieldBegin('problem', TType.STRING, 1)
-            oprot.writeString(self.problem.encode('utf-8') if sys.version_info[0] == 2 else self.problem)
-            oprot.writeFieldEnd()
-        if self.dataset is not None:
-            oprot.writeFieldBegin('dataset', TType.LIST, 2)
-            oprot.writeListBegin(TType.STRUCT, len(self.dataset))
-            for iter250 in self.dataset:
-                iter250.write(oprot)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
-        if self.username is not None:
-            oprot.writeFieldBegin('username', TType.STRING, 3)
-            oprot.writeString(self.username.encode('utf-8') if sys.version_info[0] == 2 else self.username)
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(startGADiscreteInput_args)
-startGADiscreteInput_args.thrift_spec = (
-    None,  # 0
-    (1, TType.STRING, 'problem', 'UTF8', None, ),  # 1
-    (2, TType.LIST, 'dataset', (TType.STRUCT, [DiscreteInputArchitecture, None], False), None, ),  # 2
-    (3, TType.STRING, 'username', 'UTF8', None, ),  # 3
-)
-
-
-class startGADiscreteInput_result(object):
-    """
-    Attributes:
-     - success
-
-    """
-
-
-    def __init__(self, success=None,):
-        self.success = success
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 0:
-                if ftype == TType.I32:
-                    self.success = iprot.readI32()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('startGADiscreteInput_result')
-        if self.success is not None:
-            oprot.writeFieldBegin('success', TType.I32, 0)
-            oprot.writeI32(self.success)
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(startGADiscreteInput_result)
-startGADiscreteInput_result.thrift_spec = (
-    (0, TType.I32, 'success', None, None, ),  # 0
-)
-
-
-class stopGADiscreteInput_args(object):
-    """
-    Attributes:
-     - username
-
-    """
-
-
-    def __init__(self, username=None,):
-        self.username = username
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 1:
-                if ftype == TType.STRING:
-                    self.username = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('stopGADiscreteInput_args')
-        if self.username is not None:
-            oprot.writeFieldBegin('username', TType.STRING, 1)
-            oprot.writeString(self.username.encode('utf-8') if sys.version_info[0] == 2 else self.username)
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(stopGADiscreteInput_args)
-stopGADiscreteInput_args.thrift_spec = (
-    None,  # 0
-    (1, TType.STRING, 'username', 'UTF8', None, ),  # 1
-)
-
-
-class stopGADiscreteInput_result(object):
-    """
-    Attributes:
-     - success
-
-    """
-
-
-    def __init__(self, success=None,):
-        self.success = success
-
-    def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
-            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
-            return
-        iprot.readStructBegin()
-        while True:
-            (fname, ftype, fid) = iprot.readFieldBegin()
-            if ftype == TType.STOP:
-                break
-            if fid == 0:
-                if ftype == TType.I32:
-                    self.success = iprot.readI32()
-                else:
-                    iprot.skip(ftype)
-            else:
-                iprot.skip(ftype)
-            iprot.readFieldEnd()
-        iprot.readStructEnd()
-
-    def write(self, oprot):
-        if oprot._fast_encode is not None and self.thrift_spec is not None:
-            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
-            return
-        oprot.writeStructBegin('stopGADiscreteInput_result')
-        if self.success is not None:
-            oprot.writeFieldBegin('success', TType.I32, 0)
-            oprot.writeI32(self.success)
-            oprot.writeFieldEnd()
-        oprot.writeFieldStop()
-        oprot.writeStructEnd()
-
-    def validate(self):
-        return
-
-    def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not (self == other)
-all_structs.append(stopGADiscreteInput_result)
-stopGADiscreteInput_result.thrift_spec = (
-    (0, TType.I32, 'success', None, None, ),  # 0
 )
 
 

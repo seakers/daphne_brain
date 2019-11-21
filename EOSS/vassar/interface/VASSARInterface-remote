@@ -40,15 +40,13 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('   getArchitectureScoreExplanation(string problem, BinaryInputArchitecture arch)')
     print('   getPanelScoreExplanation(string problem, BinaryInputArchitecture arch, string panel)')
     print('   getObjectiveScoreExplanation(string problem, BinaryInputArchitecture arch, string objective)')
-    print('  bool isGABinaryInputRunning()')
-    print('  int startGABinaryInput(string problem,  dataset, string username)')
-    print('  int stopGABinaryInput(string username)')
+    print('  bool isGARunning(string id)')
+    print('  int stopGA(string id)')
+    print('  string startGABinaryInput(string problem,  dataset, string username)')
+    print('  string startGADiscreteInput(string problem,  dataset, string username)')
     print('   getArchScienceInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('   getArchCostInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsBinaryInput(string problem, BinaryInputArchitecture arch, string subobj)')
-    print('  bool isGADiscreteInputRunning()')
-    print('  int startGADiscreteInput(string problem,  dataset, string username)')
-    print('  int stopGADiscreteInput(string username)')
     print('   getArchScienceInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('   getArchCostInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsDiscreteInput(string problem, DiscreteInputArchitecture arch, string subobj)')
@@ -227,11 +225,17 @@ elif cmd == 'getObjectiveScoreExplanation':
         sys.exit(1)
     pp.pprint(client.getObjectiveScoreExplanation(args[0], eval(args[1]), args[2],))
 
-elif cmd == 'isGABinaryInputRunning':
-    if len(args) != 0:
-        print('isGABinaryInputRunning requires 0 args')
+elif cmd == 'isGARunning':
+    if len(args) != 1:
+        print('isGARunning requires 1 args')
         sys.exit(1)
-    pp.pprint(client.isGABinaryInputRunning())
+    pp.pprint(client.isGARunning(args[0],))
+
+elif cmd == 'stopGA':
+    if len(args) != 1:
+        print('stopGA requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.stopGA(args[0],))
 
 elif cmd == 'startGABinaryInput':
     if len(args) != 3:
@@ -239,11 +243,11 @@ elif cmd == 'startGABinaryInput':
         sys.exit(1)
     pp.pprint(client.startGABinaryInput(args[0], eval(args[1]), args[2],))
 
-elif cmd == 'stopGABinaryInput':
-    if len(args) != 1:
-        print('stopGABinaryInput requires 1 args')
+elif cmd == 'startGADiscreteInput':
+    if len(args) != 3:
+        print('startGADiscreteInput requires 3 args')
         sys.exit(1)
-    pp.pprint(client.stopGABinaryInput(args[0],))
+    pp.pprint(client.startGADiscreteInput(args[0], eval(args[1]), args[2],))
 
 elif cmd == 'getArchScienceInformationBinaryInput':
     if len(args) != 2:
@@ -262,24 +266,6 @@ elif cmd == 'getSubscoreDetailsBinaryInput':
         print('getSubscoreDetailsBinaryInput requires 3 args')
         sys.exit(1)
     pp.pprint(client.getSubscoreDetailsBinaryInput(args[0], eval(args[1]), args[2],))
-
-elif cmd == 'isGADiscreteInputRunning':
-    if len(args) != 0:
-        print('isGADiscreteInputRunning requires 0 args')
-        sys.exit(1)
-    pp.pprint(client.isGADiscreteInputRunning())
-
-elif cmd == 'startGADiscreteInput':
-    if len(args) != 3:
-        print('startGADiscreteInput requires 3 args')
-        sys.exit(1)
-    pp.pprint(client.startGADiscreteInput(args[0], eval(args[1]), args[2],))
-
-elif cmd == 'stopGADiscreteInput':
-    if len(args) != 1:
-        print('stopGADiscreteInput requires 1 args')
-        sys.exit(1)
-    pp.pprint(client.stopGADiscreteInput(args[0],))
 
 elif cmd == 'getArchScienceInformationDiscreteInput':
     if len(args) != 2:

@@ -68,7 +68,7 @@ def extract_design_id(processed_question, number_of_features, user_information: 
     design_ids = ['d' + str(design.id) for design in user_information.eosscontext.design_set.all()]
     extracted_list = []
     for word in processed_question:
-        if word.text in design_ids:
+        if word.lower_ in design_ids:
             extracted_list.append(word.text)
     return crop_list(extracted_list, number_of_features)
 
