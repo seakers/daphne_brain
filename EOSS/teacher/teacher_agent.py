@@ -1,6 +1,6 @@
 import threading
-import json
 from queue import Queue
+import json
 import random
 from time import sleep
 import math
@@ -14,6 +14,9 @@ from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
 from EOSS.data_mining.api import DataMiningClient
 from EOSS.models import Design
+import pickle
+import os
+
 
 
 # --> This function will be the proactive teacher agent
@@ -26,6 +29,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     print('----> user:', user)
     print('----> channel name:', channel_name)
     print('--------------------------', '\n')
+
 
     # --> Architectures
     arch_dict_list = []
@@ -56,8 +60,10 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
     # --> Features
     features = get_driving_features_epsilon_moea(request, user_info)
-    features.sort(key=lambda feature: feature['score'])
-    top_features = features[:5]
+    # features.sort(key=lambda feature: feature['score'])
+    # top_features = features[:5]
+    features.sort(key=lambda feature: feature['complexity'])
+    question_features = features[:5]
     features.sort(key=lambda feature: feature['overall'])
 
 
@@ -84,34 +90,36 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
     one_evals_counter = num_evaluated
     one_evals = False
-
     two_evals_counter = num_evaluated
     two_evals = False
-
     three_evals_counter = num_evaluated
     three_evals = False
-
     four_evals_counter = num_evaluated
     four_evals = False
-
     five_evals_counter = num_evaluated
     five_evals = False
-
     sensitivity_info_given = False
     feature_info_given = False
     design_space_info_given = False
     objective_space_info_given = False
 
     send_message = False
-
     question_given = False
 
 
-
-    # generate_design_prediction_question(arch_dict_list, orbits, instruments)
-
-
-
+    # -------> Teacher Logging
+    teacher_log_file = '/home/gapaza/Dropbox/Research/SERC/Repo/daphne_brain/logs/teacher.log'
+    try:
+        if os.path.isfile(teacher_log_file):
+            log_file = open(teacher_log_file, 'a')
+            log_file.write('\n ------------ Teacher Thread Started ------------')
+            for feature in question_features:
+                feature_str = json.dumps(feature)
+                feature_str = '\n' + feature_str
+                log_file.write(feature_str)
+            log_file.close()
+    except:
+        print("Error with teacher log file")
 
 
     thought_iteration = 0
@@ -218,14 +226,14 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                     "writer": "daphne"
                 })
             else:
-                feature_choices, answer = generate_feature_question(features)
+                feature_choices, answer = generate_feature_question(question_features)
                 async_to_sync(channel_layer.send)(channel_name, {
                     'type': 'teacher.features',
                     'name': 'featureQuestion',
                     'first_choice': feature_choices[0],
                     'second_choice': feature_choices[1],
                     'correct_answer': answer,
-                    'question': 'Which of the two features better describes the Pareto Front?',
+                    'question': 'Which of these two features better describes the Pareto Front?',
                 })
 
         # ------------------------------------------------------------------------------------------------- Design Space
@@ -258,10 +266,11 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
         # -----------------------------------------------------------------------------------------Feature Functionality
         if thought_iteration == 18000:
+            single_feature = random.choice(question_features)
             async_to_sync(channel_layer.send)(channel_name, {
                         'type': 'teacher.features',
                         'name': 'displayFeatureInformation',
-                        'data': top_features,
+                        'data': single_feature,
                     })
             feature_info_given = True
 
@@ -275,7 +284,22 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
         four_evals = False
         sleep(0.01)
 
+
+
+    # -------> Teacher Logging
+    try:
+        if os.path.isfile(teacher_log_file):
+            log_file = open(teacher_log_file, 'a')
+            log_file.write('\n ------------ Teacher Thread Completed ------------ \n\n')
+            log_file.close()
+    except:
+        print("Error with teacher log file")
+
     print('--> Teacher thread has finished')
+
+
+
+
 
 
 
@@ -373,6 +397,7 @@ def generate_sensitivity_question(sensitivities):
 
 def generate_feature_question(features):
     num_features = len(features)
+
     first_feature = random.choice(features)
     first_feature_index = features.index(first_feature)
     features.remove(first_feature)
@@ -387,6 +412,10 @@ def generate_feature_question(features):
     print("First", first_feature)
     print("Second", second_feature)
     print(correct_choice)
+
+
+
+
     return [first_feature, second_feature], correct_choice
 
 
@@ -444,8 +473,10 @@ def get_driving_features_epsilon_moea(request, user_info, pareto=0):
         sen = fm[3] * 100
         distance_value = abs(fm[2] - fm[3])
         overall = cov * cov + sen * sen
-        features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics, 'score': distance_value, 'overall': overall})
-
+        and_count = df.expression.count('&&')
+        or_count = df.expression.count('||')
+        complexity = and_count + or_count
+        features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics, 'score': distance_value, 'overall': overall, 'complexity': complexity})
     client.endConnection()
     features.sort(key=lambda feature: feature['score'])
 
