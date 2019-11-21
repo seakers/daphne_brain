@@ -41,12 +41,12 @@ def send_archs_from_queue_to_main_dataset(context):
 
 def generate_background_search_message(user_info):
     message = {
-        'voice_message': 'The background search has found more than 10 architectures, but you have chosen to not show '
+        'voice_message': 'The background search has found several architectures, but you have chosen to not show '
                          'them. Do you want to see them now?',
         'visual_message_type': ['active_message'],
         'visual_message': [
             {
-                'message': 'The background search has found more than 10 architectures, but you have chosen to not show '
+                'message': 'The background search has found several architectures, but you have chosen to not show '
                            'them. Do you want to see them now?',
                 'setting': 'show_background_search_feedback'
             }

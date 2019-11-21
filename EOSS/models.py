@@ -18,7 +18,9 @@ class EOSSContext(models.Model):
     # Counter for manually added designs
     added_archs_count = models.IntegerField()
 
+    # Backends information
     vassar_port = models.IntegerField()
+    ga_id = models.TextField(null=True)
 
 
 class EOSSContextSerializer(serializers.ModelSerializer):
