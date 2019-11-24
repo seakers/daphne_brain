@@ -3,6 +3,7 @@ from rest_framework.response import Response
 import json
 import threading
 from queue import Queue
+from EOSS.models import Design
 from channels.layers import get_channel_layer
 from EOSS.sensitivities.api import SensitivitiesClient
 from auth_API.helpers import get_or_create_user_information
@@ -85,9 +86,9 @@ class GetSubjectFeatures(APIView):
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         features = get_driving_features_epsilon_moea(request, user_info)
-        features.sort(key=lambda feature: feature['score'])
-        top_features = features[:5]
-        return_data = json.dumps(top_features)
+        features.sort(key=lambda feature: feature['complexity'])
+        question_features = features[:5]
+        return_data = json.dumps(question_features)
         return Response(return_data)
 
 
@@ -202,10 +203,19 @@ class GetSubjectObjectiveSpace(APIView):
         for x in range(0, len(instruments)):
             instruments[x] = (instruments[x])[1:-1]
 
+        # dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+
+        # --> Get all the architectures that daphne is considering right now
+        # arch_dict_list = []
+        # for arch in user_info.eosscontext.design_set.all():
+        #     temp_dict = {'id': arch.id, 'inputs': json.loads(arch.inputs), 'outputs': json.loads(arch.outputs), 'paretoRanking': arch.paretoRanking}
+        #     arch_dict_list.append(temp_dict)
+
+
         plotData = request.data['plotData']
         plotDataJson = json.loads(plotData)
-
         objectiveSpaceInformation = evaluate_objective_space(plotDataJson)
+
         return_data = json.dumps(objectiveSpaceInformation)
 
         return Response(return_data)

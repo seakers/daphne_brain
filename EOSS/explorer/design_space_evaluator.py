@@ -66,10 +66,10 @@ def evaluate_design_space_level_one(arch_dict_list, orbits, instruments):
         index = entry['index']
         value = entry['value']
         obj = index_to_combination(index, combination_key_list)
+        if not obj:
+            continue
         percent = round((value / num_architectures) * 100, 2)
         final_list.append({'orbit': obj['orbit'], 'instrument': obj['instrument'], 'value': str(value), 'percent': str(percent)})
-
-
     return final_list
 
 
@@ -94,11 +94,8 @@ def index_to_combination(index, combinations):
 
 def summate_matrix_columns(bool_matrix, combination_index, combinations):
     num_architectures = len(bool_matrix)
-
     output = index_to_combination(combination_index, combinations)
     print("Evaluating: ", output['orbit'], output['instrument'])
-
-
     summation_list = {}
     for x in range(len(bool_matrix)):         # --> Iterate over each architecture
         if bool_matrix[x][combination_index] is True:
@@ -120,13 +117,10 @@ def summate_matrix_columns(bool_matrix, combination_index, combinations):
         key_info = index_to_combination(int(key), combinations)
         percent_seen = round((summation_list[key] / num_architectures) * 100, 2)
         key_num = int(key)
-
         # --> {'index': index, 'orbit': orbit, 'inst': inst, 'value': value, 'percent': percent}
         temp_dictionary = {'index': str(key_num), 'orbit': key_info['orbit'], 'instrument': key_info['instrument'],
                            'value': str(summation_list[key]), 'percent': str(percent_seen)}
         dictionary_list.append(temp_dictionary)
-
-
 
     dictionary_list = sorted(dictionary_list, key=lambda k: k['percent'])
     return dictionary_list

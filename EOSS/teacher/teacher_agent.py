@@ -166,8 +166,104 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             five_evals = True
             five_evals_counter = num_evaluated
 
-        # ---------------------------------------------------------------------------------Objective Space Functionality
-        if thought_iteration == 3000:
+
+        # 6000 = one minute
+        # -------------------------------------------------------------------------------------------------- Sensitivity - Minute 1 - Second 60
+        if thought_iteration == 6000:
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.sensitivities',
+                'name': 'displaySensitivityInformation',
+                'data': sensitivity_info,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["sensitivity_plot"],
+                "visual_message": ["ping"],
+                "writer": "daphne"
+            })
+            sensitivity_info_given = True
+
+        # ----------------------------------------------------------------------------------------- Sensitivity Question - Minute 3 - Second 180
+        if thought_iteration == 18000:
+            first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info)
+            first_choice = first_choice_info[0] + ' | ' + first_choice_info[1]
+            second_choice = second_choice_info[0] + ' | ' + second_choice_info[1]
+            second_choice_revealed = second_choice_info[0] + ' | ' + second_choice_info[1] + ' = ' + str(
+                abs(float(second_choice_info[2])))
+            first_choice_revealed = first_choice_info[0] + ' | ' + first_choice_info[1] + ' = ' + str(
+                abs(float(first_choice_info[2])))
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.sensitivities',
+                'name': 'sensitivityQuestion',
+                'data': None,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["question_template"],
+                "visual_message": ["ping"],
+                "first_choice": first_choice,
+                "second_choice": second_choice,
+                "first_choice_revealed": first_choice_revealed,
+                "second_choice_revealed": second_choice_revealed,
+                "correct_answer": correct_answer,
+                "question": question,
+                "writer": "daphne"
+            })
+
+        # ------------------------------------------------------------------------------------------------- Design Space - Minute 4 - Second 240
+        if thought_iteration == 24000:
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.design_space',
+                'name': 'displayDesignSpaceInformation',
+                'data': design_space_info,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["design_space_plot"],
+                "visual_message": ["ping"],
+                "writer": "daphne"
+            })
+            design_space_info_given = True
+
+        # ---------------------------------------------------------------------------------------- Design Space Question - Minute 6 - Second 360
+        if thought_iteration == 36000:
+            first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.design_space',
+                'name': 'designQuestion',
+                'data': None,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["question_template"],
+                "visual_message": ["ping"],
+                "first_choice": first_choice_info,
+                "second_choice": second_choice_info,
+                "correct_answer": correct_answer,
+                "question": question,
+                "writer": "daphne"
+            })
+
+        # ----------------------------------------------------------------------------------------------------- Features - Minute 7 - Second 420
+        if thought_iteration == 42000:
+            single_feature = random.choice(question_features)
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.features',
+                'name': 'displayFeatureInformation',
+                'data': single_feature,
+            })
+            feature_info_given = True
+
+        # -------------------------------------------------------------------------------------------- Features Question - Minute 9 - Second 540
+        if thought_iteration == 54000:
+            feature_choices, answer = generate_feature_question(question_features)
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.features',
+                'name': 'featureQuestion',
+                'first_choice': feature_choices[0],
+                'second_choice': feature_choices[1],
+                'correct_answer': answer,
+                'question': 'Which of these two features better describes the Pareto Front?',
+            })
+
+        # ---------------------------------------------------------------------------------------------- Objective Space - Minute 10 - Second 600
+        if thought_iteration == 60000:
             async_to_sync(channel_layer.send)(channel_name, {
                 'type': 'teacher.objective_space',
                 'name': 'displayObjectiveSpaceInformation',
@@ -180,12 +276,11 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             })
             objective_space_info_given = True
 
-        # ----------------------------------------------------------------------------------------------------- Question
-        if thought_iteration % 6000 == 0:
+        # ---------------------------------------------------------------------------------------------- Random Question - Minute 12 (every minute after)
+        if thought_iteration >= 72000 and thought_iteration % 6000 == 0:
             rand = random.random()
             if rand < 0.33:
-                first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(
-                    arch_dict_list, orbits, instruments)
+                first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
                 async_to_sync(channel_layer.send)(channel_name, {
                     'type': 'teacher.design_space',
                     'name': 'designQuestion',
@@ -200,15 +295,12 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                     "question": question,
                     "writer": "daphne"
                 })
-            elif rand < .66:
-                first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(
-                    sensitivity_info)
-                first_choice = first_choice_info[0] + ' - ' + first_choice_info[1]
-                second_choice = second_choice_info[0] + ' - ' + second_choice_info[1]
-                second_choice_revealed = second_choice_info[0] + ' - ' + second_choice_info[
-                    1] + '  Sensitivity: ' + str(second_choice_info[2])
-                first_choice_revealed = first_choice_info[0] + ' - ' + first_choice_info[
-                    1] + '  Sensitivity: ' + str(first_choice_info[2])
+            elif rand < 0.66:
+                first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info)
+                first_choice = first_choice_info[0] + ' | ' + first_choice_info[1]
+                second_choice = second_choice_info[0] + ' | ' + second_choice_info[1]
+                second_choice_revealed = second_choice_info[0] + ' | ' + second_choice_info[1] + ' = ' + str(abs(float(second_choice_info[2])))
+                first_choice_revealed = first_choice_info[0] + ' | ' + first_choice_info[1] + ' = ' + str(abs(float(first_choice_info[2])))
                 async_to_sync(channel_layer.send)(channel_name, {
                     'type': 'teacher.sensitivities',
                     'name': 'sensitivityQuestion',
@@ -235,47 +327,6 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                     'correct_answer': answer,
                     'question': 'Which of these two features better describes the Pareto Front?',
                 })
-
-        # ------------------------------------------------------------------------------------------------- Design Space
-        if thought_iteration == 9000:
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'teacher.design_space',
-                'name': 'displayDesignSpaceInformation',
-                'data': design_space_info,
-                'speak': 'ping',
-                "voice_message": 'testing',
-                "visual_message_type": ["design_space_plot"],
-                "visual_message": ["ping"],
-                "writer": "daphne"
-            })
-            design_space_info_given = True
-
-        # -------------------------------------------------------------------------------------Sensitivity Functionality
-        if thought_iteration == 15000:
-            async_to_sync(channel_layer.send)(channel_name, {
-                        'type': 'teacher.sensitivities',
-                        'name': 'displaySensitivityInformation',
-                        'data': sensitivity_info,
-                        'speak': 'ping',
-                        "voice_message": 'testing',
-                        "visual_message_type": ["sensitivity_plot"],
-                        "visual_message": ["ping"],
-                        "writer": "daphne"
-                    })
-            sensitivity_info_given = True
-
-        # -----------------------------------------------------------------------------------------Feature Functionality
-        if thought_iteration == 18000:
-            single_feature = random.choice(question_features)
-            async_to_sync(channel_layer.send)(channel_name, {
-                        'type': 'teacher.features',
-                        'name': 'displayFeatureInformation',
-                        'data': single_feature,
-                    })
-            feature_info_given = True
-
-
-
 
 
         one_evals = False
