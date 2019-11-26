@@ -147,6 +147,8 @@ class GetSubjectSensitivities(APIView):
         # --> Get the Problem Name
         # problem = request.data['problem']
         problem = user_info.eosscontext.problem
+        print("-------------PROBLEM")
+        print(problem)
 
         # --> Get the Problem Orbits
         orbits = request.data['orbits']
