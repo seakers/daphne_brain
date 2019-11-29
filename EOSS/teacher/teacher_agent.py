@@ -32,7 +32,8 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     print('--------- Problem', request.data['problem'])
 
 
-
+    # --> Tutorial
+    in_tutorial = request.data['tutorial']
 
 
     # --> Architectures
@@ -324,7 +325,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             objective_space_info_given = True
 
         # ---------------------------------------------------------------------------------------------- Random Question - Minute 12 (every minute after)
-        if thought_iteration >= 72000 and thought_iteration % 4500 == 0:
+        if thought_iteration >= 72000 and thought_iteration % 6000 == 0:
             rand = random.random()
             if rand < 0.33:
                 # first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
@@ -377,10 +378,83 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                 })
 
 
-        one_evals = False
-        two_evals = False
-        three_evals = False
-        four_evals = False
+
+
+
+        if in_tutorial == 'true':
+            print("---> In Turorial?")
+            print(in_tutorial)
+            print(type(in_tutorial))
+            if thought_iteration == 1:
+
+                # Sensitivities Information
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.sensitivities',
+                    'name': 'displaySensitivityInformation',
+                    'data': sensitivity_info,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["sensitivity_plot"],
+                    "visual_message": ["ping"],
+                    "writer": "daphne"
+                })
+
+                # Design Space Information
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.design_space',
+                    'name': 'displayDesignSpaceInformation',
+                    'data': design_space_info,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["design_space_plot"],
+                    "visual_message": ["ping"],
+                    "writer": "daphne"
+                })
+
+                # Design Space Question
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.design_space',
+                    'name': 'designQuestion',
+                    'data': None,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["question_template"],
+                    "visual_message": ["ping"],
+                    "first_choice": designq_first_choice_info[current_design_question_index],
+                    "second_choice": designq_second_choice_info[current_design_question_index],
+                    "correct_answer": designq_correct_answer[current_design_question_index],
+                    "question": designq_question[current_design_question_index],
+                    "writer": "daphne"
+                })
+                current_design_question_index = current_design_question_index + 1
+
+                # Features Info
+                single_feature = random.choice(question_features)
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.features',
+                    'name': 'displayFeatureInformation',
+                    'data': single_feature,
+                })
+
+                # Objective Space Info
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.objective_space',
+                    'name': 'displayObjectiveSpaceInformation',
+                    'data': objective_space_science_1,
+                    'speak': 'ping',
+                    "voice_message": "",
+                    "visual_message_type": ["objective_space_plot"],
+                    "visual_message": [""],
+                    "writer": "daphne"
+                })
+
+                print("Shutting off teacher")
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.features',
+                    'name': 'shutOFF',
+                })
+
+
         sleep(0.01)
 
 
