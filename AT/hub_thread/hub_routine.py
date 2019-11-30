@@ -1,7 +1,4 @@
-import pandas as pd
 from asgiref.sync import async_to_sync
-import os
-from queue import Queue
 import time
 
 
@@ -12,25 +9,30 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
     first_status_has_arrived = False
     while not first_status_has_arrived:
         if not sim_to_hub.empty():
-            tf_window = sim_to_hub.get()
+            # Parse the simulator message
+            signal = sim_to_hub.get()
+            if signal['type'] == 'window':
+                # Parse the signal
+                tf_window = signal['content']
 
-            # Parse the signal, retrieve the telemetry feed variables and send an initialization command to the frontend
-            tf_variables = list(tf_window['values'].columns.values)
-            tf_variables.remove('timestamp')
-            command = {'type': 'initialize_telemetry', 'variables': tf_variables}
-            async_to_sync(channel.send)(channel_name, command)
+                # Retrieve the telemetry feed variables and send an initialization command to the frontend
+                tf_variables = list(tf_window['values'].columns.values)
+                tf_variables.remove('timestamp')
+                command = {'type': 'initialize_telemetry', 'variables': tf_variables}
+                async_to_sync(channel.send)(channel_name, command)
 
-            # Put the first simulator output back in the queue and update the while loop condition
-            sim_to_hub.put(tf_window)
-            first_status_has_arrived = True
+                # Put the first simulator output back in the queue and update the while loop condition
+                sim_to_hub.put(signal)
+                first_status_has_arrived = True
         else:
             time.sleep(0.01)
 
-    # Initialize
+    # Set and initialize the ping routine counters
+    life_limit = 40
     time_since_last_ping = 0
     timer_start = time.time()
-    life_limit = 40
 
+    # Start the hub routine
     while time_since_last_ping < life_limit:
         # Check the frontend input queue
         if not front_to_hub.empty():
@@ -45,26 +47,33 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
         # Check the simulator input queue
         if not sim_to_hub.empty():
             signal = sim_to_hub.get()
+            if signal['type'] == 'window':
+                # Parse the signal
+                tf_window = signal['content']
 
-            # Send the telemetry feed window to the anomaly detection queue
-            last_window = {'type': 'window', 'content': signal}
-            hub_to_ad.put(last_window)
+                # Send the telemetry feed window to the anomaly detection queue
+                last_window = {'type': 'window', 'content': tf_window}
+                hub_to_ad.put(last_window)
 
-            # Update and send the telemetry update command for the frontend
-            command = {'type': 'telemetry_update',
-                       'values': tf_window['values'].to_json(),
-                       'info': tf_window['info'].to_json()}
-            async_to_sync(channel.send)(channel_name, command)
+                # Update and send the telemetry update command for the frontend
+                command = {'type': 'telemetry_update',
+                           'values': tf_window['values'].to_json(),
+                           'info': tf_window['info'].to_json()}
+                async_to_sync(channel.send)(channel_name, command)
 
         # Check the diagnosis output queue
         if not diag_to_hub.empty():
             signal = diag_to_hub.get()
+            if signal['type'] == 'diagnosed_anomalies':
+                diagnosed_anomalies = signal['content']
+                command = {'type': 'at_analysis', 'diagnosed_anomalies': diagnosed_anomalies}
+                async_to_sync(channel.send)(channel_name, command)
 
         # Update while loop condition and wait
         time_since_last_ping = time.time() - timer_start
         time.sleep(0.1)
 
-    hub_to_sim.put('stop')
+    hub_to_sim.put({'type': 'stop', 'content': ''})
     hub_to_ad.put({'type': 'stop', 'content': ''})
 
     print('Thread handler thread stopped.')

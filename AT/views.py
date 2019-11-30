@@ -4,10 +4,11 @@ import threading
 from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
 
-from queue import Queue
-from AT.simulator_thread.simulator_routine import simulate
+
+from AT.simulator_thread.simulator_routine import simulate_by_csv
 from AT.hub_thread.hub_routine import hub_routine
 from AT.ad_thread.ad_routine import anomaly_detection_routine
+from AT.diagnosis_thread.diagnosis_routine import diagnosis_routine
 
 # QUEUES
 from AT.queue_objects import frontend_to_hub_queue
@@ -37,7 +38,7 @@ class SimulateTelemetry(APIView):
         hub_thread.start()
 
         # Simulator thread initialization
-        simulator_thread = threading.Thread(target=simulate,
+        simulator_thread = threading.Thread(target=simulate_by_csv,
                                             args=(simulator_to_hub_queue,
                                                   hub_to_simulator_queue))
         simulator_thread.start()
@@ -45,13 +46,21 @@ class SimulateTelemetry(APIView):
         # Anomaly detection thread initialization
         ad_thread = threading.Thread(target=anomaly_detection_routine,
                                      args=(hub_to_ad_queue,
-                                           ad_to_diagnosis_queue,
-                                           channel_layer,
-                                           channel_name,))
+                                           ad_to_diagnosis_queue,))
         ad_thread.start()
 
+        # Diagnosis thread initialization
+        diagnosis_thread = threading.Thread(target=diagnosis_routine,
+                                            args=(ad_to_diagnosis_queue,
+                                                  diagnosis_to_hub_queue,))
+        diagnosis_thread.start()
+
         # Tread status check
-        if hub_thread.is_alive() and simulator_thread.is_alive() and ad_thread.is_alive():
+        sim_is_alive = hub_thread.is_alive()
+        hub_is_alive = hub_thread.is_alive()
+        ad_is_alive = ad_thread.is_alive()
+        diag_is_alive = diagnosis_thread.is_alive()
+        if hub_is_alive and sim_is_alive and ad_is_alive and diag_is_alive:
             print('**********\nAll AT threads started successfully.\n**********')
         else:
             print('**********')
@@ -61,6 +70,8 @@ class SimulateTelemetry(APIView):
                 print('Simulator thread start failure.')
             if not ad_thread.is_alive():
                 print('Anomaly detection thread start failure.')
+            if not diag_is_alive():
+                print('Diagnosis thread start failure.')
             print('**********')
 
 

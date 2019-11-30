@@ -1,7 +1,3 @@
-import pandas as pd
-from asgiref.sync import async_to_sync
-import os
-from queue import Queue
 import time
 from statsmodels.tsa import ar_model
 
@@ -114,12 +110,11 @@ def build_message(window):
 
     if len(messages) == 0:
         messages.append('OK')
-    print(messages)
 
     return messages
 
 
-def anomaly_detection_routine(hub_to_ad, ad_to_diag, channel, channel_name):
+def anomaly_detection_routine(hub_to_ad, ad_to_diag):
     print('AD thread started')
 
     keep_alive = True
@@ -128,11 +123,14 @@ def anomaly_detection_routine(hub_to_ad, ad_to_diag, channel, channel_name):
             signal = hub_to_ad.get()
             if signal['type'] == 'stop':
                 keep_alive = False
-                break
-            window = signal['content']
-            frontend_ad_message = build_message(window)
-            command = {'type': 'ad_message', 'message': frontend_ad_message}
-            async_to_sync(channel.send)(channel_name, command)
+                ad_to_diag.put({'type': 'stop', 'content': ''})
+            elif signal['type'] == 'window':
+                # To prevent the anomaly detection thread from falling behind the telemetry feed, empty the queue and
+                # only process the last received window
+                if hub_to_ad.empty():
+                    window = signal['content']
+                    frontend_ad_message = build_message(window)
+                    ad_to_diag.put({'type': 'anomaly_list', 'content': frontend_ad_message})
 
         time.sleep(0.5)
 
