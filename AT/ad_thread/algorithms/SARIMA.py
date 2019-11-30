@@ -3,7 +3,7 @@ from rest_framework.response import Response
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-from .functions import find_pdq
+from AT.ad_thread.algorithms.functions import find_pdq
 
 
 class AD_SARIMA(APIView):

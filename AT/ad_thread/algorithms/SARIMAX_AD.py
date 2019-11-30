@@ -1,9 +1,7 @@
-import hashlib
 import pandas as pd
 
-from django.conf import settings
-from .functions import ma_preprocess
-from .functions import find_pdq
+from AT.AD.algorithms.functions import ma_preprocess
+from AT.AD.algorithms.functions import find_pdq
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from channels.generic.websocket import JsonWebsocketConsumer

@@ -6,6 +6,7 @@ from auth_API.helpers import get_user_information
 
 from daphne_ws.consumers import DaphneConsumer
 from queue import Queue
+from AT.queue_objects import frontend_to_hub_queue
 
 from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
@@ -45,8 +46,7 @@ class ATConsumer(DaphneConsumer):
                 getattr(user_info, subcontext_name).save()
             user_info.save()
         elif content.get('msg_type') == 'ping':
-            self.queue.put('ping')
-            pass
+            frontend_to_hub_queue.put('ping')
 
     def console_text(self, event):
         self.send(json.dumps(event))
@@ -57,6 +57,5 @@ class ATConsumer(DaphneConsumer):
     def initialize_telemetry(self, event):
         self.send(json.dumps(event))
 
-    def create_queue(self, event):
-        self.queue = event['queue']
-
+    def ad_message(self, event):
+        self.send(json.dumps(event))
