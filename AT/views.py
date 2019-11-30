@@ -1,106 +1,74 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import pandas as pd
-import json
+import threading
+from channels.layers import get_channel_layer
+from auth_API.helpers import get_or_create_user_information
+
+from queue import Queue
+from AT.simulator_thread.simulator_routine import simulate
+from AT.hub_thread.hub_routine import hub_routine
+from AT.ad_thread.ad_routine import anomaly_detection_routine
+
+# QUEUES
+from AT.queue_objects import frontend_to_hub_queue
+from AT.queue_objects import simulator_to_hub_queue
+from AT.queue_objects import hub_to_simulator_queue
+from AT.queue_objects import hub_to_ad_queue
+from AT.queue_objects import ad_to_diagnosis_queue
+from AT.queue_objects import diagnosis_to_hub_queue
 
 
-def obtain_features(data):
-    """
-    Obtains features of the data:
-        Seasonality
-        Correlation
-    :param Data:
-    :return:
-    """
-    correlation = data.corr()
-    correlation['Variable'] = correlation.index
-    correlation_json = correlation.to_json(orient='records')
+class SimulateTelemetry(APIView):
+    def post(self, request):
+        # Get the user information and channel layer
+        thread_user_info = get_or_create_user_information(request.session, request.user, 'AT')
+        channel_layer = get_channel_layer()
+        channel_name = thread_user_info.channel_name
 
-    correlation_spearman = data.corr(method='spearman')
-    correlation_spearman['Variable'] = correlation_spearman.index
-    correlation_spearman_json = correlation.to_json(orient='records')
+        # Hub thread initialization
+        hub_thread = threading.Thread(target=hub_routine,
+                                      args=(frontend_to_hub_queue,
+                                            simulator_to_hub_queue,
+                                            hub_to_simulator_queue,
+                                            hub_to_ad_queue,
+                                            diagnosis_to_hub_queue,
+                                            channel_layer,
+                                            channel_name,))
+        hub_thread.start()
 
-    columns = data.columns
-    data['timestamp'] = data.index
-    out = data.to_json(orient='records', date_format='iso')
-    return_value = {
-        "data": json.loads(out),
-        "variables": columns,
-        "correlation": json.loads(correlation_json),
-        "correlationSpearman": json.loads(correlation_spearman_json)
-    }
+        # Simulator thread initialization
+        simulator_thread = threading.Thread(target=simulate,
+                                            args=(simulator_to_hub_queue,
+                                                  hub_to_simulator_queue))
+        simulator_thread.start()
 
-    return return_value
+        # Anomaly detection thread initialization
+        ad_thread = threading.Thread(target=anomaly_detection_routine,
+                                     args=(hub_to_ad_queue,
+                                           ad_to_diagnosis_queue,
+                                           channel_layer,
+                                           channel_name,))
+        ad_thread.start()
 
-
-class ImportData(APIView):
-    """ Imports data from a csv file. To be deprecated in the future.
-
-    Request Args:
-        filename: Name of the sample data file
-
-    Returns:
-        data: Json string with the read data
-        columns: array with the columns of the data
-
-    """
-
-    def post(self, request, format=None):
-
-        # Set the path of the file containing data
-        file_path = 'AT/Data/' + request.data['filename']
-
-        data = pd.read_csv(file_path, parse_dates=True, index_col='timestamp')
-
-        return Response(obtain_features(data))
+        # Tread status check
+        if hub_thread.is_alive() and simulator_thread.is_alive() and ad_thread.is_alive():
+            print('**********\nAll AT threads started successfully.\n**********')
+        else:
+            print('**********')
+            if not hub_thread.is_alive():
+                print('Thread handler thread start failure.')
+            if not simulator_thread.is_alive():
+                print('Simulator thread start failure.')
+            if not ad_thread.is_alive():
+                print('Anomaly detection thread start failure.')
+            print('**********')
 
 
-class ReadUploadedData(APIView):
-
-    def post(self, request, format=None):
-
-        data = pd.read_csv(request.data['file'], parse_dates=True, index_col='timestamp')
-
-        return Response(obtain_features(data))
+        return Response()
 
 
-# Import sample database
-class ImportDatabase(APIView):
+class StopTelemetry(APIView):
+    def post(self, request):
+        frontend_to_hub_queue.put('stop')
 
-    def post(self, request, format=None):
-
-        filePath = 'AT/Databases/' + request.data['filename']
-
-        data = pd.read_csv(filePath, parse_dates=True)
-
-        out = data.to_json(orient='records', date_format='iso')
-
-        return Response(json.loads(out))
-
-
-# Import database from File
-class ImportDatabaseFromFile(APIView):
-
-    def post(self, request, format=None):
-
-        data = pd.read_csv(request.data['file'], parse_dates=True)
-
-        out = data.to_json(orient='records', date_format='iso')
-
-        return Response(json.loads(out))
-
-
-# Removes selected variables from the analysis
-class RemoveVariables(APIView):
-
-    def post(self, request, format=None):
-
-        data = pd.read_json(request.data['data'], orient='records').set_index('timestamp')
-
-        variables = request.data['listSelectedVariables']
-
-        dataOut = data.drop(columns=variables)
-
-        return Response({"data": obtain_features(dataOut),
-                         'writtenResponse': [{'introduction': 'The following variables were removed:',
-                                              'bulletPoints': variables}]})
+        return Response()
