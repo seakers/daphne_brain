@@ -1,7 +1,5 @@
 import pandas as pd
-from asgiref.sync import async_to_sync
 import os
-from queue import Queue
 import time
 
 
@@ -20,7 +18,7 @@ def load_data():
     return tf
 
 
-def simulate(sim_to_hub, hub_to_sim):
+def simulate_by_csv(sim_to_hub, hub_to_sim):
     # Load the complete telemetry feed csv files and set the window size
     tf = load_data()
     window_span = 60
@@ -37,11 +35,11 @@ def simulate(sim_to_hub, hub_to_sim):
         # Check the communication queue messages
         if not hub_to_sim.empty():
             signal = hub_to_sim.get()
-            if signal == 'stop':
+            if signal['type'] == 'stop':
                 break
 
         # Send a new window to the thread handler thread
-        sim_to_hub.put(tf_window)
+        sim_to_hub.put({'type': 'window', 'content': tf_window})
 
         # Update the counters
         k += 1
