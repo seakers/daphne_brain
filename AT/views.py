@@ -104,3 +104,5 @@ class RemoveVariables(APIView):
         return Response({"data": obtain_features(dataOut),
                          'writtenResponse': [{'introduction': 'The following variables were removed:',
                                               'bulletPoints': variables}]})
+
+

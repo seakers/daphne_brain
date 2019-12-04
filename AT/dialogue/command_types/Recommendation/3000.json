@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.recommendation.list_procedure_steps('${procedure}')",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "step": "item[\"text\"]",
+          "step_id": "item[\"id\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "Here are the steps for procedure ${procedure}: ",
+      "repeat": "Step ${step_id}: ${step}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "Here are the steps for procedure ${procedure}: ",
+      "item_template": "Step ${step_id}: ${step}"
+    }
+  ]
+}
