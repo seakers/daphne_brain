@@ -13,6 +13,13 @@ def extract_anomaly_ids(processed_question, number_of_features, context: UserInf
     anomaly_ids = [str(id[0]) for id in session.query(ECLSSAnomalies.id).all()]
     return sorted_list_of_features_by_index(processed_question, anomaly_ids, number_of_features)
 
+
+def extract_procedures(processed_question, number_of_features, context: UserInformation):
+    procedure_list = range(1, 25)
+    procedures = [str(id) for id in procedure_list]
+    return sorted_list_of_features_by_index(processed_question, procedures, number_of_features)
+
 extract_function = {}
 
 extract_function["anomaly_id"] = extract_anomaly_ids
+extract_function["procedure"] = extract_procedures
