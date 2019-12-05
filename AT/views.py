@@ -5,7 +5,8 @@ from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
 
 
-from AT.simulator_thread.simulator_routine import simulate_by_csv
+from AT.simulator_thread.simulator_routine_by_csv import simulate_by_csv
+from AT.simulator_thread.simulator_routine_by_dummy_eclss import simulate_by_dummy_eclss
 from AT.hub_thread.hub_routine import hub_routine
 from AT.ad_thread.ad_routine import anomaly_detection_routine
 from AT.diagnosis_thread.diagnosis_routine import diagnosis_routine
@@ -38,7 +39,7 @@ class SimulateTelemetry(APIView):
         hub_thread.start()
 
         # Simulator thread initialization
-        simulator_thread = threading.Thread(target=simulate_by_csv,
+        simulator_thread = threading.Thread(target=simulate_by_dummy_eclss,
                                             args=(simulator_to_hub_queue,
                                                   hub_to_simulator_queue))
         simulator_thread.start()
@@ -70,7 +71,7 @@ class SimulateTelemetry(APIView):
                 print('Simulator thread start failure.')
             if not ad_thread.is_alive():
                 print('Anomaly detection thread start failure.')
-            if not diag_is_alive():
+            if not diag_is_alive:
                 print('Diagnosis thread start failure.')
             print('**********')
 
