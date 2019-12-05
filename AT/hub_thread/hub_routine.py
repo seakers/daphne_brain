@@ -76,5 +76,5 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
     hub_to_sim.put({'type': 'stop', 'content': ''})
     hub_to_ad.put({'type': 'stop', 'content': ''})
 
-    print('Thread handler thread stopped.')
+    print('Hub thread stopped.')
     return None
