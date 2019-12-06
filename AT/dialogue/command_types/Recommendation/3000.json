@@ -4,6 +4,7 @@
   [
     { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "List the steps of a procedure",
   "function":
   {
     "run_template": "dialogue_functions.recommendation.list_procedure_steps('${procedure}')",
