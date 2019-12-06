@@ -189,6 +189,15 @@ EDL_DATABASE = {
     'database': 'edldatabase'
 }
 
+ECLSS_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'www.selva-research.com',
+    'port': '5432',
+    'username': 'eclss',
+    'password': 'eclsstest12345',
+    'database': 'eclss'
+}
+
 
 # Session configuration
 # SESSION_ENGINE = "merge_session.merge_db"
@@ -253,7 +262,7 @@ LOGGING = {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
-        },        
+        },
         'data-mining': {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
