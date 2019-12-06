@@ -56,7 +56,7 @@ def forecast_check(trace, info):
     start_index = len(trace) - 1
     end_index = start_index + forecast_span
     model = ar_model.AR(endog=trace)
-    results = model.fit(trend='c')
+    results = model.fit()
     prediction = results.predict(start=start_index, end=end_index)
 
     # Anomaly check
