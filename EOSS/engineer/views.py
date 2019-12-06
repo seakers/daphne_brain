@@ -90,9 +90,7 @@ class EvaluateArchitecture(APIView):
                     break
 
             if not is_same:
-                architecture['id'] = user_info.eosscontext.last_arch_id
-                print(user_info.eosscontext.last_arch_id)
-                add_design(architecture, user_info.eosscontext, False)
+                architecture = add_design(architecture, request.session, request.user, False)
 
             user_info.save()
 
@@ -125,8 +123,7 @@ class RunLocalSearch(APIView):
             architectures = client.run_local_search(user_info.eosscontext.problem, inputs)
 
             for arch in architectures:
-                arch['id'] = user_info.eosscontext.last_arch_id
-                add_design(arch, user_info.eosscontext, False)
+                arch = add_design(arch, request.session, request.user, False)
 
             user_info.save()
 

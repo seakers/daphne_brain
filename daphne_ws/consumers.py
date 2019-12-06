@@ -1,7 +1,7 @@
 import hashlib
 from channels.generic.websocket import JsonWebsocketConsumer
 import schedule
-from auth_API.helpers import get_user_information
+from auth_API.helpers import get_user_information, get_or_create_user_information
 
 
 class DaphneConsumer(JsonWebsocketConsumer):
@@ -16,7 +16,7 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         # Accept the connection
         self.accept()
-        user_info = get_user_information(self.scope['session'], self.scope['user'])
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'])
         user_info.channel_name = self.channel_name
         user_info.save()
 
