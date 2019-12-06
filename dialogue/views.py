@@ -10,7 +10,8 @@ from daphne_brain.nlp_object import nlp
 from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import DialogueHistory, AllowedCommand, DialogueContext
+from daphne_context.models import DialogueHistory, DialogueContext
+from experiment.models import AllowedCommand
 
 
 class Command(APIView):
@@ -153,3 +154,20 @@ class Dialogue(APIView):
         }
 
         return Response(response_json)
+
+
+class ClearHistory(APIView):
+    """
+    Clear all past dialogue
+    """
+    daphne_version = ""
+
+    def post(self, request, format=None):
+        # Define context and see if it was already defined for this session
+        user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+
+        user_info.dialoguehistory_set.all().delete()
+
+        return Response({
+            "result": "Dialogue deleted successfully"
+        })

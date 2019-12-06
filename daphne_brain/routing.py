@@ -12,7 +12,7 @@ if "AT" in settings.ACTIVE_MODULES:
     # from AT.AD.algorithms.I_Forest import iForest
     from AT.consumers import ATConsumer
 
-from experiment_API.consumers import ExperimentConsumer
+from experiment.consumers import ExperimentConsumer
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties
