@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 
@@ -6,6 +7,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from EOSS.models import EOSSContext, Design
+from daphne_context.models import DialogueHistory
 
 
 def activate_diversifier(eosscontext: EOSSContext):
@@ -96,18 +98,34 @@ def activate_diversifier(eosscontext: EOSSContext):
         else:
             chosen_arch = group[int(group_size/2)]
 
+        message = {
+            'voice_message': 'I have detected an area in the Pareto front which is relatively unexplored. Do you want '
+                             'me to select an architecture close to it so you can start exploring it?',
+            'visual_message_type': ['active_message'],
+            'visual_message': [
+                {
+                    'message': 'I have detected an area in the Pareto front which is relatively unexplored. Do you want'
+                               ' me to select an architecture close to it so you can start exploring it?',
+                    'setting': 'modification',
+                    'modification': {
+                        'type': 'set_diversifier_id',
+                        'arch_id': chosen_arch["id"]
+                    }
+                }
+            ],
+            "writer": "daphne",
+        }
+        DialogueHistory.objects.create(user_information=eosscontext.user_information,
+                                       voice_message=message["voice_message"],
+                                       visual_message_type=json.dumps(message["visual_message_type"]),
+                                       visual_message=json.dumps(message["visual_message"]),
+                                       writer="daphne",
+                                       date=datetime.datetime.utcnow())
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.send)(eosscontext.user_information.channel_name,
                                           {
-                                              'type': 'active.modification',
-                                              'notification': {
-                                                  'title': 'Diversifier results',
-                                                  'message': 'I have detected an area in the Pareto front which is relatively unexplored. Do you want me to select an architecture close to it so you can start exploring it?',
-                                              },
-                                              'modification': {
-                                                  'type': 'set_diversifier_id',
-                                                  'arch_id': chosen_arch["id"]
-                                              }
+                                              'type': 'active.message',
+                                              'message': message
                                           })
 
 

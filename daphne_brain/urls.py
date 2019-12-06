@@ -28,7 +28,7 @@ if "AT" in settings.ACTIVE_MODULES:
     urlpatterns.append(path('api/at/', include('AT.urls')))
 urlpatterns.extend([
     path('api/ifeed/', include('iFEED_API.urls')),
-    path('api/experiment/', include('experiment_API.urls')),
+    path('api/experiment/', include('experiment.urls')),
     path('api/auth/', include('auth_API.urls')),
 
     path('server/accounts/', include('django.contrib.auth.urls')),

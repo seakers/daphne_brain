@@ -1,7 +1,7 @@
 import json
 import logging
 
-from thrift.Thrift import TException
+from thrift.Thrift import TException, TApplicationException
 
 from EOSS.vassar.api import VASSARClient
 from EOSS.data import problem_specific
@@ -17,7 +17,8 @@ def get_architecture_scores(design_id, designs, context):
     try:
         # Start connection with VASSAR
         client.start_connection()
-        scores = client.get_architecture_score_explanation(context["screen"]["problem"], designs[design_id])
+        scores = client.get_architecture_score_explanation(context["screen"]["problem"],
+                                                           designs.get(id=design_id))
 
         # End the connection before return statement
         client.end_connection()
@@ -36,7 +37,8 @@ def get_satisfying_data_products(design_id, designs, subobjective, context):
     try:
         # Start connection with VASSAR
         client.start_connection()
-        subobjective_explanation = client.get_subscore_details(context["screen"]["problem"], designs[design_id],
+        subobjective_explanation = client.get_subscore_details(context["screen"]["problem"],
+                                                               designs.get(id=design_id),
                                                                subobjective.upper())
         satisfying_data_products = [subobjective_explanation.taken_by[i] for i, x in enumerate(subobjective_explanation.scores) if x == 1.0][:5]
         # End the connection before return statement
@@ -56,8 +58,8 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
     try:
         # Start connection with VASSAR
         client.start_connection()
-        num_design_id = int(design_id)
-        subobjective_explanation = client.get_subscore_details(context["screen"]["problem"], designs[num_design_id],
+        subobjective_explanation = client.get_subscore_details(context["screen"]["problem"],
+                                                               designs.get(id=design_id),
                                                                subobjective.upper())
         if max(subobjective_explanation.scores) < 1.:
             unsatisfied_data_products = [subobjective_explanation.taken_by[i] for i, x in enumerate(subobjective_explanation.scores) if x < 1.0]
@@ -100,7 +102,9 @@ def get_panel_scores(design_id, designs, panel, context):
         }
 
         panel_code = stakeholders_to_excel[panel.lower()]
-        panel_scores = client.get_panel_score_explanation(context["screen"]["problem"], designs[design_id], panel_code)
+        panel_scores = client.get_panel_score_explanation(context["screen"]["problem"],
+                                                          designs.get(id=design_id),
+                                                          panel_code)
 
         # End the connection before return statement
         client.end_connection()
@@ -119,7 +123,8 @@ def get_objective_scores(design_id, designs, objective, context):
     try:
         # Start connection with VASSAR
         client.start_connection()
-        objective_scores = client.get_objective_score_explanation(context["screen"]["problem"], designs[design_id],
+        objective_scores = client.get_objective_score_explanation(context["screen"]["problem"],
+                                                                  designs.get(id=design_id),
                                                                   objective.upper())
 
         # End the connection before return statement
@@ -263,3 +268,48 @@ def get_measurement_requirement_followup(vassar_measurement, instrument_paramete
     target_value = requirement["thresholds"][1:-1].split(',')[0]
     return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' for subobjective ' \
            + requirement["subobjective"] + ' is ' + threshold + ' and its target value is ' + target_value + '.'
+
+
+def get_cost_explanation(design_id, designs, context):
+    try:
+        # Start connection with VASSAR
+        port = context["screen"]["vassar_port"]
+        client = VASSARClient(port)
+        client.start_connection()
+
+        # Get the correct architecture
+        arch = designs.get(id=design_id)
+        problem = context["screen"]["problem"]
+
+        cost_explanation = client.get_arch_cost_information(problem, arch)
+
+        # End the connection before return statement
+        client.end_connection()
+
+        def budgets_to_json(explanation):
+            json_list = []
+            for exp in explanation:
+                json_exp = {
+                    'orbit_name': exp.orbit_name,
+                    'payload': exp.payload,
+                    'launch_vehicle': exp.launch_vehicle,
+                    'total_mass': exp.total_mass,
+                    'total_power': exp.total_power,
+                    'total_cost': exp.total_cost,
+                    'mass_budget': exp.mass_budget,
+                    'power_budget': exp.power_budget,
+                    'cost_budget': exp.cost_budget
+                }
+                json_list.append(json_exp)
+            return json_list
+
+        json_explanation = budgets_to_json(cost_explanation)
+        for explanation in json_explanation:
+            explanation["subcosts"] = [type + ": $" + str("%.2f" % round(number, 2)) + 'M' for type, number in explanation["cost_budget"].items()]
+
+        return json_explanation
+
+    except TApplicationException as exc:
+        logger.exception('Exception when retrieving information from the current architecture!')
+        client.end_connection()
+        raise exc

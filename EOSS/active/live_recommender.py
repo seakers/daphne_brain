@@ -18,6 +18,8 @@ def generate_engineer_message(user_info, genome, session_key):
     message = {}
     if user_info.eosscontext.activecontext.show_arch_suggestions:
         suggestion_list = active_engineer_response(user_info, genome, session_key)
+        if len(suggestion_list) == 0:
+            return {}
         suggestion_list = parse_suggestions_list(suggestion_list)
         message = {
             'voice_message': 'The Live Recommender System has the following suggestions for your modified '
@@ -52,6 +54,7 @@ def generate_engineer_message(user_info, genome, session_key):
                                    visual_message=json.dumps(message["visual_message"]),
                                    writer="daphne",
                                    date=datetime.datetime.utcnow())
+    return message
 
 
 def active_historian_response(user_info: UserInformation, inputs, session_key):
@@ -65,6 +68,8 @@ def generate_historian_message(user_info, genome, session_key):
     message = {}
     if user_info.eosscontext.activecontext.show_arch_suggestions:
         suggestion_list = active_historian_response(user_info, genome, session_key)
+        if len(suggestion_list) == 0:
+            return {}
         suggestion_list = parse_suggestions_list(suggestion_list)
         message = {
             'voice_message': 'The Live Recommender System has the following suggestions for your modified '
@@ -100,6 +105,7 @@ def generate_historian_message(user_info, genome, session_key):
                                    visual_message=json.dumps(message["visual_message"]),
                                    writer="daphne",
                                    date=datetime.datetime.utcnow())
+    return message
 
 
 def parse_suggestions_list(raw_list):

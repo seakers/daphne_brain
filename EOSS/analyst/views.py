@@ -10,6 +10,7 @@ from asgiref.sync import async_to_sync
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from EOSS.data import problem_specific
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, \
     ContinuousInputArchitecture, AssigningProblemEntities
 from EOSS.models import Design
@@ -784,7 +785,7 @@ class SetProblemParameters(APIView):
             problem = request.data['problem']
             params = json.loads(request.data['params'])
 
-            if problem == "ClimateCentric" or problem == "SMAP":
+            if problem in problem_specific.assignation_problems:
                 entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
                 self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
 

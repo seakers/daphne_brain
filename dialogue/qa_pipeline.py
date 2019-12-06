@@ -137,7 +137,7 @@ def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
     data['session_key'] = session.session_key
     if user_information.daphne_version == "EOSS":
-        data['designs'] = user_information.eosscontext.design_set.all()
+        data['designs'] = user_information.eosscontext.design_set.order_by('id').all()
         data['problem'] = user_information.eosscontext.problem
     if user_information.daphne_version == "EDL":
         pass
@@ -308,18 +308,60 @@ def build_answers(voice_response_templates, visual_response_templates, results, 
             for item in result:
                 visual_answer["list"].append(item_template.substitute(item))
             answers["visual_answer"].append(visual_answer)
-        elif visual_response_templates[index]["type"] == "basic_plot":
-            if not results[0]["task_is_successful"]:
-                answers["visual_answer_type"].append("text")
-                answers["visual_answer"] = results["fail_explanation"]
-            else:
-                answers["visual_answer_type"].append("basic_plot")
-                visual_answer = {}
-                visual_answer["title"] = 'smth'
-                visual_answer["x_axis"] = 'smth'
-                visual_answer["y_axis"] = 'smth'
-                visual_answer["upper_threshold"] = 'smth'
-                visual_answer["lower_threshold"] = 'smth'
-                answers["visual_answer"] = visual_answer
+        elif visual_response_templates[index]["type"] == "multilist":
+            answers["visual_answer_type"].append("multilist")
+            visual_answer = {}
+            begin_template = Template(visual_response_templates[index]["begin"])
+            visual_answer["begin"] = begin_template.substitute(complete_data)
+            visual_answer["list"] = []
+            item_template = Template(visual_response_templates[index]["item_template"])
+            for item in result:
+                visual_answer["list"].append({
+                    "text": item_template.substitute(item),
+                    "subitems": eval(Template(visual_response_templates[index]["subitems"]).substitute(item))
+                })
+            answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "timeline_plot":
+            answers["visual_answer_type"].append("timeline_plot")
+            visual_answer = {}
+            title_template = Template(visual_response_templates[index]["title"])
+            visual_answer["title"] = title_template.substitute(complete_data)
+            visual_answer["plot_data"] = []
+            for item in result:
+                category_template = Template(visual_response_templates[index]["item"]["category"])
+                id_template = Template(visual_response_templates[index]["item"]["id"])
+                start_template = Template(visual_response_templates[index]["item"]["start"])
+                end_template = Template(visual_response_templates[index]["item"]["end"])
+                visual_answer["plot_data"].append({
+                    "category": category_template.substitute(item),
+                    "id": id_template.substitute(item),
+                    "start": start_template.substitute(item),
+                    "end": end_template.substitute(item)
+                })
+            answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "hist_plot":
+            answers["visual_answer_type"].append("hist_plot")
+            visual_answer = {}
+            title_template = Template(visual_response_templates[index]["title"])
+            visual_answer["plot_info"] = {"plot_data": []}
+            visual_answer["plot_info"]["title"] = title_template.substitute(complete_data)
+            for item in result:
+                item_template = Template(visual_response_templates[index]["item_template"])
+                visual_answer["plot_info"]["plot_data"].append(float(item_template.substitute(item)))
+            answers["visual_answer"].append(visual_answer)
+        elif visual_response_templates[index]["type"] == "plot_vars":
+            answers["visual_answer_type"].append("plot_vars")
+            visual_answer = {}
+            visual_answer["plot_info"] = {"plot_data": []}
+            for item in result:
+                item_template = Template(visual_response_templates[index]["item_template"])
+                visual_answer["plot_info"]["plot_data"].append(eval(item_template.substitute(item)))
+            title_template = Template(visual_response_templates[index]["title"])
+            visual_answer["plot_info"]["title"] = title_template.substitute(complete_data)
+            x_axis_template = Template(visual_response_templates[index]["x_axis_template"])
+            y_axis_template = Template(visual_response_templates[index]["y_axis_template"])
+            visual_answer["plot_info"]["x_axis"] = x_axis_template.substitute(complete_data)
+            visual_answer["plot_info"]["y_axis"] = y_axis_template.substitute(complete_data)
+            answers["visual_answer"].append(visual_answer)
 
     return answers
