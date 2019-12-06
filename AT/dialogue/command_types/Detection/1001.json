@@ -1,0 +1,33 @@
+{
+  "type": "run_function",
+  "params": [
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    { "name": "timestamp", "type": "timestamp", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.show_measurement(data)",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "task_is_successful" :  "command_results[0][\"task_is_successful\"]",
+          "fail_explanation" :  "command_results[0][\"fail_explanation\"]",
+          "dataframe" :  "command_results[0][\"dataframe\"]",
+          "thresholds" :  "command_results[0][\"thresholds\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "This query provides a visual answer."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "basic_plot"
+    }
+  ]
+}
