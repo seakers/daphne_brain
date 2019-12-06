@@ -3,8 +3,7 @@ from rest_framework.response import Response
 import threading
 from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
-
-
+from collections import OrderedDict
 from AT.simulator_thread.simulator_routine import simulate_by_csv
 from AT.hub_thread.hub_routine import hub_routine
 from AT.ad_thread.ad_routine import anomaly_detection_routine
@@ -55,7 +54,7 @@ class SimulateTelemetry(APIView):
                                                   diagnosis_to_hub_queue,))
         diagnosis_thread.start()
 
-        # Tread status check
+        # Thread status check
         sim_is_alive = hub_thread.is_alive()
         hub_is_alive = hub_thread.is_alive()
         ad_is_alive = ad_thread.is_alive()
@@ -73,13 +72,18 @@ class SimulateTelemetry(APIView):
             if not diag_is_alive():
                 print('Diagnosis thread start failure.')
             print('**********')
-
-
         return Response()
 
 
 class StopTelemetry(APIView):
     def post(self, request):
         frontend_to_hub_queue.put('stop')
+        return Response()
 
+class SeclssFeed(APIView):
+
+    def post(self, request):
+        print(request.data)
+        sensorData = OrderedDict(request.data)
+        print(sensorData)
         return Response()
