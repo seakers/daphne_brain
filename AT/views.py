@@ -1,9 +1,13 @@
+import json
+import threading
+from collections import OrderedDict
+
+import pandas as pd
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import threading
 from channels.layers import get_channel_layer
+
 from auth_API.helpers import get_or_create_user_information
-from collections import OrderedDict
 from AT.simulator_thread.simulator_routine_by_dummy_eclss import simulate_by_dummy_eclss
 from AT.hub_thread.hub_routine import hub_routine
 from AT.ad_thread.ad_routine import anomaly_detection_routine
@@ -80,8 +84,8 @@ class StopTelemetry(APIView):
         frontend_to_hub_queue.put('stop')
         return Response()
 
-class SeclssFeed(APIView):
 
+class SeclssFeed(APIView):
     def post(self, request):
         print(request.data)
         sensorData = OrderedDict(request.data)

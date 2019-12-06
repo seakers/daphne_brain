@@ -1,5 +1,8 @@
 import pandas as pd
+import json
 import os
+
+import AT.recommendation.dialogue_functions as recommendation
 
 
 def find_last_anomaly():
