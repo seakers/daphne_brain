@@ -4,6 +4,7 @@
   [
     { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "know what orbit is the most common for a certain measurement",
   "query":
   {
     "always": "session.query(models.MeasurementMostCommonOrbit).filter(models.MeasurementMostCommonOrbit.measurement.ilike('%${measurement}%'))",
