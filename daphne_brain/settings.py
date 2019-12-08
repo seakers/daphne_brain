@@ -96,8 +96,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'daphne',
-        'USER': os.environ['USER'],
-        'PASSWORD': os.environ['PASSWORD'],
+        'USER': 'daphne',
+        'PASSWORD': 'daphne',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -175,8 +175,8 @@ ALCHEMY_DATABASE = {
     'drivername': 'postgres',
     'host': 'localhost',
     'port': '5432',
-    'username': os.environ['USER'],
-    'password': os.environ['PASSWORD'],
+    'username': 'daphne',
+    'password': 'daphne',
     'database': 'daphne'
 }
 
@@ -184,8 +184,8 @@ EDL_DATABASE = {
     'drivername': 'postgres',
     'host': 'localhost',
     'port': '5432',
-    'username': os.environ['USER'],
-    'password': os.environ['PASSWORD'],
+    'username': 'daphne',
+    'password': 'daphne',
     'database': 'edldatabase'
 }
 
