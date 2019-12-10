@@ -1,16 +1,10 @@
-import schedule
-import pika
 import json
+import schedule
+from queue import Queue
 
 from auth_API.helpers import get_user_information
-
 from daphne_ws.consumers import DaphneConsumer
-from queue import Queue
 from AT.queue_objects import frontend_to_hub_queue
-
-from channels.layers import get_channel_layer
-from auth_API.helpers import get_or_create_user_information
-from asgiref.sync import async_to_sync
 
 
 class ATConsumer(DaphneConsumer):
