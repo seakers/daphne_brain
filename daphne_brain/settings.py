@@ -100,6 +100,10 @@ DATABASES = {
         'PASSWORD': os.environ['PASSWORD'],
         'HOST': 'selva-rds.csl99y1ur3jh.us-east-2.rds.amazonaws.com',
         'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'verify-full',
+            'sslrootcert': '/usr/local/share/ca-certificates/rds-ca-2019-root.pem'
+        }
     }
 }
 
@@ -178,8 +182,10 @@ ALCHEMY_DATABASE = {
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'selva',
-    'sslmode': 'verify-full',
-    'sslrootcert': '/usr/local/share/ca-certificates/rds-ca-2019-root.pem'
+    'query': {
+        'sslmode': 'verify-full',
+        'sslrootcert': '/usr/local/share/ca-certificates/rds-ca-2019-root.pem'
+    }
 }
 
 EDL_DATABASE = {
