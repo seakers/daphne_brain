@@ -177,7 +177,9 @@ ALCHEMY_DATABASE = {
     'port': '5432',
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
-    'database': 'selva'
+    'database': 'selva',
+    'sslmode': 'verify-full',
+    'sslrootcert': '/usr/local/share/ca-certificates/rds-ca-2019-root.pem'
 }
 
 EDL_DATABASE = {
