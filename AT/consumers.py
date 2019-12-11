@@ -51,5 +51,5 @@ class ATConsumer(DaphneConsumer):
     def initialize_telemetry(self, event):
         self.send(json.dumps(event))
 
-    def at_analysis(self, event):
+    def automated_at_report(self, event):
         self.send(json.dumps(event))

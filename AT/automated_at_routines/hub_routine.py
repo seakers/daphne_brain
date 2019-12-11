@@ -3,7 +3,7 @@ import time
 from asgiref.sync import async_to_sync
 
 
-def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, channel, channel_name):
+def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, channel, channel_name):
     print('Thread handler thread started.')
 
     # Wait for the first simulator output in order to send an initialization command to the frontend
@@ -54,7 +54,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
 
                 # Send the telemetry feed window to the anomaly detection queue
                 last_window = {'type': 'window', 'content': tf_window}
-                hub_to_ad.put(last_window)
+                hub_to_at.put(last_window)
 
                 # Update and send the telemetry update command for the frontend
                 command = {'type': 'telemetry_update',
@@ -63,19 +63,17 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
                 async_to_sync(channel.send)(channel_name, command)
 
         # Check the anomaly treatment output queue
-        if not diag_to_hub.empty():
-            signal = diag_to_hub.get()
-            if signal['type'] == 'diagnosed_anomalies':
-                diagnosed_anomalies = signal['content']
-                command = {'type': 'at_analysis', 'diagnosed_anomalies': diagnosed_anomalies}
-                async_to_sync(channel.send)(channel_name, command)
+        if not at_to_hub.empty():
+            signal = at_to_hub.get()
+            if signal['type'] == 'automated_at_report':
+                async_to_sync(channel.send)(channel_name, signal)
 
         # Update while loop condition and wait
         time_since_last_ping = time.time() - timer_start
         time.sleep(0.1)
 
     hub_to_sim.put({'type': 'stop', 'content': ''})
-    hub_to_ad.put({'type': 'stop', 'content': ''})
+    hub_to_at.put({'type': 'stop', 'content': ''})
 
     print('Hub thread stopped.')
     return

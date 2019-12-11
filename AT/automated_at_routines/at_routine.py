@@ -1,6 +1,8 @@
 import time
 from statsmodels.tsa import ar_model
 
+from AT.simulator_thread.scenario_tools import anomalies
+
 
 def compute_zone(value, info):
     """
@@ -30,15 +32,15 @@ def threshold_check(value, info):
     message = ''
     zone = compute_zone(value, info)
     if zone == -2:
-        message = 'below low critical threshold'
+        message = 'LCT'
     elif zone == -1:
-        message = 'below low warning threshold'
+        message = 'LWT'
     elif zone == 0:
-        message = ''
+        message = 'nominal'
     elif zone == 1:
-        message = 'above high warning threshold'
+        message = 'HWT'
     elif zone == 2:
-        message = 'above high critical threshold'
+        message = 'HCT'
     else:
         print('Invalid zone value')
         raise
@@ -71,15 +73,15 @@ def forecast_check(trace, info):
         zone = compute_zone(value, info)
         if zone != base_zone:
             if zone == -2:
-                message = 'low critical zone in ' + str(second) + ' seconds'
+                message = 'LCT in ' + str(second) + 's'
             elif zone == -1:
-                message = 'low warning zone in ' + str(second) + ' seconds'
+                message = 'LWT in ' + str(second) + 's'
             elif zone == 0:
-                message = 'nominal zone in ' + str(second) + ' seconds'
+                message = 'nominal in ' + str(second) + 's'
             elif zone == 1:
-                message = 'high warning zone in ' + str(second) + ' seconds'
+                message = 'HWT in ' + str(second) + 's'
             elif zone == 2:
-                message = 'high critical zone in ' + str(second) + ' seconds'
+                message = 'HCT in ' + str(second) + 's'
             else:
                 print('Invalid zone value')
                 raise
@@ -89,7 +91,7 @@ def forecast_check(trace, info):
     return message
 
 
-def build_message(window):
+def build_anomaly_report(window):
     """
     This function checks the status of the trace and builds the proper warning messages if necessary.
     """
@@ -100,7 +102,7 @@ def build_message(window):
     info = window['info']
 
     # Iteration over each telemetry feed variable's trace to search anomalies and build the proper message
-    messages = []
+    detection_list = {}
     for item in values:
         # Retrieve trace as an array
         trace = list(values[item])
@@ -108,17 +110,77 @@ def build_message(window):
         # Check and build the threshold and forecast messages
         threshold_message = threshold_check(trace[-1], info[item])
         forecast_message = forecast_check(trace, info[item])
+        detection_list[item] = {'threshold': '', 'forecast': ''}
         if threshold_message != '':
-            message = item.capitalize() + ' is ' + threshold_message + '.'
-            messages.append(message)
+            detection_list[item]['threshold'] = threshold_message
         if forecast_message != '':
-            message = item.capitalize() + ' might switch to ' + forecast_message + '.'
-            messages.append(message)
+            detection_list[item]['forecast'] = forecast_message
 
-    if len(messages) == 0:
-        messages.append('OK')
+    return detection_list
 
-    return messages
+
+def build_diagnosis_report(detection_list):
+    diagnosis_list = []
+    for item in anomalies:
+        anomaly = anomalies[item]
+        is_happening = True
+        for variable in anomaly:
+            if variable not in detection_list:
+                is_happening = False
+            else:
+                sign = anomaly[variable]['max_increment'] / abs(anomaly[variable]['max_increment'])
+                threshold = detection_list[variable]['threshold']
+                if sign == 1 and (threshold != 'HWT' and threshold != 'HCT'):
+                    is_happening = False
+                elif sign == -1 and (threshold != 'LWT' and threshold != 'LCT'):
+                    is_happening = False
+
+        if is_happening:
+            diagnosis_list.append(item)
+    return diagnosis_list
+
+
+def build_recommendation_report(diagnosis_list):
+    recommendation_list = []
+    for item in diagnosis_list:
+        if item == 'n2_tank_burst':
+            procedure = '15'
+            recommendation_list.append(procedure)
+    return recommendation_list
+
+
+def parse_detection_report(detection_report):
+    detection_messages = []
+    for item in detection_report:
+        threshold = detection_report[item]['threshold']
+        forecast = detection_report[item]['forecast']
+        if (threshold != '' and threshold != 'nominal') and forecast == '':
+            message = item + ': is ' + threshold + '.'
+            detection_messages.append(message)
+        elif (threshold == '' and threshold == 'nominal') and forecast != '':
+            message = item + ': to ' + forecast + '.'
+            detection_messages.append(message)
+        elif (threshold != '' and threshold != 'nominal') and forecast != '':
+            message = item + ': is ' + threshold + ', to ' + forecast + '.'
+            detection_messages.append(message)
+    return detection_messages
+
+
+def parse_diagnosis_report(diagnosis_report):
+    diagnosis_messages = []
+    for item in diagnosis_report:
+        anomaly_name = item.replace('_', ' ')
+        message = 'Might be a ' + anomaly_name + '.'
+        diagnosis_messages.append(message)
+    return diagnosis_messages
+
+
+def parse_recommendation_report(recommendation_report):
+    recommendation_messages = []
+    for item in recommendation_report:
+        message = 'Request procedure ' + item + ' to Daphne.'
+        recommendation_messages.append(message)
+    return recommendation_messages
 
 
 def anomaly_treatment_routine(hub_to_at, at_to_hub):
@@ -136,12 +198,22 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
                 # only process the last received window
                 if hub_to_at.empty():
                     window = signal['content']
-                    anomaly_list = build_message(window)
+                    detection_report = build_anomaly_report(window)
+                    detection_list = parse_detection_report(detection_report)
 
                     # Trigger diagnosis here
+                    diagnosis_report = build_diagnosis_report(detection_report)
+                    diagnosis_list = parse_diagnosis_report(diagnosis_report)
+
+                    # Trigger recommendation here
+                    recommendation_report = build_recommendation_report(diagnosis_report)
+                    recommendation_list = parse_recommendation_report(recommendation_report)
 
                     # Send message to frontend
-                    at_to_hub.put({'type': 'diagnosed_anomalies', 'content': anomaly_list})
+                    report = {'detection': detection_list,
+                              'diagnosis': diagnosis_list,
+                              'recommendation': recommendation_list}
+                    at_to_hub.put({'type': 'automated_at_report', 'content': report})
 
         time.sleep(0.5)
 

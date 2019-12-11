@@ -10,7 +10,7 @@ add_variable('N2 concentration', 60, 70, 79, 85, 90)
 add_variable('Dummy variable', 150, 180, 200, 220, 250)
 
 # Simulator anomaly settings
-add_to_anomaly('n2_tank_burst', 'N2 concentration', 0.1, -0.1, 1)
+add_to_anomaly('n2_tank_burst', 'N2 concentration', 1, -1, 15)
 add_to_anomaly('n2_tank_burst', 'Cabin pressure', 0.02, -0.02, 0.5)
 # add_to_anomaly('custom', 'n2_concentration', -0.05, 0.1, -2)
 
