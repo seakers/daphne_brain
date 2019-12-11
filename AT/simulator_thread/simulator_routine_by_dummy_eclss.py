@@ -153,13 +153,13 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
     # Generate and send and initial (noised) window to the frontend
     tf_window = generate_initial_window(status)
     sim_to_hub.put({'type': 'window', 'content': tf_window})
+    time_last_display = time.time()
 
     # Initialize the simulation loop counters
     keep_alive = True
     t = window_span - 1
     lower_row = 0
     upper_row = window_span - 1
-    time_since_last_display = display_lapse
 
     # Simulation loop
     while keep_alive:
@@ -176,19 +176,19 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
         status = generate_new_values(status, t, dt, window_span)
 
         # Send a new telemetry feed window to the hub thread periodically
-        if time_since_last_display >= display_lapse:
+        elapsed_time_since_last_display = time.time() - time_last_display
+        if elapsed_time_since_last_display >= display_lapse:
+            # Update telemetry feed window and send it to the hub thread
+            tf_window = update_window(tf_window, status, t, lower_row + 1, upper_row + 1)
+            sim_to_hub.put({'type': 'window', 'content': tf_window})
+
             # Update row and time counters
             lower_row += 1
             upper_row += 1
-            time_since_last_display = 0
-
-            # Update telemetry feed window and send it to the hub thread
-            tf_window = update_window(tf_window, status, t, lower_row, upper_row)
-            sim_to_hub.put({'type': 'window', 'content': tf_window})
+            time_last_display = time.time()
 
         # Wait
         time.sleep(dt)
-        time_since_last_display += dt
 
     print('Simulator thread stopped.')
     return
