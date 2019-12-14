@@ -4,6 +4,7 @@
   [
     { "name": "anomaly_id", "type": "anomaly_id", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "describe the actions associated with an anomaly",
   "query":
   {
     "always": "session.query(models.ECLSSActions).join(models.symptom_to_action).join(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",

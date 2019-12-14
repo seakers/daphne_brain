@@ -103,7 +103,6 @@ def extract_data(processed_question, params, user_information: UserInformation, 
     # Count how many non-context params of each type are needed
     for param in params:
         if not param["from_context"]:
-            print(processed_question) #FIXME
             if param["type"] in number_of_features:
                 number_of_features[param["type"]] += 1
             else:
@@ -162,7 +161,7 @@ def get_query_model(command_class):
         engine = models.db_connect()
         session = sessionmaker(bind=engine)()
         return models, session
-    if command_class == "Diagnosis": #FIXME
+    if command_class == "Diagnosis":
         import AT.diagnosis.models as models
         engine = models.db_connect()
         session = sessionmaker(bind=engine)()

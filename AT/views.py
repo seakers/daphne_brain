@@ -1,25 +1,21 @@
-import json
 import threading
 from collections import OrderedDict
 
-import pandas as pd
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from channels.layers import get_channel_layer
 
 from auth_API.helpers import get_or_create_user_information
 from AT.simulator_thread.simulator_routine_by_dummy_eclss import simulate_by_dummy_eclss
-from AT.hub_thread.hub_routine import hub_routine
-from AT.ad_thread.ad_routine import anomaly_detection_routine
-from AT.diagnosis_thread.diagnosis_routine import diagnosis_routine
+from AT.automated_at_routines.hub_routine import hub_routine
+from AT.automated_at_routines.at_routine import anomaly_treatment_routine
 
 # QUEUES
 from AT.queue_objects import frontend_to_hub_queue
 from AT.queue_objects import simulator_to_hub_queue
 from AT.queue_objects import hub_to_simulator_queue
-from AT.queue_objects import hub_to_ad_queue
-from AT.queue_objects import ad_to_diagnosis_queue
-from AT.queue_objects import diagnosis_to_hub_queue
+from AT.queue_objects import hub_to_at_queue
+from AT.queue_objects import at_to_hub_queue
 
 
 class SimulateTelemetry(APIView):
@@ -34,8 +30,8 @@ class SimulateTelemetry(APIView):
                                       args=(frontend_to_hub_queue,
                                             simulator_to_hub_queue,
                                             hub_to_simulator_queue,
-                                            hub_to_ad_queue,
-                                            diagnosis_to_hub_queue,
+                                            hub_to_at_queue,
+                                            at_to_hub_queue,
                                             channel_layer,
                                             channel_name,))
         hub_thread.start()
@@ -47,23 +43,16 @@ class SimulateTelemetry(APIView):
         simulator_thread.start()
 
         # Anomaly detection thread initialization
-        ad_thread = threading.Thread(target=anomaly_detection_routine,
-                                     args=(hub_to_ad_queue,
-                                           ad_to_diagnosis_queue,))
-        ad_thread.start()
-
-        # Diagnosis thread initialization
-        diagnosis_thread = threading.Thread(target=diagnosis_routine,
-                                            args=(ad_to_diagnosis_queue,
-                                                  diagnosis_to_hub_queue,))
-        diagnosis_thread.start()
+        at_thread = threading.Thread(target=anomaly_treatment_routine,
+                                     args=(hub_to_at_queue,
+                                           at_to_hub_queue,))
+        at_thread.start()
 
         # Thread status check
         sim_is_alive = hub_thread.is_alive()
         hub_is_alive = hub_thread.is_alive()
-        ad_is_alive = ad_thread.is_alive()
-        diag_is_alive = diagnosis_thread.is_alive()
-        if hub_is_alive and sim_is_alive and ad_is_alive and diag_is_alive:
+        ad_is_alive = at_thread.is_alive()
+        if hub_is_alive and sim_is_alive and ad_is_alive:
             print('**********\nAll AT threads started successfully.\n**********')
         else:
             print('**********')
@@ -71,10 +60,8 @@ class SimulateTelemetry(APIView):
                 print('Thread handler thread start failure.')
             if not simulator_thread.is_alive():
                 print('Simulator thread start failure.')
-            if not ad_thread.is_alive():
-                print('Anomaly detection thread start failure.')
-            if not diag_is_alive:
-                print('Diagnosis thread start failure.')
+            if not at_thread.is_alive():
+                print('Anomaly treatment thread start failure.')
             print('**********')
         return Response()
 
