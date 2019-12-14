@@ -4,6 +4,7 @@
   [
     { "name": "anomaly_id", "type": "anomaly_id", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "describe an anomaly with a certain id",
   "query":
   {
     "always": "session.query(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",

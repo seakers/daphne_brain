@@ -13,6 +13,7 @@ def list_procedure_steps(procedure):
 
 
 def procedure_pdf_name(procedure):
-    procedure_pdfs = os.listdir('C:/Users/Michael/Documents/repos/daphne_brain/AT/Databases/procedures')
+    path = os.path.join(os.getcwd(), "AT", "databases", "procedures")
+    procedure_pdfs = os.listdir(path)
     pdf_name = procedure_pdfs[int(procedure)-1]
     return urllib.parse.urlencode({"filename": pdf_name})

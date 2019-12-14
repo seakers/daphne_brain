@@ -1,5 +1,6 @@
-from asgiref.sync import async_to_sync
 import time
+
+from asgiref.sync import async_to_sync
 
 
 def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, channel, channel_name):
@@ -61,7 +62,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
                            'info': tf_window['info'].to_json()}
                 async_to_sync(channel.send)(channel_name, command)
 
-        # Check the diagnosis output queue
+        # Check the anomaly treatment output queue
         if not diag_to_hub.empty():
             signal = diag_to_hub.get()
             if signal['type'] == 'diagnosed_anomalies':
@@ -77,4 +78,4 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_ad, diag_to_hub, ch
     hub_to_ad.put({'type': 'stop', 'content': ''})
 
     print('Hub thread stopped.')
-    return None
+    return

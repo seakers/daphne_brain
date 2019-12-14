@@ -92,7 +92,6 @@ def calculate_contribution(event, variable, parameters, t_now, delta, initial_de
 
     # Compute the time that the variable would require to reach the maximum increment
     dt_max = abs(parameters['max_increment'] / parameters['pace_in'])
-    print(variable)
 
     # Scenario A can happen in two situations:
     #   - The variable can reach its maximum allowed increment before the anomaly fades out.
@@ -101,12 +100,10 @@ def calculate_contribution(event, variable, parameters, t_now, delta, initial_de
         t_out = abs(parameters['max_increment'] / parameters['pace_out'])
         t2 = start + dt_max
         t4 = t3 + t_out
-        print('t_now:', t_now, 'dt_max: ', dt_max, 'duration: ', duration, 'flat', t1, t2, t3, t4)
         if t1 < t_now <= t2:
             delta = t_now - t1
             contribution = delta * parameters['pace_in']
         elif t2 < t_now <= t3:
-            print('HERE')
             contribution = parameters['max_increment']
         elif t3 < t_now <= t4:
             delta = t_now - t3
@@ -114,7 +111,6 @@ def calculate_contribution(event, variable, parameters, t_now, delta, initial_de
     else:
         delta_out = abs(duration * parameters['pace_in'] / parameters['pace_out'])
         t4 = t3 + delta_out
-        print('t_now:', t_now, 'dt_max:', dt_max,'duration:', duration, 'peak', t1, t3, t4)
         if t1 < t_now <= t3:
             contribution = (t_now - t1) * parameters['pace_in']
         elif t3 < t_now < t4:
@@ -195,4 +191,4 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
         time_since_last_display += dt
 
     print('Simulator thread stopped.')
-    return None
+    return

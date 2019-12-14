@@ -22,18 +22,18 @@ def create_tables(engine):
     DeclarativeBase.metadata.create_all(engine)
 
 
-symptom_to_action = Table('eclss_symptom_to_action',  DeclarativeBase.metadata,
+symptom_to_action = Table('eclss_symptom_to_action', DeclarativeBase.metadata,
                           Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
                           Column('actionid', Integer, ForeignKey('eclss_action.id')))
-symptom_to_cause = Table('eclss_symptom_to_cause',   DeclarativeBase.metadata,
+symptom_to_cause = Table('eclss_symptom_to_cause', DeclarativeBase.metadata,
                          Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
                          Column('causeid', Integer, ForeignKey('eclss_cause.id')))
-symptom_to_component = Table('eclss_symptoms_to_related_components',   DeclarativeBase.metadata,
+symptom_to_component = Table('eclss_symptoms_to_related_components', DeclarativeBase.metadata,
                              Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
                              Column('componentsid', Integer, ForeignKey('eclss_related_components.id')))
-symptom_to_risk = Table('eclss_symptom_to_risk',   DeclarativeBase.metadata,
-                         Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
-                         Column('riskid', Integer, ForeignKey('eclss_risk.id')))
+symptom_to_risk = Table('eclss_symptom_to_risk', DeclarativeBase.metadata,
+                        Column('symptomid', Integer, ForeignKey('eclss_symptoms.id')),
+                        Column('riskid', Integer, ForeignKey('eclss_risk.id')))
 
 
 class ECLSSAnomalies(DeclarativeBase):

@@ -4,6 +4,7 @@
   [
     { "name": "anomaly_id", "type": "anomaly_id", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "describe the risks associated with each anomaly",
   "query":
   {
     "always": "session.query(models.ECLSSRisk).join(models.symptom_to_risk).join(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",

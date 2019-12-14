@@ -4,6 +4,7 @@
   [
     { "name": "anomaly_id", "type": "anomaly_id", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "describe the components related to each anomaly",
   "query":
   {
     "always": "session.query(models.ECLSSRelatedComponents).join(models.symptom_to_component).join(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",

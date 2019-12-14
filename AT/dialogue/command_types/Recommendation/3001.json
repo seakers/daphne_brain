@@ -4,6 +4,7 @@
   [
     { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "Display the PDF file of a procedure",
   "function":
   {
     "run_template": "dialogue_functions.recommendation.procedure_pdf_name('${procedure}')",
