@@ -13,10 +13,6 @@ class UserInformation(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
-    # Mycroft information
-    mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)
-    mycroft_channel_name = models.CharField(max_length=120, null=True)
-
     # Daphne Version Choice
     DAPHNE_VERSIONS = (
         ('EOSS', 'Earth Observation Satellite Systems'),
@@ -27,6 +23,11 @@ class UserInformation(models.Model):
 
     # Websockets communication
     channel_name = models.CharField(max_length=120)
+
+    # Mycroft information
+    mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)
+    mycroft_connection = models.BooleanField(default=False)
+    mycroft_channel_name = models.CharField(max_length=120, null=True)
 
     # Special restrictions
     class Meta:
