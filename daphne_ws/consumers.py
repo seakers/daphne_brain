@@ -21,7 +21,8 @@ class MycroftConsumer(JsonWebsocketConsumer):
         # Accept the connection
         self.accept()
 
-        # Mycroft session code
+        #   Query UserInformation database for mycroft access
+        # key found in websocket header
         user_info = self.get_mycroft_user_information()
         if not user_info:
             print("BAD MYCROFT SESSION NUMBER")
