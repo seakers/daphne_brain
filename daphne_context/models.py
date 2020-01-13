@@ -25,9 +25,9 @@ class UserInformation(models.Model):
     channel_name = models.CharField(max_length=120)
 
     # Mycroft information
-    mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)
-    mycroft_connection = models.BooleanField(default=False)
-    mycroft_channel_name = models.CharField(max_length=120, null=True)
+    mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)  # four digit session number
+    mycroft_connection = models.BooleanField(default=False)                                           # true if connection established
+    mycroft_channel_name = models.CharField(max_length=120, null=True)                                # channel name for talking to Mycroft
 
     # Special restrictions
     class Meta:
