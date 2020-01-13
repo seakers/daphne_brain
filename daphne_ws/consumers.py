@@ -30,6 +30,7 @@ class MycroftConsumer(JsonWebsocketConsumer):
             # return
         else:
             user_info.mycroft_channel_name = self.channel_name
+            user_info.mycroft_connection = True
             user_info.save()
 
         key = self.scope['path'].lstrip('api/')
@@ -37,23 +38,44 @@ class MycroftConsumer(JsonWebsocketConsumer):
         # Add to the group
         self.channel_layer.group_add(hash_key, self.channel_name)
 
+        # Tell the front-end that you are connected
+        self.send_to_frontend({'type': 'mycroft.message', 'subject': 'connection', 'status': 'true'})
+
     def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
         """
+        # Set Mycroft connection bool to False
+        print("---- ATTEMPTING TO CLOSE CONNECTION")
+        user_info = self.get_mycroft_user_information()
+        self.send_to_frontend({'type': 'mycroft.message', 'subject': 'connection', 'status': 'false'})
+        user_info.mycroft_connection = False
+        user_info.save()
+
         # Leave all the rooms we are still in
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Remove from the group on clean disconnect
         self.channel_layer.group_discard(hash_key, self.channel_name)
 
+    # Returns False if wrong 4 digit code
     def get_mycroft_user_information(self):
         for header in self.scope['headers']:
             if str(header[0], 'utf-8') == 'mycroft-session':
                 mycroft_session = str(header[1], 'utf-8')
                 print('MYCROFT SESSION:', mycroft_session)
-                return UserInformation.objects.filter(mycroft_session=mycroft_session)
+                return UserInformation.objects.get(mycroft_session=mycroft_session)
         return False
+
+    # Send a message to the front-end
+    def send_to_frontend(self, message):
+        user_info = self.get_mycroft_user_information()
+        if not user_info:
+            print("Can't send to frontend, no mycroft user found")
+            return
+        channel_layer = get_channel_layer()
+        # Message must have 'type' filed that is a funciton in EOSS consumers
+        async_to_sync(channel_layer.send)(user_info.channel_name, message)
 
     def receive_json(self, content, **kwargs):
         """
@@ -63,24 +85,17 @@ class MycroftConsumer(JsonWebsocketConsumer):
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
-        # Consumer messages
+        # Messages received
         if content.get('msg_type') == 'ping':
             print("Ping received")
             self.send_json({'type': 'ping'})
-
-        elif content.get('msg_type') == 'mycroft':
-            print("Mycroft message content", content)
-
-        elif content.get('msg_type') == 'mycroft_forward':
-            print("Mycroft message content", content)
-            channel_layer = get_channel_layer()
-            user_info = self.get_mycroft_user_information()
-            async_to_sync(channel_layer.send)(user_info.channel_name, {'type': 'ping'})
-
         elif content.get('msg_type') == 'mycroft_test':
             print("Mycroft message content", content)
             phrase = content.get('phrase')
             self.send_json({'type': 'mycroft.test', 'content': phrase})
+
+
+
 
     def mycroft_speak(self, event):
         print(event)
