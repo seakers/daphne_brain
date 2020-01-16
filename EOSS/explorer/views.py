@@ -70,7 +70,7 @@ class StartGA(APIView):
                 client.end_connection()
 
                 # Start listening for redis inputs to share through websockets
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+                connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ']))
                 channel = connection.channel()
 
                 channel.queue_declare(queue=ga_id + '_gabrain')
