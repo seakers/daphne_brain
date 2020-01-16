@@ -29,6 +29,11 @@ class Command(APIView):
         # Obtain the merged context
         context = self.get_current_context(user_info)
 
+        print("------------ TESTING")
+        print(request.data['command'])
+        print(request.data)
+        print(request)
+
         # Save user input as part of the dialogue history
         DialogueHistory.objects.create(user_information=user_info,
                                        voice_message=request.data["command"],
