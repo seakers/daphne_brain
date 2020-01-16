@@ -13,7 +13,9 @@ class MycroftConsumer(JsonWebsocketConsumer):
     sched_stopper = None
     kill_event = None
 
-    ##### WebSocket event handlers
+    # ----------------------------
+    # --- Connect / Disconnect ---
+    # ----------------------------
     def connect(self):
         """
         Called when the websocket is handshaking as part of initial connection.
@@ -38,7 +40,7 @@ class MycroftConsumer(JsonWebsocketConsumer):
         # Add to the group
         self.channel_layer.group_add(hash_key, self.channel_name)
 
-        # Tell the front-end that you are connected
+        # --> Front-end connection signal
         self.send_to_frontend({'type': 'mycroft.message', 'subject': 'connection', 'status': 'true'})
 
     def disconnect(self, code):
@@ -48,15 +50,56 @@ class MycroftConsumer(JsonWebsocketConsumer):
         # Set Mycroft connection bool to False
         print("---- ATTEMPTING TO CLOSE CONNECTION")
         user_info = self.get_mycroft_user_information()
-        self.send_to_frontend({'type': 'mycroft.message', 'subject': 'connection', 'status': 'false'})
         user_info.mycroft_connection = False
         user_info.save()
+        self.send_to_frontend({'type': 'mycroft.message', 'subject': 'connection', 'status': 'false'})
 
         # Leave all the rooms we are still in
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
         # Remove from the group on clean disconnect
         self.channel_layer.group_discard(hash_key, self.channel_name)
+
+
+
+
+    # ----------------------
+    # --- Send / Receive ---
+    # ----------------------
+    def receive_json(self, content, **kwargs):
+        """
+        Called when we get a text frame. Channels will JSON-decode the payload
+        for us and pass it as the first argument.
+        """
+        key = self.scope['path'].lstrip('api/')
+        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+
+        # Messages received
+        if content.get('msg_type') == 'ping':
+            print("Ping received")
+            self.send_json({'type': 'ping'})
+        elif content.get('msg_type') == 'mycroft_test':
+            phrase = content.get('phrase')
+            self.send_json({'type': 'mycroft.test', 'content': phrase})
+        elif content.get('msg_type') == 'mycroft_message':
+            self.send_to_frontend({'type': 'mycroft.message', 'subject': 'command', 'command': content.get('command')})
+
+    def mycroft_speak(self, event):
+        print(event)
+        self.send_json(event)
+
+    def mycroft_test(self, event):
+        print(event)
+        self.send_json(event)
+
+    def mycroft_forward(self, event):
+        print(event)
+        self.send_json(event)
+
+
+    # ---------------
+    # --- Helpers ---
+    # ---------------
 
     # Returns False if wrong 4 digit code
     def get_mycroft_user_information(self):
@@ -76,38 +119,6 @@ class MycroftConsumer(JsonWebsocketConsumer):
         channel_layer = get_channel_layer()
         # Message must have 'type' filed that is a funciton in EOSS consumers
         async_to_sync(channel_layer.send)(user_info.channel_name, message)
-
-    def receive_json(self, content, **kwargs):
-        """
-        Called when we get a text frame. Channels will JSON-decode the payload
-        for us and pass it as the first argument.
-        """
-        key = self.scope['path'].lstrip('api/')
-        hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
-
-        # Messages received
-        if content.get('msg_type') == 'ping':
-            print("Ping received")
-            self.send_json({'type': 'ping'})
-        elif content.get('msg_type') == 'mycroft_test':
-            print("Mycroft message content", content)
-            phrase = content.get('phrase')
-            self.send_json({'type': 'mycroft.test', 'content': phrase})
-
-
-
-
-    def mycroft_speak(self, event):
-        print(event)
-        self.send_json(event)
-
-    def mycroft_test(self, event):
-        print(event)
-        self.send_json(event)
-
-    def mycroft_forward(self, event):
-        print(event)
-        self.send_json(event)
 
 
 
