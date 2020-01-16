@@ -17,7 +17,7 @@ class DataMiningClient():
         port = config['data-mining']['port']
 
         # Make socket
-        self.transport = TSocket.TSocket('localhost', port)
+        self.transport = TSocket.TSocket(os.environ['DATAMINING'], port)
     
         # Buffering is critical. Raw sockets are very slow
         self.transport = TTransport.TBufferedTransport(self.transport)

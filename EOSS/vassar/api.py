@@ -33,7 +33,7 @@ class VASSARClient:
     
     def __init__(self, port=9090):
         # Make socket
-        self.transport = TSocket.TSocket('localhost', port)
+        self.transport = TSocket.TSocket(os.environ['VASSAR'], port)
     
         # Buffering is critical. Raw sockets are very slow
         self.transport = TTransport.TBufferedTransport(self.transport)
