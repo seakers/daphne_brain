@@ -4,7 +4,7 @@ from queue import Queue
 
 from auth_API.helpers import get_user_information
 from daphne_ws.consumers import DaphneConsumer
-from AT.queue_objects import frontend_to_hub_queue
+from AT.global_objects import frontend_to_hub_queue
 
 
 class ATConsumer(DaphneConsumer):

@@ -1,13 +1,13 @@
 {
-  "type": "run_function",
+  "type": "neo4j_query",
   "params":
   [
     { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "List the steps of a procedure",
-  "function":
+  "objective": "Retrieve and display the steps from the specified procedure.",
+  "neo4j_query":
   {
-    "run_template": "dialogue_functions.recommendation.list_procedure_steps('${procedure}')",
+    "query": "Neo4j Query Goes Here",
     "results": [
       {
         "result_type": "list",
