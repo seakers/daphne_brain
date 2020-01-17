@@ -1,8 +1,8 @@
-from AT.diagnosis import models
-from daphne_context.models import UserInformation
-
 from sqlalchemy.orm import sessionmaker
+
+from daphne_context.models import UserInformation
 from AT.diagnosis.models import ECLSSAnomalies
+from AT.diagnosis import models
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index
 
 
