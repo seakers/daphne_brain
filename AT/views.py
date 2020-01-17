@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from AT.automated_at_routines.at_routine import anomaly_treatment_routine
 from AT.automated_at_routines.hub_routine import hub_routine
 from AT.global_objects import at_to_hub_queue
+from AT.simulator_thread.simulator_routine_by_dummy_eclss import simulate_by_dummy_eclss
 
 # QUEUES
 from AT.global_objects import frontend_to_hub_queue
@@ -35,7 +36,7 @@ class SimulateTelemetry(APIView):
         hub_thread.start()
 
         # Simulator thread initialization
-        simulator_thread = threading.Thread(target=simulate_by_dummy_eclss,
+        simulator_thread = threading.Thread(target=simulate_by_dummy_eclss(),
                                             args=(simulator_to_hub_queue,
                                                   hub_to_simulator_queue))
         simulator_thread.start()
