@@ -1,4 +1,5 @@
 import pika
+import os
 
 from auth_API.helpers import get_user_information
 
