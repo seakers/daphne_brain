@@ -19,6 +19,7 @@
 # under the License.
 #
 import json
+import os
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport

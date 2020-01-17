@@ -98,7 +98,7 @@ DATABASES = {
         'NAME': 'daphne',
         'USER': os.environ['USER'],
         'PASSWORD': os.environ['PASSWORD'],
-        'HOST': 'localhost',
+        'HOST': os.environ['POSTGRES'],
         'PORT': '5432',
     }
 }
@@ -173,7 +173,7 @@ ASGI_APPLICATION = 'daphne_brain.routing.application'
 # Databases for Daphne
 ALCHEMY_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
+    'host': os.environ['POSTGRES'],
     'port': '5432',
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
@@ -182,7 +182,7 @@ ALCHEMY_DATABASE = {
 
 EDL_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
+    'host': os.environ['POSTGRES'],
     'port': '5432',
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
