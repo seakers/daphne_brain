@@ -63,7 +63,7 @@ def forecast_check(trace, info):
     start_index = len(trace) - 1
     end_index = start_index + forecast_span
     model = ar_model.AR(endog=trace)
-    results = model.fit()
+    results = model.fit(trend='nc')
     prediction = results.predict(start=start_index, end=end_index)
 
     # Anomaly check
@@ -98,7 +98,7 @@ def build_anomaly_report(window):
 
     # Input parse
     values = window['values']
-    values = values.drop(labels='timestamp', axis='columns')
+    # values = values.drop(labels='timestamp', axis='columns')
     info = window['info']
 
     # Iteration over each telemetry feed variable's trace to search anomalies and build the proper message

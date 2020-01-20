@@ -28,7 +28,7 @@ def generate_initial_window(status):
     timestamp = []
     for second in range(window_span):
         timestamp.append(time.strftime('%H:%M:%S', time.gmtime(second)))
-    tf_values_dict['timestamp'] = timestamp
+    # tf_values_dict['timestamp'] = timestamp
 
     # Create the initial variables value
     for key in status:

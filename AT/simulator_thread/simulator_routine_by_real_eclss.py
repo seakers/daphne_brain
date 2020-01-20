@@ -18,10 +18,11 @@ def get_param_values(sensor_data):
         hct = item['UpperCriticalLimit']
 
         tf_info_dict[name] = [lct, lwt, nominal, hwt, hct]
-        new_row[item] = simulated_value
+        new_row[name] = simulated_value
 
     tf_info = pd.DataFrame(tf_info_dict)
-    parsed_sensor_data = {'new_row': new_row, 'info': tf_info}
+    tf_info = tf_info.set_index('parameter')
+    parsed_sensor_data = {'new_values': new_row, 'info': tf_info}
     return parsed_sensor_data
 
 
@@ -29,10 +30,10 @@ def generate_initial_window(sensor_data):
     tf_window = {'values': '', 'info': sensor_data['info']}
     tf_values_dict = {}
 
-    for item in tf_window['values']:
+    for item in sensor_data['new_values']:
         values = []
         for count in range(60):
-            values.append(tf_window['values'][item])
+            values.append(sensor_data['new_values'][item])
         tf_values_dict[item] = values
 
     tf_values = pd.DataFrame(tf_values_dict)
@@ -42,7 +43,7 @@ def generate_initial_window(sensor_data):
 
 
 def update_window(sensor_data, tf_window, counter):
-    new_values_dict = sensor_data['values']
+    new_values_dict = sensor_data['new_values']
     new_row = []
     for item in new_values_dict:
         value = new_values_dict[item]
@@ -79,10 +80,11 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
                     tf_window = generate_initial_window(parsed_sensor_data)
                     first_update = False
                 else:
-                    tf_window = update_window(tf_window, parsed_sensor_data, counter)
+                    tf_window = update_window(parsed_sensor_data, tf_window, counter)
 
                 sim_to_hub.put({'type': 'window', 'content': tf_window})
                 counter += 1
 
+    print('Simulator thread stopped.')
     time.sleep(0.1)
     return
