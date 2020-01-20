@@ -18,7 +18,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
 
                 # Retrieve the telemetry feed variables and send an initialization command to the frontend
                 tf_variables = list(tf_window['values'].columns.values)
-                tf_variables.remove('timestamp')
+                # tf_variables.remove('timestamp')
                 command = {'type': 'initialize_telemetry', 'variables': tf_variables}
                 async_to_sync(channel.send)(channel_name, command)
 

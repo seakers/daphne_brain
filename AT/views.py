@@ -120,13 +120,13 @@ class StartSeclssFeed(APIView):
             if not at_thread.is_alive():
                 print('Anomaly treatment thread start failure.')
             print('**********')
-            return Response()
+        return Response()
 
 
 class SeclssFeed(APIView):
-    def post(self, request, is_alive):
+    def post(self, request):
         sensor_data = request.data['parameters']
-        print(sensor_data)
+        # print(sensor_data)
         parsed_sensor_data = json.loads(sensor_data)
         server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
         return Response(parsed_sensor_data)
