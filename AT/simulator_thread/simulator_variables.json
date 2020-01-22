@@ -1,0 +1,27 @@
+{
+  "Cabin pressure": {
+    "units": "atm",
+    "low_critic_threshold": 0.5,
+    "low_warning_threshold": 0.9,
+    "nominal": 1,
+    "high_warning_threshold": 1.1,
+    "high_critic_threshold": 1.5
+  },
+  "N2 concentration": {
+    "units": "%",
+    "low_critic_threshold": 60,
+    "low_warning_threshold": 70,
+    "nominal": 79,
+    "high_warning_threshold": 85,
+    "high_critic_threshold": 90
+  },
+  "Dummy variable": {
+    "units": "euros",
+    "low_critic_threshold":150,
+    "low_warning_threshold": 180,
+    "nominal": 200,
+    "high_warning_threshold": 220,
+    "high_critic_threshold": 250
+  }
+}
+
