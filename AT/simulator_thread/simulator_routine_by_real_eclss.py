@@ -4,20 +4,21 @@ import pandas as pd
 
 def get_param_values(sensor_data):
     new_row = {}
-    tf_info_dict = {'parameter': ['low_critic_threshold', 'low_warning_threshold', 'nominal',
+    tf_info_dict = {'parameter': ['units', 'low_critic_threshold', 'low_warning_threshold', 'nominal',
                                   'high_warning_threshold', 'high_critic_threshold', ]}
 
     for item in sensor_data:
         name = item['Name']
         nominal = item['NominalValue']
         simulated_value = item['SimValue']
+        units = item['Unit']
 
         lct = item['LowerCriticalLimit']
         lwt = item['LowerWarningLimit']
         hwt = item['UpperWarningLimit']
         hct = item['UpperCriticalLimit']
 
-        tf_info_dict[name] = [lct, lwt, nominal, hwt, hct]
+        tf_info_dict[name] = [units, lct, lwt, nominal, hwt, hct]
         new_row[name] = simulated_value
 
     tf_info = pd.DataFrame(tf_info_dict)
@@ -50,6 +51,7 @@ def update_window(sensor_data, tf_window, counter):
         new_row.append(value)
 
     # Update and send telemetry feed window
+    print(tf_window)
     tf_window['values'] = tf_window['values'].drop(index=counter)
     tf_window['values'].loc[counter + 61] = new_row
     tf_window['info'] = sensor_data['info']
