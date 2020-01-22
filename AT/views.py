@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from AT.automated_at_routines.at_routine import anomaly_treatment_routine
 from AT.automated_at_routines.hub_routine import hub_routine
 from AT.global_objects import at_to_hub_queue
-from AT.simulator_thread.simulator_routine_by_dummy_eclss import simulate_by_dummy_eclss
+from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
 
 
@@ -20,6 +20,25 @@ from AT.global_objects import server_to_simulator_queue
 from auth_API.helpers import get_or_create_user_information
 
 
+def check_threads_status(simulator_thread, hub_thread, at_thread):
+    sim_is_alive = simulator_thread.is_alive()
+    hub_is_alive = hub_thread.is_alive()
+    ad_is_alive = at_thread.is_alive()
+
+    if hub_is_alive and sim_is_alive and ad_is_alive:
+        print('**********\nAll AT threads started successfully.\n**********')
+    else:
+        print('**********')
+        if not hub_thread.is_alive():
+            print('Thread handler thread start failure.')
+        if not simulator_thread.is_alive():
+            print('Simulator thread start failure.')
+        if not at_thread.is_alive():
+            print('Anomaly treatment thread start failure.')
+        print('**********')
+    return
+
+
 class SimulateTelemetry(APIView):
     def post(self, request):
         # Get the user information and channel layer
@@ -29,42 +48,22 @@ class SimulateTelemetry(APIView):
 
         # Hub thread initialization
         hub_thread = threading.Thread(target=hub_routine,
-                                      args=(frontend_to_hub_queue,
-                                            simulator_to_hub_queue,
-                                            hub_to_simulator_queue,
-                                            hub_to_at_queue,
-                                            at_to_hub_queue,
-                                            channel_layer,
-                                            channel_name,))
+                                      args=(frontend_to_hub_queue, simulator_to_hub_queue, hub_to_simulator_queue,
+                                            hub_to_at_queue, at_to_hub_queue, channel_layer, channel_name,))
         hub_thread.start()
 
         # Simulator thread initialization
         simulator_thread = threading.Thread(target=simulate_by_dummy_eclss,
-                                            args=(simulator_to_hub_queue,
-                                                  hub_to_simulator_queue))
+                                            args=(simulator_to_hub_queue, hub_to_simulator_queue))
         simulator_thread.start()
 
         # Anomaly detection thread initialization
         at_thread = threading.Thread(target=anomaly_treatment_routine,
-                                     args=(hub_to_at_queue,
-                                           at_to_hub_queue,))
+                                     args=(hub_to_at_queue, at_to_hub_queue,))
         at_thread.start()
 
         # Thread status check
-        sim_is_alive = hub_thread.is_alive()
-        hub_is_alive = hub_thread.is_alive()
-        ad_is_alive = at_thread.is_alive()
-        if hub_is_alive and sim_is_alive and ad_is_alive:
-            print('**********\nAll AT threads started successfully.\n**********')
-        else:
-            print('**********')
-            if not hub_thread.is_alive():
-                print('Thread handler thread start failure.')
-            if not simulator_thread.is_alive():
-                print('Simulator thread start failure.')
-            if not at_thread.is_alive():
-                print('Anomaly treatment thread start failure.')
-            print('**********')
+        check_threads_status(simulator_thread, hub_thread, at_thread)
         return Response()
 
 
@@ -83,43 +82,23 @@ class StartSeclssFeed(APIView):
 
         # Hub thread initialization
         hub_thread = threading.Thread(target=hub_routine,
-                                      args=(frontend_to_hub_queue,
-                                            simulator_to_hub_queue,
-                                            hub_to_simulator_queue,
-                                            hub_to_at_queue,
-                                            at_to_hub_queue,
-                                            channel_layer,
-                                            channel_name,))
+                                      args=(frontend_to_hub_queue, simulator_to_hub_queue, hub_to_simulator_queue,
+                                            hub_to_at_queue, at_to_hub_queue, channel_layer, channel_name,))
         hub_thread.start()
 
         # Simulator thread initialization
         simulator_thread = threading.Thread(target=handle_eclss_update,
-                                            args=(simulator_to_hub_queue,
-                                                  hub_to_simulator_queue,
+                                            args=(simulator_to_hub_queue, hub_to_simulator_queue,
                                                   server_to_simulator_queue))
         simulator_thread.start()
 
         # Anomaly detection thread initialization
         at_thread = threading.Thread(target=anomaly_treatment_routine,
-                                     args=(hub_to_at_queue,
-                                           at_to_hub_queue,))
+                                     args=(hub_to_at_queue, at_to_hub_queue,))
         at_thread.start()
 
         # Thread status check
-        sim_is_alive = hub_thread.is_alive()
-        hub_is_alive = hub_thread.is_alive()
-        ad_is_alive = at_thread.is_alive()
-        if hub_is_alive and sim_is_alive and ad_is_alive:
-            print('**********\nAll AT threads started successfully.\n**********')
-        else:
-            print('**********')
-            if not hub_thread.is_alive():
-                print('Thread handler thread start failure.')
-            if not simulator_thread.is_alive():
-                print('Simulator thread start failure.')
-            if not at_thread.is_alive():
-                print('Anomaly treatment thread start failure.')
-            print('**********')
+        check_threads_status(simulator_thread, hub_thread, at_thread)
         return Response()
 
 

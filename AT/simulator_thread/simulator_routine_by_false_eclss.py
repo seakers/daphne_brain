@@ -1,26 +1,17 @@
 import time
 import numpy as np
 import pandas as pd
-
-# Import the simulation settings
-from AT.simulator_thread.scenario_tools import set_simulation
-from AT.simulator_thread.simulation_parameters import variables
-from AT.simulator_thread.simulation_parameters import anomalies
-from AT.simulator_thread.simulation_parameters import timeline
-from AT.simulator_thread.simulation_parameters import window_span
-from AT.simulator_thread.simulation_parameters import dt
-from AT.simulator_thread.simulation_parameters import display_lapse
-from AT.simulator_thread.simulation_parameters import std_fact
-from AT.simulator_thread.simulation_parameters import digits
+import json
+import os
 
 
-def add_noise(variable):
+def add_noise(variable, variables, std_fact, digits):
     std = variables[variable]['nominal'] * std_fact
     noise = round(np.random.normal(0, std), digits)
     return noise
 
 
-def generate_initial_window(status):
+def generate_initial_window(status, variables, window_span, std_fact, digits):
     # Initialize the telemetry feed values dictionary
     tf_values_dict = {}
 
@@ -34,17 +25,17 @@ def generate_initial_window(status):
     for key in status:
         values = []
         for second in range(window_span):
-            values.append(variables[key]['nominal'] + add_noise(key))
+            values.append(variables[key]['nominal'] + add_noise(key, variables, std_fact, digits))
         tf_values_dict[key] = values
 
     # Parse the variables information into a dictionary
-    tf_info_dict = {'parameter': ['low_critic_threshold', 'low_warning_threshold', 'nominal',
+    tf_info_dict = {'parameter': ['units', 'low_critic_threshold', 'low_warning_threshold', 'nominal',
                                   'high_warning_threshold', 'high_critic_threshold', ]}
     for key in variables:
         variable_info = variables[key]
-        tf_info_dict[key] = [variable_info['low_critic_threshold'], variable_info['low_warning_threshold'],
-                             variable_info['nominal'], variable_info['high_warning_threshold'],
-                             variable_info['high_critic_threshold'], ]
+        tf_info_dict[key] = [variable_info['units'], variable_info['low_critic_threshold'],
+                             variable_info['low_warning_threshold'], variable_info['nominal'],
+                             variable_info['high_warning_threshold'], variable_info['high_critic_threshold'], ]
 
     # Convert both dictionaries to dataframes
     tf_values = pd.DataFrame(tf_values_dict)
@@ -55,7 +46,7 @@ def generate_initial_window(status):
     return tf_window
 
 
-def update_window(tf_window, status, t, lower_row, upper_row):
+def update_window(tf_window, status, variables, t, lower_row, upper_row, std_fact, digits):
     # Compute new timestamp and generate new row
     new_timestamp = time.strftime('%H:%M:%S', time.gmtime(t + 1))
     tf_columns = list(tf_window['values'].columns.values)
@@ -65,7 +56,7 @@ def update_window(tf_window, status, t, lower_row, upper_row):
             new_row.append(new_timestamp)
         else:
             # Add noise before sending
-            new_row.append(status[key] + add_noise(key))
+            new_row.append(status[key] + add_noise(key, variables, std_fact, digits))
 
     # Update and send telemetry feed window
     tf_window['values'] = tf_window['values'].drop(index=lower_row - 1)
@@ -119,7 +110,7 @@ def calculate_contribution(event, variable, parameters, t_now, delta, initial_de
     return contribution
 
 
-def generate_new_values(status, t_now, delta, initial_delay):
+def generate_new_values(status, variables, anomalies, timeline, t_now, delta, initial_delay, digits):
     # Initialize contributions
     accumulated_contributions = {}
     for variable in status:
@@ -143,7 +134,23 @@ def generate_new_values(status, t_now, delta, initial_delay):
 
 def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
     # Set the simulation
-    set_simulation()
+    variables_json_filename = os.path.join(os.getcwd(), 'AT', 'simulator_thread', 'simulator_variables.json')
+    anomalies_json_filename = os.path.join(os.getcwd(), 'AT', 'simulator_thread', 'simulator_anomalies.json')
+    timeline_json_filename = os.path.join(os.getcwd(), 'AT', 'simulator_thread', 'simulator_timeline.json')
+
+    variables_content = open(variables_json_filename, "r")
+    anomalies_content = open(anomalies_json_filename, "r")
+    timeline_content = open(timeline_json_filename, "r")
+
+    variables = json.load(variables_content)
+    anomalies = json.load(anomalies_content)
+    timeline = json.load(timeline_content)
+
+    window_span = 60
+    dt = 0.1
+    display_lapse = 1
+    std_fact = 0.01
+    digits = 5
 
     # Initialize the status variable (to the nominal value of all the simulation variables)
     status = {}
@@ -151,7 +158,7 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
         status[key] = variables[key]['nominal']
 
     # Generate and send and initial (noised) window to the frontend
-    tf_window = generate_initial_window(status)
+    tf_window = generate_initial_window(status, variables, window_span, std_fact, digits)
     sim_to_hub.put({'type': 'window', 'content': tf_window})
     time_last_display = time.time()
 
@@ -173,13 +180,13 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
         t = round(t + dt, 5)
 
         # Update status
-        status = generate_new_values(status, t, dt, window_span)
+        status = generate_new_values(status, variables, anomalies, timeline, t, dt, window_span, digits)
 
         # Send a new telemetry feed window to the hub thread periodically
         elapsed_time_since_last_display = time.time() - time_last_display
         if elapsed_time_since_last_display >= display_lapse:
             # Update telemetry feed window and send it to the hub thread
-            tf_window = update_window(tf_window, status, t, lower_row + 1, upper_row + 1)
+            tf_window = update_window(tf_window, status, variables, t, lower_row + 1, upper_row + 1, std_fact, digits)
             sim_to_hub.put({'type': 'window', 'content': tf_window})
 
             # Update row and time counters

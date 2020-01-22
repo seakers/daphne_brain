@@ -17,9 +17,15 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
                 tf_window = signal['content']
 
                 # Retrieve the telemetry feed variables and send an initialization command to the frontend
-                tf_variables = list(tf_window['values'].columns.values)
+                tf_variables = list(tf_window['info'].columns.values)
+                tf_variables_units = {}
+                for variable in tf_variables:
+                    units = tf_window['info'].loc['units'][variable]
+                    tf_variables_units[variable] = units
                 # tf_variables.remove('timestamp')
-                command = {'type': 'initialize_telemetry', 'variables': tf_variables}
+                command = {'type': 'initialize_telemetry',
+                           'variables_names': tf_variables,
+                           'variables_units': tf_variables_units}
                 async_to_sync(channel.send)(channel_name, command)
 
                 # Put the first simulator output back in the queue and update the while loop condition
@@ -65,7 +71,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
         # Check the anomaly treatment output queue
         if not at_to_hub.empty():
             signal = at_to_hub.get()
-            if signal['type'] == 'automated_at_report':
+            if signal['type'] == 'symptoms_report':
                 async_to_sync(channel.send)(channel_name, signal)
 
         # Update while loop condition and wait

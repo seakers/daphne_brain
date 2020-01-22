@@ -1,0 +1,15 @@
+{
+  "n2_tank_burst": {
+    "N2 concentration": {
+      "pace_in": 1,
+      "pace_out": -1,
+      "max_increment": 15
+    },
+    "Cabin pressure": {
+      "pace_in": 0.02,
+      "pace_out": -0.02,
+      "max_increment": 0.5
+    }
+  }
+}
+
