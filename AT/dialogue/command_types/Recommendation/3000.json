@@ -7,7 +7,7 @@
   "objective": "Retrieve and display the steps from the specified procedure.",
   "neo4j_query":
   {
-    "query": "Neo4j Query Goes Here",
+    "query": "match (p:Procedure)-[:Has]-(s:Step) where p.pNumber={procedure} return s.Action order by s.Step",
     "results": [
       {
         "result_type": "list",

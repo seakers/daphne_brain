@@ -193,8 +193,8 @@ ECLSS_DATABASE = {
     'drivername': 'postgres',
     'host': 'www.selva-research.com',
     'port': '5432',
-    'username': 'eclss',
-    'password': 'eclsstest12345',
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
     'database': 'eclss'
 }
 
