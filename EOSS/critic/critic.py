@@ -11,21 +11,22 @@ import EOSS.data.problem_specific as problem_specific
 from EOSS.analyst.helpers import get_feature_unsatisfied, get_feature_satisfied, \
     feature_expression_to_string
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-from EOSS.models import Design
+from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
+from EOSS.models import Design, EOSSContext
 from EOSS.vassar.api import VASSARClient
-from daphne_context.models import UserInformation
 from EOSS.data_mining.api import DataMiningClient
 
 
 class Critic:
 
-    def __init__(self, context: UserInformation):
+    def __init__(self, context: EOSSContext, session_key):
         # Connect to the CEOS database
         self.engine = models.db_connect()
         self.session = sessionmaker(bind=self.engine)()
         self.context = context
-        self.instruments_dataset = problem_specific.get_instrument_dataset(context.eosscontext.problem)
-        self.orbits_dataset = problem_specific.get_orbit_dataset(context.eosscontext.problem)
+        self.instruments_dataset = problem_specific.get_instrument_dataset(context.problem)
+        self.orbits_dataset = problem_specific.get_orbit_dataset(context.problem)
+        self.session_key = session_key
 
     def get_missions_from_genome(self, problem_type, genome):
         missions = []
@@ -135,13 +136,12 @@ class Critic:
 
     def expert_critic(self, design):
         # Criticize architecture (based on rules)
-        port = self.context.eosscontext.vassar_port
-        problem = self.context.eosscontext.problem
-        inputs = json.loads(design.inputs)
+        port = self.context.vassar_port
+        problem = self.context.problem
         client = VASSARClient(port)
         client.start_connection()
 
-        result_list = client.critique_architecture(problem, inputs)
+        result_list = client.critique_architecture(problem, design)
 
         client.end_connection()
 
@@ -189,20 +189,20 @@ class Critic:
 
         original_outputs = json.loads(design.outputs)
         original_inputs = json.loads(design.inputs)
-        problem = self.context.eosscontext.problem
-        port = self.context.eosscontext.vassar_port
+        problem = self.context.problem
+        port = self.context.vassar_port
         client = VASSARClient(port)
         client.start_connection()
 
         archs = None
         advices = []
         if problem in assignation_problems:
-            archs = client.run_local_search(problem, json.loads(design.inputs))
+            archs = client.run_local_search(problem, design)
 
             for arch in archs:
-                new_outputs = arch.outputs
+                new_outputs = arch["outputs"]
 
-                new_design_inputs = arch.inputs
+                new_design_inputs = arch["inputs"]
                 diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
                 advice = [get_advices_from_bit_string_diff(diff)]
 
@@ -220,7 +220,7 @@ class Critic:
                 advice = "".join(advice)
                 advices.append(advice)
         elif problem in partition_problems:
-            archs = client.run_local_search(problem, json.loads(design.inputs))
+            archs = client.run_local_search(problem, design.inputs)
 
             # TODO: Add the delta code for discrete architectures
 
@@ -236,7 +236,7 @@ class Critic:
     def historian_critic(self, design):
         historian_feedback = []
 
-        problem = self.context.eosscontext.problem
+        problem = self.context.problem
         if problem in assignation_problems:
             problem_type = 'binary'
         elif problem in partition_problems:
@@ -286,7 +286,7 @@ class Critic:
         result = []
         client = DataMiningClient()
 
-        problem = self.context.eosscontext.problem
+        problem = self.context.problem
         if problem in assignation_problems:
             problem_type = 'binary'
         elif problem in partition_problems:
@@ -305,7 +305,7 @@ class Critic:
             behavioral = []
             non_behavioral = []
 
-            dataset = Design.objects.filter(eosscontext_id__exact=self.context.eosscontext.id).all()
+            dataset = Design.objects.filter(eosscontext_id__exact=self.context.id).all()
 
             if len(dataset) < 10:
                 raise ValueError("Could not run data mining: the number of samples is less than 10")
@@ -328,9 +328,24 @@ class Critic:
                         non_behavioral.append(temp[i][0])
 
             # Extract feature
-            # features = client.getDrivingFeatures(behavioral, non_behavioral, designs, support_threshold, confidence_threshold, lift_threshold)
-            features = client.runAutomatedLocalSearch(problem, problem_type, behavioral, non_behavioral, dataset,
-                                                      support_threshold, confidence_threshold, lift_threshold)
+            _archs = []
+            if problem_type == "binary":
+                for arch in dataset:
+                    _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = client.client.getDrivingFeaturesEpsilonMOEABinary(self.session_key, problem, behavioral,
+                                                                              non_behavioral, _archs)
+
+            elif problem_type == "discrete":
+                for arch in dataset:
+                    _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
+                _features = client.client.getDrivingFeaturesEpsilonMOEADiscrete(self.session_key, problem, behavioral,
+                                                                                non_behavioral, _archs)
+            else:
+                raise ValueError("Problem type not implemented")
+
+            features = []
+            for df in _features:
+                features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics})
 
             advices = []
             if not len(features) == 0:

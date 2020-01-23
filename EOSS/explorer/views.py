@@ -15,7 +15,8 @@ from EOSS.models import Design
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from auth_API.helpers import get_or_create_user_information
-from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back
+from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back, \
+    generate_background_search_message
 from EOSS.data.design_helpers import add_design
 
 # Get an instance of a logger
@@ -27,81 +28,6 @@ class StartGA(APIView):
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
-                # Start listening for redis inputs to share through websockets
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-                channel = connection.channel()
-
-                channel.queue_declare(queue=request.user.username + '_gabrain')
-                channel.queue_purge(queue=request.user.username + '_gabrain')
-
-                def callback(ch, method, properties, body):
-                    thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                    message = json.loads(body)
-                    if message['type'] == 'new_arch':
-                        print('Processing some new archs!')
-                        nonlocal inputs_unique_set
-                        # Archs are added one by one
-                        new_archs = [message['data']]
-                        send_back = []
-                        # Add archs to the context data before sending back to user
-                        for arch in new_archs:
-                            hashed_input = hash(tuple(arch['inputs']))
-                            if hashed_input not in inputs_unique_set:
-                                full_arch = {
-                                    'id': thread_user_info.eosscontext.last_arch_id,
-                                    'inputs': arch['inputs'],
-                                    'outputs': arch['outputs']
-                                }
-                                if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
-                                    add_design(full_arch, thread_user_info.eosscontext, False)
-                                else:
-                                    add_design(full_arch, thread_user_info.eosscontext, True)
-                                send_back.append(full_arch)
-                                inputs_unique_set.add(hashed_input)
-                                thread_user_info.save()
-
-                        # Look for channel to send back to user
-                        channel_layer = get_channel_layer()
-
-                        background_queue_qs = Design.objects.filter(
-                            activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
-                        if background_queue_qs.count() >= 10:
-                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                              {
-                                                                  'type': 'active.notification',
-                                                                  'notification': {
-                                                                      'title': 'Background search results',
-                                                                      'message': 'The background search has found more than 10 architectures, but you have chosen to not show them. Do you want to see them now?',
-                                                                      'setting': 'show_background_search_feedback'
-                                                                  }
-                                                              })
-                        if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
-                            back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
-                            send_back.extend(back_list)
-                            send_archs_back(channel_layer, thread_user_info.channel_name, send_back)
-                    if message['type'] == 'ga_started':
-                        # Look for channel to send back to user
-                        channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                          {
-                                                              'type': 'ga.started'
-                                                          })
-                    if message['type'] == 'ga_done':
-                        channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                          {
-                                                              'type': 'ga.finished'
-                                                          })
-                        print('Ending the thread!')
-                        channel.stop_consuming()
-
-                channel.basic_consume(queue=request.user.username + '_gabrain',
-                                      on_message_callback=callback,
-                                      auto_ack=True)
-
-                thread = threading.Thread(target=channel.start_consuming)
-                thread.start()
-
                 # Start connection with VASSAR
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
                 port = user_info.eosscontext.vassar_port
@@ -134,13 +60,84 @@ class StartGA(APIView):
                 else:
                     raise ValueError('Unrecognized problem type: {0}'.format(problem))
 
-                client.stop_ga(problem, request.user.username)
-                while client.is_ga_running(problem):
-                    time.sleep(0.1)
-                client.start_ga(problem, request.user.username, thrift_list)
+                if user_info.eosscontext.ga_id is not None:
+                    client.stop_ga(user_info.eosscontext.ga_id)
+                ga_id = client.start_ga(problem, request.user.username, thrift_list)
+                user_info.eosscontext.ga_id = ga_id
+                user_info.eosscontext.save()
 
                 # End the connection before return statement
                 client.end_connection()
+
+                # Start listening for redis inputs to share through websockets
+                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+                channel = connection.channel()
+
+                channel.queue_declare(queue=ga_id + '_gabrain')
+
+                def callback(ch, method, properties, body):
+                    thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                    message = json.loads(body)
+                    if message['type'] == 'new_arch':
+                        print('Processing some new archs!')
+                        nonlocal inputs_unique_set
+                        # Archs are added one by one
+                        new_archs = [message['data']]
+                        send_back = []
+                        # Add archs to the context data before sending back to user
+                        for arch in new_archs:
+                            hashed_input = hash(tuple(arch['inputs']))
+                            if hashed_input not in inputs_unique_set:
+                                full_arch = {
+                                    'inputs': arch['inputs'],
+                                    'outputs': arch['outputs']
+                                }
+                                if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
+                                    full_arch = add_design(full_arch, request.session, request.user, False)
+                                else:
+                                    full_arch = add_design(full_arch, request.session, request.user, True)
+                                send_back.append(full_arch)
+                                inputs_unique_set.add(hashed_input)
+                                thread_user_info.save()
+
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+
+                        background_queue_qs = Design.objects.filter(
+                            activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
+                        if background_queue_qs.count() == 10:
+                            ws_message = generate_background_search_message(thread_user_info)
+                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                              {
+                                                                  'type': 'active.message',
+                                                                  'message': ws_message
+                                                              })
+                        if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
+                            back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
+                            send_back.extend(back_list)
+                            send_archs_back(channel_layer, thread_user_info.channel_name, send_back)
+                    if message['type'] == 'ga_started':
+                        # Look for channel to send back to user
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                          {
+                                                              'type': 'ga.started'
+                                                          })
+                    if message['type'] == 'ga_done':
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                          {
+                                                              'type': 'ga.finished'
+                                                          })
+                        print('Ending the thread!')
+                        channel.stop_consuming()
+
+                channel.basic_consume(queue=ga_id + '_gabrain',
+                                      on_message_callback=callback,
+                                      auto_ack=True)
+
+                thread = threading.Thread(target=channel.start_consuming)
+                thread.start()
 
                 return Response({
                     "status": 'GA started correctly!'
@@ -172,12 +169,10 @@ class StopGA(APIView):
                 client = VASSARClient(port)
                 client.start_connection()
 
-                problem = request.data['problem']
-
                 # Call the GA stop function on Engineer
-                client.stop_ga(problem, request.user.username)
-                while client.is_ga_running(problem):
-                    time.sleep(0.1)
+                client.stop_ga(user_info.eosscontext.ga_id)
+                user_info.eosscontext.ga_id = None
+                user_info.eosscontext.save()
 
                 # End the connection before return statement
                 client.end_connection()
@@ -211,8 +206,7 @@ class CheckGA(APIView):
                 client = VASSARClient(port)
                 client.start_connection()
 
-                problem = request.data['problem']
-                status = client.is_ga_running(problem)
+                status = client.is_ga_running(user_info.eosscontext.ga_id)
 
                 # End the connection before return statement
                 client.end_connection()

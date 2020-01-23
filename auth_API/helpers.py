@@ -2,8 +2,9 @@ from django.contrib.auth.models import User
 from django.db import transaction
 
 from EDL.models import EDLContext
-from EOSS.models import EOSSContext, ActiveContext, EngineerContext
-from daphne_context.models import UserInformation, ExperimentContext
+from EOSS.models import EOSSContext, ActiveContext
+from experiment.models import ExperimentContext
+from daphne_context.models import UserInformation
 from django.contrib.sessions.models import Session
 
 
@@ -31,9 +32,6 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         active_context = ActiveContext(eosscontext=eoss_context, show_background_search_feedback=False,
                                        check_for_diversity=False, show_arch_suggestions=False)
         active_context.save()
-
-        engineer_context = EngineerContext(eosscontext=eoss_context, vassar_instrument='', instrument_parameter='')
-        engineer_context.save()
 
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
                                                current_state="")
