@@ -4,6 +4,7 @@
   [
     { "name": "objective", "type": "objective", "options": "", "from_context": false, "mandatory": true }
   ],
+  "objective": "list all instruments that can improve a certain objective",
   "function":
   {
     "run_template": "dialogue_functions.engineer.get_instruments_for_objective('${objective}', context)",

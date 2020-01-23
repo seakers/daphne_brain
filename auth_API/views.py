@@ -167,8 +167,8 @@ class CheckStatus(APIView):
             response['is_logged_in'] = True
             # Transform the database design data into a json for the frontend
             response['data'] = []
-            if len(user_info.eosscontext.design_set.all()) > 0:
-                for design in user_info.eosscontext.design_set.all():
+            if user_info.eosscontext.design_set.count() > 0:
+                for design in user_info.eosscontext.design_set.order_by('id').all():
                     response['data'].append(
                         {'id': design.id, 'inputs': json.loads(design.inputs), 'outputs': json.loads(design.outputs)})
                 response['modified_dataset'] = True
@@ -177,3 +177,12 @@ class CheckStatus(APIView):
         else:
             response['is_logged_in'] = False
         return Response(response)
+
+
+class GenerateSession(APIView):
+    """
+    Simply generate a session for the user (solves a ton of bugs)
+    """
+    def post(self, request, format=None):
+        request.session.save()
+        return Response("Session generated")
