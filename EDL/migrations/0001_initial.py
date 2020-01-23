@@ -20,13 +20,8 @@ class Migration(migrations.Migration):
                 ('current_mat_file', models.CharField(max_length=255)),
                 ('current_mat_file_for_print', models.CharField(max_length=255)),
                 ('current_scorecard_file', models.CharField(max_length=255)),
-<<<<<<< HEAD:daphne_API/migrations/0003_edlcontext.py
-                ('current_scorecard_path', models.CharField(max_length=255)),
-                ('user_information', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='daphne_API.UserInformation')),
-=======
                 ('current_scorecard', models.CharField(max_length=255)),
                 ('user_information', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='daphne_context.UserInformation')),
->>>>>>> cleanup:EDL/migrations/0001_initial.py
             ],
         ),
     ]

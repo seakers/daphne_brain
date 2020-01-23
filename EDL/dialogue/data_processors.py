@@ -61,7 +61,7 @@ def process_edl_mat_file_parameter(extracted_data, options, context):
 
 def process_edl_scorecard_calculate(extracted_data, options, context):
     metric_calculation = []
-    with open('scorecard.json') as file:
+    with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecard_materials/scorecard.json') as file:
         scorecard_json = json.load(file)
         scorecard_metrics = []
         for item in scorecard_json:

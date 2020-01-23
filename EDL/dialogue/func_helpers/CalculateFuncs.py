@@ -1,13 +1,17 @@
 import re
 import numpy as np, scipy.io
+from re import search
 
 def equation_parser(equation_string, matfile_path):
     variables = scipy.io.whosmat(matfile_path)
     variables_in_mat = [i[0] for i in variables]
+    if search('(i)', equation_string):
+        equation_string = equation_string.replace('(i)', "")
 
-    valid = re.compile(r"([A-Za-z]\w*)(?![\(\w])")
+    valid = re.compile(r"([A-Za-z_b]\w*)(?![\(\w])")
     matches = valid.findall(equation_string)
     matches.remove('ans')
+    # matches.remove('i')
     matches.append('output_case')
     if 'e3' in matches:
         matches.remove('e3')

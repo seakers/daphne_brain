@@ -9,9 +9,13 @@ import os
 import yaml
 
 from EDL.dialogue.MatEngine_object import eng1
-from EDL.dialogue.func_helpers import CalculateFuncs, ScorecardDataFrameFuncs, get_variable_info
+from EDL.dialogue.func_helpers import CalculateFuncs, ScorecardDataFrameFuncs, get_variable_info, correlation_multiprocessing
 from EDL.models import EDLContextScorecards
 from daphne_context.models import UserInformation
+import pandas as pd
+from multiprocessing import Pool
+
+
 
 
 def load_mat_files(mission_name, mat_file, context: UserInformation):
@@ -32,6 +36,7 @@ def load_mat_files(mission_name, mat_file, context: UserInformation):
     # eng1.disp('esto', nargout = 0)
     print('The current mat_file is:')
     print(mat_file)
+
     return 'file loaded'
 
 
@@ -50,36 +55,35 @@ def mat_file_list(mission_name, context: UserInformation):
 
 def compute_stat(mission_name,mat_file, param_name, context: UserInformation):
     eng1.addpath('/Volumes/Encrypted/Mars2020/mars2020/MATLAB/', nargout=0)
-
     eng1.addpath('/Users/ssantini/Code/ExtractDataMatlab/MatlabEngine/', nargout=0)
 
     if mission_name == 'None': # if query uses context,  just use the file path in context
         file_path = mat_file
     else:
         file_path = os.path.join('/Users/ssantini/Code/EDL_Simulation_Files/', mission_name, mat_file)
-
     ##################### CHECK IF IT IS A SCORECARD METRIC ###########################################
-    '''Get from the template the details of the metric being calculated'''
-    with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/scorecard.json') as file:
-        scorecard_json = json.load(file)
-
-        for item in scorecard_json:
-            if str.lower(str(item["metric"])) == param_name:
-                units = item['units']
-                calculation_string = item['calculation']
-                list_for_load, warning = CalculateFuncs.equation_parser(calculation_string, mat_file)
-                ''' Equations to calculate and remove the things left to the equal side '''
-                eqs_to_calc = calculation_string.split(';')
-                ''' Load  variables into workspace'''
-                [eng1.load(mat_file, item, nargout=0) for item in list_for_load]  # load each
-                [eng1.workspace[item] for item in list_for_load]  # add each to workspace
-                for item in eqs_to_calc:
-                    eng1.eval(item, nargout=0)
-                val2 = eng1.workspace['ans']
-                param_array = np.array(val2)
-                break
-            else:
-                warning = 'Not Scorecard Metric'
+    scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=os.path.basename(file_path).replace(".mat", ".yml"),
+                                                          edl_context_id__exact=context.edlcontext.id)
+    if scorecard_query.count() > 0:
+        scorecard = scorecard_query.first()
+        scorecard_labeled = pickle.loads(scorecard.current_scorecard_df)
+        sub_df = scorecard_labeled.loc[scorecard_labeled['metric_name'].str.lower() == param_name]
+        if sub_df.shape[0] > 0:
+            units = sub_df['units'].ravel().tolist()[0]
+            calculation_string = sub_df['calculation'].ravel().tolist()[0]
+            list_for_load, warning = CalculateFuncs.equation_parser(calculation_string, mat_file)
+            ''' Equations to calculate and remove the things left to the equal side '''
+            eqs_to_calc = calculation_string.split(';')
+            ''' Load  variables into workspace'''
+            [eng1.load(mat_file, item, nargout=0) for item in list_for_load]  # load each
+            [eng1.workspace[item] for item in list_for_load]  # add each to workspace
+            for item in eqs_to_calc:
+                eng1.eval(item, nargout=0)
+            val2 = eng1.workspace['ans']
+            param_array = np.array(val2)
+            warning = 'Scorecard Metric'
+        else:
+            warning = 'Not Scorecard Metric'
 
     if warning == 'Not Scorecard Metric':
         edl_mat_load = eng1.load(file_path, param_name, nargout=0) # loads in engine
@@ -114,7 +118,7 @@ def compute_stat(mission_name,mat_file, param_name, context: UserInformation):
     mean_minus_low_99_87 = np.mean(param_array) - np.percentile(param_array, 0.13)
 
     name_of_stat = ["max", "min", "mean", "variance", "std", "3s", "mean", "-3s", "0.13%", "1.00%", "10.00%", "50.00%",
-                    "90.00%",
+                    "99.00%",
                     "99.87", "high 99.89 - median", "high 99.87 - mean", "median - low 99.87",
                     "mean - low 99.87"]
 
@@ -141,23 +145,23 @@ def compute_stat(mission_name,mat_file, param_name, context: UserInformation):
 
 def load_scorecard(mission_name, mat_file, context: UserInformation):
 
+    # ''' Get Scorecard path'''
     if mission_name == 'None':
         file_to_search = os.path.basename(mat_file.replace(".mat", ".yml"))
     else:
         file_to_search = mat_file.replace(".mat", ".yml")
-
+    # ''' Check if scorecard exists in the Database'''
     all_scorecards = EDLContextScorecards.objects
-    scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search, edl_context_id__exact=context.edlcontext.id)
+    scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search,
+                                                          edl_context_id__exact=context.edlcontext.id)
     if scorecard_query.count() > 0:
         scorecard = scorecard_query.first()
         return 'Scorecard already exists, and loaded'
 
-
-    '''Check if scorecard exists already and just save scorecard path'''
-    if os.path.exists(os.path.join("/Users/ssantini/Code/Code_Daphne/daphne_brain/daphne_API/edl/Scorecards/", file_to_search)) == True:
+    # '''Check if scorecard exists already and just save scorecard path'''
+    if os.path.exists(os.path.join("/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecards", file_to_search)) == True:
         i = 1
-        scorecard_path = os.path.join('/Users/ssantini/Code/Code_Daphne/daphne_brain/daphne_API/edl/Scorecards', file_to_search)
-
+        scorecard_path = os.path.join('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecards', file_to_search)
     else:
         ''' Set Paths:
          1. mat file path; 2. the scorecard template path''
@@ -166,7 +170,6 @@ def load_scorecard(mission_name, mat_file, context: UserInformation):
             mat_file_path = mat_file # this is actually a path
         else:
             mat_file_path = os.path.join('/Users/ssantini/Code/EDL_Simulation_Files', mission_name, mat_file)
-
         ''' Connect to the local computer and generate scorecard'''
         os.system('setenv DYLD_FALLBACK_LIBRARY_PATH $LD_LIBRARY_PATH')
         os.system('~/scorecard.rb --help')
@@ -179,37 +182,33 @@ def load_scorecard(mission_name, mat_file, context: UserInformation):
         ''' Rename the Scorecard to the mat file'''
         scorecard_temp_path = mat_file.replace(".mat", "")
         scorecard_name = os.path.basename(scorecard_temp_path)+'.yml'
-        scorecard_path = os.path.join('/Users/ssantini/Code/Code_Daphne/daphne_brain/daphne_API/edl/Scorecards/', scorecard_name)
+        scorecard_path = os.path.join('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecards', scorecard_name)
         if os.path.isfile('/Users/ssantini/Code/Code_Daphne/daphne_brain/scorecard.yml'):
             os.rename('/Users/ssantini/Code/Code_Daphne/daphne_brain/scorecard.yml', scorecard_path)
 
     with open(scorecard_path, encoding='utf-8') as scorecard_file:
         scorecard_dict = yaml.load(scorecard_file)
+        scorecard_df_labeled = pd.DataFrame(scorecard_dict)
+        scorecard_df_labeled = scorecard_df_labeled[~scorecard_df_labeled[':sheet'].str.contains("FLAG FAIL")]
+        scorecard_df_labeled = scorecard_df_labeled[~scorecard_df_labeled[':calculation'].str.contains('haz_filename')]
+        scorecard_df_labeled = scorecard_df_labeled[~scorecard_df_labeled[':calculation'].str.contains('lvs_error_x_fesn')]
 
-    scorecard_df = ScorecardDataFrameFuncs.generate_scorecard_dataframe(scorecard_dict)
-    scorecard_df = scorecard_df.dropna()
-    scorecard_df = scorecard_df[scorecard_df.metric_name != 'Hazardous Landing Fraction']
-    scorecard_df = scorecard_df[scorecard_df.metric_name !='Probability of Success - Terrain Only']
-    scorecard_df =scorecard_df[scorecard_df.metric_name != 'Probability of Success (with TRN)']
-    scorecard_df =scorecard_df[scorecard_df.metric_name != 'Probability of Success at Backshell Sep. (surrogate for no TRN)']
-    scorecard_df = scorecard_df[scorecard_df.metric_name != 'Max. Probability of Success Possible (based on hazard map)']
-    scorecard_df = scorecard_df[scorecard_df.metric_name != 'Slope Landed On']
-
-    scorecard_df = scorecard_df[~scorecard_df['metric_name'].astype(str).str.startswith("fail_")].reset_index(drop=True)
-    scorecard_df = scorecard_df[~scorecard_df['metric_name'].astype(str).str.startswith("flag_")].reset_index(drop=True)
-    scorecard_df_labeled = ScorecardDataFrameFuncs.generate_scorecard_dataframe_labeled(scorecard_df)
-
-
+    scorecard_df_labeled.columns = ['metric_name', 'type', 'units', 'calculation', 'direction', 'flag', 'out_of_spec', 'evalString', 'post_results', 'color','status', 'sheet_name']
+    scorecard_df_labeled['status'] = scorecard_df_labeled['status'].replace([':grey', ':green'], 'ok')
+    scorecard_df_labeled['status'] = scorecard_df_labeled['status'].replace([':yellow'], 'flagged')
+    scorecard_df_labeled['status'] = scorecard_df_labeled['status'].replace([':red'], 'out_of_spec')
 
     flagged_df = scorecard_df_labeled[scorecard_df_labeled.status == 'flagged']
-    out_of_spec_df = scorecard_df_labeled[scorecard_df_labeled.status == 'out of spec']
+    out_of_spec_df = scorecard_df_labeled[scorecard_df_labeled.status == 'out_of_spec']
 
-    out_of_spec_arrays = ScorecardDataFrameFuncs.get_scorecard_arrays(out_of_spec_df, mat_file)
+    out_of_spec_arrays = ScorecardDataFrameFuncs.get_scorecard_arrays(out_of_spec_df, mat_file, False)
     out_of_spec_df['arrays'] = out_of_spec_arrays
 
+    # db_template = ScorecardDataFrameFuncs.scorecard_df_for_db(mat_file_path, context)
     scorecard_df_bytes = pickle.dumps(scorecard_df_labeled)
     out_of_spec_df_bytes = pickle.dumps(out_of_spec_df)
     flag_df_bytes = pickle.dumps(flagged_df)
+    # db_template = pickle.dumps(db_template)
 
     metrics_of_interest = list(flagged_df['metric_name']) + list(out_of_spec_df['metric_name'])
     context.edlcontext.current_metrics_of_interest = json.dumps(metrics_of_interest)
@@ -224,20 +223,24 @@ def load_scorecard(mission_name, mat_file, context: UserInformation):
     new_scorecard.save()
     context.save()
 
-
-
     return 'Score Card Loaded and Populated'
 
 
 def get_scorecard_post_results(edl_scorecard, scorecard_post_param, context: UserInformation):
 
     if edl_scorecard == 'None':
-        scorecard_df = context.edlcontext.current_scorecard_df
-        scorecard_df = pickle.loads(scorecard_df)
+        scorecard_query = EDLContextScorecards.objects.filter(
+            scorecard_name__exact=os.path.basename(context.edlcontext.current_mat_file).replace(".mat", ".yml"),
+            edl_context_id__exact=context.edlcontext.id)
+        if scorecard_query.count() > 0:
+            scorecard = scorecard_query.first()
+            scorecard_df = pickle.loads(scorecard.current_scorecard_df)
+            sub_df = scorecard_df.loc[scorecard_df['metric_name'].str.lower() == scorecard_post_param.lower()]
     else:
+        current_scorecard = edl_scorecard.replace('.mat', 'yml')
         with open(os.path.basename(edl_scorecard), encoding='utf-8') as scorecard_file:
             scorecard_dict = yaml.load(scorecard_file)
-        scorecard_df = ScorecardDataFrameFuncs.generate_scorecard_dataframe(scorecard_dict)
+            scorecard_df = ScorecardDataFrameFuncs.generate_scorecard_dataframe(scorecard_dict)
 
     '''Search in dictionary what is contained '''
     possible_metrics = scorecard_df.metric_name.str.contains(str(scorecard_post_param), case = False, na = False)
@@ -258,21 +261,21 @@ def get_scorecard_post_results(edl_scorecard, scorecard_post_param, context: Use
 def get_flag_summary(edl_scorecard, mat_file, context: UserInformation, *flag_type):
     if edl_scorecard == 'None':
         file_to_search = os.path.basename(mat_file.replace(".mat", ".yml"))
-        scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search,
-                                                              edl_context_id__exact=context.edlcontext.id)
+        scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
         if scorecard_query.count() > 0:
             scorecard = scorecard_query.first()
             scorecard_df = scorecard.current_scorecard_df
+            flagged_df = pickle.loads(scorecard.current_scorecard_df_flag)
+            out_of_spec_df = pickle.loads(scorecard.current_scorecard_df_fail)
             scorecard_df = pickle.loads(scorecard_df)
     else:
-        with open(os.path.basename(edl_scorecard), encoding='utf-8') as scorecard_file:
-            scorecard_dict = yaml.load(scorecard_file)
-        scorecard_df = ScorecardDataFrameFuncs.generate_scorecard_dataframe(scorecard_dict)
-        scorecard_df= ScorecardDataFrameFuncs.generate_scorecard_dataframe_labeled(scorecard_df)
-
-    flagged_df = scorecard_df[scorecard_df.status == 'flagged']
-    out_of_spec_df = scorecard_df[scorecard_df.status == 'out of spec']
-
+        scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=edl_scorecard)
+        if scorecard_query.count() > 0:
+            scorecard = scorecard_query.first()
+            scorecard_df = scorecard.current_scorecard_df
+            flagged_df = pickle.loads(scorecard.current_scorecard_df_flag)
+            out_of_spec_df = pickle.loads(scorecard.current_scorecard_df_fail)
+            scorecard_df = pickle.loads(scorecard_df)
     ''' Now we want to get what metrics are flagged and which are out of spec as a list'''
     if 'flagged_results' in flag_type:
         flagged_list = []
@@ -312,7 +315,7 @@ def calculate_scorecard_metric(mat_file, edl_scorecard_calculate, scorecard_post
     else:
         mat_file = mat_file
     '''Get from the template the details of the metric being calculated'''
-    with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/scorecard.json') as file:
+    with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecard_materials/scorecard.json') as file:
         scorecard_json = json.load(file)
         for item in scorecard_json:
             if item['metric'] == scorecard_post_param:
@@ -350,8 +353,7 @@ def plot_from_matfile(mat_file, param_name1, param_name2, context: UserInformati
     # param_name1 = 'windvert'
     # param_name2 = 'peak inflation axial load'
     file_to_search = os.path.basename(mat_file.replace(".mat", ".yml"))
-    scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search,
-                                                          edl_context_id__exact=context.edlcontext.id)
+    scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
     if scorecard_query.count() > 0:
         scorecard = scorecard_query.first()
         complete_scorecard = pickle.loads(scorecard.current_scorecard_df)
@@ -409,3 +411,66 @@ def plot_from_matfile(mat_file, param_name1, param_name2, context: UserInformati
             my_list.append((val1._data[_], val2._data[_], None))
 
     return my_list
+
+
+def create_cormat(matout_path, context: UserInformation):
+    ''' Start Engine
+    1. Get list of variables in da
+    taset
+    2. Set desired events for search
+    3. Remove irrelevant events
+    4. Create dataframe of remaining variables and compute the correlation matrix
+
+
+    '''
+
+
+    prueba = matout_path
+    eng1.load(matout_path, nargout = 0)
+    eng1.load(matout_path, 'output_case', nargout=0)
+    output_cases = [item for sublist in np.array(eng1.workspace['output_case']).tolist() for item in sublist] # will be used as dataframe indices
+
+    list_metrics_matout = scipy.io.whosmat(matout_path)
+    list_metrics_matout_clean = [i[0] for i in list_metrics_matout]
+
+    list_events = [words for segments in list_metrics_matout_clean for words in segments.split('_')[-1:]]
+    list_events = (list(set(list_events)))
+    # We had roughly 806 events. For an initial approach, we selected the events below. Which result in ~2,500 variables
+    sub_events = ['_dsi', 'fesn', 'AGLsample', '_ei', '_rc', '_rev1', '_end1', '_hda', '_sufr', '_pd', '_hs', '_bs', '_sky', '_td']
+
+    list_metrics_arm = []
+    for substring in sub_events:
+        list_variables = [s for s in list_metrics_matout_clean if substring in s]
+        list_metrics_arm.append(list_variables)
+
+    list_metrics_arm = [item for sublist in list_metrics_arm for item in sublist]
+    ''' Get data from matout.mat and save as dataframe'''
+    my_list = []
+    for i in range(len(list_metrics_arm)):
+        arr = eng1.eval(list_metrics_arm[i])
+        my_list.append(np.asarray(arr._data))
+
+    matout_df = pd.DataFrame(my_list, index=list_metrics_arm, columns=output_cases).transpose()
+    matout_df.astype('float32')
+    matin_df_sorted = matout_df.reset_index()
+    num_partitions = 16  # no. partitions to split dataframe
+    num_cores = 8
+    corr_matrix = correlation_multiprocessing.parallelize_dataframe(matin_df_sorted, correlation_multiprocessing.vcorrcoef, list_metrics_arm)
+    cormat_df = pd.DataFrame(corr_matrix, index=list_metrics_arm, columns=list_metrics_arm)
+    i = 1
+    cormat_df_bytes = pickle.dumps(cormat_df)
+    context.edlcontext.current_cormat_status = "true"
+    context.edlcontext.current_cormat_df = cormat_df_bytes
+    context.edlcontext.save()
+
+    file_to_search = os.path.basename(context.edlcontext.current_mat_file.replace(".mat", ".yml"))
+    new_cormat_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search).first()
+    new_cormat_query.current_corr_mat_df = pickle.dumps(cormat_df)
+    new_cormat_query.current_corr_mat_status = "true"
+
+    new_cormat_query.save()
+
+
+    context.save()
+
+    return 'Correlation matrix generated successfully'

@@ -1,5 +1,6 @@
 import os
 
+import pandas
 import pandas as pd
 import scipy.io
 import json
@@ -53,7 +54,7 @@ def extract_edl_mat_file(processed_question, number_of_features, context):
 
 
 def get_edl_metric_names(processed_question, number_of_features, context):
-    with open('scorecard.json') as file:
+    with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecard_materials/scorecard.json') as file:
         scorecard_json = json.load(file)
         scorecard_metrics = []
         for item in scorecard_json:
@@ -63,7 +64,7 @@ def get_edl_metric_names(processed_question, number_of_features, context):
 
 
 def edl_metric_calculate(processed_question, number_of_features, context):
-    with open('scorecard.json') as file:
+    with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecard_materials/scorecard.json') as file:
         scorecard_json = json.load(file)
         scorecard_metrics = []
         for item in scorecard_json:
@@ -77,14 +78,15 @@ mat_dict = scipy.io.loadmat(file_paths)
 '''Get list of keys in mat dict'''
 list_items = list(mat_dict.keys())
 list_items_scorecard = []
-with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/scorecard.json') as file:
+with open('/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/scorecard_materials/scorecard.json') as file:
     scorecard_json = json.load(file)
     for item in scorecard_json:
         list_items_scorecard.append(item['metric'])
 
 # print(list_items)
 '''Get the NL description of the variable'''
-xls_path = os.path.join(settings.EDL_PATH, 'Code_Daphne/command_classifier/edlsimqueries.xlsx')
+xls_path = '/Users/ssantini/Code/Code_Daphne/daphne_brain/EDL/data/query_data/edlsimqueries.xlsx'
+#xls_path = os.path.join(settings.EDL_PATH, 'Code_Daphne/command_classifier/edlsimqueries.xlsx')
 file_path = pandas.read_excel(xls_path)
 list_descriptions = list(file_path[0])
 
@@ -96,6 +98,7 @@ def extract_edl_mat_parameter(processed_question, number_of_features, context):
     mat_parameter = [elem for elem in mat_parameter if elem is not None]
     lower_case_list = [x.lower() for x in mat_parameter]
     mat_parameter_clean = list(set(lower_case_list))
+    mat_parameter_clean.insert(0, 'azplus_sts_search_fesn')
     print(mat_parameter_clean)
     # with open('VariableList.txt', 'w') as output:
     #     output.write(str(mat_parameter_clean))
