@@ -13,6 +13,8 @@ class EDLContext(models.Model):
     selected_case = models.IntegerField()
     current_mission = models.CharField(max_length=255)
     current_metrics_of_interest = models.TextField(null=True)
+    current_cormat_df = models.BinaryField(max_length=None, default=bytes())
+    current_cormat_status = models.CharField(max_length=255, default="false")
 
 
 class EDLContextScorecards(models.Model):
@@ -21,4 +23,7 @@ class EDLContextScorecards(models.Model):
     current_scorecard_df = models.BinaryField(max_length=None, default=bytes())
     current_scorecard_df_flag = models.BinaryField(max_length=None, default=bytes())
     current_scorecard_df_fail = models.BinaryField(max_length=None, default=bytes())
+    current_scorecard_df_db = models.BinaryField(max_length=None, default=bytes())
     edl_context = models.ForeignKey(EDLContext, on_delete=models.CASCADE)
+    current_corr_mat_df = models.BinaryField(max_length=None, default=bytes())
+    current_corr_mat_status = models.CharField(max_length=255, default="false")

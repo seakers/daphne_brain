@@ -30,7 +30,7 @@
   "visual_response": [
     {
       "type": "plot_vars",
-      "title": "Title of plot",
+      "title": "${edl_mat_param} vs ${edl_mat_param2}",
       "item_template": "{ \"x\": ${plot_elem}[0], \"y\": ${plot_elem}[1], \"extra_info\": {\"output_case\": ${plot_elem}[2]} , \"is_failed_case\": ${plot_elem}[3] , \"is_flagged_case\": ${plot_elem}[4]}",
       "x_axis_template": "${edl_mat_param}",
       "y_axis_template": "${edl_mat_param2}"

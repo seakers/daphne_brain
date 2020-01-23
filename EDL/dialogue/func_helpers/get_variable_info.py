@@ -2,13 +2,14 @@ import pandas as pd
 import matlab.engine
 import json
 import numpy as np
-from daphne_API.edl import ScorecardDataFrameFuncs
+
+from EDL.dialogue.func_helpers import ScorecardDataFrameFuncs
 
 
 def locate_variable(metric_name, scorecard_dataframe, out_of_spec_df, matfile_path, criteria):
-    check1 = scorecard_dataframe['metric_name'].str.lower() == metric_name # check in scorecard
+    check1 = scorecard_dataframe['metric_name'].str.lower() == str(metric_name).lower() # check in scorecard
     index1 = check1[check1 == True].index.tolist() # get indices
-    check2 = out_of_spec_df['metric_name'].str.lower() == metric_name# check in out of spec if array exists
+    check2 = out_of_spec_df['metric_name'].str.lower() == str(metric_name).lower()# check in out of spec if array exists
     index2 = check2[check2 == True].index.tolist()  # get indices
 
     if metric_name in list(scorecard_dataframe['metric_name'].str.lower()):
@@ -26,7 +27,7 @@ def locate_variable(metric_name, scorecard_dataframe, out_of_spec_df, matfile_pa
     flag_indices = []
 
     if len(index1) > 0 and len(index2) > 0:
-        variable_location = 'metric is in scorecard and it is an out of spec metric'
+        variable_location = 'out of spec scorecard metric, array existed'
         metric_array = out_of_spec_df.loc[out_of_spec_df.metric_name.str.lower() == metric_name, 'arrays'].values[0]
         #metric_array = out_of_spec_df[out_of_spec_df["metric_name"].str.lower().str.contains(metric_name)].arrays.array[0]
         sub_df = out_of_spec_df[((out_of_spec_df.metric_name).str.lower() == metric_name)].iloc[[0]]
@@ -34,11 +35,11 @@ def locate_variable(metric_name, scorecard_dataframe, out_of_spec_df, matfile_pa
 
 
     elif len(index1) > 0 and len(index2) == 0:
-        variable_location = 'scorecard metric but not out of spec, requires calculating metric'
-        sub_df = scorecard_dataframe[((scorecard_dataframe.metric_name).str.lower() == metric_name)]
+        variable_location = 'flagged scorecard metric, array was calculated'
+        sub_df = scorecard_dataframe[((scorecard_dataframe.metric_name).str.lower() == str(metric_name).lower())]
         sub_df = sub_df.drop_duplicates(subset='metric_name')
         #df_index = sub_df.index.tolist()
-        metric_array = ScorecardDataFrameFuncs.get_scorecard_arrays(sub_df, matfile_path)
+        metric_array = ScorecardDataFrameFuncs.get_scorecard_arrays(sub_df, matfile_path, False)
         sub_df['arrays'] = pd.Series((metric_array), index = sub_df.index)
         metric_array = metric_array[0]
         fail_indices, fail_case_no, flag_indices, flag_case_no = ScorecardDataFrameFuncs.get_case_numbers(metric_name, sub_df, matfile_path, criteria)
