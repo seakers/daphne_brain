@@ -1,5 +1,5 @@
 {
-  "Cabin pressure": {
+  "Pressure": {
     "units": "atm",
     "low_critic_threshold": 0.5,
     "low_warning_threshold": 0.9,
@@ -7,8 +7,8 @@
     "high_warning_threshold": 1.1,
     "high_critic_threshold": 1.5
   },
-  "N2 concentration": {
-    "units": "%",
+  "ppN2": {
+    "units": "ppm",
     "low_critic_threshold": 60,
     "low_warning_threshold": 70,
     "nominal": 79,

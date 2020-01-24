@@ -21,23 +21,21 @@ def compute_zone(value, info):
     return zone
 
 
-def threshold_check(value, info):
+def build_threshold_tag(value, info):
     """
     This function returns an string depending on the threshold zone on which a value is located.
+    In the knowledge graph with the information about the anomalies, the word "limit" is used instead of "threshold",
+    and hence the change of nomenclature here. Also, no distinction is made when being beyond the warning limit.
     """
 
     message = ''
     zone = compute_zone(value, info)
-    if zone == -2:
-        message = 'LCT'
-    elif zone == -1:
-        message = 'LWT'
+    if zone < 0:
+        message = 'LWL'
     elif zone == 0:
         message = 'nominal'
-    elif zone == 1:
-        message = 'HWT'
-    elif zone == 2:
-        message = 'HCT'
+    elif zone > 0:
+        message = 'UWL'
     else:
         print('Invalid zone value')
         raise
@@ -64,17 +62,15 @@ def build_symptoms_report(window):
         # Check and build the threshold and forecast messages
         last_point = trace[-1]
         variable_info = info[variable]
-        threshold_message = threshold_check(last_point, variable_info)
-        if threshold_message != '' and threshold_message != 'nominal':
-            text = variable + ' is ' + threshold_message + '.'
-            event = {'parameter': variable, 'symptom': threshold_message, 'text': text}
+        threshold_tag = build_threshold_tag(last_point, variable_info)
+        if threshold_tag != '' and threshold_tag != 'nominal':
+            event = {'measurement': variable, 'relationship': threshold_tag}
             symptoms_report.append(event)
 
     return symptoms_report
 
 
 def anomaly_treatment_routine(hub_to_at, at_to_hub):
-    print('AD thread started')
 
     keep_alive = True
     while keep_alive:

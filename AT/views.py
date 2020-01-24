@@ -1,6 +1,7 @@
 import json
 import threading
 
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +10,7 @@ from AT.automated_at_routines.hub_routine import hub_routine
 from AT.global_objects import at_to_hub_queue
 from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
+from AT.diagnosis.diagnosis_functions import diagnose_symptoms_neo4j
 
 
 # QUEUES
@@ -109,3 +111,29 @@ class SeclssFeed(APIView):
         parsed_sensor_data = json.loads(sensor_data)
         server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
         return Response(parsed_sensor_data)
+
+
+class RequestDiagnosis(APIView):
+    def post(self, request):
+        # Retrieve the symptoms list from the request
+        symptoms_list = json.loads(request.data['symptomsList'])
+
+        # Parse the symptoms list to meet the neo4j query function requirements
+        parsed_symptoms_list = []
+        for item in symptoms_list:
+            symptom = {'measurement': item['measurement'],
+                       'relationship': 'Exceeds_' + item['relationship']}
+            parsed_symptoms_list.append(symptom)
+
+        # Query the neo4j graph
+        diagnosis_list = diagnose_symptoms_neo4j(parsed_symptoms_list)
+
+        # Build the diagnosis report and send it to the frontend
+        diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list}
+        signal = {'type': 'diagnosis_report', 'content': diagnosis_report}
+        user_info = get_or_create_user_information(request.session, request.user, 'AT')
+        channel_layer = get_channel_layer()
+        channel_name = user_info.channel_name
+        async_to_sync(channel_layer.send)(channel_name, signal)
+
+        return Response()
