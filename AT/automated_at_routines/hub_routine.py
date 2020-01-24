@@ -4,7 +4,6 @@ from asgiref.sync import async_to_sync
 
 
 def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, channel, channel_name):
-    print('Thread handler thread started.')
 
     # Wait for the first simulator output in order to send an initialization command to the frontend
     first_status_has_arrived = False
