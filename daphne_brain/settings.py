@@ -98,8 +98,8 @@ DATABASES = {
         'NAME': 'daphne',
         'USER': os.environ['USER'],
         'PASSWORD': os.environ['PASSWORD'],
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'HOST': os.environ['POSTGRES_HOST'],
+        'PORT': os.environ['POSTGRES_PORT'],
     }
 }
 
@@ -162,7 +162,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [(os.environ['REDIS_HOST'], os.environ['REDIS_PORT'])],
         }
     },
 }
@@ -173,8 +173,8 @@ ASGI_APPLICATION = 'daphne_brain.routing.application'
 # Databases for Daphne
 ALCHEMY_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
-    'port': '5432',
+    'host': os.environ['POSTGRES_HOST'],
+    'port': os.environ['POSTGRES_PORT'],
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'daphne'
@@ -182,8 +182,8 @@ ALCHEMY_DATABASE = {
 
 EDL_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
-    'port': '5432',
+    'host': os.environ['POSTGRES_HOST'],
+    'port': os.environ['POSTGRES_PORT'],
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
