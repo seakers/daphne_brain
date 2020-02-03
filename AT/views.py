@@ -10,7 +10,10 @@ from AT.automated_at_routines.hub_routine import hub_routine
 from AT.global_objects import at_to_hub_queue
 from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
-from AT.diagnosis.diagnosis_functions import diagnose_symptoms_neo4j
+from AT.neo4j_queries.query_functions import diagnose_symptoms
+from AT.neo4j_queries.query_functions import retrieve_all_anomalies
+from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_ordered_steps_from_procedure
 
 
 # QUEUES
@@ -126,14 +129,43 @@ class RequestDiagnosis(APIView):
             parsed_symptoms_list.append(symptom)
 
         # Query the neo4j graph
-        diagnosis_list = diagnose_symptoms_neo4j(parsed_symptoms_list)
+        diagnosis_list = diagnose_symptoms(parsed_symptoms_list)
 
         # Build the diagnosis report and send it to the frontend
         diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list}
-        signal = {'type': 'diagnosis_report', 'content': diagnosis_report}
-        user_info = get_or_create_user_information(request.session, request.user, 'AT')
-        channel_layer = get_channel_layer()
-        channel_name = user_info.channel_name
-        async_to_sync(channel_layer.send)(channel_name, signal)
 
-        return Response()
+        return Response(diagnosis_report)
+
+
+class LoadAllAnomalies(APIView):
+    def post(self, request):
+        # Query the neo4j graph
+        anomaly_list = retrieve_all_anomalies()
+
+        return Response(anomaly_list)
+
+
+class RetrieveProcedureFromAnomaly(APIView):
+    def post(self, request):
+        # Retrieve the symptoms list from the request
+        anomaly_name = json.loads(request.data['anomaly_name'])
+
+        # Build the diagnosis report and send it to the frontend
+        procedure_name = retrieve_procedures_from_anomaly(anomaly_name)
+
+        # If more than one procedure is returned, for now, take the first one
+        if len(procedure_name) > 0:
+            procedure_name = procedure_name[0]
+
+        return Response(procedure_name)
+
+
+class RetrieveStepsFromProcedure(APIView):
+    def post(self, request):
+        # Retrieve the symptoms list from the request
+        procedure_name = json.loads(request.data['procedure_name'])
+
+        # Build the diagnosis report and send it to the frontend
+        steps_list = retrieve_ordered_steps_from_procedure(procedure_name)
+
+        return Response(steps_list)

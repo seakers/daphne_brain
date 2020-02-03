@@ -8,7 +8,7 @@
     "high_critic_threshold": 1.5
   },
   "ppN2": {
-    "units": "ppm",
+    "units": "%",
     "low_critic_threshold": 60,
     "low_warning_threshold": 70,
     "nominal": 79,

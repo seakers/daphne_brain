@@ -54,5 +54,3 @@ class ATConsumer(DaphneConsumer):
     def symptoms_report(self, event):
         self.send(json.dumps(event))
 
-    def diagnosis_report(self, event):
-        self.send(json.dumps(event))
