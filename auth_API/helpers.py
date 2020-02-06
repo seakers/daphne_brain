@@ -3,6 +3,7 @@ from django.db import transaction
 
 from EDL.models import EDLContext
 from EOSS.models import EOSSContext, ActiveContext
+from AT.models import ATContext
 from experiment.models import ExperimentContext
 from daphne_context.models import UserInformation
 from django.contrib.sessions.models import Session
@@ -40,6 +41,10 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         edl_context = EDLContext(user_information=user_info, current_mat_file="", current_mat_file_for_print="",
                                  current_scorecard_file="", current_scorecard="")
         edl_context.save()
+
+        at_context = ATContext(user_information=user_info, current_anomaly="", current_step=-1)
+
+        at_context.save()
 
         return user_info
 
