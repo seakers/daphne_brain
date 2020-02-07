@@ -44,6 +44,19 @@ def check_threads_status(simulator_thread, hub_thread, at_thread):
     return
 
 
+def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
+    relationship = ''
+    if threshold_tag == 'LCL' or threshold_tag == 'LWL':
+        relationship = 'Exceeds_LWL'
+    elif threshold_tag == 'UCL' or threshold_tag == 'UWL':
+        relationship = 'Exceeds_UWL'
+    else:
+        print('Invalid threshold tag')
+        raise
+
+    return relationship
+
+
 class SimulateTelemetry(APIView):
     def post(self, request):
         # Get the user information and channel layer
@@ -124,8 +137,10 @@ class RequestDiagnosis(APIView):
         # Parse the symptoms list to meet the neo4j query function requirements
         parsed_symptoms_list = []
         for item in symptoms_list:
+            threshold_tag = item['threshold_tag']
+            relationship = convert_threshold_tag_to_neo4j_relationship(threshold_tag)
             symptom = {'measurement': item['measurement'],
-                       'relationship': 'Exceeds_' + item['relationship']}
+                       'relationship': relationship}
             parsed_symptoms_list.append(symptom)
 
         # Query the neo4j graph

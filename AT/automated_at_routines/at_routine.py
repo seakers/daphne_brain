@@ -28,19 +28,40 @@ def build_threshold_tag(value, info):
     and hence the change of nomenclature here. Also, no distinction is made when being beyond the warning limit.
     """
 
-    message = ''
+    tag = ''
     zone = compute_zone(value, info)
-    if zone < 0:
-        message = 'LWL'
+    if zone == -2:
+        tag = 'LCL'
+    elif zone == -1:
+        tag = 'LWL'
     elif zone == 0:
-        message = 'nominal'
-    elif zone > 0:
-        message = 'UWL'
+        tag = 'nominal'
+    elif zone == 1:
+        tag = 'UWL'
+    elif zone == 2:
+        tag = 'UCL'
     else:
         print('Invalid zone value')
         raise
 
-    return message
+    return tag
+
+
+def build_detection_text(variable, threshold_tag):
+    text = ''
+    if threshold_tag == 'LCL':
+        text = variable + ': Is below Lower Critic Limit.'
+    elif threshold_tag == 'LWL':
+        text = variable + ': Is below Lower Warning Limit.'
+    elif threshold_tag == 'UWL':
+        text = variable + ': Is above Upper Warning Limit.'
+    elif threshold_tag == 'UCL':
+        text = variable + ': Is above Upper Critic Limit.'
+    else:
+        print('Invalid threshold tag')
+        raise
+
+    return text
 
 
 def build_symptoms_report(window):
@@ -64,7 +85,10 @@ def build_symptoms_report(window):
         variable_info = info[variable]
         threshold_tag = build_threshold_tag(last_point, variable_info)
         if threshold_tag != '' and threshold_tag != 'nominal':
-            event = {'measurement': variable, 'relationship': threshold_tag}
+            detection_text = build_detection_text(variable, threshold_tag)
+            event = {'measurement': variable,
+                     'detection_text': detection_text,
+                     'threshold_tag': threshold_tag}
             symptoms_report.append(event)
 
     return symptoms_report

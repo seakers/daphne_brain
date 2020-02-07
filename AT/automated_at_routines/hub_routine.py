@@ -17,14 +17,11 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
 
                 # Retrieve the telemetry feed variables and send an initialization command to the frontend
                 tf_variables = list(tf_window['info'].columns.values)
-                tf_variables_units = {}
-                for variable in tf_variables:
-                    units = tf_window['info'].loc['units'][variable]
-                    tf_variables_units[variable] = units
-                # tf_variables.remove('timestamp')
+                content = {'variables_names': tf_variables,
+                           'values': tf_window['values'].to_json(),
+                           'info': tf_window['info'].to_json()}
                 command = {'type': 'initialize_telemetry',
-                           'variables_names': tf_variables,
-                           'variables_units': tf_variables_units}
+                           'content': content}
                 async_to_sync(channel.send)(channel_name, command)
 
                 # Put the first simulator output back in the queue and update the while loop condition
@@ -62,9 +59,10 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
                 hub_to_at.put(last_window)
 
                 # Update and send the telemetry update command for the frontend
-                command = {'type': 'telemetry_update',
-                           'values': tf_window['values'].to_json(),
+                content = {'values': tf_window['values'].to_json(),
                            'info': tf_window['info'].to_json()}
+                command = {'type': 'telemetry_update',
+                           'content': content}
                 async_to_sync(channel.send)(channel_name, command)
 
         # Check the anomaly treatment output queue
