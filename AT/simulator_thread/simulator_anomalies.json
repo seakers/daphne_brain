@@ -6,9 +6,9 @@
       "max_increment": 15
     },
     "Pressure": {
-      "pace_in": 0.02,
+      "pace_in": 0.1,
       "pace_out": -0.02,
-      "max_increment": 0.5
+      "max_increment": 3
     }
   }
 }
