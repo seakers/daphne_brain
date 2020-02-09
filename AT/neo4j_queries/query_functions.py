@@ -81,6 +81,29 @@ def retrieve_procedures_from_anomaly(anomaly_name):
     return procedure_list
 
 
+def retrieve_thresholds_from_measurement(measurement_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL"
+    result = session.run(query)
+
+    # Parse the result
+    parsed_result = ''
+    for item in result:
+        parsed_result = item
+
+    thresholds_dict = {'LCL': parsed_result[0],
+                       'LWL': parsed_result[1],
+                       'UWL': parsed_result[2],
+                       'UCL': parsed_result[3]}
+    print(thresholds_dict)
+
+    return thresholds_dict
+
+
 def retrieve_ordered_steps_from_procedure(procedure_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
