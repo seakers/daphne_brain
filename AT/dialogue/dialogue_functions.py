@@ -2,6 +2,7 @@ import json
 import pandas as pd
 
 import AT.recommendation.dialogue_functions as recommendation
+from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement
 
 
 def get_measurement_current_value(measurement, context):
@@ -18,10 +19,23 @@ def get_measurement_current_value(measurement, context):
     last_measurement_value = measurement_values_column.iloc[-1]
 
     # Retrieve the measurement units
-    meausrement_info_column = info_dataframe[measurement]
-    units = meausrement_info_column['units']
+    measurement_info_column = info_dataframe[measurement]
+    units = measurement_info_column['units']
 
     # Build the output dictionary
     result = {'measurement_value': last_measurement_value, 'measurement_units': units}
 
     return result
+
+
+def get_measurement_thresholds(measurement):
+    # Retrieve  and parse the (jsoned) telemetry feed values dataframe from the context
+    thresholds = retrieve_thresholds_from_measurement(measurement)
+
+    # Parse the result
+    result_list = []
+    for key in thresholds:
+        result = {'threshold_type': key, 'threshold_value': thresholds[key]}
+        result_list.append(result)
+
+    return result_list
