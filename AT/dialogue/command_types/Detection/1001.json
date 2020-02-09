@@ -4,31 +4,33 @@
   [
     { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Retrieve current value of a certain measurement",
+  "objective": "Provide the thresholds for a certain measurement",
   "function":
   {
-    "run_template": "dialogue_functions.get_measurement_current_value(data['measurement'], context)",
+    "run_template": "dialogue_functions.get_measurement_thresholds(data['measurement'])",
     "results": [
       {
-        "result_type": "single",
+        "result_type": "list",
         "result_fields": {
-          "measurement_value": "command_results[0]['measurement_value']",
-          "measurement_units": "command_results[0]['measurement_units']"
+          "threshold_type": "item['threshold_type']",
+          "threshold_value": "item['threshold_value']"
         }
       }
     ]
   },
   "voice_response": [
     {
-      "type": "single",
-      "template": "The current value of the ${measurement} measurement is: ${measurement_value} [${measurement_units}]."
+      "type": "list",
+      "begin": "The thresholds for the ${measurement} measurement are: ",
+      "repeat": "${threshold_type}: ${threshold_value}",
+      "end": "."
     }
   ],
   "visual_response": [
     {
-      "type": "text",
-      "from": "single",
-      "template": "The current value of the ${measurement} measurement is: ${measurement_value} [${measurement_units}]."
+      "type": "list",
+      "begin": "The thresholds for the ${measurement} measurement are: ",
+      "item_template": "${threshold_type}: ${threshold_value}"
     }
   ]
 }
