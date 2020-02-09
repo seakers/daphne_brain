@@ -3,23 +3,19 @@ import pandas as pd
 
 import AT.recommendation.dialogue_functions as recommendation
 from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement
+from AT.neo4j_queries.query_functions import retrieve_units_from_measurement
+from AT.neo4j_queries.query_functions import retrieve_risks_from_anomaly
+from AT.dialogue.data_helpers import last_measurement_value_from_context
 
 
 def get_measurement_current_value(measurement, context):
-    # Retrieve the (jsoned) telemetry context. Raise an error if the telemetry context is empty
-    values_json = context['screen']['current_telemetry_values']
-    info_json = context['screen']['current_telemetry_info']
-    if values_json != '' and info_json != '':
-        # Parse the telemetry context (convert to dataframes)
-        values_dataframe = pd.read_json(values_json)
-        info_dataframe = pd.read_json(info_json)
+    # Retrieve the last value from the context
+    last_value = last_measurement_value_from_context(measurement, context)
 
-        # Retrieve the measurement current value and units
-        last_measurement_value = values_dataframe[measurement].iloc[-1]
-        units = info_dataframe[measurement]['units']
-
-        # Build the output dictionary
-        result = {'measurement_value': last_measurement_value, 'measurement_units': units}
+    # If not empty, retrieve the units and build the result.
+    if last_value is not None:
+        units = retrieve_units_from_measurement(measurement)
+        result = {'measurement_value': last_value, 'measurement_units': units}
     else:
         print('The telemetry context is empty or incomplete.')
         result = {'measurement_value': 'None', 'measurement_units': 'None'}
@@ -28,8 +24,9 @@ def get_measurement_current_value(measurement, context):
 
 
 def get_measurement_thresholds(measurement):
-    # Retrieve  and parse the (jsoned) telemetry feed values dataframe from the context
-    thresholds, units = retrieve_thresholds_from_measurement(measurement)
+    # Query the neo4j graph for the thresholds and units
+    thresholds = retrieve_thresholds_from_measurement(measurement)
+    units = retrieve_units_from_measurement(measurement)
 
     # Parse the result
     result_list = []
@@ -38,3 +35,36 @@ def get_measurement_thresholds(measurement):
         result_list.append(result)
 
     return result_list
+
+
+def check_measurement_status(measurement, context):
+    # Retrieve the last value from the context
+    last_value = last_measurement_value_from_context(measurement, context)
+
+    # Query the neo4j graph for the thresholds
+    thresholds = retrieve_thresholds_from_measurement(measurement)
+
+    if last_value is not None:
+        if last_value <= thresholds['LCL']:
+            zone = 'below the Low Critical Limit'
+        elif thresholds['LCL'] < last_value <= thresholds['LWL']:
+            zone = 'below the Low Warning Limit (but above the Low Critical Limit)'
+        elif thresholds['LWL'] < last_value <= thresholds['UWL']:
+            zone = 'nominal'
+        elif thresholds['UWL'] < last_value <= thresholds['UCL']:
+            zone = 'above the High Warning Limit (but below the High Critical Limit)'
+        elif thresholds['UCL'] < last_value:
+            zone = 'above the High Critical Limit'
+        else:
+            zone = 'ZONE ERROR'
+    else:
+        zone = 'None'
+
+    return zone
+
+
+def get_anomaly_risks(anomaly):
+    # Query the neo4j graph for the anomaly risks
+    risks = retrieve_risks_from_anomaly(anomaly)
+
+    return risks

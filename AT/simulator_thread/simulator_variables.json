@@ -1,11 +1,11 @@
 {
   "Pressure": {
     "units": "atm",
-    "low_critic_threshold": 0.5,
-    "low_warning_threshold": 0.9,
+    "low_critic_threshold": 0.58,
+    "low_warning_threshold": 0.89,
     "nominal": 1,
-    "high_warning_threshold": 1.1,
-    "high_critic_threshold": 1.5
+    "high_warning_threshold": 1.5,
+    "high_critic_threshold": 2
   },
   "ppN2": {
     "units": "%",

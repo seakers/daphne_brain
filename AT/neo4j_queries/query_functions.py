@@ -70,7 +70,7 @@ def retrieve_procedures_from_anomaly(anomaly_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (a:Anomaly)-[:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.Title"
+    query = "MATCH (a:Anomaly)-[:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN DISTINCT p.Title"
     result = session.run(query)
 
     # Parse the result
@@ -81,6 +81,23 @@ def retrieve_procedures_from_anomaly(anomaly_name):
     return procedure_list
 
 
+def retrieve_risks_from_anomaly(anomaly_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (a:Anomaly)-[:Risk]-(r:Risk) WHERE a.Title='" + anomaly_name + "' RETURN DISTINCT r.Title"
+    result = session.run(query)
+
+    # Parse the result
+    risks_list = []
+    for item in result:
+        risks_list.append(item[0])
+
+    return risks_list
+
+
 def retrieve_thresholds_from_measurement(measurement_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
@@ -88,7 +105,7 @@ def retrieve_thresholds_from_measurement(measurement_name):
 
     # Build and send the query
     query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name +\
-            "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL, m.Unit"
+            "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL"
     result = session.run(query)
 
     # Parse the result
@@ -98,9 +115,28 @@ def retrieve_thresholds_from_measurement(measurement_name):
 
     thresholds_dict = {'LCL': parsed_result[0], 'LWL': parsed_result[1],
                        'UWL': parsed_result[2], 'UCL': parsed_result[3]}
-    units = parsed_result[4]
 
-    return thresholds_dict, units
+    return thresholds_dict
+
+
+def retrieve_units_from_measurement(measurement_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name +\
+            "' RETURN DISTINCT m.Unit"
+    result = session.run(query)
+
+    # Parse the result
+    parsed_result = ''
+    for item in result:
+        parsed_result = item
+
+    units = parsed_result[0]
+
+    return units
 
 
 def retrieve_ordered_steps_from_procedure(procedure_name):
