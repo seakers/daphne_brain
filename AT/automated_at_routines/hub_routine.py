@@ -3,7 +3,7 @@ import time
 from asgiref.sync import async_to_sync
 
 
-def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, channel, channel_name):
+def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, channel_layer, channel_name):
 
     # Wait for the first simulator output in order to send an initialization command to the frontend
     first_status_has_arrived = False
@@ -22,7 +22,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
                            'info': tf_window['info'].to_json()}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                async_to_sync(channel.send)(channel_name, command)
+                async_to_sync(channel_layer.send)(channel_name, command)
 
                 # Put the first simulator output back in the queue and update the while loop condition
                 sim_to_hub.put(signal)
@@ -63,13 +63,13 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
                            'info': tf_window['info'].to_json()}
                 command = {'type': 'telemetry_update',
                            'content': content}
-                async_to_sync(channel.send)(channel_name, command)
+                async_to_sync(channel_layer.send)(channel_name, command)
 
         # Check the anomaly treatment output queue
         if not at_to_hub.empty():
             signal = at_to_hub.get()
             if signal['type'] == 'symptoms_report':
-                async_to_sync(channel.send)(channel_name, signal)
+                async_to_sync(channel_layer.send)(channel_name, signal)
 
         # Update while loop condition and wait
         time_since_last_ping = time.time() - timer_start
