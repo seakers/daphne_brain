@@ -87,7 +87,8 @@ def retrieve_thresholds_from_measurement(measurement_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL"
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name +\
+            "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL, m.Unit"
     result = session.run(query)
 
     # Parse the result
@@ -95,13 +96,11 @@ def retrieve_thresholds_from_measurement(measurement_name):
     for item in result:
         parsed_result = item
 
-    thresholds_dict = {'LCL': parsed_result[0],
-                       'LWL': parsed_result[1],
-                       'UWL': parsed_result[2],
-                       'UCL': parsed_result[3]}
-    print(thresholds_dict)
+    thresholds_dict = {'LCL': parsed_result[0], 'LWL': parsed_result[1],
+                       'UWL': parsed_result[2], 'UCL': parsed_result[3]}
+    units = parsed_result[4]
 
-    return thresholds_dict
+    return thresholds_dict, units
 
 
 def retrieve_ordered_steps_from_procedure(procedure_name):

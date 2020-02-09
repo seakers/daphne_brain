@@ -6,36 +6,35 @@ from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measuremen
 
 
 def get_measurement_current_value(measurement, context):
-    # Retrieve  and parse the (jsoned) telemetry feed values dataframe from the context
+    # Retrieve the (jsoned) telemetry context. Raise an error if the telemetry context is empty
     values_json = context['screen']['current_telemetry_values']
-    values_dataframe = pd.read_json(values_json)
-
-    # Retrieve  and parse the (jsoned) telemetry feed info dataframe from the context
     info_json = context['screen']['current_telemetry_info']
-    info_dataframe = pd.read_json(info_json)
+    if values_json != '' and info_json != '':
+        # Parse the telemetry context (convert to dataframes)
+        values_dataframe = pd.read_json(values_json)
+        info_dataframe = pd.read_json(info_json)
 
-    # Retrieve the measurement current value
-    measurement_values_column = values_dataframe[measurement]
-    last_measurement_value = measurement_values_column.iloc[-1]
+        # Retrieve the measurement current value and units
+        last_measurement_value = values_dataframe[measurement].iloc[-1]
+        units = info_dataframe[measurement]['units']
 
-    # Retrieve the measurement units
-    measurement_info_column = info_dataframe[measurement]
-    units = measurement_info_column['units']
-
-    # Build the output dictionary
-    result = {'measurement_value': last_measurement_value, 'measurement_units': units}
+        # Build the output dictionary
+        result = {'measurement_value': last_measurement_value, 'measurement_units': units}
+    else:
+        print('The telemetry context is empty or incomplete.')
+        result = {'measurement_value': 'None', 'measurement_units': 'None'}
 
     return result
 
 
 def get_measurement_thresholds(measurement):
     # Retrieve  and parse the (jsoned) telemetry feed values dataframe from the context
-    thresholds = retrieve_thresholds_from_measurement(measurement)
+    thresholds, units = retrieve_thresholds_from_measurement(measurement)
 
     # Parse the result
     result_list = []
     for key in thresholds:
-        result = {'threshold_type': key, 'threshold_value': thresholds[key]}
+        result = {'threshold_type': key, 'threshold_value': thresholds[key], 'threshold_units': units}
         result_list.append(result)
 
     return result_list
