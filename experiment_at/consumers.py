@@ -6,7 +6,7 @@ from auth_API.helpers import get_or_create_user_information
 from experiment.models import ExperimentAction
 
 
-class ExperimentConsumer(JsonWebsocketConsumer):
+class ATExperimentConsumer(JsonWebsocketConsumer):
     ##### WebSocket event handlers
     def connect(self):
         """
