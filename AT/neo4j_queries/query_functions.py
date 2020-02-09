@@ -47,6 +47,23 @@ def retrieve_all_anomalies():
     return anomaly_list
 
 
+def retrieve_all_measurements():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = 'MATCH (m:Measurement) RETURN DISTINCT m.Name'
+    result = session.run(query)
+
+    # Parse the result
+    measurement_list = []
+    for item in result:
+        measurement_list.append(item[0])
+
+    return measurement_list
+
+
 def retrieve_procedures_from_anomaly(anomaly_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
