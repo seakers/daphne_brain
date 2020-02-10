@@ -5,6 +5,9 @@ import AT.recommendation.dialogue_functions as recommendation
 from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_units_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_risks_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_symptoms_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_affected_subsystems_from_anomaly
 from AT.dialogue.data_helpers import last_measurement_value_from_context
 
 
@@ -68,3 +71,28 @@ def get_anomaly_risks(anomaly):
     risks = retrieve_risks_from_anomaly(anomaly)
 
     return risks
+
+
+def get_anomaly_symptoms(anomaly):
+    # Query the neo4j graph for the anomaly risks
+    symptoms = retrieve_symptoms_from_anomaly(anomaly)
+
+    return symptoms
+
+
+def get_anomaly_procedures(anomaly):
+    # Query the neo4j graph for the anomaly risks
+    procedures = retrieve_procedures_from_anomaly(anomaly)
+    procedure_info_list = []
+    for procedure in procedures:
+        procedure_info = {'procedure_name': procedure, 'procedure_link': 'EMPTYLINK'}
+        procedure_info_list.append(procedure_info)
+
+    return procedure_info_list
+
+def get_anomaly_affected_subsystem(anomaly):
+    # Query the neo4j graph for the anomaly risks
+    subsystems = retrieve_affected_subsystems_from_anomaly(anomaly)
+    print(subsystems)
+
+    return subsystems
