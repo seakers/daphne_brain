@@ -9,5 +9,6 @@ urlpatterns = [
     path('reload-experiment', views.ReloadExperiment.as_view()),
     path('finish-experiment', views.FinishExperiment.as_view()),
 
-    path('subject-list', views.SubjectList.as_view())
+    path('subject-list', views.SubjectList.as_view()),
+    path('get-state', views.GetState.as_view()),
 ]
