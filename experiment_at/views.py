@@ -168,3 +168,10 @@ class SubjectList(APIView):
         return Response({
             "subjects": subject_info
         })
+
+class GetState(APIView):
+
+    def post(self, request, format=None):
+        state_query = ATExperimentContext.objects.filter(user_information__id__exact=int(request.data["user_id"]))[0]
+        state = json.loads(state_query.current_state)
+        return Response(state)

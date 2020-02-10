@@ -14,7 +14,7 @@ class ATExperimentContext(models.Model):
 
 # A data structure defining an experimental stage
 class ATExperimentStage(models.Model):
-    experimentcontext = models.ForeignKey(ATExperimentContext, on_delete=models.CASCADE)
+    atexperimentcontext = models.ForeignKey(ATExperimentContext, on_delete=models.CASCADE)
 
     type = models.CharField(max_length=50)
     start_date = models.DateTimeField()
@@ -23,7 +23,7 @@ class ATExperimentStage(models.Model):
 
 
 class ATExperimentAction(models.Model):
-    experimentstage = models.ForeignKey(ATExperimentStage, on_delete=models.CASCADE)
+    atexperimentstage = models.ForeignKey(ATExperimentStage, on_delete=models.CASCADE)
 
     action = models.TextField()
     date = models.DateTimeField()

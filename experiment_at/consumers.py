@@ -3,7 +3,7 @@ import json
 
 from channels.generic.websocket import JsonWebsocketConsumer
 from auth_API.helpers import get_or_create_user_information
-from experiment.models import ExperimentAction
+from experiment_at.models import ATExperimentAction
 
 
 class ATExperimentConsumer(JsonWebsocketConsumer):
@@ -23,13 +23,13 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
 
         # Get an updated session store
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
-        if hasattr(user_info, 'experimentcontext'):
-            experiment_context = user_info.experimentcontext
+        if hasattr(user_info, 'atexperimentcontext'):
+            experiment_context = user_info.atexperimentcontext
 
             if content.get('msg_type') == 'add_action':
-                experiment_stage = experiment_context.experimentstage_set.all().order_by("id")[content['stage']]
-                ExperimentAction.objects.create(experimentstage=experiment_stage, action=json.dumps(content['action']),
-                                                date=datetime.datetime.utcnow())
+                experiment_stage = experiment_context.atexperimentstage_set.all().order_by("id")[content['stage']]
+                ATExperimentAction.objects.create(experimentstage=experiment_stage, action=json.dumps(content['action']),
+                                                  date=datetime.datetime.utcnow())
                 self.send_json({
                     'action': content['action'],
                     'date': datetime.datetime.utcnow().isoformat()
