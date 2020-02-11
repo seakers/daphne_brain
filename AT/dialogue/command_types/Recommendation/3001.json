@@ -1,0 +1,34 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Provide the pdf for a certain procedure",
+  "function":
+  {
+    "run_template": "dialogue_functions.get_procedure_pdf(data['procedure'])",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "procedure_name": "command_results[0]['procedure_name']",
+          "pdf_link": "command_results[0]['pdf_link']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "A link to the ${procedure_name} procedure pdf has been provided."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "See the pdf for <a href=\"api/at/recommendation/procedure?${pdf_link}\" target=\"_blank\">${procedure_name}</a>."
+    }
+  ]
+}
