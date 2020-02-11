@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+import urllib.parse
 
 
 def last_measurement_value_from_context(measurement, context):
@@ -12,3 +14,8 @@ def last_measurement_value_from_context(measurement, context):
         last_measurement_value = values_dataframe[measurement].iloc[-1]
         last_measurement_value = round(last_measurement_value, 5)
         return last_measurement_value
+
+
+def pdf_link_from_procedure(procedure):
+    path = os.path.join(os.getcwd(), "AT", "databases", "procedures", procedure + '.pdf')
+    return urllib.parse.urlencode({"filename": path})

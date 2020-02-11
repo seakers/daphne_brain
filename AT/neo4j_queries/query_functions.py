@@ -64,6 +64,23 @@ def retrieve_all_measurements():
     return measurement_list
 
 
+def retrieve_all_procedures():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = 'MATCH (p:Procedure) RETURN DISTINCT p.Title'
+    result = session.run(query)
+
+    # Parse the result
+    procedure_list = []
+    for item in result:
+        procedure_list.append(item[0])
+
+    return procedure_list
+
+
 def retrieve_procedures_from_anomaly(anomaly_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
@@ -79,6 +96,43 @@ def retrieve_procedures_from_anomaly(anomaly_name):
         procedure_list.append(item[0])
 
     return procedure_list
+
+
+def retrieve_affected_components_from_procedure(procedure):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure)-[:Comprises]-(c:Component) WHERE p.Title='" + procedure + "' RETURN DISTINCT c.Title"
+    result = session.run(query)
+
+    # Parse the result
+    component_list = []
+    for item in result:
+        component_list.append(item[0])
+
+    return component_list
+
+
+def retrieve_time_from_procedure(procedure):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) WHERE p.Title='" + procedure + "' RETURN DISTINCT p.ETR"
+    result = session.run(query)
+
+    # Parse the result
+    procedure_time_list = []
+    for item in result:
+        time_string = item[0]
+        time_int = int(time_string.strip(' Minutes'))
+        procedure_time_list.append(time_int)
+    time = procedure_time_list[0]
+
+    return time
 
 
 def retrieve_risks_from_anomaly(anomaly_name):

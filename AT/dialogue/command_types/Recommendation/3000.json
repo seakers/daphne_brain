@@ -13,7 +13,7 @@
         "result_type": "list",
         "result_fields": {
           "procedure_name": "item['procedure_name']",
-          "procedure_link": "item['procedure_link']"
+          "pdf_link": "item['pdf_link']"
         }
       }
     ]
@@ -30,7 +30,7 @@
     {
       "type": "list",
       "begin": "The procedures for ${anomaly} anomaly are:",
-      "item_template": "${procedure_name}"
+      "item_template": "<a href=\"api/at/recommendation/procedure?${pdf_link}\" target=\"_blank\">${procedure_name}</a>"
     }
   ]
 }

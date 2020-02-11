@@ -4,7 +4,7 @@ from daphne_context.models import UserInformation
 from AT.diagnosis.models import ECLSSAnomalies
 from AT.diagnosis import models
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index
-from AT.neo4j_queries.query_functions import retrieve_all_measurements, retrieve_all_anomalies
+from AT.neo4j_queries.query_functions import retrieve_all_measurements, retrieve_all_anomalies, retrieve_all_procedures
 
 
 def extract_anomaly_ids(processed_question, number_of_features, context: UserInformation):
@@ -16,8 +16,8 @@ def extract_anomaly_ids(processed_question, number_of_features, context: UserInf
 
 
 def extract_procedures(processed_question, number_of_features, context: UserInformation):
-    procedure_list = range(1, 25)
-    procedures = [str(id) for id in procedure_list]
+    # Get a list of procedures
+    procedures = retrieve_all_procedures()
     return sorted_list_of_features_by_index(processed_question, procedures, number_of_features)
 
 
