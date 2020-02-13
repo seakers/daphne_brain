@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'AT',
     'auth_API',
     'experiment',
+    'experiment_at',
     'iFEED_API',
     'django.contrib.admin',
     'django.contrib.auth',
