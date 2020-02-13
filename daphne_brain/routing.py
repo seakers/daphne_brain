@@ -3,6 +3,7 @@ from django.urls import path
 from channels.routing import ProtocolTypeRouter, URLRouter
 
 from daphne_brain import settings
+from experiment_at.consumers import ATExperimentConsumer
 
 if "EOSS" in settings.ACTIVE_MODULES:
     from EOSS.consumers import EOSSConsumer
@@ -27,7 +28,8 @@ if "AT" in settings.ACTIVE_MODULES:
         # path('api/at/SARIMAX_AD', SARIMAX_AD),
         # path('api/at/adaptiveKNN', adaptiveKNN),
         # path('api/at/iForest', iForest),
-        path('api/at/ws', ATConsumer)
+        path('api/at/ws', ATConsumer),
+        path('api/at/experiment', ATExperimentConsumer)
     ])
 ws_routes.extend([
     path('api/experiment', ExperimentConsumer),
