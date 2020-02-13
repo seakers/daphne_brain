@@ -4,7 +4,7 @@ from django.db import models
 from daphne_context.models import UserInformation
 
 
-class ExperimentContext(models.Model):
+class ATExperimentContext(models.Model):
     user_information = models.OneToOneField(UserInformation, on_delete=models.CASCADE)
 
     is_running = models.BooleanField()
@@ -13,8 +13,8 @@ class ExperimentContext(models.Model):
 
 
 # A data structure defining an experimental stage
-class ExperimentStage(models.Model):
-    experimentcontext = models.ForeignKey(ExperimentContext, on_delete=models.CASCADE)
+class ATExperimentStage(models.Model):
+    atexperimentcontext = models.ForeignKey(ATExperimentContext, on_delete=models.CASCADE)
 
     type = models.CharField(max_length=50)
     start_date = models.DateTimeField()
@@ -22,15 +22,15 @@ class ExperimentStage(models.Model):
     end_state = models.TextField()
 
 
-class ExperimentAction(models.Model):
-    experimentstage = models.ForeignKey(ExperimentStage, on_delete=models.CASCADE)
+class ATExperimentAction(models.Model):
+    atexperimentstage = models.ForeignKey(ATExperimentStage, on_delete=models.CASCADE)
 
     action = models.TextField()
     date = models.DateTimeField()
 
 
 # An allowed command for Daphne (to be used with experiments to limit functionalities programmatically)
-class AllowedCommand(models.Model):
+class ATAllowedCommand(models.Model):
     user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
 
     # Command Type Choice
