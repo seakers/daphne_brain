@@ -42,8 +42,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                  current_scorecard_file="", current_scorecard="")
         edl_context.save()
 
-        at_context = ATContext(user_information=user_info, current_anomaly="", current_step=-1,
-                               current_telemetry_values='')
+        at_context = ATContext(user_information=user_info)
         at_context.save()
 
         return user_info

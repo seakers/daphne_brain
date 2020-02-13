@@ -162,17 +162,13 @@ class LoadAllAnomalies(APIView):
 
 class RetrieveProcedureFromAnomaly(APIView):
     def post(self, request):
-        # Retrieve the symptoms list from the request
+        # Retrieve the anomaly name list from the request
         anomaly_name = json.loads(request.data['anomaly_name'])
 
-        # Build the diagnosis report and send it to the frontend
-        procedure_name = retrieve_procedures_from_anomaly(anomaly_name)
+        # Obtain all the procedures related to the anomaly
+        procedure_names = retrieve_procedures_from_anomaly(anomaly_name)
 
-        # If more than one procedure is returned, for now, take the first one
-        if len(procedure_name) > 0:
-            procedure_name = procedure_name[0]
-
-        return Response(procedure_name)
+        return Response(procedure_names)
 
 
 class RetrieveStepsFromProcedure(APIView):
