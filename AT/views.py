@@ -14,6 +14,7 @@ from AT.neo4j_queries.query_functions import diagnose_symptoms
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_ordered_steps_from_procedure
+from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 
 
 # QUEUES
@@ -177,6 +178,7 @@ class RetrieveStepsFromProcedure(APIView):
         procedure_name = json.loads(request.data['procedure_name'])
 
         # Build the diagnosis report and send it to the frontend
-        steps_list = retrieve_ordered_steps_from_procedure(procedure_name)
+        # steps_list = retrieve_ordered_steps_from_procedure(procedure_name)
+        steps_list = retrieve_fancy_steps_from_procedure(procedure_name)
 
         return Response(steps_list)

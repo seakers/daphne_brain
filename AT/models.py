@@ -15,13 +15,10 @@ class ATContext(models.Model):
     # to ask questions such as "What are the risks of THIS anomaly?" from the chat box. A proper method is then defined
     # to retrieve the meaning of the "THIS" pointer.
     selected_anomalies = models.TextField(default='')
-    recent_anomalies = models.TextField(default='')
     selected_measurements = models.TextField(default='')
-    recent_measurements = models.TextField(default='')
     selected_procedures = models.TextField(default='')
-    recent_procedures = models.TextField(default='')
 
-    # Current step context variable (to be defined)
+    # Current step context variable (dictionary with the selected procedures as keys and their current steps as values)
     current_procedure_step = models.TextField(default='')
 
     # Current telemetry values context variable
