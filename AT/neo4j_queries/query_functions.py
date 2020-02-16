@@ -263,3 +263,66 @@ def retrieve_ordered_steps_from_procedure(procedure_name):
         steps_list.append(item[0])
 
     return steps_list
+
+
+def retrieve_fancy_steps_from_procedure(procedure):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build the queries
+    query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+
+    # Run the queries
+    result_step_labels = session.run(query_step_labels)
+    result_step_actions = session.run(query_step_actions)
+
+    step_labels = []
+    for item in result_step_labels:
+        step_labels.append(item[0])
+
+    step_actions = []
+    for item in result_step_actions:
+        step_actions.append(item[0])
+
+    # Parse the result
+    steps = []
+    label_counter = {
+        'steps': 0,
+        'substeps': 0,
+        'subsubsteps': 0
+    }
+    for index, step in enumerate(step_labels):
+        # Retrieve the depth from the label points
+        label_points = 0
+        for char in step_labels[index]:
+            if char == '.':
+                label_points += 1
+        depth = label_points
+
+        # Decide whether the step should be initially enabled or not
+        is_enabled = False
+        if depth == 0:
+            if label_counter['steps'] == 0:
+                is_enabled = True
+            label_counter['steps'] += 1
+        if depth == 1:
+            if label_counter['steps'] == 1 and label_counter['substeps'] == 0:
+                is_enabled = True
+            label_counter['substeps'] += 1
+        if depth == 1:
+            if label_counter['steps'] == 1 and label_counter['substeps'] == 1 and label_counter['subsubsteps'] == 0:
+                is_enabled = True
+            label_counter['subsubsteps'] += 1
+
+        # Build the parsed item
+        step_item = {'depth': depth,
+                     'label': step_labels[index],
+                     'action': step_actions[index],
+                     'isDone': False,}
+
+        steps.append(step_item)
+
+    return steps
+
