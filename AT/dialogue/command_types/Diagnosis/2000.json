@@ -20,7 +20,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The risks for the ${anomaly} anomaly are:",
+      "begin": "The potential risks for the ${anomaly} anomaly are:",
       "repeat": "${risk}",
       "end": "."
     }
@@ -28,7 +28,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The risks for the ${anomaly} anomaly are: ",
+      "begin": "The potential risks for the ${anomaly} anomaly are: ",
       "item_template": "${risk}"
     }
   ]

@@ -1,0 +1,33 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Check the status of a certain measurement",
+  "function":
+  {
+    "run_template": "dialogue_functions.check_measurement_status(data['measurement'], context)",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "status": "command_results[0]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "The ${measurement} measurement is currently ${status}."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "The ${measurement} measurement is currently ${status}."
+    }
+  ]
+}
