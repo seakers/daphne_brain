@@ -141,7 +141,7 @@ def retrieve_risks_from_anomaly(anomaly_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (a:Anomaly)-[:Risk]-(r:Risk) WHERE a.Title='" + anomaly_name + "' RETURN DISTINCT r.Title"
+    query = "MATCH (a:Anomaly)-[:Can_Cause]-(r:Risk) WHERE a.Title='" + anomaly_name + "' RETURN DISTINCT r.Title"
     result = session.run(query)
 
     # Parse the result

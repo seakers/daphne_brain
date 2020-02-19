@@ -4,7 +4,7 @@
   [
     { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Retrieve current value of a certain measurement",
+  "objective": "retrieve current value of a certain measurement",
   "function":
   {
     "run_template": "dialogue_functions.get_measurement_current_value(data['measurement'], context)",

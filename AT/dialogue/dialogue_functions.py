@@ -17,6 +17,7 @@ from AT.dialogue.data_helpers import pdf_link_from_procedure
 def get_measurement_current_value(measurement, context):
     # Retrieve the last value from the context
     last_value = last_measurement_value_from_context(measurement, context)
+    print(context)
 
     # If not empty, retrieve the units and build the result.
     if last_value is not None:

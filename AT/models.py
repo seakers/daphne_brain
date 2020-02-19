@@ -18,11 +18,11 @@ class ATContext(models.Model):
     selected_measurements = models.TextField(default='')
     selected_procedures = models.TextField(default='')
 
-    # Current step context variable (dictionary with the selected procedures as keys and their current steps as values)
-    current_procedure_step = models.TextField(default='')
-
     # Current telemetry values context variable
     current_telemetry_values = models.TextField(default='')
+
+    # Thread deployment status bool
+    are_at_threads_deployed = models.BooleanField(default=False)
 
 
 class ATContextSerializer(serializers.ModelSerializer):
