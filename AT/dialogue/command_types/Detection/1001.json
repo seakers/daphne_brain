@@ -1,0 +1,38 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    { "name": "parameter_group", "type": "parameter_group", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "provide the thresholds for a certain measurement",
+  "function":
+  {
+    "run_template": "dialogue_functions.get_measurement_thresholds(data['measurement'], data['parameter_group'])",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "threshold_type": "item['threshold_type']",
+          "threshold_value": "item['threshold_value']",
+          "threshold_units": "item['threshold_units']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The thresholds for the ${measurement} (${parameter_group}) measurement are:",
+      "repeat": "${threshold_type}: ${threshold_value} [${threshold_units}]",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The thresholds for the ${measurement} (${parameter_group}) measurement are:",
+      "item_template": "${threshold_type}: ${threshold_value} [${threshold_units}]"
+    }
+  ]
+}
