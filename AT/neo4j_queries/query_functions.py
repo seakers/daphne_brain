@@ -64,6 +64,24 @@ def retrieve_all_measurements():
     return measurement_list
 
 
+def retrieve_all_measurements_parameter_groups():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = 'MATCH (m:Measurement) RETURN DISTINCT m.ParameterGroup'
+    result = session.run(query)
+
+    # Parse the result
+    measurement_list = []
+    for item in result:
+        if item[0] is not None and item[0] != '':
+            measurement_list.append(item[0])
+
+    return measurement_list
+
+
 def retrieve_all_procedures():
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
@@ -176,23 +194,25 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
 
     # Build and send the query to obtain the affected measurements that exceed the UWL
     query_uwl = "MATCH (a:Anomaly)-[r:Exceeds_UWL]-(m:Measurement) WHERE a.Title='" + anomaly_name +\
-                "' RETURN DISTINCT m.Name"
+                "' RETURN DISTINCT m.Name, m.ParameterGroup"
     result_uwl = session.run(query_uwl)
 
     # Parse the result
     symptoms_list_uwl = []
     for item in result_uwl:
-        symptoms_list_uwl.append(item[0])
+        measurement_name = item[0] + ' (' + item[1] + ')'
+        symptoms_list_uwl.append(measurement_name)
 
     # Build and send the query to obtain the affected measurements that exceed the UWL
     query_lwl = "MATCH (a:Anomaly)-[r:Exceeds_LWL]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
-                "' RETURN DISTINCT m.Name"
+                "' RETURN DISTINCT m.Name, m.ParameterGroup"
     result_lwl = session.run(query_lwl)
 
     # Parse the result
     symptoms_list_lwl = []
     for item in result_lwl:
-        symptoms_list_lwl.append(item[0])
+        measurement_name = item[0] + ' (' + item[1] + ')'
+        symptoms_list_lwl.append(measurement_name)
 
     # Build the output (making the relationship explicit)
     symptoms_list = []
@@ -206,13 +226,13 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
     return symptoms_list
 
 
-def retrieve_thresholds_from_measurement(measurement_name):
+def retrieve_thresholds_from_measurement(measurement_name, parameter_group):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name +\
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' AND m.ParameterGroup='" + parameter_group +\
             "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL"
     result = session.run(query)
 

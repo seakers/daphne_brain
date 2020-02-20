@@ -14,10 +14,10 @@ from AT.dialogue.data_helpers import last_measurement_value_from_context
 from AT.dialogue.data_helpers import pdf_link_from_procedure
 
 
-def get_measurement_current_value(measurement, context):
+def get_measurement_current_value(measurement, parameter_group, context):
     # Retrieve the last value from the context
-    last_value = last_measurement_value_from_context(measurement, context)
-    print(context)
+    measurement_display_name = measurement + ' (' + parameter_group + ')'
+    last_value = last_measurement_value_from_context(measurement_display_name, context)
 
     # If not empty, retrieve the units and build the result.
     if last_value is not None:
@@ -30,9 +30,9 @@ def get_measurement_current_value(measurement, context):
     return result
 
 
-def get_measurement_thresholds(measurement):
+def get_measurement_thresholds(measurement, parameter_group):
     # Query the neo4j graph for the thresholds and units
-    thresholds = retrieve_thresholds_from_measurement(measurement)
+    thresholds = retrieve_thresholds_from_measurement(measurement, parameter_group)
     units = retrieve_units_from_measurement(measurement)
 
     # Parse the result
@@ -44,12 +44,13 @@ def get_measurement_thresholds(measurement):
     return result_list
 
 
-def check_measurement_status(measurement, context):
+def check_measurement_status(measurement, parameter_group, context):
     # Retrieve the last value from the context
-    last_value = last_measurement_value_from_context(measurement, context)
+    measurement_display_name = measurement + ' (' + parameter_group + ')'
+    last_value = last_measurement_value_from_context(measurement_display_name, context)
 
     # Query the neo4j graph for the thresholds
-    thresholds = retrieve_thresholds_from_measurement(measurement)
+    thresholds = retrieve_thresholds_from_measurement(measurement, parameter_group)
 
     if last_value is not None:
         if last_value <= thresholds['LCL']:

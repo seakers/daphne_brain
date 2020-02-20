@@ -4,22 +4,32 @@ import pandas as pd
 
 def get_param_values(sensor_data):
     new_row = {}
-    tf_info_dict = {'parameter': ['units', 'low_critic_threshold', 'low_warning_threshold', 'nominal',
-                                  'high_warning_threshold', 'high_critic_threshold', ]}
+    tf_info_dict = {'parameter': ['display_name',
+                                  'kg_name',
+                                  'group',
+                                  'units',
+                                  'low_critic_threshold',
+                                  'low_warning_threshold',
+                                  'nominal',
+                                  'high_warning_threshold',
+                                  'high_critic_threshold', ]}
 
     for item in sensor_data:
         name = item['Name']
         nominal = item['NominalValue']
         simulated_value = item['SimValue']
         units = item['Unit']
-
+        group = item['ParameterGroup']
         lct = item['LowerCriticalLimit']
         lwt = item['LowerWarningLimit']
         hwt = item['UpperWarningLimit']
         hct = item['UpperCriticalLimit']
 
-        tf_info_dict[name] = [units, lct, lwt, nominal, hwt, hct]
-        new_row[name] = simulated_value
+        display_name = name + ' (' + group + ')'
+        kg_name = name
+
+        tf_info_dict[display_name] = [display_name, kg_name, group, units, lct, lwt, nominal, hwt, hct]
+        new_row[display_name] = simulated_value
 
     tf_info = pd.DataFrame(tf_info_dict)
     tf_info = tf_info.set_index('parameter')
@@ -51,9 +61,8 @@ def update_window(sensor_data, tf_window, counter):
         new_row.append(value)
 
     # Update and send telemetry feed window
-    print(tf_window)
     tf_window['values'] = tf_window['values'].drop(index=counter)
-    tf_window['values'].loc[counter + 61] = new_row
+    tf_window['values'].loc[counter + 60] = new_row
     tf_window['info'] = sensor_data['info']
 
     return tf_window
@@ -82,10 +91,13 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
                     tf_window = generate_initial_window(parsed_sensor_data)
                     first_update = False
                 else:
-                    tf_window = update_window(parsed_sensor_data, tf_window, counter)
+                    tf_window = update_window(parsed_sensor_data, tf_window, counter - 1)
 
                 sim_to_hub.put({'type': 'window', 'content': tf_window})
                 counter += 1
+                print('New sensor data received and sent.')
+
+            time.sleep(0.1)
 
     print('Simulator thread stopped.')
     time.sleep(0.1)

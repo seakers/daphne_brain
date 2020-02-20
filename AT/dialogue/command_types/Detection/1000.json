@@ -2,12 +2,13 @@
   "type": "run_function",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    ,{ "name": "parameter_group", "type": "parameter_group", "options": "", "from_context": false, "mandatory": true }
   ],
   "objective": "retrieve current value of a certain measurement",
   "function":
   {
-    "run_template": "dialogue_functions.get_measurement_current_value(data['measurement'], context)",
+    "run_template": "dialogue_functions.get_measurement_current_value(data['measurement'], data['parameter_group'], context)",
     "results": [
       {
         "result_type": "single",
@@ -21,14 +22,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "The current value of the ${measurement} measurement is: ${measurement_value} [${measurement_units}]."
+      "template": "The current value of the ${measurement} (${parameter_group}) measurement is: ${measurement_value} [${measurement_units}]."
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "The current value of the ${measurement} measurement is: ${measurement_value} [${measurement_units}]."
+      "template": "The current value of the ${measurement} (${parameter_group}) measurement is: ${measurement_value} [${measurement_units}]."
     }
   ]
 }
