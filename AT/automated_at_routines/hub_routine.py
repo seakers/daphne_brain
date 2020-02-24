@@ -4,10 +4,19 @@ from asgiref.sync import async_to_sync
 
 
 def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, channel_layer, channel_name):
+    # Set the "checking frequency"
+    check_delay = 0.1
+
+    # Set the ping routine counters
+    life_limit = 40
+    time_since_last_ping = 0
 
     # Wait for the first simulator output in order to send an initialization command to the frontend
     first_status_has_arrived = False
-    while not first_status_has_arrived:
+    first_status_is_timeout = False
+    first_status_timer = 0
+    first_status_time_limit = 10
+    while not first_status_has_arrived and not first_status_is_timeout:
         if not sim_to_hub.empty():
             # Parse the simulator message
             signal = sim_to_hub.get()
@@ -28,11 +37,23 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
                 sim_to_hub.put(signal)
                 first_status_has_arrived = True
         else:
-            time.sleep(0.01)
+            # Update counters and wait
+            first_status_timer += check_delay
+            time.sleep(check_delay)
 
-    # Set and initialize the ping routine counters
-    life_limit = 40
-    time_since_last_ping = 0
+            # Print loop info
+            s1 = str(round(first_status_timer, 1))
+            s2 = str(round(first_status_time_limit, 1))
+            waiting_message = 'Waiting to receive first status (' + s1 + ' seconds passed out of ' + s2 + ')'
+            print(waiting_message)
+
+            # Check break condition
+            if first_status_timer > first_status_time_limit:
+                first_status_is_timeout = True
+                time_since_last_ping = life_limit + 1
+                print('First status not received. Aborting AT routine.')
+
+    # Initialize the ping routine timer
     timer_start = time.time()
 
     # Start the hub routine
@@ -73,7 +94,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
 
         # Update while loop condition and wait
         time_since_last_ping = time.time() - timer_start
-        time.sleep(0.1)
+        time.sleep(check_delay)
 
     hub_to_sim.put({'type': 'stop', 'content': ''})
     hub_to_at.put({'type': 'stop', 'content': ''})

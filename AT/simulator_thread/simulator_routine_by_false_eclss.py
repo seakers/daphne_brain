@@ -29,13 +29,26 @@ def generate_initial_window(status, variables, window_span, std_fact, digits):
         tf_values_dict[key] = values
 
     # Parse the variables information into a dictionary
-    tf_info_dict = {'parameter': ['units', 'low_critic_threshold', 'low_warning_threshold', 'nominal',
-                                  'high_warning_threshold', 'high_critic_threshold', ]}
+    tf_info_dict = {'parameter': ['display_name',
+                                  'kg_name',
+                                  'group',
+                                  'units',
+                                  'low_critic_threshold',
+                                  'low_warning_threshold',
+                                  'nominal',
+                                  'high_warning_threshold',
+                                  'high_critic_threshold', ]}
     for key in variables:
         variable_info = variables[key]
-        tf_info_dict[key] = [variable_info['units'], variable_info['low_critic_threshold'],
-                             variable_info['low_warning_threshold'], variable_info['nominal'],
-                             variable_info['high_warning_threshold'], variable_info['high_critic_threshold'], ]
+        tf_info_dict[key] = [variable_info['display_name'],
+                             variable_info['kg_name'],
+                             variable_info['group'],
+                             variable_info['units'],
+                             variable_info['low_critic_threshold'],
+                             variable_info['low_warning_threshold'],
+                             variable_info['nominal'],
+                             variable_info['high_warning_threshold'],
+                             variable_info['high_critic_threshold'], ]
 
     # Convert both dictionaries to dataframes
     tf_values = pd.DataFrame(tf_values_dict)
