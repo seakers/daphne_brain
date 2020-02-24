@@ -161,10 +161,11 @@ class SubjectList(APIView):
         subjects = UserInformation.objects.filter(atexperimentcontext__is_running__exact=True)
         subject_info = []
         for subject in subjects:
-            subject_info.append({
-                "name": subject.user.username,
-                "id": subject.id
-            })
+            if subject.user is not None:
+                subject_info.append({
+                    "name": subject.user.username,
+                    "id": subject.id
+                })
         return Response({
             "subjects": subject_info
         })

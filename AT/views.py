@@ -88,6 +88,7 @@ class SimulateTelemetry(APIView):
 
 class StopTelemetry(APIView):
     def post(self, request):
+        print('STOP')
         frontend_to_hub_queue.put('stop')
         return Response()
 
@@ -124,6 +125,7 @@ class StartSeclssFeed(APIView):
 class SeclssFeed(APIView):
     def post(self, request):
         sensor_data = request.data['parameters']
+        print(sensor_data)
         # print(sensor_data)
         parsed_sensor_data = json.loads(sensor_data)
         server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})

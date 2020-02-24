@@ -1,5 +1,8 @@
 {
-  "Pressure": {
+  "Pressure (L1)": {
+    "display_name": "Pressure (L1)",
+    "kg_name": "Pressure",
+    "group": "L1",
     "units": "atm",
     "low_critic_threshold": 0.58,
     "low_warning_threshold": 0.89,
@@ -7,7 +10,10 @@
     "high_warning_threshold": 1.5,
     "high_critic_threshold": 2
   },
-  "ppN2": {
+  "ppN2 (L1)": {
+    "display_name": "ppN2 (L1)",
+    "kg_name": "ppN2",
+    "group": "L1",
     "units": "%",
     "low_critic_threshold": 60,
     "low_warning_threshold": 70,
@@ -16,6 +22,9 @@
     "high_critic_threshold": 90
   },
   "Dummy variable": {
+    "display_name": "Dummy variable",
+    "kg_name": "",
+    "group": "L1",
     "units": "euros",
     "low_critic_threshold":150,
     "low_warning_threshold": 180,
