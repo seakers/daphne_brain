@@ -19,6 +19,7 @@
 # under the License.
 #
 import json
+import os
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -33,7 +34,7 @@ class VASSARClient:
     
     def __init__(self, port=9090):
         # Make socket
-        self.transport = TSocket.TSocket('localhost', port)
+        self.transport = TSocket.TSocket(os.environ['VASSAR_HOST'], os.environ['VASSAR_PORT'])
     
         # Buffering is critical. Raw sockets are very slow
         self.transport = TTransport.TBufferedTransport(self.transport)
