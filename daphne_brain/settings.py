@@ -24,7 +24,7 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['3.134.113.173', 'localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu', 'dev.selva-research.com']
 
 USE_X_FORWARDED_HOST = True
 
@@ -96,10 +96,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'daphne',
-        'USER': 'daphne',
-        'PASSWORD': 'daphne',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'USER': os.environ['USER'],
+        'PASSWORD': os.environ['PASSWORD'],
+        'HOST': os.environ['POSTGRES_HOST'],
+        'PORT': os.environ['POSTGRES_PORT'],
     }
 }
 
@@ -126,7 +126,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ORIGIN_WHITELIST = (
     'http://daphne.engr.tamu.edu',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'http://dev.selva-research.com'
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -134,7 +135,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = (
     'http://daphne.engr.tamu.edu',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'http://dev.selva-research.com'
 )
 
 
@@ -162,7 +164,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [(os.environ['REDIS_HOST'], os.environ['REDIS_PORT'])],
         }
     },
 }
@@ -173,19 +175,19 @@ ASGI_APPLICATION = 'daphne_brain.routing.application'
 # Databases for Daphne
 ALCHEMY_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
-    'port': '5432',
-    'username': 'daphne',
-    'password': 'daphne',
+    'host': os.environ['POSTGRES_HOST'],
+    'port': os.environ['POSTGRES_PORT'],
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
     'database': 'daphne'
 }
 
 EDL_DATABASE = {
     'drivername': 'postgres',
-    'host': 'localhost',
-    'port': '5432',
-    'username': 'daphne',
-    'password': 'daphne',
+    'host': os.environ['POSTGRES_HOST'],
+    'port': os.environ['POSTGRES_PORT'],
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
 }
 
