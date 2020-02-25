@@ -276,7 +276,7 @@ class GetMarginalDrivingFeatures(APIView):
             if input_type == "binary":
 
                 # Start listening for redis inputs to share through websockets
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+                connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
                 channel = connection.channel()
                 channel.queue_declare(queue=session_key + '_localSearch')
                 channel.queue_purge(queue=session_key + '_localSearch')
@@ -348,7 +348,7 @@ class GeneralizeFeature(APIView):
 
     def post(self, request, format=None):
         # Start listening for redis inputs to share through websockets
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
         channel = connection.channel()
 
         session_key = request.session.session_key
@@ -757,7 +757,7 @@ class SetProblemParameters(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         # Start listening for redis inputs to share through websockets
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
         channel = connection.channel()
 
         session_key = request.session.session_key
