@@ -11,7 +11,7 @@ EOSS/analyst/data/
 
 EOSS/sensitivities/venv
 EOSS/sensitivities/.idea
-
+.vscode
 *.pyc
 db.sqlite3
 dialogue/models
