@@ -12,15 +12,16 @@ def last_measurement_value_from_context(measurement, context):
     if telemetry_values_json == '':
         return None
     else:
-        # Ugly patch. The commented block of code underneath should be used. It worked at some point, but right now
-        # it's giving an error that I don't understand nor know how to fix.
+        # Parse the telemetry feed from the context into a dictionary
         all_values_dict = ast.literal_eval(telemetry_values_json)
-        measurement_values_list = list(all_values_dict[measurement].values())
-        last_measurement_value = measurement_values_list[-1]
 
-        # values_dataframe = pd.read_json(values_json)
-        # last_measurement_value = values_dataframe[measurement].iloc[-1]
-        # last_measurement_value = round(last_measurement_value, 5)
+        # Check if the dictionary has a key with the requested measurement and proceed accordingly
+        if measurement in all_values_dict:
+            measurement_values_list = list(all_values_dict[measurement].values())
+            last_measurement_value = measurement_values_list[-1]
+        else:
+            last_measurement_value = None
+
         return last_measurement_value
 
 

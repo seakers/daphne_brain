@@ -241,8 +241,13 @@ def retrieve_thresholds_from_measurement(measurement_name, parameter_group):
     for item in result:
         parsed_result = item
 
-    thresholds_dict = {'LCL': parsed_result[0], 'LWL': parsed_result[1],
-                       'UWL': parsed_result[2], 'UCL': parsed_result[3]}
+    # Check if the parsed result is empty and proceed accordingly
+    if parsed_result != '':
+        thresholds_dict = {'LCL': parsed_result[0], 'LWL': parsed_result[1],
+                           'UWL': parsed_result[2], 'UCL': parsed_result[3]}
+    else:
+        thresholds_dict = {'LCL': 'None', 'LWL': 'None',
+                           'UWL': 'None', 'UCL': 'None'}
 
     return thresholds_dict
 

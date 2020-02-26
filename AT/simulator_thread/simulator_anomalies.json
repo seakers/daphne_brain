@@ -1,14 +1,14 @@
 {
   "n2_tank_burst": {
     "ppN2 (L1)": {
-      "pace_in": 1,
-      "pace_out": -1,
-      "max_increment": 15
+      "pace_in": 10,
+      "pace_out": -10,
+      "max_increment": 70
     },
     "Pressure (L1)": {
       "pace_in": 0.1,
       "pace_out": -0.02,
-      "max_increment": 3
+      "max_increment": 0.3
     }
   }
 }

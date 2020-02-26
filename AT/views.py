@@ -31,6 +31,7 @@ def check_threads_status(simulator_thread, hub_thread, at_thread):
     hub_is_alive = hub_thread.is_alive()
     ad_is_alive = at_thread.is_alive()
 
+    # Check if all the treads are in a healthy status. Display a message according to the result.
     if hub_is_alive and sim_is_alive and ad_is_alive:
         print('**********\nAll AT threads started successfully.\n**********')
     else:
@@ -125,7 +126,6 @@ class StartSeclssFeed(APIView):
 class SeclssFeed(APIView):
     def post(self, request):
         sensor_data = request.data['parameters']
-        print(sensor_data)
         # print(sensor_data)
         parsed_sensor_data = json.loads(sensor_data)
         server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})

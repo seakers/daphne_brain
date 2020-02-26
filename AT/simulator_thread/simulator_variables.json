@@ -1,4 +1,15 @@
 {
+  "ppN2 (L1)": {
+    "display_name": "ppN2 (L1)",
+    "kg_name": "ppN2",
+    "group": "L1",
+    "units": "mmHg",
+    "low_critic_threshold": 220.1,
+    "low_warning_threshold": 320,
+    "nominal": 335,
+    "high_warning_threshold": 350,
+    "high_critic_threshold": 380
+  },
   "Pressure (L1)": {
     "display_name": "Pressure (L1)",
     "kg_name": "Pressure",
@@ -9,28 +20,6 @@
     "nominal": 1,
     "high_warning_threshold": 1.5,
     "high_critic_threshold": 2
-  },
-  "ppN2 (L1)": {
-    "display_name": "ppN2 (L1)",
-    "kg_name": "ppN2",
-    "group": "L1",
-    "units": "%",
-    "low_critic_threshold": 60,
-    "low_warning_threshold": 70,
-    "nominal": 79,
-    "high_warning_threshold": 85,
-    "high_critic_threshold": 90
-  },
-  "Dummy variable": {
-    "display_name": "Dummy variable",
-    "kg_name": "",
-    "group": "L1",
-    "units": "euros",
-    "low_critic_threshold":150,
-    "low_warning_threshold": 180,
-    "nominal": 200,
-    "high_warning_threshold": 220,
-    "high_critic_threshold": 250
   }
 }
 

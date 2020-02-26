@@ -7,7 +7,7 @@ urlpatterns = [
     path('recommendation/', include('AT.recommendation.urls')),
     # **********
     # Choose just one of the two following lines
-    # path('startTelemetry', views.SimulateTelemetry.as_view(), name='SimulateTelemetry'),
+    path('startFakeTelemetry', views.SimulateTelemetry.as_view(), name='SimulateTelemetry'),
     path('startTelemetry', views.StartSeclssFeed.as_view(), name='startSeclssFeed'),
     # **********
     path('stop', views.StopTelemetry.as_view(), name='StopTelemetry'),

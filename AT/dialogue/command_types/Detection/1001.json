@@ -24,7 +24,7 @@
     {
       "type": "list",
       "begin": "The thresholds for the ${measurement} (${parameter_group}) measurement are:",
-      "repeat": "${threshold_type}: ${threshold_value} [${threshold_units}]",
+      "repeat": "${threshold_type}: ${threshold_value} ${threshold_units}",
       "end": "."
     }
   ],
@@ -32,7 +32,7 @@
     {
       "type": "list",
       "begin": "The thresholds for the ${measurement} (${parameter_group}) measurement are:",
-      "item_template": "${threshold_type}: ${threshold_value} [${threshold_units}]"
+      "item_template": "${threshold_type}: ${threshold_value} ${threshold_units}"
     }
   ]
 }
