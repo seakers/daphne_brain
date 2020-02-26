@@ -13,7 +13,7 @@
       {
         "result_type": "single",
         "result_fields": {
-          "status": "command_results[0]"
+          "text_response": "command_results[0]"
         }
       }
     ]
@@ -21,14 +21,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "The ${measurement} measurement is currently ${status}."
+      "template": "${text_response}"
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "The ${measurement} measurement is currently ${status}."
+      "template": "${text_response}"
     }
   ]
 }

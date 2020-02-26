@@ -74,6 +74,7 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
     keep_alive = True
     first_update = True
     counter = 0
+    check_delay = 0.1
 
     while keep_alive:
         if not hub_to_sim.empty():
@@ -97,8 +98,9 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
                 counter += 1
                 print('New sensor data received and sent.')
 
-            time.sleep(0.1)
+            time.sleep(check_delay)
+
+        time.sleep(check_delay)
 
     print('Simulator thread stopped.')
-    time.sleep(0.1)
     return

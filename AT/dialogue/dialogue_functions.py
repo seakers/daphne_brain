@@ -20,12 +20,15 @@ def get_measurement_current_value(measurement, parameter_group, context):
     last_value = last_measurement_value_from_context(measurement_display_name, context)
 
     # If not empty, retrieve the units and build the result.
+    text_response = ''
     if last_value is not None:
         units = retrieve_units_from_measurement(measurement)
-        result = {'measurement_value': last_value, 'measurement_units': units}
+        text_response = 'The current value of the ' + str(measurement_display_name) + \
+                        ' measurement is: ' + str(last_value) + ' [' + units + '].'
     else:
-        print('The telemetry context is empty or incomplete.')
-        result = {'measurement_value': 'None', 'measurement_units': 'None'}
+        text_response = 'There is no measurement with this name and parameter group within the current sensor data.'
+
+    result = text_response
 
     return result
 
@@ -35,10 +38,20 @@ def get_measurement_thresholds(measurement, parameter_group):
     thresholds = retrieve_thresholds_from_measurement(measurement, parameter_group)
     units = retrieve_units_from_measurement(measurement)
 
+    # Check if the requested measurement exists and proceed accordingly
+    if thresholds['LCL'] == 'None':
+        units = ''
+        error_message = 'This measurement does not exist'
+        thresholds = {'LCL': error_message, 'LWL': error_message, 'UWL': error_message, 'UCL': error_message}
+    else:
+        units = '[' + units + ']'
+
     # Parse the result
     result_list = []
     for key in thresholds:
-        result = {'threshold_type': key, 'threshold_value': thresholds[key], 'threshold_units': units}
+        result = {'threshold_type': key,
+                  'threshold_value': thresholds[key],
+                  'threshold_units': units}
         result_list.append(result)
 
     return result_list
@@ -68,7 +81,16 @@ def check_measurement_status(measurement, parameter_group, context):
     else:
         zone = 'None'
 
-    return zone
+    # Check the final outcome and build the result accordingly
+    if zone == 'None':
+        result = 'There is no measurement with this name and parameter group within the current sensor data.'
+    elif zone == 'ZONE ERROR':
+        result = 'I had some troubles checking this measurement status. Please report this to someone.'
+    else:
+        text = 'The' + measurement_display_name + ' measurement is currently ' + zone + '.'
+        result = text
+
+    return result
 
 
 def get_anomaly_risks(anomaly):
