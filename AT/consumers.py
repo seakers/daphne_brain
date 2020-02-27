@@ -2,7 +2,7 @@ import json
 import schedule
 from queue import Queue
 
-from auth_API.helpers import get_user_information
+from auth_API.helpers import get_user_information, get_or_create_user_information
 from daphne_ws.consumers import DaphneConsumer
 from AT.global_objects import frontend_to_hub_queue
 
@@ -40,7 +40,17 @@ class ATConsumer(DaphneConsumer):
                 getattr(user_info, subcontext_name).save()
             user_info.save()
         elif content.get('msg_type') == 'ping':
-            frontend_to_hub_queue.put('ping')
+            signal = {'type': 'ping', 'content': None}
+            frontend_to_hub_queue.put(signal)
+
+    def connect(self):
+        # First call function from base class, and then add the new behavior
+        super(ATConsumer, self).connect()
+
+        # Send a message to the threads with the updated user information
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
+        signal = {'type': 'ws_configuration_update', 'content': user_info}
+        frontend_to_hub_queue.put(signal)
 
     def console_text(self, event):
         self.send(json.dumps(event))

@@ -10,11 +10,22 @@
     "high_warning_threshold": 350,
     "high_critic_threshold": 380
   },
-  "Pressure (L1)": {
-    "display_name": "Pressure (L1)",
-    "kg_name": "Pressure",
+  "Level Cabin Pressure (L1)": {
+    "display_name": "Level Cabin Pressure (L1)",
+    "kg_name": "Level Cabin Pressure",
     "group": "L1",
     "units": "atm",
+    "low_critic_threshold": 0.58,
+    "low_warning_threshold": 0.89,
+    "nominal": 1,
+    "high_warning_threshold": 1.5,
+    "high_critic_threshold": 2
+  },
+  "Dummy Variable (Subfloor)": {
+    "display_name": "Dummy Variable (Subfloor)",
+    "kg_name": "Dummy Variable",
+    "group": "Subfloor",
+    "units": "euros",
     "low_critic_threshold": 0.58,
     "low_warning_threshold": 0.89,
     "nominal": 1,
