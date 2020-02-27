@@ -1,9 +1,26 @@
 import time
 
 from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from auth_API.helpers import get_or_create_user_information
 
 
-def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, channel_layer, channel_name):
+def update_channel_layer_and_name(signal):
+    # Update the user information and channel layer
+    user_info = signal['content']
+    channel_layer = get_channel_layer()
+    channel_name = user_info.channel_name
+
+    return channel_layer, channel_name
+
+
+def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, request):
+    # Get the user information and channel layer
+    user_info = get_or_create_user_information(request.session, request.user, 'AT')
+    channel_layer = get_channel_layer()
+    channel_name = user_info.channel_name
+
     # Set the "checking frequency"
     check_delay = 0.1
 
@@ -11,12 +28,34 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
     life_limit = 40
     time_since_last_ping = 0
 
+    # Build the initialization command
+    initialization_command = {}
+
     # Wait for the first simulator output in order to send an initialization command to the frontend
     first_status_has_arrived = False
     first_status_is_timeout = False
     first_status_timer = 0
     first_status_time_limit = 10
     while not first_status_has_arrived and not first_status_is_timeout:
+
+        # Check the frontend input queue
+        if not front_to_hub.empty():
+            signal = front_to_hub.get()
+            print('New message from the frontend: ' + signal['type'])
+            if signal['type'] == 'stop':
+                break
+            elif signal['type'] == 'ping':
+                timer_start = time.time()
+            elif signal['type'] == 'ws_configuration_update':
+                # Update the user information and channel layer
+                channel_layer, channel_name = update_channel_layer_and_name(signal)
+
+                # Resend an initialization command
+                async_to_sync(channel_layer.send)(channel_name, initialization_command)
+
+            # Put the signal back to the queue for the next while loop
+            front_to_hub.put(signal)
+
         if not sim_to_hub.empty():
             # Parse the simulator message
             signal = sim_to_hub.get()
@@ -32,6 +71,9 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
                 command = {'type': 'initialize_telemetry',
                            'content': content}
                 async_to_sync(channel_layer.send)(channel_name, command)
+
+                # Save the initialization command
+                initialization_command = command
 
                 # Put the first simulator output back in the queue and update the while loop condition
                 sim_to_hub.put(signal)
@@ -58,14 +100,23 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, chan
 
     # Start the hub routine
     while time_since_last_ping < life_limit:
+
         # Check the frontend input queue
         if not front_to_hub.empty():
             signal = front_to_hub.get()
-            print('New message from the frontend: ' + signal)
-            if signal == 'stop':
+            print('New message from the frontend: ' + signal['type'])
+            if signal['type'] == 'stop':
                 break
-            elif signal == 'ping':
-                time_since_last_ping = 0
+            elif signal['type'] == 'ping':
+                timer_start = time.time()
+            elif signal['type'] == 'ws_configuration_update':
+                # Update the user information and channel layer
+                channel_layer, channel_name = update_channel_layer_and_name(signal)
+
+                # Resend an initialization command
+                async_to_sync(channel_layer.send)(channel_name, initialization_command)
+
+                # Reset the ping timeout
                 timer_start = time.time()
 
         # Check the simulator input queue

@@ -86,7 +86,9 @@ def build_symptoms_report(window):
         threshold_tag = build_threshold_tag(last_point, variable_info)
         if threshold_tag != '' and threshold_tag != 'nominal':
             detection_text = build_detection_text(variable, threshold_tag)
+            display_name = variable_info['display_name']
             event = {'measurement': variable,
+                     'display_name': display_name,
                      'detection_text': detection_text,
                      'threshold_tag': threshold_tag}
             symptoms_report.append(event)

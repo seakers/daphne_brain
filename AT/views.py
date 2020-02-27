@@ -10,7 +10,8 @@ from AT.automated_at_routines.hub_routine import hub_routine
 from AT.global_objects import at_to_hub_queue
 from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
-from AT.neo4j_queries.query_functions import diagnose_symptoms
+from AT.neo4j_queries.query_functions import diagnose_symptoms_by_subset_of_anomaly
+from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_ordered_steps_from_procedure
@@ -61,15 +62,10 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 
 class SimulateTelemetry(APIView):
     def post(self, request):
-        # Get the user information and channel layer
-        thread_user_info = get_or_create_user_information(request.session, request.user, 'AT')
-        channel_layer = get_channel_layer()
-        channel_name = thread_user_info.channel_name
-
         # Hub thread initialization
         hub_thread = threading.Thread(target=hub_routine,
                                       args=(frontend_to_hub_queue, simulator_to_hub_queue, hub_to_simulator_queue,
-                                            hub_to_at_queue, at_to_hub_queue, channel_layer, channel_name,))
+                                            hub_to_at_queue, at_to_hub_queue, request))
         hub_thread.start()
 
         # Simulator thread initialization
@@ -90,21 +86,17 @@ class SimulateTelemetry(APIView):
 class StopTelemetry(APIView):
     def post(self, request):
         print('STOP')
-        frontend_to_hub_queue.put('stop')
+        signal = {'type': 'stop', 'content': None}
+        frontend_to_hub_queue.put(signal)
         return Response()
 
 
 class StartSeclssFeed(APIView):
     def post(self, request):
-        # Get the user information and channel layer
-        thread_user_info = get_or_create_user_information(request.session, request.user, 'AT')
-        channel_layer = get_channel_layer()
-        channel_name = thread_user_info.channel_name
-
         # Hub thread initialization
         hub_thread = threading.Thread(target=hub_routine,
                                       args=(frontend_to_hub_queue, simulator_to_hub_queue, hub_to_simulator_queue,
-                                            hub_to_at_queue, at_to_hub_queue, channel_layer, channel_name,))
+                                            hub_to_at_queue, at_to_hub_queue, request))
         hub_thread.start()
 
         # Simulator thread initialization
@@ -143,11 +135,13 @@ class RequestDiagnosis(APIView):
             threshold_tag = item['threshold_tag']
             relationship = convert_threshold_tag_to_neo4j_relationship(threshold_tag)
             symptom = {'measurement': item['measurement'],
+                       'display_name': item['display_name'],
                        'relationship': relationship}
             parsed_symptoms_list.append(symptom)
 
-        # Query the neo4j graph
-        diagnosis_list = diagnose_symptoms(parsed_symptoms_list)
+        # Query the neo4j graph (do not delete first line until second one is tested)
+        # diagnosis_list = diagnose_symptoms_by_subset_of_anomaly(parsed_symptoms_list)
+        diagnosis_list = diagnose_symptoms_by_intersection_with_anomaly(parsed_symptoms_list)
 
         # Build the diagnosis report and send it to the frontend
         diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list}

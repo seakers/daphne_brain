@@ -8,25 +8,120 @@ def set_up_connection():
     return session
 
 
-def diagnose_symptoms(symptoms):
+def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # build the query based on the symptoms list
     query = ''
-    for id, symp in enumerate(symptoms):
-        query = query + 'MATCH (m' + str(id) + ':Measurement)-[r' + str(id) + ':' + symp['relationship'] + ']->(g:Anomaly) '
+    for index, symp in enumerate(symptoms):
+        query = query + 'MATCH (m' + str(index) + ':Measurement)-[r' + str(index) + ':' + symp['relationship'] + ']->(g:Anomaly) '
     query = query + 'WHERE '
-    for id, symp in enumerate(symptoms):
-        if (id + 1) < len(symptoms):
-            query = query + 'm' + str(id) + '.Name=\'' + symp['measurement'] + '\' and '
+    for index, symp in enumerate(symptoms):
+        if (index + 1) < len(symptoms):
+            query = query + 'm' + str(index) + '.Name=\'' + symp['measurement'] + '\' AND '
         else:
-            query = query + 'm' + str(id) + '.Name=\'' + symp['measurement'] + '\' RETURN DISTINCT g.Title'
+            query = query + 'm' + str(index) + '.Name=\'' + symp['measurement'] + '\' RETURN DISTINCT g.Title'
 
     # query the database
     result = session.run(query)
     diagnosis = [node[0] for node in result]
+    return diagnosis
+
+
+def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
+    # Symptoms dictionary for comparison
+    comparison_symptoms = []
+    for symptom in requested_symptoms:
+        display_name = symptom['display_name']
+        relationship = symptom['relationship']
+        item = {'measurement': display_name, 'relationship': relationship}
+        comparison_symptoms.append(item)
+
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build the query based on the symptoms list
+    query = ''
+    for index, symp in enumerate(requested_symptoms):
+        query = query + 'MATCH (m' + str(index) + ':Measurement)-[r' + str(index) + ':' + symp['relationship'] + ']->(g:Anomaly) '
+    query = query + 'WHERE '
+    for index, symp in enumerate(requested_symptoms):
+        if (index + 1) < len(requested_symptoms):
+            query = query + 'm' + str(index) + '.Name=\'' + symp['measurement'] + '\' OR '
+        else:
+            query = query + 'm' + str(index) + '.Name=\'' + symp['measurement'] + '\' RETURN DISTINCT g.Title'
+
+    # Query the database and parse the result (which is a list of the anomalies which symptoms have non empty
+    # intersection with the requested symptoms)
+    result = session.run(query)
+    diagnosis = [node[0] for node in result]
+
+    # For each anomaly, build a dictionary where each key is the anomaly and the value is a list of its symptoms
+    symptoms_of_each_anomaly = {}
+    for anomaly in diagnosis:
+        anomaly_symptoms = retrieve_symptoms_from_anomaly(anomaly)
+        aux = []
+        for symptom in anomaly_symptoms:
+            relationship = symptom['relationship']
+            if relationship == "Upper Warning Limit" or relationship == "Upper Critic Limit":
+                relationship = 'Exceeds_UWL'
+            else:
+                relationship = 'Exceeds_LWL'
+            symptom['relationship'] = relationship
+            aux.append(symptom)
+        symptoms_of_each_anomaly[anomaly] = aux
+
+    # For each anomaly, build a dictionary where each key is the anomaly and the value is the cardinality of
+    # (requested symptoms INTERSECTED WITH the symptoms of that anomaly)
+    cardinality_for_each_anomaly = {}
+    size_of_each_anomaly = {}
+    for anomaly in diagnosis:
+        cardinal = 0
+        anomaly_symptoms = symptoms_of_each_anomaly[anomaly]
+        for anomaly_symptom in anomaly_symptoms:
+            for comparison_symptom in comparison_symptoms:
+                measurements_are_equal = (anomaly_symptom['measurement'] == comparison_symptom['measurement'])
+                relationships_are_equal = (anomaly_symptom['relationship'] == comparison_symptom['relationship'])
+                if measurements_are_equal and relationships_are_equal:
+                    cardinal += 1
+        cardinality_for_each_anomaly[anomaly] = cardinal
+        size_of_each_anomaly[anomaly] = len(anomaly_symptoms)
+
+    # Ordered anomalies by cardinality of the intersection
+    ordered_anomalies = {k: v for k, v in sorted(cardinality_for_each_anomaly.items(), key=lambda item1: item1[1])}
+
+    # Convert to list
+    ordered_diagnosis = list(ordered_anomalies.keys())
+
+    # Cast list to top 7 items
+    top_n_diagnosis = []
+    sizelimit = min(7, len(ordered_diagnosis))
+    for i in range(0, sizelimit):
+        top_n_diagnosis.append(ordered_diagnosis[i])
+
+    # Add score
+    fancy_diagnosis = []
+    print(size_of_each_anomaly)
+    print(cardinality_for_each_anomaly)
+    for anomaly in top_n_diagnosis:
+        # Parsing
+        total_requested_symptoms = len(requested_symptoms)
+        cardinality = cardinality_for_each_anomaly[anomaly]
+        total_anomaly_symptoms = size_of_each_anomaly[anomaly]
+        # Scores
+        score_intersection_fulfils_all_requested_symptoms = cardinality / total_requested_symptoms
+        score_intersection_fulfils_all_anomaly_symptoms = cardinality / total_anomaly_symptoms
+        score = score_intersection_fulfils_all_anomaly_symptoms * score_intersection_fulfils_all_requested_symptoms
+        score = round(score, 2)
+        item = {'name': anomaly, 'score': score}
+        fancy_diagnosis.append(item)
+
+    # Return result
+    diagnosis = fancy_diagnosis
+
     return diagnosis
 
 
@@ -105,7 +200,7 @@ def retrieve_procedures_from_anomaly(anomaly_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (a:Anomaly)-[:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN DISTINCT p.Title"
+    query = "MATCH (a:Anomaly)-[s:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.Title ORDER BY s.Order"
     result = session.run(query)
 
     # Parse the result
