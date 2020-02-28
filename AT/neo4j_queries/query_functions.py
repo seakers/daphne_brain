@@ -31,13 +31,27 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
 
 
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
-    # Symptoms dictionary for comparison
-    comparison_symptoms = []
-    for symptom in requested_symptoms:
-        display_name = symptom['display_name']
-        relationship = symptom['relationship']
-        item = {'measurement': display_name, 'relationship': relationship}
-        comparison_symptoms.append(item)
+    # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
+    # of all the VA code.
+
+    # Notation (needed to understand the function)
+    #     Let A = {a1, a2, ..., aN} be the set of all anomalies.
+    #     Let Sk = {sk1, sk2, ..., skM} be the set of symptoms of anomaly k (with 1<=k<=N).
+    #     Let S = (Union of all Sk) = (s1, s2, ..., sM) be the set of all symptoms.
+    #     Let X be a subset of S to be diagnosed (that is, the input of this function, X = "requested_symptoms").
+    #     Let f be the diagnosis function. Then f is defined as:
+    #           f: P(S) -> P(A), f(X) := {ak in A : (Sk intersection X) is nonempty}
+    #     In other words, f return all the anomalies which have some of their symptoms in the symptoms to be diagnosed.
+    #
+    #     This code function computes f(requested_symptoms) and sorts the resulting list according to a certain score.
+    #     Such score is defined as g(ak) = g1(ak) * g2(ak), where:
+    #          g1(ak) = #(Sk intersection X) / #X
+    #          g2(ak) = #(Sk intersection X) / #Sk
+    #     Where #A is used to denote the cardinal of the set A.
+    #
+
+    # **************************************************
+    # This first block of the function queries the neo4j graph. The result is f(X) (not sorted yet!)
 
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
@@ -58,12 +72,45 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # intersection with the requested symptoms)
     result = session.run(query)
     diagnosis = [node[0] for node in result]
+    # **************************************************
 
-    # For each anomaly, build a dictionary where each key is the anomaly and the value is a list of its symptoms
+    # **************************************************
+    # This second section does some super ugly parsing that needs to be improved. The input of this function is a data
+    # structure that looks as follows (disregarding all the previous notation):
+    #     requested_symptoms = [symptDict1, symptDict2, ...., symptDictN]
+    # Where:
+    #     symptDictK = {measurement: 'Raw name of the measurement',
+    #                   display_name: 'Raw name of the measurement + parameter group',
+    #                   relationship: 'Threshold signature (as 'Exceeds_UWL')'}                      (*1)
+    #
+    # The output of the query in the first block, on the other hand, looks as follows:
+    #     diagnosis = [anomaly1, anomaly2, ...., anomalyN]
+    #
+    # For each anomaly in the previous list, the set of its symptoms is retrieved (using another function within
+    # this same script. The result looks as follows:
+    #     symptoms_of_anomaly = {measurement: 'Raw name of the measurement + parameter group',
+    #                            relationship: 'Threshold signature (as 'Upper Warning Limit')'}     (*2)
+    #
+    # To compute the desired intersections we will need to compare items like (*1) with items like (*2), and hence the
+    # need to do some ugly parsing. Both types of items will be "translated" to the following common ground:
+    #     symptCommonDict = {measurement: 'Raw name of the measurement + parameter group',
+    #                        relationship: 'Threshold signature (as 'Exceeds_UWL')'}                 (*3)
+
+    # The input is parsed from (*1) to (*3) ('measurement' field is substituted by 'display name' value, 'display_name'
+    # field is stripped and 'relationship' field is left equal).
+    parsed_input_symptoms = []
+    for symptom in requested_symptoms:
+        parsed_input_symptoms.append({'measurement': symptom['display_name'], 'relationship': symptom['relationship']})
+
+    # For each anomaly of the diagnosis output, an object like (*2) is obtained and converted to (*3). The only parsing
+    # needed is to convert the relationship format.
     symptoms_of_each_anomaly = {}
     for anomaly in diagnosis:
+        # Retrieve symptoms of anomaly
         anomaly_symptoms = retrieve_symptoms_from_anomaly(anomaly)
-        aux = []
+        symptom_of_anomaly = []
+
+        # For each symptom of the anomaly, parse the relationship field
         for symptom in anomaly_symptoms:
             relationship = symptom['relationship']
             if relationship == "Upper Warning Limit" or relationship == "Upper Critic Limit":
@@ -71,58 +118,90 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
             else:
                 relationship = 'Exceeds_LWL'
             symptom['relationship'] = relationship
-            aux.append(symptom)
-        symptoms_of_each_anomaly[anomaly] = aux
+            symptom_of_anomaly.append(symptom)
 
-    # For each anomaly, build a dictionary where each key is the anomaly and the value is the cardinality of
-    # (requested symptoms INTERSECTED WITH the symptoms of that anomaly)
+        # Append the resulting object to the dictionary
+        symptoms_of_each_anomaly[anomaly] = symptom_of_anomaly
+    # **************************************************
+
+    # **************************************************
+    # In this third part of the code, the cardinal of the said intersections is computed. Also, the amount of symptoms
+    # of each anomaly is retrieved.
+
+    # Let A and B be sets. A is looped. For each element in a, B is looped. For each element b in B, a and b are
+    # compared, and the cardinal is increased if equal. This could  be done more efficiently, but the alread poor
+    # readability of this function would be completely obliterated.
+    # A -> requested_symptoms
+    # B -> anomaly_symptoms
+
+    # Define auxiliary function to compare the symptom dictionaries
+    def compare(anomaly_symptom, parsed_input_symptom):
+        measurements_are_equal = (anomaly_symptom['measurement'] == parsed_input_symptom['measurement'])
+        relationships_are_equal = (anomaly_symptom['relationship'] == parsed_input_symptom['relationship'])
+        if measurements_are_equal and relationships_are_equal:
+            return True
+        else:
+            return False
+
+    # Initialize result storing variables
     cardinality_for_each_anomaly = {}
     size_of_each_anomaly = {}
+
+    # Loop over the anomalies
     for anomaly in diagnosis:
+        # Initialize the cardinal counter
         cardinal = 0
-        anomaly_symptoms = symptoms_of_each_anomaly[anomaly]
-        for anomaly_symptom in anomaly_symptoms:
-            for comparison_symptom in comparison_symptoms:
-                measurements_are_equal = (anomaly_symptom['measurement'] == comparison_symptom['measurement'])
-                relationships_are_equal = (anomaly_symptom['relationship'] == comparison_symptom['relationship'])
-                if measurements_are_equal and relationships_are_equal:
+        # Loop over A
+        for anomaly_symptom in symptoms_of_each_anomaly[anomaly]:
+            # Loop over B
+            for parsed_input_symptom in parsed_input_symptoms:
+                # Compare
+                are_equal = compare(anomaly_symptom, parsed_input_symptom)
+                if are_equal:
                     cardinal += 1
+
+        # Store the results
         cardinality_for_each_anomaly[anomaly] = cardinal
-        size_of_each_anomaly[anomaly] = len(anomaly_symptoms)
+        size_of_each_anomaly[anomaly] = len(symptoms_of_each_anomaly[anomaly])
+    # **************************************************
 
-    # Ordered anomalies by cardinality of the intersection
-    ordered_anomalies = {k: v for k, v in sorted(cardinality_for_each_anomaly.items(), key=lambda item1: item1[1])}
+    # **************************************************
+    # In this fourth part of the code, the score of each anomaly is computed and the final ordered list of anomalies is
+    # built.
 
-    # Convert to list
-    ordered_diagnosis = list(ordered_anomalies.keys())
+    # Create the result storing variable and parse the size of the requested symptoms set
+    scored_diagnosis = {}
+    total_requested_symptoms = len(requested_symptoms)
+
+    # Loop over the anomalies, compute each of the partial scores and the total scores (g1, g2 and g)
+    for anomaly in diagnosis:
+        # Compute the score
+        g1 = cardinality_for_each_anomaly[anomaly] / total_requested_symptoms
+        g2 = cardinality_for_each_anomaly[anomaly] / size_of_each_anomaly[anomaly]
+        g = g1 * g2
+        # Round it for the frontend display
+        score = round(g, 2)
+        # Save it
+        scored_diagnosis[anomaly] = score
+
+    # Sort the result according to the scores
+    ordered_diagnosis = {k: v for k, v in sorted(scored_diagnosis.items(), key=lambda item1: item1[1])}
+
+    # Convert the dictionary to a list of its keys
+    ordered_diagnosis = list(ordered_diagnosis.keys())
 
     # Cast list to top 7 items
     top_n_diagnosis = []
-    sizelimit = min(7, len(ordered_diagnosis))
-    for i in range(0, sizelimit):
-        top_n_diagnosis.append(ordered_diagnosis[i])
-
-    # Add score
-    fancy_diagnosis = []
-    print(size_of_each_anomaly)
-    print(cardinality_for_each_anomaly)
-    for anomaly in top_n_diagnosis:
-        # Parsing
-        total_requested_symptoms = len(requested_symptoms)
-        cardinality = cardinality_for_each_anomaly[anomaly]
-        total_anomaly_symptoms = size_of_each_anomaly[anomaly]
-        # Scores
-        score_intersection_fulfils_all_requested_symptoms = cardinality / total_requested_symptoms
-        score_intersection_fulfils_all_anomaly_symptoms = cardinality / total_anomaly_symptoms
-        score = score_intersection_fulfils_all_anomaly_symptoms * score_intersection_fulfils_all_requested_symptoms
-        score = round(score, 2)
-        item = {'name': anomaly, 'score': score}
-        fancy_diagnosis.append(item)
+    size_limit = min(7, len(ordered_diagnosis))
+    for i in range(0, size_limit):
+        anomaly = ordered_diagnosis[i]
+        score = scored_diagnosis[anomaly]
+        top_n_diagnosis.append({'name': anomaly, 'score': score})
 
     # Return result
-    diagnosis = fancy_diagnosis
+    final_diagnosis = top_n_diagnosis
 
-    return diagnosis
+    return final_diagnosis
 
 
 def retrieve_all_anomalies():
