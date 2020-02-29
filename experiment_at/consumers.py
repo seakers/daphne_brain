@@ -28,7 +28,7 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
 
             if content.get('msg_type') == 'add_action':
                 experiment_stage = experiment_context.atexperimentstage_set.all().order_by("id")[content['stage']]
-                ATExperimentAction.objects.create(experimentstage=experiment_stage, action=json.dumps(content['action']),
+                ATExperimentAction.objects.create(atexperimentstage=experiment_stage, action=json.dumps(content['action']),
                                                   date=datetime.datetime.utcnow())
                 self.send_json({
                     'action': content['action'],
