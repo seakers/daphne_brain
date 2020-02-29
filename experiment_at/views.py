@@ -115,7 +115,12 @@ class ReloadExperiment(APIView):
         if hasattr(user_info, 'atexperimentcontext'):
             experiment_context = user_info.atexperimentcontext
             if experiment_context.is_running:
-                return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
+                experiment_state = experiment_context.current_state
+                if experiment_state == '':
+                    experiment_data = json.loads('' or 'null')
+                else:
+                    experiment_data = json.loads(experiment_state)
+                return Response({'is_running': True, 'experiment_data': experiment_data})
         return Response({ 'is_running': False })
         
         
