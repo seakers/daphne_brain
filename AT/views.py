@@ -16,6 +16,8 @@ from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_ordered_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
+from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
+from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
 
 
 # QUEUES
@@ -178,3 +180,25 @@ class RetrieveStepsFromProcedure(APIView):
         steps_list = retrieve_fancy_steps_from_procedure(procedure_name)
 
         return Response(steps_list)
+
+
+class RetrieveObjectiveFromProcedure(APIView):
+    def post(self, request):
+        # Retrieve the procedure name from the request
+        procedure_name = json.loads(request.data['procedure_name'])
+
+        # Build the diagnosis report and send it to the frontend
+        objective = retrieve_objective_from_procedure(procedure_name)
+
+        return Response(objective)
+
+
+class RetrieveEquipmentFromProcedure(APIView):
+    def post(self, request):
+        # Retrieve the procedure name from the request
+        procedure_name = json.loads(request.data['procedure_name'])
+
+        # Build the diagnosis report and send it to the frontend
+        equipment = retrieve_equipment_from_procedure(procedure_name)
+
+        return Response(equipment)

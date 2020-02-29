@@ -525,3 +525,47 @@ def retrieve_fancy_steps_from_procedure(procedure):
 
     return steps
 
+
+def retrieve_objective_from_procedure(procedure_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) WHERE p.Title='" + procedure_name + "' RETURN p.Objective"
+    result = session.run(query)
+
+    # Parse the result
+    objective_list = []
+    for item in result:
+        objective_list.append(item[0])
+
+    if len(objective_list) == 0:
+        objective = 'ERROR: missing objective description.'
+    else:
+        objective = objective_list[0]
+
+    return objective
+
+
+def retrieve_equipment_from_procedure(procedure_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.Title='" + procedure_name + "' RETURN e.Title"
+    result = session.run(query)
+
+    # Parse the result
+    equipment_list = []
+    for item in result:
+        equipment_list.append(item[0])
+
+    if len(equipment_list) == 0:
+        equipment = 'ERROR: missing equipment list.'
+    else:
+        equipment = equipment_list
+
+    return equipment
+
