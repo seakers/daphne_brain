@@ -1,4 +1,4 @@
-from dialogue.views import Command
+from dialogue.views import Command, ClearHistory
 from daphne_context.models import UserInformation, DialogueContext, DialogueContextSerializer
 from AT.models import ATContextSerializer
 
@@ -43,3 +43,7 @@ class ATCommand(Command):
         #     dialogue_context_dict["eossdialoguecontext"] = eossdialogue_context_serializer.data
         #     dialogue_context_dict["eossdialoguecontext"]["engineercontext"] = engineer_context_serializer.data
         return dialogue_context_dict
+
+
+class ATClearHistory(ClearHistory):
+    daphne_version = "AT"

@@ -39,7 +39,7 @@ class Login(APIView):
 
             if len(userinfo_qs) != 0:
                 # Force the user information daphne version to be the one from the login
-                userinfo = get_or_create_user_information(request.session, user, daphne_version)
+                userinfo = userinfo_qs[0]
                 userinfo.daphne_version = daphne_version
                 userinfo.save()
 
