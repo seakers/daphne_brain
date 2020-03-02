@@ -31,6 +31,8 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
 
 
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
+    print('STARTING DIAGNOSIS')
+
     # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
     # of all the VA code.
 
@@ -58,20 +60,22 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     session = driver.session()
 
     # Build the query based on the symptoms list
-    query = ''
-    for index, symp in enumerate(requested_symptoms):
-        query = query + 'MATCH (m' + str(index) + ':Measurement)-[r' + str(index) + ':' + symp['relationship'] + ']->(g:Anomaly) '
-    query = query + 'WHERE '
-    for index, symp in enumerate(requested_symptoms):
+    query = 'MATCH (m:Measurement)-[r]->(a:Anomaly) WHERE '
+    for index, symptom in enumerate(requested_symptoms):
+        measurement = symptom['measurement']
+        clause = '(m.Name = "' + measurement + '")'
         if (index + 1) < len(requested_symptoms):
-            query = query + 'm' + str(index) + '.Name=\'' + symp['measurement'] + '\' OR '
-        else:
-            query = query + 'm' + str(index) + '.Name=\'' + symp['measurement'] + '\' RETURN DISTINCT g.Title'
+            clause = clause + ' OR '
+        query = query + clause
+    query = query + ' RETURN DISTINCT a.Title'
 
     # Query the database and parse the result (which is a list of the anomalies which symptoms have non empty
     # intersection with the requested symptoms)
     result = session.run(query)
     diagnosis = [node[0] for node in result]
+    print(diagnosis)
+
+    print('BLOCK 1 FINISHED')
     # **************************************************
 
     # **************************************************
@@ -122,6 +126,8 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
 
         # Append the resulting object to the dictionary
         symptoms_of_each_anomaly[anomaly] = symptom_of_anomaly
+
+    print('BLOCK 2 FINISHED')
     # **************************************************
 
     # **************************************************
@@ -163,6 +169,8 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
         # Store the results
         cardinality_for_each_anomaly[anomaly] = cardinal
         size_of_each_anomaly[anomaly] = len(symptoms_of_each_anomaly[anomaly])
+
+    print('BLOCK 3 FINISHED')
     # **************************************************
 
     # **************************************************
@@ -189,6 +197,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
 
     # Convert the dictionary to a list of its keys
     ordered_diagnosis = list(ordered_diagnosis.keys())
+    ordered_diagnosis.reverse()
 
     # Cast list to top 7 items
     top_n_diagnosis = []
@@ -200,6 +209,8 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
 
     # Return result
     final_diagnosis = top_n_diagnosis
+
+    print('BLOCK 4 FINISHED')
 
     return final_diagnosis
 
@@ -563,7 +574,7 @@ def retrieve_equipment_from_procedure(procedure_name):
         equipment_list.append(item[0])
 
     if len(equipment_list) == 0:
-        equipment = 'ERROR: missing equipment list.'
+        equipment = ['ERROR: missing equipment list.']
     else:
         equipment = equipment_list
 

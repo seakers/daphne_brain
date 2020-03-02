@@ -29,7 +29,10 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, requ
     time_since_last_ping = 0
 
     # Build the initialization command
-    initialization_command = {}
+    initialization_command = {
+        'type': 'initialize_telemetry',
+        'content': ''
+    }
 
     # Wait for the first simulator output in order to send an initialization command to the frontend
     first_status_has_arrived = False
@@ -43,18 +46,19 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, requ
             signal = front_to_hub.get()
             print('New message from the frontend: ' + signal['type'])
             if signal['type'] == 'stop':
+                # Put the signal back to the queue for the next while loop
+                front_to_hub.put(signal)
                 break
             elif signal['type'] == 'ping':
                 timer_start = time.time()
+                # Put the signal back to the queue for the next while loop
+                front_to_hub.put(signal)
             elif signal['type'] == 'ws_configuration_update':
                 # Update the user information and channel layer
                 channel_layer, channel_name = update_channel_layer_and_name(signal)
 
                 # Resend an initialization command
                 async_to_sync(channel_layer.send)(channel_name, initialization_command)
-
-            # Put the signal back to the queue for the next while loop
-            front_to_hub.put(signal)
 
         if not sim_to_hub.empty():
             # Parse the simulator message
@@ -130,12 +134,22 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, requ
                 last_window = {'type': 'window', 'content': tf_window}
                 hub_to_at.put(last_window)
 
-                # Update and send the telemetry update command for the frontend
-                content = {'values': tf_window['values'].to_json(),
-                           'info': tf_window['info'].to_json()}
-                command = {'type': 'telemetry_update',
-                           'content': content}
-                async_to_sync(channel_layer.send)(channel_name, command)
+                # Try to convert the dataframes to json format (this fails from time to time with no explanation)
+                json_values = ''
+                json_info = ''
+                try:
+                    json_values = tf_window['values'].to_json()
+                    json_info = tf_window['info'].to_json()
+                except:
+                    print('Dataframe conversion failed')
+
+                # If the conversion was successful, update and send the telemetry update command for the frontend
+                if json_values != '' and json_info != '':
+                    content = {'values': json_values,
+                               'info': json_info}
+                    command = {'type': 'telemetry_update',
+                               'content': content}
+                    async_to_sync(channel_layer.send)(channel_name, command)
 
         # Check the anomaly treatment output queue
         if not at_to_hub.empty():

@@ -16,10 +16,6 @@ urlpatterns = [
     path('loadAllAnomalies', views.LoadAllAnomalies.as_view(), name='LoadAllAnomalies'),
     path('retrieveProcedureFromAnomaly', views.RetrieveProcedureFromAnomaly.as_view(),
          name='retrieveProcedureFromAnomaly'),
-    path('retrieveStepsFromProcedure', views.RetrieveStepsFromProcedure.as_view(),
-         name='retrieveStepsFromProcedure'),
-    path('retrieveObjectiveFromProcedure', views.RetrieveObjectiveFromProcedure.as_view(),
-         name='retrieveObjectiveFromProcedure'),
-    path('retrieveEquipmentFromProcedure', views.RetrieveEquipmentFromProcedure.as_view(),
-         name='retrieveEquipmentFromProcedure'),
+    path('retrieveInfoFromProcedure', views.RetrieveInfoFromProcedure.as_view(),
+         name='retrieveInfoFromProcedure'),
 ]

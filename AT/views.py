@@ -170,35 +170,21 @@ class RetrieveProcedureFromAnomaly(APIView):
         return Response(procedure_names)
 
 
-class RetrieveStepsFromProcedure(APIView):
+class RetrieveInfoFromProcedure(APIView):
     def post(self, request):
-        # Retrieve the symptoms list from the request
+        # Retrieve the procedure name from the request
         procedure_name = json.loads(request.data['procedure_name'])
 
-        # Build the diagnosis report and send it to the frontend
-        # steps_list = retrieve_ordered_steps_from_procedure(procedure_name)
+        # Query the neo4j to retrieve the procedure information
         steps_list = retrieve_fancy_steps_from_procedure(procedure_name)
-
-        return Response(steps_list)
-
-
-class RetrieveObjectiveFromProcedure(APIView):
-    def post(self, request):
-        # Retrieve the procedure name from the request
-        procedure_name = json.loads(request.data['procedure_name'])
-
-        # Build the diagnosis report and send it to the frontend
         objective = retrieve_objective_from_procedure(procedure_name)
-
-        return Response(objective)
-
-
-class RetrieveEquipmentFromProcedure(APIView):
-    def post(self, request):
-        # Retrieve the procedure name from the request
-        procedure_name = json.loads(request.data['procedure_name'])
-
-        # Build the diagnosis report and send it to the frontend
         equipment = retrieve_equipment_from_procedure(procedure_name)
 
-        return Response(equipment)
+        # Build the output dictionary
+        info = {
+            'procedureStepsList': steps_list,
+            'procedureObjective': objective,
+            'procedureEquipment': equipment,
+        }
+
+        return Response(info)

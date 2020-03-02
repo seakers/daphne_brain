@@ -19,6 +19,15 @@ class ATConsumer(DaphneConsumer):
         super().__init__(*args, **kwargs)
         self.queue = Queue()
 
+    def connect(self):
+        # First call function from base class, and then add the new behavior
+        super(ATConsumer, self).connect()
+
+        # Send a message to the threads with the updated user information
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
+        signal = {'type': 'ws_configuration_update', 'content': user_info}
+        frontend_to_hub_queue.put(signal)
+
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload
@@ -43,15 +52,6 @@ class ATConsumer(DaphneConsumer):
             signal = {'type': 'ping', 'content': None}
             frontend_to_hub_queue.put(signal)
 
-    def connect(self):
-        # First call function from base class, and then add the new behavior
-        super(ATConsumer, self).connect()
-
-        # Send a message to the threads with the updated user information
-        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
-        signal = {'type': 'ws_configuration_update', 'content': user_info}
-        frontend_to_hub_queue.put(signal)
-
     def console_text(self, event):
         self.send(json.dumps(event))
 
@@ -64,3 +64,5 @@ class ATConsumer(DaphneConsumer):
     def symptoms_report(self, event):
         self.send(json.dumps(event))
 
+    def ws_configuration_update(self, event):
+        self.send(json.dumps(event))
