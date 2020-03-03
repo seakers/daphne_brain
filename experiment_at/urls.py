@@ -11,4 +11,5 @@ urlpatterns = [
 
     path('subject-list', views.SubjectList.as_view()),
     path('get-state', views.GetState.as_view()),
+    path('finish-experiment-from-mcc', views.FinishExperimentFromMcc.as_view())
 ]

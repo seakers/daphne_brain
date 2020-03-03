@@ -2,6 +2,9 @@ import logging
 import os
 import json
 import datetime
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from auth_API.helpers import get_or_create_user_information
@@ -14,16 +17,7 @@ logger = logging.getLogger('experiment')
 
 
 def stage_type(id, stage_num):
-    if id % 2 == 0:
-        if stage_num == 0:
-            return 'with_daphne'
-        else:
-            return 'without_daphne'
-    else:
-        if stage_num == 0:
-            return 'without_daphne'
-        else:
-            return 'with_daphne'
+    return 'with_daphne'
 
 
 # Create your views here.
@@ -61,10 +55,10 @@ class StartExperiment(APIView):
                                                         start_date=datetime.datetime.now(),
                                                         end_date=datetime.datetime.now(),
                                                         end_state="")
-        experiment_context.atexperimentstage_set.create(type=stage_type(new_id, 1),
-                                                        start_date=datetime.datetime.now(),
-                                                        end_date=datetime.datetime.now(),
-                                                        end_state="")
+        # experiment_context.atexperimentstage_set.create(type=stage_type(new_id, 1),
+        #                                                 start_date=datetime.datetime.now(),
+        #                                                 end_date=datetime.datetime.now(),
+        #                                                 end_state="")
 
         # Save experiment started on database
         experiment_context.is_running = True
@@ -175,9 +169,38 @@ class SubjectList(APIView):
             "subjects": subject_info
         })
 
+
 class GetState(APIView):
 
     def post(self, request, format=None):
-        state_query = ATExperimentContext.objects.filter(user_information__id__exact=int(request.data["user_id"]))[0]
-        state = json.loads(state_query.current_state)
-        return Response(state)
+        state_query = ATExperimentContext.objects.filter(user_information__id__exact=int(request.data["user_id"]))
+        if len(state_query) > 0:
+            current_state = state_query[0].current_state
+            if current_state != '':
+                json_current_state = json.loads(current_state)
+            else:
+                json_current_state = json.loads('' or 'null')
+            state = json_current_state
+            return Response(state)
+        else:
+            return Response('None')
+
+
+class FinishExperimentFromMcc(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user information
+        session = request.session
+        user = request.user
+        user_info = get_or_create_user_information(session, user)
+
+        # Retrieve the websocket information
+        channel_layer = get_channel_layer()
+        channel_name = user_info.channel_name
+
+        # Build and send a command to the frontend
+        command = {'type': 'finish_experiment_from_mcc',
+                   'content': ''}
+        async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
