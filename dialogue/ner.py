@@ -2,13 +2,14 @@
 import spacy
 from sys import argv
 import os
+import en_ner_model
 
-MODEL_USED = "ner_model"
-nlp = spacy.load(MODEL_USED)
+MODEL_USED = "en_daphne_entities-12-0.0.0"
 
 # Returns a list of dicts with the text, label, starting and ending chart of every entity
 def ner(text):
-    doc = nlp(text)
+    nlp = en_ner_model.load()
+    doc = nlp(text.text)
     entities_recognized = []
     extraction_dict = {}
     for index, entity in enumerate(doc.ents):
@@ -16,11 +17,11 @@ def ner(text):
                                     "label": entity.label_, 
                                     "start": entity.start_char, 
                                     "end": entity.start_char + len(entity.text)})
-        if extraction_dict[entity.label_.lower()]:
-            extraction_dict[entity.label_.lower()].append(entity.text)
-        else:
+        try:
+             extraction_dict[entity.label_.lower()].append(entity.text)
+        except KeyError:
             extraction_dict[entity.label_.lower()] = [entity.text]
-
+    print("extraction dict: {}".format(extraction_dict))
     return entities_recognized, extraction_dict
 
 if __name__ == "__main__":

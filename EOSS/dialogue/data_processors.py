@@ -5,7 +5,7 @@ from dialogue.param_processing_helpers import not_processed
 
 
 def process_mission(extracted_data, options, context):
-    return extracted_data[1:]
+    return extracted_data[0:]
 
 
 def process_design(extracted_data, options, context):
@@ -36,5 +36,8 @@ process_function["instrument_parameter"] = not_processed
 process_function["vassar_instrument"] = not_processed
 process_function["vassar_measurement"] = not_processed
 process_function["vassar_stakeholder"] = not_processed
+process_function["instrument"] = not_processed
+process_function["measurement"] = not_processed
+process_function["stakeholder"] = not_processed
 process_function["objective"] = not_processed
 process_function["subobjective"] = not_processed

@@ -112,7 +112,9 @@ def extract_data(processed_question, params, user_information: UserInformation, 
     #for type, num in number_of_features.items():
     #    extracted_raw_data[type] = extract_function[type](processed_question, num, user_information)
         #print("ERD Type {}: {}".format(type, extracted_raw_data[type]))
+    print("Calling ner")
     _, extracted_raw_data = ner.ner(processed_question)
+    print(extracted_raw_data)
     
     # For each parameter check if it's needed and apply postprocessing;
     for param in params:
@@ -128,15 +130,17 @@ def extract_data(processed_question, params, user_information: UserInformation, 
                 if param["mandatory"]:
                     raise ParameterMissingError(param["type"])
         else:
-            if len(extracted_raw_data[param["type"]]) > 0:
+            try: 
                 extracted_param = extracted_raw_data[param["type"]].pop(0)
-            elif param["mandatory"]:
-                # If param is needed but not detected return error with type of parameter
-                raise ParameterMissingError(param["type"])
+            except KeyError:
+                if param["mandatory"]:
+                    # If param is needed but not detected return error with type of parameter
+                    raise ParameterMissingError(param["type"])
         if extracted_param is not None:
             extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"],
                                                                             user_information)
             print("ED Name: {}".format(extracted_data[param["name"]]))                                                                        
+    print("EData: {}".format(extract_data))
     return extracted_data
 
 
