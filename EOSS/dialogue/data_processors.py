@@ -9,10 +9,10 @@ def process_mission(extracted_data, options, context):
 
 
 def process_design(extracted_data, options, context):
-    if isinstance(extracted_data, str):
+    try:
+        return int(extracted_data)
+    except:
         return int(extracted_data[1:])
-    else:
-        return extracted_data
 
 
 def process_date(extracted_data, options, context):
