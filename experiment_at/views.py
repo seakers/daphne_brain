@@ -189,18 +189,18 @@ class GetState(APIView):
 class FinishExperimentFromMcc(APIView):
 
     def post(self, request, format=None):
-        # Retrieve the user information
-        session = request.session
-        user = request.user
-        user_info = get_or_create_user_information(session, user)
+        # Retrieve the user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
 
-        # Retrieve the websocket information
-        channel_layer = get_channel_layer()
-        channel_name = user_info.channel_name
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and channel layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
 
-        # Build and send a command to the frontend
-        command = {'type': 'finish_experiment_from_mcc',
-                   'content': ''}
-        async_to_sync(channel_layer.send)(channel_name, command)
+            # Build and send a command to the frontend
+            command = {'type': 'finish_experiment_from_mcc',
+                       'content': ''}
+            async_to_sync(channel_layer.send)(channel_name, command)
 
         return Response()
