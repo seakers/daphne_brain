@@ -20,107 +20,107 @@ for row in measurements_sheet.itertuples(index=True, name='Measurement'):
             param_names.append(row[i])
 
 
-def extract_mission(processed_question, number_of_features, user_information: UserInformation):
+def extract_mission(processed_entity, number_of_features, user_information: UserInformation):
     # Get a list of missions
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
     missions = [' ' + mission.name.strip().lower() for mission in session.query(earth_models.Mission).all()]
-    return sorted_list_of_features_by_index(processed_question, missions, number_of_features)
+    return missions
 
 
-def extract_measurement(processed_question, number_of_features, user_information: UserInformation):
+def extract_measurement(processed_entity, number_of_features, user_information: UserInformation):
     # Get a list of measurements
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
     measurements = [measurement.name.strip().lower() for measurement in session.query(earth_models.Measurement).all()]
-    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+    return measurements
 
 
-def extract_technology(processed_question, number_of_features, user_information: UserInformation):
+def extract_technology(processed_entity, number_of_features, user_information: UserInformation):
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
     technologies = [technology for technology in earth_models.technologies]
     technologies = technologies + [type.name.strip().lower() for type in session.query(earth_models.InstrumentType).all()]
-    return sorted_list_of_features_by_index(processed_question, technologies, number_of_features)
+    return technologies
 
 
-def extract_space_agency(processed_question, number_of_features, user_information: UserInformation):
+def extract_space_agency(processed_entity, number_of_features, user_information: UserInformation):
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
     agencies = [' ' + agency.name.strip() for agency in session.query(earth_models.Agency).all()]
-    return sorted_list_of_features_by_index(processed_question, agencies, number_of_features, case_sensitive=True)
+    return agencies
 
 
-def extract_date(processed_question, number_of_features, user_information: UserInformation):
+def extract_date(processed_entity, number_of_features, user_information: UserInformation):
     # For now just pick the years
     extracted_list = []
-    for word in processed_question:
+    for word in processed_entity:
         if len(word) == 4 and word.like_num:
             extracted_list.append(word.text)
 
     return crop_list(extracted_list, number_of_features)
 
 
-def extract_design_id(processed_question, number_of_features, user_information: UserInformation):
+def extract_design_id(processed_entity, number_of_features, user_information: UserInformation):
     # Get a list of design ids
     design_ids = ['d' + str(design.id) for design in user_information.eosscontext.design_set.all()]
     extracted_list = []
-    for word in processed_question:
+    for word in processed_entity:
         if word.lower_ in design_ids:
             extracted_list.append(word.text)
     return crop_list(extracted_list, number_of_features)
 
 
-def extract_agent(processed_question, number_of_features, user_information: UserInformation):
+def extract_agent(processed_entity, number_of_features, user_information: UserInformation):
     agents = ["expert", "historian", "analyst", "explorer"]
     extracted_list = []
-    for word in processed_question:
+    for word in processed_entity:
         if word.lower_ in agents:
             extracted_list.append(word.lower_)
     return crop_list(extracted_list, number_of_features)
 
 
-def extract_instrument_parameter(processed_question, number_of_features, user_information: UserInformation):
+def extract_instrument_parameter(processed_entity, number_of_features, user_information: UserInformation):
     instrument_parameters = \
         problem_specific.get_instruments_sheet(user_information.eosscontext.problem)['Attributes-for-object-Instrument']
-    return sorted_list_of_features_by_index(processed_question, instrument_parameters, number_of_features)
+    return instrument_parameters
 
 
-def extract_vassar_instrument(processed_question, number_of_features, user_information: UserInformation):
+def extract_vassar_instrument(processed_entity, number_of_features, user_information: UserInformation):
     options = [instr["name"] for instr in problem_specific.get_instrument_dataset(user_information.eosscontext.problem)]
-    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+    return options
 
 
-def extract_vassar_measurement(processed_question, number_of_features, user_information: UserInformation):
+def extract_vassar_measurement(processed_entity, number_of_features, user_information: UserInformation):
     param_names = problem_specific.get_param_names(user_information.eosscontext.problem)
-    return sorted_list_of_features_by_index(processed_question, param_names, number_of_features)
+    return param_names
 
 
-def extract_vassar_stakeholder(processed_question, number_of_features, user_information: UserInformation):
+def extract_vassar_stakeholder(processed_entity, number_of_features, user_information: UserInformation):
     options = problem_specific.get_stakeholders_list(user_information.eosscontext.problem)
-    return sorted_list_of_features_by_index(processed_question, options, number_of_features)
+    return options
 
 
-def extract_vassar_objective(processed_question, number_of_features, user_information: UserInformation):
+def extract_vassar_objective(processed_entity, number_of_features, user_information: UserInformation):
     port = user_information.eosscontext.vassar_port
     vassar_client = VASSARClient(port)
     vassar_client.start_connection()
     objectives = vassar_client.get_objective_list(user_information.eosscontext.problem)
     objectives = [objective.lower() for objective in objectives]
     vassar_client.end_connection()
-    return sorted_list_of_features_by_index(processed_question, objectives, number_of_features)
+    return objectives
 
 
-def extract_vassar_subobjective(processed_question, number_of_features, user_information: UserInformation):
+def extract_vassar_subobjective(processed_entity, number_of_features, user_information: UserInformation):
     port = user_information.eosscontext.vassar_port
     vassar_client = VASSARClient(port)
     vassar_client.start_connection()
     subobjectives = vassar_client.get_subobjective_list(user_information.eosscontext.problem)
     subobjectives = [subobjective.lower() for subobjective in subobjectives]
     vassar_client.end_connection()
-    return sorted_list_of_features_by_index(processed_question, subobjectives, number_of_features)
+    return subobjectives
 
 
 extract_function = {}

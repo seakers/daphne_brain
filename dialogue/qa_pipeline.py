@@ -13,6 +13,7 @@ from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation
 from dialogue.nn_models import nn_models
+from dialogue.param_extraction_helpers import sorted_list_of_features_by_index
 from . import ner
 
 def classify(question, daphne_version, module_name):
@@ -94,7 +95,7 @@ def extract_data(processed_question, params, user_information: UserInformation, 
     extracted_data = {}
 
     # Get the right extractors and processors
-    #extract_function = get_extract_functions(user_information.daphne_version)
+    extract_function = get_extract_functions(user_information.daphne_version)
     process_function = get_process_functions(user_information.daphne_version)
 
     # Count how many non-context params of each type are needed
