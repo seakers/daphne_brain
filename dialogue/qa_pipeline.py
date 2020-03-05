@@ -130,7 +130,9 @@ def extract_data(processed_question, params, user_information: UserInformation, 
                     raise ParameterMissingError(param["type"])
         else:
             try: 
-                extracted_param = extracted_raw_data[param["type"]].pop(0)
+                extracted_entity = extracted_raw_data[param["type"]].pop(0)
+                extracted_param = sorted_list_of_features_by_index(extracted_entity, extract_function[param["type"]](extracted_entity, user_information))
+                print("Extracted_param: {}".format(extracted_param))
             except KeyError:
                 if param["mandatory"]:
                     # If param is needed but not detected return error with type of parameter

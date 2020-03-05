@@ -26,9 +26,9 @@ def crop_list(full_list, max_size):
         return full_list
 
 
-def sorted_list_of_features_by_index(processed_entity, feature_list, number_of_features, case_sensitive=False):
+def sorted_list_of_features_by_index(processed_entity, feature_list, case_sensitive=False):
     obt_feature_list = feature_list_by_ratio(processed_entity, feature_list, case_sensitive)
-    obt_feature_list = crop_list(obt_feature_list, number_of_features)
+    #obt_feature_list = crop_list(obt_feature_list, number_of_features)
     #obt_feature_list = sorted(obt_feature_list, key=lambda ratio_info: ratio_info[2])
     obt_feature_list = [feature[0] for feature in obt_feature_list]
-    return obt_feature_list
+    return obt_feature_list[0]

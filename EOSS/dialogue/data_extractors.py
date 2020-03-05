@@ -20,7 +20,7 @@ for row in measurements_sheet.itertuples(index=True, name='Measurement'):
             param_names.append(row[i])
 
 
-def extract_mission(processed_entity, number_of_features, user_information: UserInformation):
+def extract_mission(processed_entity, user_information: UserInformation):
     # Get a list of missions
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -28,7 +28,7 @@ def extract_mission(processed_entity, number_of_features, user_information: User
     return missions
 
 
-def extract_measurement(processed_entity, number_of_features, user_information: UserInformation):
+def extract_measurement(processed_entity, user_information: UserInformation):
     # Get a list of measurements
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -36,7 +36,7 @@ def extract_measurement(processed_entity, number_of_features, user_information: 
     return measurements
 
 
-def extract_technology(processed_entity, number_of_features, user_information: UserInformation):
+def extract_technology(processed_entity, user_information: UserInformation):
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -45,7 +45,7 @@ def extract_technology(processed_entity, number_of_features, user_information: U
     return technologies
 
 
-def extract_space_agency(processed_entity, number_of_features, user_information: UserInformation):
+def extract_space_agency(processed_entity, user_information: UserInformation):
     # Get a list of technologies and types
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
@@ -53,57 +53,56 @@ def extract_space_agency(processed_entity, number_of_features, user_information:
     return agencies
 
 
-def extract_date(processed_entity, number_of_features, user_information: UserInformation):
+def extract_date(processed_entity, user_information: UserInformation):
     # For now just pick the years
     extracted_list = []
     for word in processed_entity:
         if len(word) == 4 and word.like_num:
             extracted_list.append(word.text)
 
-    return crop_list(extracted_list, number_of_features)
+    return extracted_list
 
 
-def extract_design_id(processed_entity, number_of_features, user_information: UserInformation):
+def extract_design_id(processed_entity, user_information: UserInformation):
     # Get a list of design ids
     design_ids = ['d' + str(design.id) for design in user_information.eosscontext.design_set.all()]
     extracted_list = []
     for word in processed_entity:
         if word.lower_ in design_ids:
             extracted_list.append(word.text)
-    return crop_list(extracted_list, number_of_features)
+    return extracted_list
 
 
-def extract_agent(processed_entity, number_of_features, user_information: UserInformation):
+def extract_agent(processed_entity, user_information: UserInformation):
     agents = ["expert", "historian", "analyst", "explorer"]
     extracted_list = []
     for word in processed_entity:
         if word.lower_ in agents:
             extracted_list.append(word.lower_)
-    return crop_list(extracted_list, number_of_features)
+    return extracted_list
 
-
-def extract_instrument_parameter(processed_entity, number_of_features, user_information: UserInformation):
+def extract_instrument_parameter(processed_entity, user_information: UserInformation):
     instrument_parameters = \
         problem_specific.get_instruments_sheet(user_information.eosscontext.problem)['Attributes-for-object-Instrument']
     return instrument_parameters
 
 
-def extract_vassar_instrument(processed_entity, number_of_features, user_information: UserInformation):
+def extract_vassar_instrument(processed_entity, user_information: UserInformation):
     options = [instr["name"] for instr in problem_specific.get_instrument_dataset(user_information.eosscontext.problem)]
     return options
 
 
-def extract_vassar_measurement(processed_entity, number_of_features, user_information: UserInformation):
+def extract_vassar_measurement(processed_entity, user_information: UserInformation):
     param_names = problem_specific.get_param_names(user_information.eosscontext.problem)
     return param_names
 
 
-def extract_vassar_stakeholder(processed_entity, number_of_features, user_information: UserInformation):
+def extract_vassar_stakeholder(processed_entity, user_information: UserInformation):
     options = problem_specific.get_stakeholders_list(user_information.eosscontext.problem)
     return options
 
 
-def extract_vassar_objective(processed_entity, number_of_features, user_information: UserInformation):
+def extract_vassar_objective(processed_entity, user_information: UserInformation):
     port = user_information.eosscontext.vassar_port
     vassar_client = VASSARClient(port)
     vassar_client.start_connection()
@@ -113,7 +112,7 @@ def extract_vassar_objective(processed_entity, number_of_features, user_informat
     return objectives
 
 
-def extract_vassar_subobjective(processed_entity, number_of_features, user_information: UserInformation):
+def extract_vassar_subobjective(processed_entity, user_information: UserInformation):
     port = user_information.eosscontext.vassar_port
     vassar_client = VASSARClient(port)
     vassar_client.start_connection()
