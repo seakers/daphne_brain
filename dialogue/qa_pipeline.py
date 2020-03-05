@@ -86,8 +86,6 @@ def get_process_functions(daphne_version):
         from AT.dialogue.data_processors import process_function
         return process_function
 
-"""La función recibe el input del usuario, los parámetros con los que debería contar una
-oración de su tipo, la información del usuario y un contexto."""
 def extract_data(processed_question, params, user_information: UserInformation, context):
     print("Processed Question: {}".format(processed_question))
     """ Extract the features from the processed question, with a correcting factor """
