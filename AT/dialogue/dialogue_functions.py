@@ -87,7 +87,7 @@ def check_measurement_status(measurement, parameter_group, context):
     elif zone == 'ZONE ERROR':
         result = 'I had some troubles checking this measurement status. Please report this to someone.'
     else:
-        text = 'The' + measurement_display_name + ' measurement is currently ' + zone + '.'
+        text = 'The ' + measurement_display_name + ' measurement is currently ' + zone + '.'
         result = text
 
     return result
