@@ -4,7 +4,7 @@ from sys import argv
 import os
 import en_ner_model
 
-MODEL_USED = "en_daphne_entities-12-0.0.0"
+MODEL_USED = "en_ner_model-0.0.0"
 
 # Returns a list of dicts with the text, label, starting and ending chart of every entity
 def ner(text):
@@ -17,10 +17,19 @@ def ner(text):
                                     "label": entity.label_, 
                                     "start": entity.start_char, 
                                     "end": entity.start_char + len(entity.text)})
+        label = entity.label_.lower()
+        # This part is kind of hardcoded... it could be trained again changing the entities names to add the vassar_ prefix.
+        if (label == "instrument") or (label == "stakeholder"):
+            label = "vassar_" + label
         try:
-             extraction_dict[entity.label_.lower()].append(entity.text)
+            extraction_dict[label].append(entity.text)
+            if label == "measurement":
+                extraction_dict["vassar_" + label].append(entity.text)
         except KeyError:
-            extraction_dict[entity.label_.lower()] = [entity.text]
+            extraction_dict[label] = [entity.text]
+            if label == "measurement":
+                extraction_dict["vassar_" + label] = [entity.text]
+
     print("extraction dict: {}".format(extraction_dict))
     return entities_recognized, extraction_dict
 

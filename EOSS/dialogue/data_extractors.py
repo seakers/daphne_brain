@@ -33,6 +33,9 @@ def extract_measurement(processed_entity, user_information: UserInformation):
     engine = earth_models.db_connect()
     session = sessionmaker(bind=engine)()
     measurements = [measurement.name.strip().lower() for measurement in session.query(earth_models.Measurement).all()]
+    #Vassar Measurements added as well
+    vassar_measurements = problem_specific.get_param_names(user_information.eosscontext.problem)
+    measurements += vassar_measurements
     return measurements
 
 
@@ -68,7 +71,7 @@ def extract_design_id(processed_entity, user_information: UserInformation):
     design_ids = ['d' + str(design.id) for design in user_information.eosscontext.design_set.all()]
     extracted_list = []
     for word in processed_entity:
-        if word.lower_ in design_ids:
+        if word.lower() in design_ids:
             extracted_list.append(word.text)
     return extracted_list
 
@@ -77,8 +80,8 @@ def extract_agent(processed_entity, user_information: UserInformation):
     agents = ["expert", "historian", "analyst", "explorer"]
     extracted_list = []
     for word in processed_entity:
-        if word.lower_ in agents:
-            extracted_list.append(word.lower_)
+        if word.lower() in agents:
+            extracted_list.append(word.lower())
     return extracted_list
 
 def extract_instrument_parameter(processed_entity, user_information: UserInformation):
@@ -92,9 +95,9 @@ def extract_vassar_instrument(processed_entity, user_information: UserInformatio
     return options
 
 
-def extract_vassar_measurement(processed_entity, user_information: UserInformation):
-    param_names = problem_specific.get_param_names(user_information.eosscontext.problem)
-    return param_names
+#def extract_vassar_measurement(processed_entity, user_information: UserInformation):
+#    param_names = problem_specific.get_param_names(user_information.eosscontext.problem)
+#    return param_names
 
 
 def extract_vassar_stakeholder(processed_entity, user_information: UserInformation):
@@ -132,7 +135,7 @@ extract_function["design_id"] = extract_design_id
 extract_function["agent"] = extract_agent
 extract_function["instrument_parameter"] = extract_instrument_parameter
 extract_function["vassar_instrument"] = extract_vassar_instrument
-extract_function["vassar_measurement"] = extract_vassar_measurement
+extract_function["vassar_measurement"] = extract_measurement
 extract_function["vassar_stakeholder"] = extract_vassar_stakeholder
 extract_function["objective"] = extract_vassar_objective
 extract_function["subobjective"] = extract_vassar_subobjective

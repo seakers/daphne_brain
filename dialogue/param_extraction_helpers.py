@@ -16,6 +16,7 @@ def feature_list_by_ratio(processed_entity, feature_list, case_sensitive=False):
     ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -len(ratio_info[0]))
     ratio_ordered = sorted(ratio_ordered, key=lambda ratio_info: -ratio_info[1])
     ratio_ordered = [ratio_info for ratio_info in ratio_ordered if ratio_info[1] > 0.75]
+    print("ratio ordered: {}".format(ratio_ordered))
     return ratio_ordered
 
 
