@@ -31,7 +31,6 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
 
 
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
-    print('STARTING DIAGNOSIS')
 
     # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
     # of all the VA code.
@@ -75,7 +74,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     diagnosis = [node[0] for node in result]
     print(diagnosis)
 
-    print('BLOCK 1 FINISHED')
     # **************************************************
 
     # **************************************************
@@ -127,7 +125,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
         # Append the resulting object to the dictionary
         symptoms_of_each_anomaly[anomaly] = symptom_of_anomaly
 
-    print('BLOCK 2 FINISHED')
     # **************************************************
 
     # **************************************************
@@ -170,7 +167,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
         cardinality_for_each_anomaly[anomaly] = cardinal
         size_of_each_anomaly[anomaly] = len(symptoms_of_each_anomaly[anomaly])
 
-    print('BLOCK 3 FINISHED')
     # **************************************************
 
     # **************************************************
@@ -209,8 +205,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
 
     # Return result
     final_diagnosis = top_n_diagnosis
-
-    print('BLOCK 4 FINISHED')
 
     return final_diagnosis
 
