@@ -127,7 +127,7 @@ class SeclssFeed(APIView):
             return Response(parsed_sensor_data)
         else:
             print('ERROR retrieving the sensor data from the ECLSS simulator')
-            Response()
+            return Response()
 
 
 class RequestDiagnosis(APIView):
