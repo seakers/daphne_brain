@@ -119,11 +119,15 @@ class StartSeclssFeed(APIView):
 
 class SeclssFeed(APIView):
     def post(self, request):
-        sensor_data = request.data['parameters']
-        # print(sensor_data)
-        parsed_sensor_data = json.loads(sensor_data)
-        server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
-        return Response(parsed_sensor_data)
+        if 'parameters' in request.data:
+            sensor_data = request.data['parameters']
+            # print(sensor_data)
+            parsed_sensor_data = json.loads(sensor_data)
+            server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
+            return Response(parsed_sensor_data)
+        else:
+            print('ERROR retrieving the sensor data from the ECLSS simulator')
+            Response()
 
 
 class RequestDiagnosis(APIView):
