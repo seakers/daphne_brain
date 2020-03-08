@@ -75,6 +75,7 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
     first_update = True
     counter = 0
     check_delay = 0.1
+    print_freq = 10  # This is only to occasionally print a health check message through the terminal
 
     while keep_alive:
         if not hub_to_sim.empty():
@@ -96,7 +97,8 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
 
                 sim_to_hub.put({'type': 'window', 'content': tf_window})
                 counter += 1
-                print('New sensor data received and sent.')
+                if counter % print_freq == 0:
+                    print('The ECLSS sensor data handler is healthy.')
 
             time.sleep(check_delay)
 
