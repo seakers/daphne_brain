@@ -133,11 +133,16 @@ class FinishExperiment(APIView):
             }
             for stage in experiment_context.atexperimentstage_set.all():
                 print(stage.type, stage.end_state)
+                end_state = stage.end_state
+                if end_state == '':
+                    json_end_state = json.loads('' or 'null')
+                else:
+                    json_end_state = json.loads(end_state)
                 json_stage = {
                     "type": stage.type,
                     "start_date": stage.start_date.isoformat(),
                     "end_date": stage.end_date.isoformat(),
-                    "end_state": json.loads(stage.end_state),
+                    "end_state": json_end_state,
                     "actions": []
                 }
                 for action in stage.atexperimentaction_set.all():
