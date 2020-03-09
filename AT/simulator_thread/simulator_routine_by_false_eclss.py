@@ -162,7 +162,7 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
     window_span = 60
     dt = 0.1
     display_lapse = 1
-    std_fact = 0.01
+    std_fact = 0.001
     digits = 5
 
     # Initialize the status variable (to the nominal value of all the simulation variables)

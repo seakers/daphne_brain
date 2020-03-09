@@ -524,7 +524,7 @@ def retrieve_fancy_steps_from_procedure(procedure):
         step_item = {'depth': depth,
                      'label': step_labels[index],
                      'action': step_actions[index],
-                     'isDone': False,}
+                     'isDone': False}
 
         steps.append(step_item)
 

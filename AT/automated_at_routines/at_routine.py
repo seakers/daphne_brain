@@ -96,9 +96,61 @@ def build_symptoms_report(window):
     return symptoms_report
 
 
+def symptom_reports_are_equal(old_report, new_report):
+    if len(old_report) != len(new_report):
+        return False
+    else:
+        N = len(old_report)
+        are_equal = True
+        for i in range(0, N):
+            old_display_name = old_report[i]['display_name']
+            new_display_name = new_report[i]['display_name']
+            old_threshold_tag = old_report[i]['threshold_tag']
+            new_threshold_tag = new_report[i]['threshold_tag']
+            same_name = (old_display_name == new_display_name)
+            same_tag = (old_threshold_tag == new_threshold_tag)
+            if not same_name or not same_tag:
+                are_equal = False
+        return are_equal
+
+
+def decide_alarm(old_report, new_report, t_nominal, cs_is_pending, cs_wait):
+    # Check whether the previous and new symptoms reports are equal or not
+    are_equal = symptom_reports_are_equal(old_report, new_report)
+
+    # Act depending on the case
+    if are_equal and len(old_report) != 0:
+        # This means that the symptoms reports are equal and nonempty. No new anomalies have appeared and no clear sound
+        # should is pending.
+        return 'None', t_nominal, False
+    else:
+        if len(new_report) == 0 and len(old_report) != 0:
+            # This means that the situation just switched to nominal. No clear sound is triggered since we want to wait
+            # a safe time before doing so. Hence we mark the clear sound as pending and compute the time in which this
+            # switch took place.
+            return 'None', time.time(), True
+        elif len(new_report) == 0 and len(old_report) == 0:
+            # This means that the situation has been nominal for a while. Hence we check our auxiliary variables.
+            elapsed_time = time.time() - t_nominal
+            if elapsed_time >= cs_wait and cs_is_pending:
+                # If we waited pass the safe time and the clear sound is pending, then we emmit a clear sound.
+                return 'alarmOut', t_nominal, False
+            else:
+                # Do nothing otherwise
+                return 'None', t_nominal, cs_is_pending
+        else:
+            # We can only get here if the symptoms repots are not equal and the new one is not empty. Hence we make an
+            # alarm sound.
+            return 'alarmIn', t_nominal, False
+
+
 def anomaly_treatment_routine(hub_to_at, at_to_hub):
 
     keep_alive = True
+    last_symptoms_report = []
+    t_nominal = -1  # This variable is used to store the last time the telemetry switched from off nominal to nominal
+    cs_is_pending = False  # cs stand for "clear sound"
+    cs_wait = 10  # cs stands for "clear sound"
     while keep_alive:
         while not hub_to_at.empty():
             signal = hub_to_at.get()
@@ -109,10 +161,21 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
                 # only process the last received window
                 if hub_to_at.empty():
                     window = signal['content']
+                    # Build the new symptoms report
                     symptoms_report = build_symptoms_report(window)
 
+                    # Decide if an alarm has to be triggered or not
+                    alarm, t_nominal, cs_is_pending = decide_alarm(last_symptoms_report, symptoms_report,
+                                                                   t_nominal, cs_is_pending, cs_wait)
+
+                    # Update the last symptoms report
+                    last_symptoms_report = symptoms_report
+
+                    # Build the message for the frontend
+                    content = {'symptoms_report': symptoms_report, 'alarm': alarm}
+
                     # Send message to frontend
-                    at_to_hub.put({'type': 'symptoms_report', 'content': symptoms_report})
+                    at_to_hub.put({'type': 'symptoms_report', 'content': content})
 
         time.sleep(0.5)
 
