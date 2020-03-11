@@ -72,7 +72,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # intersection with the requested symptoms)
     result = session.run(query)
     diagnosis = [node[0] for node in result]
-    print(diagnosis)
 
     # **************************************************
 

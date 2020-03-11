@@ -104,5 +104,9 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
 
         time.sleep(check_delay)
 
+    # Clear the queues and print a stop message
+    sim_to_hub.queue.clear()
+    hub_to_sim.queue.clear()
+    ser_to_sim.queue.clear()
     print('Simulator thread stopped.')
     return

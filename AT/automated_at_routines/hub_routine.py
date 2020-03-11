@@ -38,7 +38,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, requ
     first_status_has_arrived = False
     first_status_is_timeout = False
     first_status_timer = 0
-    first_status_time_limit = 10
+    first_status_time_limit = 30
     while not first_status_has_arrived and not first_status_is_timeout:
 
         # Check the frontend input queue
@@ -164,5 +164,7 @@ def hub_routine(front_to_hub, sim_to_hub, hub_to_sim, hub_to_at, at_to_hub, requ
     hub_to_sim.put({'type': 'stop', 'content': ''})
     hub_to_at.put({'type': 'stop', 'content': ''})
 
+    # Clear the queues and print a stop message
+    front_to_hub.queue.clear()
     print('Hub thread stopped.')
     return
