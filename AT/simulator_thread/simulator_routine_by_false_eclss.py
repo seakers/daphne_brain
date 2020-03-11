@@ -210,5 +210,8 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
         # Wait
         time.sleep(dt)
 
+    # Clear the queues and print a stop message
+    sim_to_hub.queue.clear()
+    hub_to_sim.queue.clear()
     print('Simulator thread stopped.')
     return

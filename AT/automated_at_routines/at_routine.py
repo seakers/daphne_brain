@@ -179,5 +179,8 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
 
         time.sleep(0.5)
 
+    # Clear the queues and print a stop message
+    at_to_hub.queue.clear()
+    hub_to_at.queue.clear()
     print('Anomaly treatment thread stopped.')
     return
