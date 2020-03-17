@@ -21,7 +21,7 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu', 'dev.selva-research.com']
 
 USE_X_FORWARDED_HOST = True
 
@@ -123,7 +123,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ORIGIN_WHITELIST = (
     'http://daphne.engr.tamu.edu',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'http://dev.selva-research.com'
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -131,7 +132,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = (
     'http://daphne.engr.tamu.edu',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'http://dev.selva-research.com'
 )
 
 
