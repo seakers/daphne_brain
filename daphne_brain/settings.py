@@ -24,7 +24,7 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu', 'dev.selva-research.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne']
 
 USE_X_FORWARDED_HOST = True
 

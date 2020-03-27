@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import UserInformation
 
+import requests
+import json
 
 class Login(APIView):
     """
@@ -107,6 +109,8 @@ class Register(APIView):
         try:
             user = User.objects.create_user(username, email, password1)
             user.save()
+            print("USER ID", user.id)
+            user_id = user.id
             # Create folders in the server structure
             folder_name = os.path.join(os.getcwd(), "EOSS", "data", "datasets", username)
             os.mkdir(folder_name)
@@ -114,6 +118,14 @@ class Register(APIView):
             for problem in problem_list:
                 subfolder_name = os.path.join(folder_name, problem)
                 os.mkdir(subfolder_name)
+
+            # We must give the user access to the default group: seakers (default)
+            URL = 'http://graphql:8080/v1/graphql'
+            mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: 1, user_id: ' + str(user_id) + '}) { returning { group_id user_id id }}}'
+            request_data = json.dumps({'query': mutation})
+            r = requests.post(url=URL, data=request_data)
+
+
         except ValueError:
             return Response({
                 'status': 'registration_error',
@@ -148,7 +160,6 @@ class CheckStatus(APIView):
     Check if a user is logged in
     """
     def get(self, request, format=None):
-
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         problem = user_info.eosscontext.problem
@@ -186,3 +197,68 @@ class GenerateSession(APIView):
     def post(self, request, format=None):
         request.session.save()
         return Response("Session generated")
+
+
+
+
+
+
+
+
+
+# Vassar Problem Editor
+
+
+class GetUserPk(APIView):
+    """
+    Simply generate a session for the user (solves a ton of bugs)
+    """
+    def post(self, request, format=None):
+        if request.user == None:
+            return Response({'status': 'request.user is none'})
+        users = User.objects.filter(username__exact=request.user)
+        if len(users) == 1:
+            print("USER", users[0].id)
+            return Response({'user_id': users[0].id})
+        else:
+            return Response({'status': 'query returned more than one users'})
+
+
+
+
+
+class CheckStatusHasura(APIView):
+    """
+    Request sent from the hasura container! Authenticates the user editing a problem
+    """
+    def get(self, request, format=None):
+        print("Check hasura status", request.data)
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+        problem = user_info.eosscontext.problem
+        dataset_filename = user_info.eosscontext.dataset_name
+        dataset_user = user_info.eosscontext.dataset_user
+
+        response = {
+            "X-Hasura-User-Id": "1",
+            "X-Hasura-Role": "admin",
+            "X-Hasura-Is-Owner": "true",
+            "X-Hasura-Custom": "custom value"
+        }
+        return Response(response)
+
+        # if request.user.is_authenticated:
+        #     response['is_logged_in'] = True
+        #     # Transform the database design data into a json for the frontend
+        #     response['data'] = []
+        #     if user_info.eosscontext.design_set.count() > 0:
+        #         for design in user_info.eosscontext.design_set.order_by('id').all():
+        #             response['data'].append(
+        #                 {'id': design.id, 'inputs': json.loads(design.inputs), 'outputs': json.loads(design.outputs)})
+        #         response['modified_dataset'] = True
+        #     else:
+        #         response['modified_dataset'] = False
+        # else:
+        #     response['is_logged_in'] = False
+        # return Response(response)
+
