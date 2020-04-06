@@ -14,3 +14,4 @@ dialogue/models
 /logs/daphne.log
 venv/
 venv_linux/
+.vscode/

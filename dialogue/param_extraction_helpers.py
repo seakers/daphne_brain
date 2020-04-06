@@ -3,6 +3,7 @@ import Levenshtein as lev
 
 
 def feature_list_by_ratio(processed_entity, feature_list, case_sensitive=False):
+    print(processed_entity, feature_list)
     """ Obtain a list of all the features in the list sorted by partial similarity to the processed entity"""
     ratio_ordered = []
     for feature in feature_list:
@@ -32,4 +33,4 @@ def sorted_list_of_features_by_index(processed_entity, feature_list, case_sensit
     #obt_feature_list = crop_list(obt_feature_list, number_of_features)
     #obt_feature_list = sorted(obt_feature_list, key=lambda ratio_info: ratio_info[2])
     obt_feature_list = [feature[0] for feature in obt_feature_list]
-    return obt_feature_list[0]
+    return obt_feature_list

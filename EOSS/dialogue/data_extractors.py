@@ -58,21 +58,30 @@ def extract_space_agency(processed_entity, user_information: UserInformation):
 
 def extract_date(processed_entity, user_information: UserInformation):
     # For now just pick the years
+    print("extracting date")
+    print(processed_entity)
+    separated_date = processed_entity.split()
     extracted_list = []
-    for word in processed_entity:
-        if len(word) == 4 and word.like_num:
-            extracted_list.append(word.text)
-
+    for word in separated_date:
+        print("word", word)
+        if len(word) == 4 and word.isnumeric():
+            extracted_list.append(word)
+    print("extract_date:{}".format(extracted_list))
     return extracted_list
 
 
 def extract_design_id(processed_entity, user_information: UserInformation):
     # Get a list of design ids
     design_ids = ['d' + str(design.id) for design in user_information.eosscontext.design_set.all()]
+    design_ids_without_d = [str(design.id) for design in user_information.eosscontext.design_set.all()]
+    print('design_ids', design_ids)
     extracted_list = []
-    for word in processed_entity:
+    separated_design = processed_entity.split()
+    for word in separated_design:
         if word.lower() in design_ids:
-            extracted_list.append(word.text)
+            extracted_list.append(word)
+        if word.lower() in design_ids_without_d:
+            extracted_list.append('d' + word)
     return extracted_list
 
 
