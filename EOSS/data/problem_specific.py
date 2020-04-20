@@ -1,6 +1,6 @@
 import pandas
 
-assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
+assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric', 'Aerosols_Clouds']
 partition_problems = ['Decadal2017Aerosols']
 
 CC_ORBIT_DATASET = [
@@ -135,6 +135,96 @@ smap_instruments_info = [
 
 smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
 
+AC_ORBIT_DATASET = [
+    {"alias": "1000", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
+    {"alias": "2000", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
+    {"alias": "3000", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
+    {"alias": "4000", "name": "SSO-800-SSO-AM", "type": "Sun-synchronous", "altitude": 800, "LST": "AM"},
+    {"alias": "5000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"}]
+
+
+AC_INSTRUMENT_DATASET = [
+    {"alias": "ACE-CPR", "name": "ACE-CPR", "type": "Cloud profiling radar", "technology": "Cloud and precipitation radar",
+     "geometry": "Along-track sampling", "wavebands": ["W-band"]},
+    {"alias": "ACE-OCI", "name": "ACE-OCI", "type": "Ocean color imagers", "technology": "Moderate resolution optical imager",
+     "geometry": "Off-nadir pushbroom", "wavebands": ["UV", "VIS", "NIR", "SWIR"]},
+    {"alias": "ACE-POL", "name": "ACE-POL", "type": "Polarimeters",
+     "technology": "Moderate resolution optical imager", "geometry": "Nadir viewing", "wavebands": ["VIS", "NIR", "SWIR"]},
+    {"alias": "ACE-LID", "name": "ACE-LID", "type": "Aerosol and cloud profiling lidars",
+     "technology": "Lidar", "geometry": "Nadir viewing",
+     "wavebands": ["UV", "VIS", "NIR"]},
+    {"alias": "CALIPSO-CALIOP", "name": "CALIPSO-CALIOP", "type": "Aerosol and cloud profiling lidars",
+     "technology": "Lidar", "geometry": "Nadir viewing",
+     "wavebands": ["VIS", "NIR"]},
+    {"alias": "CALIPSO-WFC", "name": "CALIPSO-WFC", "type": "VIS imagers",
+     "technology": "High resolution optical imager", "geometry": "Nadir-viewing pushbroom",
+     "wavebands": ["VIS"]},
+    {"alias": "CALIPSO-IIR", "name": "CALIPSO-IIR", "type": "Imaging infrared radiometers",
+     "technology": "Moderate resolution optical imager", "geometry": "Nadir-viewing pushbroom",
+     "wavebands": ["TIR"]},
+    {"alias": "EARTHCARE-ATLID", "name": "EARTHCARE-ATLID", "type": "Atmospheric lidars",
+     "technology": "Lidar", "geometry": "Near-nadir viewing",
+     "wavebands": ["UV"]},
+    {"alias": "EARTHCARE-BBR", "name": "EARTHCARE-BBR", "type": "Broadband radiometers",
+     "technology": "Broadband Earth radiation radiometer", "geometry": "Three along-track views",
+     "wavebands": ["UV", "VIS", "NIR", "SWIR", "MWIR", "TIR"]},
+    {"alias": "EARTHCARE-CPR", "name": "EARTHCARE-CPR", "type": "Cloud profiling radar", "technology": "Cloud and precipitation radar",
+     "geometry": "Along-track sampling", "wavebands": ["W-band"]},
+    {"alias": "EARTHCARE-MSI", "name": "EARTHCARE-MSI", "type": "Multi-spectral imagers",
+     "technology": "Moderate resolution optical imager", "geometry": "Pushbroom",
+     "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
+    {"alias": "ICI", "name": "ICI", "type": "Ice cloud imagers",
+     "technology": "Conical scanning microwave radiometer", "geometry": "Nadir-viewing",
+     "wavebands": ["W-band", "mm", "THF"]}
+]
+
+
+ac_capabilities_sheet = pandas.read_excel('../VASSAR_resources/problems/Aerosols_Clouds/xls/Instrument Capability Definition.xls',
+                                            sheet_name='CHARACTERISTICS')
+
+ac_instrument_sheet = lambda vassar_instrument: pandas.read_excel('../VASSAR_resources/problems/Aerosols_Clouds/xls/Instrument Capability Definition.xls',
+                                                                    sheet_name=vassar_instrument, header=None)
+
+ac_requirements_sheet = pandas.read_excel('../VASSAR_resources/problems/Aerosols_Clouds/xls/Requirement Rules.xls',
+                                            sheet_name='Requirement rules')
+
+ac_instruments_sheet = pandas.read_excel('../VASSAR_resources/problems/Aerosols_Clouds/xls/AttributeSet.xls', sheet_name='Instrument')
+ac_measurements_sheet = pandas.read_excel('../VASSAR_resources/problems/Aerosols_Clouds/xls/AttributeSet.xls', sheet_name='Measurement')
+ac_param_names = []
+for row in ac_measurements_sheet.itertuples(index=True, name='Measurement'):
+    if row[2] == 'Parameter':
+        for i in range(6, len(row)):
+            ac_param_names.append(row[i])
+
+
+ac_orbits_info = [
+    "<b>Orbit name: Orbit information</b>",
+    "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
+    "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
+    "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
+    "SSO-800-SSO-AM: Low Earth, Sun-synchronous, High Altitude (800 km), Morning",
+    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk"
+]
+
+
+ac_instruments_info = [
+    "<b>Instrument name: Instrument type, Instrument technology, Band, Mass, Power</b>",
+    "BIOMASS: Imaging microwave radars, Imaging radar (SAR), P-band, 500kg, 1672W",
+    "SMAP_RAD: Imaging microwave radars, Imaging radar (SAR), L-band, 45.2kg, 1672W",
+    "SMAP_MWR: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, L-band, 10.4kg, 45.2W",
+    "CMIS: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, C-band/X-band/K-band/Ka-band/W-band, 257kg, 340W",
+    "VIIRS: High-resolution nadir-scanning IR spectrometer, Atmospheric temperature and humidity sounders, VIS/NIR/SWIR/MWIR/TIR, 199kg, 134W",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " "
+]
+
+ac_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
+
 
 def get_orbit_dataset(problem):
     if problem == "ClimateCentric":
@@ -143,6 +233,8 @@ def get_orbit_dataset(problem):
         return SMAP_ORBIT_DATASET
     if problem == "Decadal2017Aerosols":
         return SMAP_ORBIT_DATASET
+    if problem == "Aerosols_Clouds":
+        return AC_ORBIT_DATASET
 
 
 def get_instrument_dataset(problem):
@@ -152,6 +244,8 @@ def get_instrument_dataset(problem):
         return SMAP_INSTRUMENT_DATASET
     if problem == "Decadal2017Aerosols":
         return SMAP_INSTRUMENT_DATASET
+    if problem == "Aerosols_Clouds":
+        return AC_INSTRUMENT_DATASET
 
 
 def get_capabilities_sheet(problem):
@@ -159,6 +253,8 @@ def get_capabilities_sheet(problem):
         return cc_capabilities_sheet
     if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_capabilities_sheet
+    if problem == "Aerosols_Clouds":
+        return ac_capabilities_sheet
 
 
 def get_instrument_sheet(problem, instrument):
@@ -166,6 +262,8 @@ def get_instrument_sheet(problem, instrument):
         return cc_instrument_sheet(instrument)
     if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_instrument_sheet(instrument)
+    if problem == "Aerosols_Clouds":
+        return ac_instrument_sheet(instrument)
 
 
 def get_instruments_sheet(problem):
@@ -173,6 +271,8 @@ def get_instruments_sheet(problem):
         return cc_instruments_sheet
     if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_instruments_sheet
+    if problem == "Aerosols_Clouds":
+        return ac_instruments_sheet
 
 
 def get_requirements_sheet(problem):
@@ -180,6 +280,8 @@ def get_requirements_sheet(problem):
         return cc_requirements_sheet
     if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_requirements_sheet
+    if problem == "Aerosols_Clouds":
+        return ac_requirements_sheet
 
 
 def get_param_names(problem):
@@ -187,6 +289,8 @@ def get_param_names(problem):
         return cc_param_names
     if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_param_names
+    if problem == "Aerosols_Clouds":
+        return ac_param_names
 
 
 def get_orbits_info(problem):
@@ -196,6 +300,8 @@ def get_orbits_info(problem):
         return smap_orbits_info
     if problem == "Decadal2017Aerosols":
         return smap_orbits_info
+    if problem == "Aerosols_Clouds":
+        return ac_orbits_info
 
 
 def get_instruments_info(problem):
@@ -205,10 +311,13 @@ def get_instruments_info(problem):
         return smap_instruments_info
     if problem == "Decadal2017Aerosols":
         return smap_instruments_info
-
+    if problem == "Aerosols_Clouds":
+        return ac_instruments_info
 
 def get_stakeholders_list(problem):
     if problem == "ClimateCentric":
         return cc_stakeholder_list
     if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
         return smap_stakeholder_list
+    if problem == "Aerosols_Clouds":
+        return ac_stakeholder_list
