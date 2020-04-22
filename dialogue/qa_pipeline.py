@@ -13,7 +13,8 @@ from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation
 from dialogue.nn_models import nn_models
-
+from dialogue.param_extraction_helpers import sorted_list_of_features_by_index
+from . import ner
 
 def classify(question, daphne_version, module_name):
     cleaned_question = data_helpers.clean_str(question)
@@ -86,8 +87,8 @@ def get_process_functions(daphne_version):
         from AT.dialogue.data_processors import process_function
         return process_function
 
-
 def extract_data(processed_question, params, user_information: UserInformation, context):
+    print("Processed Question: {}".format(processed_question))
     """ Extract the features from the processed question, with a correcting factor """
     number_of_features = {}
     extracted_raw_data = {}
@@ -99,6 +100,7 @@ def extract_data(processed_question, params, user_information: UserInformation, 
 
     # Count how many non-context params of each type are needed
     for param in params:
+        print("Param: {}".format(param))
         if not param["from_context"]:
             print(processed_question)
             if param["type"] in number_of_features:
@@ -106,8 +108,13 @@ def extract_data(processed_question, params, user_information: UserInformation, 
             else:
                 number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
-    for type, num in number_of_features.items():
-        extracted_raw_data[type] = extract_function[type](processed_question, num, user_information)
+    #for type, num in number_of_features.items():
+    #    extracted_raw_data[type] = extract_function[type](processed_question, num, user_information)
+        #print("ERD Type {}: {}".format(type, extracted_raw_data[type]))
+    print("Calling ner")
+    _, extracted_raw_data = ner.ner(processed_question)
+    print(extracted_raw_data)
+    
     # For each parameter check if it's needed and apply postprocessing;
     for param in params:
         extracted_param = None
@@ -122,14 +129,19 @@ def extract_data(processed_question, params, user_information: UserInformation, 
                 if param["mandatory"]:
                     raise ParameterMissingError(param["type"])
         else:
-            if len(extracted_raw_data[param["type"]]) > 0:
-                extracted_param = extracted_raw_data[param["type"]].pop(0)
-            elif param["mandatory"]:
-                # If param is needed but not detected return error with type of parameter
-                raise ParameterMissingError(param["type"])
+            try: 
+                extracted_entity = str(extracted_raw_data[param["type"]].pop(0))
+                extracted_param = sorted_list_of_features_by_index(extracted_entity, extract_function[param["type"]](extracted_entity, user_information))[0]
+                print("Extracted_param: {}".format(extracted_param))
+            except KeyError:
+                if param["mandatory"]:
+                    # If param is needed but not detected return error with type of parameter
+                    raise ParameterMissingError(param["type"])
         if extracted_param is not None:
             extracted_data[param["name"]] = process_function[param["type"]](extracted_param, param["options"],
                                                                             user_information)
+            print("ED Name: {}".format(extracted_data[param["name"]]))                                                                        
+    print("EData: {}".format(extract_data))
     return extracted_data
 
 
