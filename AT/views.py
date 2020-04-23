@@ -1,49 +1,41 @@
 import json
 import threading
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from AT.automated_at_routines.at_routine import anomaly_treatment_routine
 from AT.automated_at_routines.hub_routine import hub_routine
-from AT.global_objects import at_to_hub_queue
 from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
-from AT.neo4j_queries.query_functions import diagnose_symptoms_by_subset_of_anomaly
 from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
-from AT.neo4j_queries.query_functions import retrieve_ordered_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
 
 
-# QUEUES
-from AT.global_objects import frontend_to_hub_queue
-from AT.global_objects import hub_to_at_queue
-from AT.global_objects import hub_to_simulator_queue
-from AT.global_objects import simulator_to_hub_queue
-from AT.global_objects import server_to_simulator_queue
+# THREADS + QUEUES
+import AT.global_objects as global_obj
+
 from auth_API.helpers import get_or_create_user_information
 
 
-def check_threads_status(simulator_thread, hub_thread, at_thread):
-    sim_is_alive = simulator_thread.is_alive()
-    hub_is_alive = hub_thread.is_alive()
-    ad_is_alive = at_thread.is_alive()
+def check_threads_status():
+    sim_is_alive = global_obj.simulator_thread.is_alive()
+    hub_is_alive = global_obj.hub_thread.is_alive()
+    ad_is_alive = global_obj.at_thread.is_alive()
 
     # Check if all the treads are in a healthy status. Display a message according to the result.
     if hub_is_alive and sim_is_alive and ad_is_alive:
         print('**********\nAll AT threads started successfully.\n**********')
     else:
         print('**********')
-        if not hub_thread.is_alive():
+        if not global_obj.hub_thread.is_alive():
             print('Thread handler thread start failure.')
-        if not simulator_thread.is_alive():
+        if not global_obj.simulator_thread.is_alive():
             print('Simulator thread start failure.')
-        if not at_thread.is_alive():
+        if not global_obj.at_thread.is_alive():
             print('Anomaly treatment thread start failure.')
         print('**********')
     return
@@ -65,23 +57,29 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 class SimulateTelemetry(APIView):
     def post(self, request):
         # Hub thread initialization
-        hub_thread = threading.Thread(target=hub_routine,
-                                      args=(frontend_to_hub_queue, simulator_to_hub_queue, hub_to_simulator_queue,
-                                            hub_to_at_queue, at_to_hub_queue, request))
-        hub_thread.start()
+        global_obj.hub_thread = threading.Thread(target=hub_routine,
+                                      args=(global_obj.frontend_to_hub_queue,
+                                            global_obj.simulator_to_hub_queue,
+                                            global_obj.hub_to_simulator_queue,
+                                            global_obj.hub_to_at_queue,
+                                            global_obj.at_to_hub_queue,
+                                            request))
+        global_obj.hub_thread.start()
 
         # Simulator thread initialization
-        simulator_thread = threading.Thread(target=simulate_by_dummy_eclss,
-                                            args=(simulator_to_hub_queue, hub_to_simulator_queue))
-        simulator_thread.start()
+        global_obj.simulator_thread = threading.Thread(target=simulate_by_dummy_eclss,
+                                            args=(global_obj.simulator_to_hub_queue,
+                                                  global_obj.hub_to_simulator_queue))
+        global_obj.simulator_thread.start()
 
         # Anomaly detection thread initialization
-        at_thread = threading.Thread(target=anomaly_treatment_routine,
-                                     args=(hub_to_at_queue, at_to_hub_queue,))
-        at_thread.start()
+        global_obj.at_thread = threading.Thread(target=anomaly_treatment_routine,
+                                     args=(global_obj.hub_to_at_queue,
+                                           global_obj.at_to_hub_queue,))
+        global_obj.at_thread.start()
 
         # Thread status check
-        check_threads_status(simulator_thread, hub_thread, at_thread)
+        check_threads_status()
         return Response()
 
 
@@ -89,31 +87,37 @@ class StopTelemetry(APIView):
     def post(self, request):
         print('STOP')
         signal = {'type': 'stop', 'content': None}
-        frontend_to_hub_queue.put(signal)
+        global_obj.frontend_to_hub_queue.put(signal)
         return Response()
 
 
 class StartSeclssFeed(APIView):
     def post(self, request):
         # Hub thread initialization
-        hub_thread = threading.Thread(target=hub_routine,
-                                      args=(frontend_to_hub_queue, simulator_to_hub_queue, hub_to_simulator_queue,
-                                            hub_to_at_queue, at_to_hub_queue, request))
-        hub_thread.start()
+        global_obj.hub_thread = threading.Thread(target=hub_routine,
+                                      args=(global_obj.frontend_to_hub_queue,
+                                            global_obj.simulator_to_hub_queue,
+                                            global_obj.hub_to_simulator_queue,
+                                            global_obj.hub_to_at_queue,
+                                            global_obj.at_to_hub_queue,
+                                            request))
+        global_obj.hub_thread.start()
 
         # Simulator thread initialization
-        simulator_thread = threading.Thread(target=handle_eclss_update,
-                                            args=(simulator_to_hub_queue, hub_to_simulator_queue,
-                                                  server_to_simulator_queue))
-        simulator_thread.start()
+        global_obj.simulator_thread = threading.Thread(target=handle_eclss_update,
+                                            args=(global_obj.simulator_to_hub_queue,
+                                                  global_obj.hub_to_simulator_queue,
+                                                  global_obj.server_to_simulator_queue))
+        global_obj.simulator_thread.start()
 
         # Anomaly detection thread initialization
-        at_thread = threading.Thread(target=anomaly_treatment_routine,
-                                     args=(hub_to_at_queue, at_to_hub_queue,))
-        at_thread.start()
+        global_obj.at_thread = threading.Thread(target=anomaly_treatment_routine,
+                                     args=(global_obj.hub_to_at_queue,
+                                           global_obj.at_to_hub_queue,))
+        global_obj.at_thread.start()
 
         # Thread status check
-        check_threads_status(simulator_thread, hub_thread, at_thread)
+        check_threads_status()
         return Response()
 
 
@@ -123,7 +127,8 @@ class SeclssFeed(APIView):
             sensor_data = request.data['parameters']
             # print(sensor_data)
             parsed_sensor_data = json.loads(sensor_data)
-            server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
+            if global_obj.simulator_thread is not None and global_obj.simulator_thread.is_alive():
+                global_obj.server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
             return Response(parsed_sensor_data)
         else:
             print('ERROR retrieving the sensor data from the ECLSS simulator')
