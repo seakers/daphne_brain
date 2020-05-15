@@ -41,10 +41,14 @@ class Login(APIView):
             # Log the user in
             login(request, user)
 
+            # Get user private key
+            user_pk = get_user_pk(username)
+
             # Return the login response
             return Response({
                 'status': 'logged_in',
                 'username': username,
+                'pk': user_pk,
                 'permissions': []
             })
         else:
@@ -176,6 +180,7 @@ class CheckStatus(APIView):
 
         if request.user.is_authenticated:
             response['is_logged_in'] = True
+            response['pk'] = get_user_pk(request.user.username)
             # Transform the database design data into a json for the frontend
             response['data'] = []
             if user_info.eosscontext.design_set.count() > 0:
@@ -188,6 +193,7 @@ class CheckStatus(APIView):
         else:
             response['is_logged_in'] = False
         return Response(response)
+
 
 
 class GenerateSession(APIView):
@@ -222,9 +228,6 @@ class GetUserPk(APIView):
             return Response({'user_id': users[0].id})
         else:
             return Response({'status': 'query returned more than one users'})
-
-
-
 
 
 class CheckStatusHasura(APIView):
@@ -262,3 +265,14 @@ class CheckStatusHasura(APIView):
         #     response['is_logged_in'] = False
         # return Response(response)
 
+
+
+
+def get_user_pk(username):
+    users = User.objects.filter(username__exact=username)
+    if len(users) == 1:
+        print("---> USER FOUND", users[0].id)
+        return users[0].id
+    else:
+        print("---> USER PK ERROR")
+        return False
