@@ -14,6 +14,4 @@ The server which serves all of the Daphne interfaces
 
 4. Install the latest PostgreSQL on the system if not in it yet (https://www.postgresql.org/download/ or use a packet manager if in Linux)
 
-### If using iFEED:
-
-5. Install the latest version of Java Development Kit (JDK) if not in it yet (http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html or use a packet manager if using Linux)
+Test
