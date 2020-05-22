@@ -14,4 +14,4 @@ The server which serves all of the Daphne interfaces
 
 4. Install the latest PostgreSQL on the system if not in it yet (https://www.postgresql.org/download/ or use a packet manager if in Linux)
 
-Test
+Test2
