@@ -48,6 +48,9 @@ class ATConsumer(DaphneConsumer):
                     setattr(getattr(user_info, subcontext_name), key, value)
                 getattr(user_info, subcontext_name).save()
             user_info.save()
+        elif content.get('msg_type') == 'get_telemetry_params':
+            signal = {'type': 'get_telemetry_params', 'content': None}
+            frontend_to_hub_queue.put(signal)
         elif content.get('msg_type') == 'ping':
             signal = {'type': 'ping', 'content': None}
             frontend_to_hub_queue.put(signal)

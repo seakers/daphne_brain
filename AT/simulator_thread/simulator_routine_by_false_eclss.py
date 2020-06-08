@@ -181,13 +181,23 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
     lower_row = 0
     upper_row = window_span - 1
 
+    # Set the ping routine counters
+    life_limit = 40.
+    time_since_last_ping = 0.
+    current_time = time.time()
+
     # Simulation loop
-    while keep_alive:
+    while keep_alive and time_since_last_ping < life_limit:
         # Check the communication queue messages
         if not hub_to_sim.empty():
             signal = hub_to_sim.get()
             if signal['type'] == 'stop':
                 keep_alive = False
+            elif signal['type'] == 'ping':
+                time_since_last_ping = time.time() - current_time
+                current_time = time.time()
+            elif signal['type'] == 'get_telemetry_params':
+                sim_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
         # Update the time counter
         t = round(t + dt, 5)
