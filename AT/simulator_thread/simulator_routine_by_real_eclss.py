@@ -83,12 +83,14 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
     current_time = time.time()
 
     while keep_alive and time_since_last_ping < life_limit:
+        time_since_last_ping = time.time() - current_time
+
         if not hub_to_sim.empty():
             signal = hub_to_sim.get()
             if signal['type'] == 'stop':
+                print("Real killed by signal")
                 keep_alive = False
             elif signal['type'] == 'ping':
-                time_since_last_ping = time.time() - current_time
                 current_time = time.time()
             elif signal['type'] == 'get_telemetry_params':
                 if tf_window['info'] is None:
