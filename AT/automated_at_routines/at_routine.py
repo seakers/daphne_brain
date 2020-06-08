@@ -157,12 +157,12 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
     current_time = time.time()
 
     while keep_alive and time_since_last_ping < life_limit:
+        time_since_last_ping = time.time() - current_time
         while not hub_to_at.empty():
             signal = hub_to_at.get()
             if signal['type'] == 'stop':
                 keep_alive = False
             elif signal['type'] == 'ping':
-                time_since_last_ping = time.time() - current_time
                 current_time = time.time()
             elif signal['type'] == 'window':
                 # To prevent the anomaly detection thread from falling behind the telemetry feed, empty the queue and

@@ -188,13 +188,14 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
 
     # Simulation loop
     while keep_alive and time_since_last_ping < life_limit:
+        time_since_last_ping = time.time() - current_time
         # Check the communication queue messages
         if not hub_to_sim.empty():
             signal = hub_to_sim.get()
             if signal['type'] == 'stop':
+                print("Fake killed by signal")
                 keep_alive = False
             elif signal['type'] == 'ping':
-                time_since_last_ping = time.time() - current_time
                 current_time = time.time()
             elif signal['type'] == 'get_telemetry_params':
                 sim_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
