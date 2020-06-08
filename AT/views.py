@@ -92,21 +92,28 @@ class SimulateTelemetry(APIView):
 
 class StopTelemetry(APIView):
     def post(self, request):
-        signal = {'type': 'stop_telemetry', 'content': None}
-        global_obj.frontend_to_hub_queue.put(signal)
+        # Only stop telemetry if there was a telemetry running
+        if global_obj.simulator_thread is not None and global_obj.simulator_thread.is_alive():
+            signal = {'type': 'stop_telemetry', 'content': None}
+            global_obj.frontend_to_hub_queue.put(signal)
 
-        # Wait 2 seconds for simulator thread to terminate
-        thread_name = global_obj.simulator_thread.name
-        global_obj.simulator_thread.join(2.0)
-        if global_obj.simulator_thread.is_alive():
-            return Response({
-                "status": "error",
-                "message": "The Telemetry Thread did not stop in 2 seconds. Please try again."
-            })
+            # Wait 2 seconds for simulator thread to terminate
+            thread_name = global_obj.simulator_thread.name
+            global_obj.simulator_thread.join(2.0)
+            if global_obj.simulator_thread.is_alive():
+                return Response({
+                    "status": "error",
+                    "message": "The Telemetry Thread did not stop in 2 seconds. Please try again."
+                })
+            else:
+                return Response({
+                    "status": "success",
+                    "message": "The " + thread_name + " has stopped correctly. Please proceed."
+                })
         else:
             return Response({
                 "status": "success",
-                "message": "The " + thread_name + " has stopped correctly. Please proceed."
+                "message": "No Telemetry Thread was running."
             })
 
 
