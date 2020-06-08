@@ -96,6 +96,7 @@ class StopTelemetry(APIView):
         global_obj.frontend_to_hub_queue.put(signal)
 
         # Wait 2 seconds for simulator thread to terminate
+        thread_name = global_obj.simulator_thread.name
         global_obj.simulator_thread.join(2.0)
         if global_obj.simulator_thread.is_alive():
             return Response({
@@ -105,7 +106,7 @@ class StopTelemetry(APIView):
         else:
             return Response({
                 "status": "success",
-                "message": "The Telemetry Thread has stopped correctly. Please proceed."
+                "message": "The " + thread_name + " has stopped correctly. Please proceed."
             })
 
 
