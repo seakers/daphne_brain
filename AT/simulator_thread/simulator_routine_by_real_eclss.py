@@ -77,11 +77,24 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
     check_delay = 0.1
     print_freq = 10  # This is only to occasionally print a health check message through the terminal
 
-    while keep_alive:
+    # Set the ping routine counters
+    life_limit = 40.
+    time_since_last_ping = 0.
+    current_time = time.time()
+
+    while keep_alive and time_since_last_ping < life_limit:
         if not hub_to_sim.empty():
             signal = hub_to_sim.get()
             if signal['type'] == 'stop':
                 keep_alive = False
+            elif signal['type'] == 'ping':
+                time_since_last_ping = time.time() - current_time
+                current_time = time.time()
+            elif signal['type'] == 'get_telemetry_params':
+                if tf_window['info'] == '':
+                    hub_to_sim.put(signal)
+                else:
+                    sim_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
         while not ser_to_sim.empty():
             signal = ser_to_sim.get()
@@ -99,8 +112,6 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
                 counter += 1
                 if counter % print_freq == 0:
                     print('The ECLSS sensor data handler is healthy.')
-
-            time.sleep(check_delay)
 
         time.sleep(check_delay)
 

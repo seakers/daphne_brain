@@ -18,8 +18,6 @@ from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
 # THREADS + QUEUES
 import AT.global_objects as global_obj
 
-from auth_API.helpers import get_or_create_user_information
-
 
 def check_threads_status():
     sim_is_alive = global_obj.simulator_thread.is_alive()
@@ -56,69 +54,160 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 
 class SimulateTelemetry(APIView):
     def post(self, request):
-        # Hub thread initialization
-        global_obj.hub_thread = threading.Thread(target=hub_routine,
-                                      args=(global_obj.frontend_to_hub_queue,
-                                            global_obj.simulator_to_hub_queue,
-                                            global_obj.hub_to_simulator_queue,
-                                            global_obj.hub_to_at_queue,
-                                            global_obj.at_to_hub_queue,
-                                            request))
-        global_obj.hub_thread.start()
+        if global_obj.simulator_thread is not None and global_obj.simulator_thread.is_alive():
+            if global_obj.simulator_thread.name == "Fake Telemetry Thread":
+                return Response({
+                    "status": "already_running",
+                    "message": "Fake Telemetry Thread was already running, this is fine if someone else is using "
+                               "Daphne-AT."
+                })
+            else:
+                return Response({
+                    "status": "error",
+                    "message": "The Real Telemetry Thread was already running, and you are trying to initialize a Fake "
+                               "Telemetry Thread. Please ensure the other thread is stopped before trying to call this "
+                               "again."
+                })
 
         # Simulator thread initialization
         global_obj.simulator_thread = threading.Thread(target=simulate_by_dummy_eclss,
-                                            args=(global_obj.simulator_to_hub_queue,
-                                                  global_obj.hub_to_simulator_queue))
+                                                       name="Fake Telemetry Thread",
+                                                       args=(global_obj.simulator_to_hub_queue,
+                                                             global_obj.hub_to_simulator_queue))
         global_obj.simulator_thread.start()
 
-        # Anomaly detection thread initialization
-        global_obj.at_thread = threading.Thread(target=anomaly_treatment_routine,
-                                     args=(global_obj.hub_to_at_queue,
-                                           global_obj.at_to_hub_queue,))
-        global_obj.at_thread.start()
-
         # Thread status check
-        check_threads_status()
-        return Response()
+        if global_obj.simulator_thread.is_alive():
+            print("Fake Telemetry Thread started.")
+            return Response({
+                "status": "success",
+                "message": "Success starting Fake Telemetry Thread. Proceed with initialization."
+            })
+        else:
+            return Response({
+                "status": "error",
+                "message": "Error starting Fake Telemetry Thread. Try again."
+            })
 
 
 class StopTelemetry(APIView):
     def post(self, request):
-        print('STOP')
-        signal = {'type': 'stop', 'content': None}
+        signal = {'type': 'stop_telemetry', 'content': None}
         global_obj.frontend_to_hub_queue.put(signal)
-        return Response()
+
+        # Wait 2 seconds for simulator thread to terminate
+        global_obj.simulator_thread.join(2.0)
+        if global_obj.simulator_thread.is_alive():
+            return Response({
+                "status": "error",
+                "message": "The Telemetry Thread did not stop in 2 seconds. Please try again."
+            })
+        else:
+            return Response({
+                "status": "success",
+                "message": "The Telemetry Thread has stopped correctly. Please proceed."
+            })
 
 
 class StartSeclssFeed(APIView):
     def post(self, request):
-        # Hub thread initialization
-        global_obj.hub_thread = threading.Thread(target=hub_routine,
-                                      args=(global_obj.frontend_to_hub_queue,
-                                            global_obj.simulator_to_hub_queue,
-                                            global_obj.hub_to_simulator_queue,
-                                            global_obj.hub_to_at_queue,
-                                            global_obj.at_to_hub_queue,
-                                            request))
-        global_obj.hub_thread.start()
+        if global_obj.simulator_thread is not None and global_obj.simulator_thread.is_alive():
+            if global_obj.simulator_thread.name == "Real Telemetry Thread":
+                return Response({
+                    "status": "already_running",
+                    "message": "Real Telemetry Thread was already running, this is fine if someone else is using "
+                               "Daphne-AT."
+                })
+            else:
+                return Response({
+                    "status": "error",
+                    "message": "The Fake Telemetry Thread was already running, and you are trying to initialize a Real "
+                               "Telemetry Thread. Please ensure the other thread is stopped before trying to call this "
+                               "again."
+                })
 
         # Simulator thread initialization
         global_obj.simulator_thread = threading.Thread(target=handle_eclss_update,
-                                            args=(global_obj.simulator_to_hub_queue,
-                                                  global_obj.hub_to_simulator_queue,
-                                                  global_obj.server_to_simulator_queue))
+                                                       name="Real Telemetry Thread",
+                                                       args=(global_obj.simulator_to_hub_queue,
+                                                             global_obj.hub_to_simulator_queue,
+                                                             global_obj.server_to_simulator_queue))
         global_obj.simulator_thread.start()
+
+        # Thread status check
+        if global_obj.simulator_thread.is_alive():
+            print("Real Telemetry Thread started.")
+            return Response({
+                "status": "success",
+                "message": "Success starting Real Telemetry Thread. Proceed with initialization."
+            })
+        else:
+            return Response({
+                "status": "error",
+                "message": "Error starting Real Telemetry Thread. Try again."
+            })
+
+
+class StartHubThread(APIView):
+    def post(self, request):
+        if global_obj.hub_thread is not None and global_obj.hub_thread.is_alive():
+            return Response({
+                "status": "already_running",
+                "message": "Hub Thread was already running, this is fine if someone else is using Daphne-AT."
+            })
+
+        # Hub thread initialization
+        global_obj.hub_thread = threading.Thread(target=hub_routine,
+                                                 name="Hub Thread",
+                                                 args=(global_obj.frontend_to_hub_queue,
+                                                       global_obj.simulator_to_hub_queue,
+                                                       global_obj.hub_to_simulator_queue,
+                                                       global_obj.hub_to_at_queue,
+                                                       global_obj.at_to_hub_queue,
+                                                       request))
+        global_obj.hub_thread.start()
+
+        # Thread status check
+        if global_obj.hub_thread.is_alive():
+            print("Hub Thread started.")
+            return Response({
+                "status": "success",
+                "message": "Success starting Hub Thread. Proceed with initialization."
+            })
+        else:
+            return Response({
+                "status": "error",
+                "message": "Error starting Hub Thread. Try again."
+            })
+
+
+class StartATThread(APIView):
+    def post(self, request):
+        if global_obj.at_thread is not None and global_obj.at_thread.is_alive():
+            return Response({
+                "status": "already_running",
+                "message": "AT Thread was already running, this is fine if someone else is using Daphne-AT."
+            })
 
         # Anomaly detection thread initialization
         global_obj.at_thread = threading.Thread(target=anomaly_treatment_routine,
-                                     args=(global_obj.hub_to_at_queue,
-                                           global_obj.at_to_hub_queue,))
+                                                name="AT Thread",
+                                                args=(global_obj.hub_to_at_queue,
+                                                      global_obj.at_to_hub_queue,))
         global_obj.at_thread.start()
 
         # Thread status check
-        check_threads_status()
-        return Response()
+        if global_obj.at_thread.is_alive():
+            print("AT Thread started.")
+            return Response({
+                "status": "success",
+                "message": "Success starting AT Thread. Proceed with initialization."
+            })
+        else:
+            return Response({
+                "status": "error",
+                "message": "Error starting AT Thread. Try again."
+            })
 
 
 class SeclssFeed(APIView):
@@ -127,12 +216,17 @@ class SeclssFeed(APIView):
             sensor_data = request.data['parameters']
             # print(sensor_data)
             parsed_sensor_data = json.loads(sensor_data)
-            if global_obj.simulator_thread is not None and global_obj.simulator_thread.is_alive():
+            if global_obj.simulator_thread is not None \
+                    and global_obj.simulator_thread.is_alive() \
+                    and global_obj.simulator_thread.name == "Real Telemetry Feed":
                 global_obj.server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
             return Response(parsed_sensor_data)
         else:
             print('ERROR retrieving the sensor data from the ECLSS simulator')
-            return Response()
+            return Response({
+                "status": "error",
+                "message": "ERROR retrieving the sensor data from the ECLSS simulator"
+            })
 
 
 class RequestDiagnosis(APIView):

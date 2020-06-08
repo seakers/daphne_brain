@@ -145,17 +145,25 @@ def decide_alarm(old_report, new_report, t_nominal, cs_is_pending, cs_wait):
 
 
 def anomaly_treatment_routine(hub_to_at, at_to_hub):
-
     keep_alive = True
     last_symptoms_report = []
     t_nominal = -1  # This variable is used to store the last time the telemetry switched from off nominal to nominal
     cs_is_pending = False  # cs stand for "clear sound"
     cs_wait = 10  # cs stands for "clear sound"
-    while keep_alive:
+
+    # Set the ping routine counters
+    life_limit = 40.
+    time_since_last_ping = 0.
+    current_time = time.time()
+
+    while keep_alive and time_since_last_ping < life_limit:
         while not hub_to_at.empty():
             signal = hub_to_at.get()
             if signal['type'] == 'stop':
                 keep_alive = False
+            elif signal['type'] == 'ping':
+                time_since_last_ping = time.time() - current_time
+                current_time = time.time()
             elif signal['type'] == 'window':
                 # To prevent the anomaly detection thread from falling behind the telemetry feed, empty the queue and
                 # only process the last received window
