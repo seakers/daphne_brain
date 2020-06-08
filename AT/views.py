@@ -218,7 +218,7 @@ class SeclssFeed(APIView):
             parsed_sensor_data = json.loads(sensor_data)
             if global_obj.simulator_thread is not None \
                     and global_obj.simulator_thread.is_alive() \
-                    and global_obj.simulator_thread.name == "Real Telemetry Feed":
+                    and global_obj.simulator_thread.name == "Real Telemetry Thread":
                 global_obj.server_to_simulator_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
             return Response(parsed_sensor_data)
         else:
