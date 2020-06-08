@@ -70,7 +70,7 @@ def update_window(sensor_data, tf_window, counter):
 
 def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
 
-    tf_window = {'values': '', 'info': ''}
+    tf_window = {'values': None, 'info': None}
     keep_alive = True
     first_update = True
     counter = 0
@@ -91,7 +91,7 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
                 time_since_last_ping = time.time() - current_time
                 current_time = time.time()
             elif signal['type'] == 'get_telemetry_params':
-                if tf_window['info'] == '':
+                if tf_window['info'] is None:
                     hub_to_sim.put(signal)
                 else:
                     sim_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
