@@ -20,6 +20,8 @@
 #
 import json
 import os
+import boto3
+import random
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -29,46 +31,62 @@ from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.interface import VASSARInterface
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 
+from EOSS.graphql.api import GraphqlClient
+
+
+ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
+SECRET_KEY = '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'
+
 
 class VASSARClient:
     
-    def __init__(self, port=9090):
-        # Make socket
-        self.transport = TSocket.TSocket(os.environ['VASSAR_HOST'], os.environ['VASSAR_PORT'])
-    
-        # Buffering is critical. Raw sockets are very slow
-        self.transport = TTransport.TBufferedTransport(self.transport)
-    
-        # Wrap in a protocol
-        self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
+    def __init__(self, port=9090, queue_name='test_queue', region_name='us-east-2'):
 
-        # Create a client to use the protocol encoder
-        self.client = VASSARInterface.Client(self.protocol)
+        # Boto3
+        self.queue_name = queue_name
+        self.region_name = region_name
+        self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
+        # Graphql Client
+        self.dbClient = GraphqlClient()
+
+
+    
+    # This will now connect to SQS with Boto3 FINISHED
     def start_connection(self):
-        # Connect
-        self.transport.open()
+        return 0
     
+    # End SQS connection with Boto3 FINISHED
     def end_connection(self):
-        # Close
-        self.transport.close()
+        return 0
 
 
+    # Boto3 query problem FINISHED
+    def get_orbit_list(self, problem, group_id=1, problem_id=5):
+        query = self.dbClient.get_orbit_list(group_id, problem_id)
+        print([orbit['name'] for orbit in query['data']['Orbit']])
+        return [orbit['name'] for orbit in query['data']['Orbit']]
 
-    # Move to frontend apollo
-    def get_orbit_list(self, problem):
-        return self.client.getOrbitList(problem)
+    # Boto3 query problem FINISHED
+    def get_instrument_list(self, problem, group_id=1, problem_id=5):
+        query = self.dbClient.get_instrument_list(group_id, problem_id)
+        print([instrument['name'] for instrument in query['data']['Instrument']])
+        return [instrument['name'] for instrument in query['data']['Instrument']]
 
-    def get_instrument_list(self, problem):
-        return self.client.getInstrumentList(problem)
+    # Boto3 query problem FINISHED
+    def get_objective_list(self, problem, group_id=1, problem_id=5):
+        query = self.dbClient.get_objective_list(group_id, problem_id)
+        print([obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']])
+        return [obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']]
 
-    def get_objective_list(self, problem):
-        return self.client.getObjectiveList(problem)
+    # Boto3 query problem FINISHED
+    def get_subobjective_list(self, problem, group_id=1, problem_id=5):
+        query = self.dbClient.get_subobjective_list(group_id, problem_id)
+        print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
+        return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
-    def get_subobjective_list(self, problem):
-        return self.client.getSubobjectiveList(problem)
-
-    # Move to frontend later
+    
+    # Move to frontend later -- dialogue functions
     def get_instruments_for_objective(self, problem, objective):
         return self.client.getInstrumentsForObjective(problem, objective)
 
@@ -76,53 +94,136 @@ class VASSARClient:
         return self.client.getInstrumentsForPanel(problem, panel)
 
 
-    # VASSAR service
-    def evaluate_architecture(self, problem, inputs):
-        if problem in assignation_problems:
-            arch_formatted = self.client.evalBinaryInputArch(problem, inputs)
-        elif problem in partition_problems:
-            arch_formatted = self.client.evalDiscreteInputArch(problem, inputs)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
-        arch = {'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs}
+    # FINISHED
+    def evaluate_architecture(self, problem, inputs, problem_id=5, eval_queue_name='vassar_queue'):
+
+        # Connect to queue
+        evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
+
+        evalQueue.send_message(MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'evaluate',
+                'DataType': 'String'
+            },
+            'input': {
+                'StringValue': inputs,
+                'DataType': 'String'
+            }
+        })
+
+        result = self.dbClient.subscribe_to_architecture(inputs, problem_id)
+        
+        if result == False:
+            raise ValueError('---> Evaluation Timeout!!!!')
+
+        result_formatted = result['data']['Architecture'][0]
+        outputs = []
+        outputs.append(result_formatted['science'])
+        outputs.append(result_formatted['cost'])
+        arch = {'id': result_formatted['id'], 'inputs': result_formatted['input'], 'outputs': outputs}
+        print('--> Arch: ' + str(arch))
         return arch
 
-    # Search service
-    def run_local_search(self, problem, arch):
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        if problem in assignation_problems:
-            archs_formatted = self.client.runLocalSearchBinaryInput(problem, thrift_arch)
-        elif problem in partition_problems:
-            archs_formatted = self.client.runLocalSearchDiscreteInput(problem, thrift_arch)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
-        archs = []
-        for arch_formatted in archs_formatted:
-            arch = {'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs}
-            archs.append(arch)
-        return archs
 
-    # GA service
-    def stop_ga(self, ga_id):
-        return self.client.stopGA(ga_id)
+    
+    
+    # FINISHED  
+    def run_local_search(self, problem, inputs, problem_id=5, eval_queue_name='vassar_queue'):
+        designs = []
 
+        for x in range(4):
+            new_design = self.random_local_change(inputs)
+            print('---> NEW DESIGN: ', str(new_design))
+            new_design_result = self.evaluate_architecture('SMAP', new_design, problem_id, eval_queue_name)
+            print('---> RESULT: ', str(new_design_result))
+            designs.append(new_design_result)
+
+        return designs
+
+    def random_local_change(self, inputs):
+        index = random.randint(0, len(inputs)-1)
+        new_bit = '1'
+        if(inputs[index] == '0'):
+            new_bit = '1'
+        new_design = inputs[:index] + new_bit + inputs[index + 1:]
+        return new_design
+
+
+    # TO BE IMPLEMENTED AFTER DEMO not
     def is_ga_running(self, ga_id):
         return self.client.isGARunning(ga_id)
 
-    def start_ga(self, problem, username, thrift_list):
-        if problem in assignation_problems:
-            ga_id = self.client.startGABinaryInput(problem, thrift_list, username)
-        elif problem in partition_problems:
-            ga_id = self.client.startGADiscreteInput(problem, thrift_list, username)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
+
+    # TO BE IMPLEMENTED AFTER DEMO not
+    def stop_ga(self, ga_id, ga_queue_name='algorithm_queue'):
+
+        # Connect to queue
+        gaQueue = self.sqs.get_queue_by_name(QueueName=ga_queue_name)
+
+        gaQueue.send_message(MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'stop_ga',
+                'DataType': 'String'
+            },
+            'ga_id': {
+                'StringValue': ga_id,
+                'DataType': 'String'
+            }
+        })
+
+
+        return 1 # return 0 if failure
+
+    # TO BE IMPLEMENTED AFTER DEMO not
+    # def start_ga(self, problem, username, thrift_list):
+    def start_ga(self, ga_queue_name='algorithm_queue'):
+
+        # Connect to queue
+        gaQueue = self.sqs.get_queue_by_name(QueueName=ga_queue_name)
+
+        # Create ga_id
+        ga_id = 'test_ga_' + str(random.random())
+
+        gaQueue.send_message(MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'start_ga',
+                'DataType': 'String'
+            },
+            'maxEvals': {
+                'StringValue': '3000',
+                'DataType': 'String'
+            },
+            'crossoverProbability': {
+                'StringValue': '1',
+                'DataType': 'String'
+            },
+            'mutationProbability': {
+                'StringValue': '0.016666',
+                'DataType': 'String'
+            },
+            'group_id': {
+                'StringValue': '1',
+                'DataType': 'String'
+            },
+            'problem_id': {
+                'StringValue': '5',
+                'DataType': 'String'
+            },
+            'ga_id': {
+                'StringValue': ga_id,
+                'DataType': 'String'
+            }
+        })
+
         return ga_id
 
-
-
-
-
-
+    
+    
+    
+    
+    
+    
+    # TO BE IMPLEMENTED AFTER DEMO
     def create_thrift_arch(self, problem, arch):
         if problem in assignation_problems:
             return BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
@@ -130,6 +231,7 @@ class VASSARClient:
             return DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
+
 
     def get_architecture_score_explanation(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
