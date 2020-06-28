@@ -65,13 +65,15 @@ class VASSARClient:
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_orbit_list(group_id, problem_id)
         print([orbit['name'] for orbit in query['data']['Orbit']])
-        return [orbit['name'] for orbit in query['data']['Orbit']]
+        hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
+        return hardcode
 
     # Boto3 query problem FINISHED
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_instrument_list(group_id, problem_id)
         print([instrument['name'] for instrument in query['data']['Instrument']])
-        return [instrument['name'] for instrument in query['data']['Instrument']]
+        hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
+        return hardcode
 
     # Boto3 query problem FINISHED
     def get_objective_list(self, problem, group_id=1, problem_id=5):
@@ -95,9 +97,17 @@ class VASSARClient:
 
 
     # FINISHED
-    def evaluate_architecture(self, problem, inputs, problem_id=5, eval_queue_name='vassar_queue'):
-
+    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue'):
+        inputs = ''
+        for x in input_str:
+            if x:
+                inputs = inputs + '1'
+            else:
+                inputs = inputs + '0'
+        
         # Connect to queue
+        print("----------> Evaluating architecture ", inputs)
+
         evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
 
         evalQueue.send_message(MessageBody='boto3', MessageAttributes={
@@ -106,7 +116,7 @@ class VASSARClient:
                 'DataType': 'String'
             },
             'input': {
-                'StringValue': inputs,
+                'StringValue': str(inputs),
                 'DataType': 'String'
             }
         })
@@ -166,7 +176,7 @@ class VASSARClient:
                 'DataType': 'String'
             },
             'ga_id': {
-                'StringValue': ga_id,
+                'StringValue': str(ga_id),
                 'DataType': 'String'
             }
         })
@@ -182,7 +192,8 @@ class VASSARClient:
         gaQueue = self.sqs.get_queue_by_name(QueueName=ga_queue_name)
 
         # Create ga_id
-        ga_id = 'test_ga_' + str(random.random())
+        # ga_id = 'test_ga_' + str(random.random())
+        ga_id = 'test_ga_1'
 
         gaQueue.send_message(MessageBody='boto3', MessageAttributes={
             'msgType': {
