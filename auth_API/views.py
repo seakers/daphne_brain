@@ -170,6 +170,7 @@ class CheckStatus(APIView):
         dataset_filename = user_info.eosscontext.dataset_name
         dataset_user = user_info.eosscontext.dataset_user
 
+        # problem: is now the problem_id (from the database)
         response = {
             'username': request.user.username,
             'permissions': [],
@@ -207,11 +208,6 @@ class GenerateSession(APIView):
 
 
 
-
-
-
-
-
 # Vassar Problem Editor
 
 
@@ -228,7 +224,6 @@ class GetUserPk(APIView):
             return Response({'user_id': users[0].id})
         else:
             return Response({'status': 'query returned more than one users'})
-
 
 class CheckStatusHasura(APIView):
     """

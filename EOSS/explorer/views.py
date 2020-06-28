@@ -63,7 +63,8 @@ class StartGA(APIView):
 
                 if user_info.eosscontext.ga_id is not None:
                     client.stop_ga(user_info.eosscontext.ga_id)
-                ga_id = client.start_ga(problem, request.user.username, thrift_list)
+                # ga_id = client.start_ga(problem, request.user.username, thrift_list)
+                ga_id = client.start_ga()
                 user_info.eosscontext.ga_id = ga_id
                 user_info.eosscontext.save()
 
@@ -73,6 +74,8 @@ class StartGA(APIView):
                 # Start listening for redis inputs to share through websockets
                 connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
                 channel = connection.channel()
+
+                print("---> Queue:", str(ga_id + '_gabrain'))
 
                 channel.queue_declare(queue=ga_id + '_gabrain')
 
@@ -106,13 +109,13 @@ class StartGA(APIView):
 
                         background_queue_qs = Design.objects.filter(
                             activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
-                        if background_queue_qs.count() == 10:
-                            ws_message = generate_background_search_message(thread_user_info)
-                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                              {
-                                                                  'type': 'active.message',
-                                                                  'message': ws_message
-                                                              })
+                        # if background_queue_qs.count() == 10:
+                        ws_message = generate_background_search_message(thread_user_info)
+                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                            {
+                                                                'type': 'active.message',
+                                                                'message': ws_message
+                                                            })
                         if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
                             back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
                             send_back.extend(back_list)

@@ -14,6 +14,13 @@ class GraphqlClient:
         self.hasura_url = hasura_url
 
 
+
+    def get_architectures(self, problem_id=5):
+        problem_id = str(problem_id)
+        query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + problem_id + '}}) { id input cost science } } '
+        return self.execute_query(query)
+
+
     def get_orbit_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
@@ -47,8 +54,6 @@ class GraphqlClient:
 
         return result
 
-
-    
     # Return architecture details after vassar evaluates
     def subscribe_to_architecture(self, input, problem_id, timeout=1000):
         query = ' query subscribe_to_architecture { Architecture_aggregate(where: {problem_id: {_eq: ' + str(problem_id) + '}, input: {_eq: "' + str(input) + '"}})  {aggregate { count }} } '
