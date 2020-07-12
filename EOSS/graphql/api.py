@@ -17,20 +17,21 @@ class GraphqlClient:
 
     def get_architectures(self, problem_id=5):
         problem_id = str(problem_id)
-        query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + problem_id + '}}) { id input cost science } } '
+        query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + problem_id + '}}) { id input cost science eval_status } } '
         return self.execute_query(query)
 
 
     def get_orbit_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
-        query = ' query get_orbit_list { Orbit(where: {group_id: {_eq: ' + group_id + '}}) { id name } } '
+        # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
+        query = ' query get_orbit_list { Join__Problem_Orbit(where: {problem_id: {_eq: ' + problem_id + '}}){ Orbit { id name } } } '
         return self.execute_query(query)
 
     def get_instrument_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
-        query = ' query get_instrument_list { Instrument(where: {Join__Problem_Instruments: {problem_id: {_eq: ' + problem_id + '}}})  { id name } } '
+        query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + problem_id + '}}) { Instrument { id name } } } '
         return self.execute_query(query)
 
     def get_objective_list(self, group_id, problem_id):
@@ -44,6 +45,12 @@ class GraphqlClient:
         problem_id = str(problem_id)
         query = ' query get_subobjective_list { Stakeholder_Needs_Subobjective(where: {Problem: {id: {_eq: ' + problem_id + '}}})  { id name description problem_id weight} } '
         return self.execute_query(query)
+
+    def get_false_architectures(self, problem_id):
+        problem_id = str(problem_id)
+        query = ' query MyQuery { Architecture(where: {problem_id: {_eq: ' + problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
+        return self.execute_query(query)
+
 
     def execute_query(self, query):
         r = requests.post(self.hasura_url, json={'query': query })
