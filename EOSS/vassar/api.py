@@ -46,12 +46,11 @@ class VASSARClient:
         self.queue_name = queue_name
         self.region_name = region_name
         self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+        self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
         # Graphql Client
         self.dbClient = GraphqlClient()
 
-
-    
     # This will now connect to SQS with Boto3 FINISHED
     def start_connection(self):
         return 0
@@ -61,19 +60,58 @@ class VASSARClient:
         return 0
 
 
+    def initialize_vassar_containers(self, group_id=1, problem_id=5):
+        queues = self.sqs_client.list_queues()
+
+        # GET CORRECT PRIVATE QUEUES
+        queue_urls = []
+        for url in queues['QueueUrls']:
+            print(url)
+            queue_info = self.sqs_client.list_queue_tags(QueueUrl=url)
+            if 'Tags' in queue_info:
+                queue_tags = queue_info['Tags']
+                if 'problem_id' in queue_tags and 'type' in queue_tags:
+                    if queue_tags['problem_id'] == str(problem_id) and queue_tags['type'] == 'vassar_eval_private':
+                        queue_urls.append(url)
+        
+        print("---> QUEUE URLS TO INITIALIZE", queue_urls)
+        for url in queue_urls:
+            self.send_initialize_message(url, group_id, problem_id)
+
+        return 0
+
+    def send_initialize_message(self, url, group_id, problem_id):
+        # Send init message
+        privateQueue = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'build',
+                'DataType': 'String'
+            },
+            'group_id': {
+                'StringValue': str(group_id),
+                'DataType': 'String'
+            },
+            'problem_id': {
+                'StringValue': str(problem_id),
+                'DataType': 'String'
+            }
+        })
+
+
     # Boto3 query problem FINISHED
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_orbit_list(group_id, problem_id)
-        print([orbit['name'] for orbit in query['data']['Orbit']])
-        hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
-        return hardcode
+        orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
+        # hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
+        return orbits
 
     # Boto3 query problem FINISHED
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_instrument_list(group_id, problem_id)
-        print([instrument['name'] for instrument in query['data']['Instrument']])
-        hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
-        return hardcode
+        instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
+        # hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
+        # return hardcode
+        return instruments
 
     # Boto3 query problem FINISHED
     def get_objective_list(self, problem, group_id=1, problem_id=5):
@@ -133,6 +171,30 @@ class VASSARClient:
         arch = {'id': result_formatted['id'], 'inputs': result_formatted['input'], 'outputs': outputs}
         print('--> Arch: ' + str(arch))
         return arch
+
+
+    def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):
+        query_info = self.dbClient.get_false_architectures(problem_id)
+        all_archs = query_info['data']['Architecture']
+        evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
+        for arch in all_archs:
+            print("--> re-evaluate:", arch['input'])
+            evalQueue.send_message(MessageBody='boto3', MessageAttributes={
+                'msgType': {
+                    'StringValue': 'evaluate',
+                    'DataType': 'String'
+                },
+                'input': {
+                    'StringValue': str(arch['input']),
+                    'DataType': 'String'
+                },
+                'redo': {
+                    'StringValue': 'true',
+                    'DataType': 'String'
+                }
+            })
+
+        return 0
 
 
     
@@ -227,8 +289,6 @@ class VASSARClient:
         })
 
         return ga_id
-
-    
     
     
     

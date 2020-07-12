@@ -53,7 +53,11 @@ class ImportData(APIView):
 
             # Iterate over architectures
             print("---> Architecture Query:", query)
+            counter = 0
             for arch in query['data']['Architecture']:
+
+                if not arch['eval_status']:
+                    continue
                 
                 # Inputs
                 inputs = []
@@ -70,14 +74,25 @@ class ImportData(APIView):
                 inputs_unique_set = set()
                 hashed_input = hash(tuple(inputs))
 
+                # if hashed_input not in inputs_unique_set:
+                #     architectures.append(Design(id=user_info.eosscontext.last_arch_id,
+                #                                     eosscontext=user_info.eosscontext,
+                #                                     inputs=json.dumps(inputs),
+                #                                     outputs=json.dumps(outputs)))
+                #     architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
+                #     user_info.eosscontext.last_arch_id += 1
+                #     inputs_unique_set.add(hashed_input)
+
+                # arch['id'] --> counter
                 if hashed_input not in inputs_unique_set:
-                    architectures.append(Design(id=user_info.eosscontext.last_arch_id,
+                    architectures.append(Design(id=counter,
                                                     eosscontext=user_info.eosscontext,
                                                     inputs=json.dumps(inputs),
                                                     outputs=json.dumps(outputs)))
-                    architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
-                    user_info.eosscontext.last_arch_id += 1
+                    architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
+                    user_info.eosscontext.last_arch_id = counter
                     inputs_unique_set.add(hashed_input)
+                counter = counter + 1
 
 
             # Define context and see if it was already defined for this session
