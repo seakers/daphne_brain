@@ -60,7 +60,7 @@ class VASSARClient:
         return 0
 
 
-    def initialize_vassar_containers(self, group_id=1, problem_id=5):
+    def initialize_vassar_containers(self, group_id=1, problem_id=3):
         queues = self.sqs_client.list_queues()
 
         # GET CORRECT PRIVATE QUEUES
@@ -99,14 +99,14 @@ class VASSARClient:
 
 
     # Boto3 query problem FINISHED
-    def get_orbit_list(self, problem, group_id=1, problem_id=5):
+    def get_orbit_list(self, problem, group_id=1, problem_id=3):
         query = self.dbClient.get_orbit_list(group_id, problem_id)
         orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
         # hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
         return orbits
 
     # Boto3 query problem FINISHED
-    def get_instrument_list(self, problem, group_id=1, problem_id=5):
+    def get_instrument_list(self, problem, group_id=1, problem_id=3):
         query = self.dbClient.get_instrument_list(group_id, problem_id)
         instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
         # hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
@@ -114,13 +114,13 @@ class VASSARClient:
         return instruments
 
     # Boto3 query problem FINISHED
-    def get_objective_list(self, problem, group_id=1, problem_id=5):
+    def get_objective_list(self, problem, group_id=1, problem_id=3):
         query = self.dbClient.get_objective_list(group_id, problem_id)
         print([obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']])
         return [obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']]
 
     # Boto3 query problem FINISHED
-    def get_subobjective_list(self, problem, group_id=1, problem_id=5):
+    def get_subobjective_list(self, problem, group_id=1, problem_id=3):
         query = self.dbClient.get_subobjective_list(group_id, problem_id)
         print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
@@ -135,7 +135,7 @@ class VASSARClient:
 
 
     # FINISHED
-    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue'):
+    def evaluate_architecture(self, problem, input_str, problem_id=3, eval_queue_name='vassar_queue'):
         inputs = ''
         for x in input_str:
             if x:
@@ -200,7 +200,7 @@ class VASSARClient:
     
     
     # FINISHED  
-    def run_local_search(self, problem, inputs, problem_id=5, eval_queue_name='vassar_queue'):
+    def run_local_search(self, problem, inputs, problem_id=3, eval_queue_name='vassar_queue'):
         designs = []
 
         for x in range(4):
