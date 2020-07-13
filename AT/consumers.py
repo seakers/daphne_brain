@@ -1,10 +1,12 @@
 import json
 import schedule
+import AT.global_objects as global_obj
 from queue import Queue
 
 from auth_API.helpers import get_user_information, get_or_create_user_information
 from daphne_ws.consumers import DaphneConsumer
 from AT.global_objects import frontend_to_hub_queue
+from asgiref.sync import async_to_sync
 
 
 class ATConsumer(DaphneConsumer):
@@ -28,6 +30,15 @@ class ATConsumer(DaphneConsumer):
         signal = {'type': 'ws_configuration_update', 'content': user_info}
         frontend_to_hub_queue.put(signal)
 
+    def disconnect(self):
+        # remove user from real telemetry group if they were in it
+        if self.groups.filter(name="sEclss_group").exists():
+            async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
+            global_obj.users_in_sEclss_group -= 1
+            # Kill the sEclss thread if no more users are on
+            if global_obj.users_in_sEclss_group == 0:
+                global_obj.hub_to_sEclss_queue.put({"type": "stop", "content": None})
+
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload
@@ -48,8 +59,11 @@ class ATConsumer(DaphneConsumer):
                     setattr(getattr(user_info, subcontext_name), key, value)
                 getattr(user_info, subcontext_name).save()
             user_info.save()
-        elif content.get('msg_type') == 'get_telemetry_params':
-            signal = {'type': 'get_telemetry_params', 'content': None}
+        elif content.get('msg_type') == 'get_real_telemetry_params':
+            signal = {'type': 'get_real_telemetry_params', 'content': None}
+            frontend_to_hub_queue.put(signal)
+        elif content.get('msg_type') == 'get_fake_telemetry_params':
+            signal = {'type': 'get_fake_telemetry_params', 'content': None}
             frontend_to_hub_queue.put(signal)
         elif content.get('msg_type') == 'ping':
             signal = {'type': 'ping', 'content': None}

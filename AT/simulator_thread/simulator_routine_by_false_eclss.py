@@ -197,7 +197,7 @@ def simulate_by_dummy_eclss(sim_to_hub, hub_to_sim):
                 keep_alive = False
             elif signal['type'] == 'ping':
                 current_time = time.time()
-            elif signal['type'] == 'get_telemetry_params':
+            elif signal['type'] == 'get_fake_telemetry_params':
                 sim_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
         # Update the time counter
