@@ -68,7 +68,7 @@ def update_window(sensor_data, tf_window, counter):
     return tf_window
 
 
-def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
+def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
 
     tf_window = {'values': None, 'info': None}
     keep_alive = True
@@ -85,21 +85,21 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
     while keep_alive and time_since_last_ping < life_limit:
         time_since_last_ping = time.time() - current_time
 
-        if not hub_to_sim.empty():
-            signal = hub_to_sim.get()
+        if not hub_to_sEclss.empty():
+            signal = hub_to_sEclss.get()
             if signal['type'] == 'stop':
                 print("Real killed by signal")
                 keep_alive = False
             elif signal['type'] == 'ping':
                 current_time = time.time()
-            elif signal['type'] == 'get_telemetry_params':
+            elif signal['type'] == 'get_real_telemetry_params':
                 if tf_window['info'] is None:
-                    hub_to_sim.put(signal)
+                    hub_to_sEclss.put(signal)
                 else:
-                    sim_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
+                    sEclss_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
-        while not ser_to_sim.empty():
-            signal = ser_to_sim.get()
+        while not ser_to_sEclss.empty():
+            signal = ser_to_sEclss.get()
             if signal['type'] == 'sensor_data':
                 sensor_data = signal['content']
                 parsed_sensor_data = get_param_values(sensor_data)
@@ -110,7 +110,7 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
                 else:
                     tf_window = update_window(parsed_sensor_data, tf_window, counter - 1)
 
-                sim_to_hub.put({'type': 'window', 'content': tf_window})
+                sEclss_to_hub.put({'type': 'window', 'content': tf_window})
                 counter += 1
                 if counter % print_freq == 0:
                     print('The ECLSS sensor data handler is healthy.')
@@ -118,8 +118,8 @@ def handle_eclss_update(sim_to_hub, hub_to_sim, ser_to_sim):
         time.sleep(check_delay)
 
     # Clear the queues and print a stop message
-    sim_to_hub.queue.clear()
-    hub_to_sim.queue.clear()
-    ser_to_sim.queue.clear()
+    sEclss_to_hub.queue.clear()
+    hub_to_sEclss.queue.clear()
+    ser_to_sEclss.queue.clear()
     print('Simulator thread stopped.')
     return
