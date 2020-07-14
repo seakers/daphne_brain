@@ -13,6 +13,7 @@ from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
+from AT.neo4j_queries.query_functions import retrieve_figures_from_procedure
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
@@ -397,12 +398,14 @@ class RetrieveInfoFromProcedure(APIView):
         steps_list = retrieve_fancy_steps_from_procedure(procedure_name)
         objective = retrieve_objective_from_procedure(procedure_name)
         equipment = retrieve_equipment_from_procedure(procedure_name)
+        figures = retrieve_figures_from_procedure(procedure_name)
 
         # Build the output dictionary
         info = {
             'procedureStepsList': steps_list,
             'procedureObjective': objective,
             'procedureEquipment': equipment,
+            'procedureFigures': figures,
         }
 
         return Response(info)
