@@ -30,7 +30,7 @@ class ATConsumer(DaphneConsumer):
         signal = {'type': 'ws_configuration_update', 'content': user_info}
         frontend_to_hub_queue.put(signal)
 
-    def disconnect(self):
+    def disconnect(self, close_code):
         # remove user from real telemetry group if they were in it
         if self.groups.filter(name="sEclss_group").exists():
             async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
