@@ -573,3 +573,21 @@ def retrieve_equipment_from_procedure(procedure_name):
 
     return equipment
 
+
+def retrieve_figures_from_procedure(procedure_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.Title=\'" + procedure_name + \
+            "\'RETURN f.Link ORDER BY f.Number"
+    result = session.run(query)
+
+    # Parse the result
+    figure_list = []
+    for item in result:
+        figure_list.append(item[0])
+
+    return figure_list
+
