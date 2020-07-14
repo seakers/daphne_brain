@@ -476,10 +476,18 @@ def retrieve_fancy_steps_from_procedure(procedure):
     # Build the queries
     query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
     query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
 
     # Run the queries
     result_step_labels = session.run(query_step_labels)
     result_step_actions = session.run(query_step_actions)
+    result_step_figures = session.run(query_step_figures)
+    result_step_fNumbers = session.run(query_step_fNumbers)
+    result_step_figures2 = session.run(query_step_figures2)
+    result_step_fNumbers2 = session.run(query_step_fNumbers2)
 
     step_labels = []
     for item in result_step_labels:
@@ -488,6 +496,32 @@ def retrieve_fancy_steps_from_procedure(procedure):
     step_actions = []
     for item in result_step_actions:
         step_actions.append(item[0])
+
+    step_figures = []
+    for item in result_step_figures:
+        step_figures.append(item[0])
+
+    step_fNumbers = []
+    step_hasFigure = []
+    for item in result_step_fNumbers:
+        step_fNumbers.append(item[0])
+        if (item[0]) is not None:
+            step_hasFigure.append(True)
+        else:
+            step_hasFigure.append(False)
+
+    step_figures2 = []
+    for item in result_step_figures2:
+        step_figures2.append(item[0])
+
+    step_fNumbers2 = []
+    step_hasFigure2 = []
+    for item in result_step_fNumbers2:
+        step_fNumbers2.append(item[0])
+        if (item[0]) is not None:
+            step_hasFigure2.append(True)
+        else:
+            step_hasFigure2.append(False)
 
     # Parse the result
     steps = []
@@ -523,6 +557,12 @@ def retrieve_fancy_steps_from_procedure(procedure):
         step_item = {'depth': depth,
                      'label': step_labels[index],
                      'action': step_actions[index],
+                     'figure': step_figures[index],
+                     'fNumber': step_fNumbers[index],
+                     'hasFigure': step_hasFigure[index],
+                     'figure2': step_figures2[index],
+                     'fNumber2': step_fNumbers2[index],
+                     'hasFigure2': step_hasFigure2[index],
                      'isDone': False}
 
         steps.append(step_item)
