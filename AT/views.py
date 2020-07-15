@@ -1,6 +1,7 @@
 import json
 import threading
 
+import redis
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from AT.automated_at_routines.at_routine import anomaly_treatment_routine
@@ -108,12 +109,12 @@ class StopRealTelemetry(APIView):
         # Check if the real telemetry thread is even running
         if global_obj.sEclss_thread is not None and global_obj.sEclss_thread.is_alive():
             # Check if user is in this group
-            if request.user.groups.filter(name="sEclss_group").exists():
+            r = redis.Redis()
+            if r.sismember("seclss-group-users", channel_name) == 1:
                 async_to_sync(channel_layer.group_discard)("sEclss_group", channel_name)
-                global_obj.users_in_sEclss_group -= 1
+                r.srem("seclss-group-users", channel_name)
                 # Check if this was the only user on the thread
-                if global_obj.users_in_sEclss_group == 0 and not request.user.groups.filter(
-                        name="sEclss_group").exists():
+                if r.scard("seclss-group-users") == 0:
                     signal = {'type': 'stop_real_telemetry', 'content': None}
                     global_obj.frontend_to_hub_queue.put(signal)
 
@@ -133,17 +134,18 @@ class StopRealTelemetry(APIView):
                             "message": "The " + thread_name + " has stopped correctly and the user was disconnected"
                                                               " from the real telemetry group. Please proceed."
                         })
-                elif request.user.groups.filter(name="sEclss_group").exists():
-                    return Response({
-                        "status": "error",
-                        "message": "The user was not removed from the real telemetry group. Please try again."
-                    })
-                elif not request.user.groups.filter(name="sEclss_group").exists():
-                    return Response({
-                        "status": "success",
-                        "message": "The user was removed from the real telemetry group but there were other users"
-                                   "on so the real telemetry thread is continuing to run."
-                    })
+                else:
+                    if r.sismember("seclss-group-users", channel_name) == 1:
+                        return Response({
+                            "status": "error",
+                            "message": "The user was not removed from the real telemetry group. Please try again."
+                        })
+                    else:
+                        return Response({
+                            "status": "success",
+                            "message": "The user was removed from the real telemetry group but there were other users"
+                                       "on so the real telemetry thread is continuing to run."
+                        })
             else:
                 return Response({
                     "status": "success",
