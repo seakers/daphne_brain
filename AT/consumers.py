@@ -1,4 +1,6 @@
 import json
+
+import redis
 import schedule
 import AT.global_objects as global_obj
 from queue import Queue
@@ -32,12 +34,19 @@ class ATConsumer(DaphneConsumer):
 
     def disconnect(self, close_code):
         # remove user from real telemetry group if they were in it
-        if self.groups.filter(name="sEclss_group").exists():
+        r = redis.Redis()
+        if r.sismember("seclss-group-users", self.channel_name) == 1:
             async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
-            global_obj.users_in_sEclss_group -= 1
+            r.srem("seclss-group-users", self.channel_name)
+            print(f"Channel {self.channel_name} removed from seclss group")
             # Kill the sEclss thread if no more users are on
-            if global_obj.users_in_sEclss_group == 0:
+            print(r.scard("seclss-group-users"))
+            if r.scard("seclss-group-users") == 0:
                 global_obj.hub_to_sEclss_queue.put({"type": "stop", "content": None})
+                print("sEclss thread killed because it has no listeners")
+
+        # Then call function from base class, and then add the new behavior
+        super(ATConsumer, self).disconnect(close_code)
 
     def receive_json(self, content, **kwargs):
         """

@@ -1,9 +1,4 @@
 from queue import Queue
-from django.contrib.auth.models import Group
-
-# Initialize group for real telemetry group, variable to keep track of number in the group
-sEclss_group, created = Group.objects.get_or_create(name="sEclss_group")
-users_in_sEclss_group = 0
 
 # Initialize threads
 hub_thread = None
