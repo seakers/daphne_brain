@@ -47,6 +47,7 @@ class VASSARClient:
         self.region_name = region_name
         self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
         self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+        self.problem_id = str(5)
 
         # Graphql Client
         self.dbClient = GraphqlClient()
@@ -71,12 +72,12 @@ class VASSARClient:
             if 'Tags' in queue_info:
                 queue_tags = queue_info['Tags']
                 if 'problem_id' in queue_tags and 'type' in queue_tags:
-                    if queue_tags['problem_id'] == str(problem_id) and queue_tags['type'] == 'vassar_eval_private':
+                    if queue_tags['problem_id'] == str(self.problem_id) and queue_tags['type'] == 'vassar_eval_private':
                         queue_urls.append(url)
         
         print("---> QUEUE URLS TO INITIALIZE", queue_urls)
         for url in queue_urls:
-            self.send_initialize_message(url, group_id, problem_id)
+            self.send_initialize_message(url, group_id, self.problem_id)
 
         return 0
 
@@ -92,7 +93,7 @@ class VASSARClient:
                 'DataType': 'String'
             },
             'problem_id': {
-                'StringValue': str(problem_id),
+                'StringValue': str(self.problem_id),
                 'DataType': 'String'
             }
         })
@@ -100,14 +101,14 @@ class VASSARClient:
 
     # Boto3 query problem FINISHED
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_orbit_list(group_id, problem_id)
+        query = self.dbClient.get_orbit_list(group_id, self.problem_id)
         orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
         # hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
         return orbits
 
     # Boto3 query problem FINISHED
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_instrument_list(group_id, problem_id)
+        query = self.dbClient.get_instrument_list(group_id, self.problem_id)
         instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
         # hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
         # return hardcode
@@ -115,13 +116,13 @@ class VASSARClient:
 
     # Boto3 query problem FINISHED
     def get_objective_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_objective_list(group_id, problem_id)
+        query = self.dbClient.get_objective_list(group_id, self.problem_id)
         print([obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']])
         return [obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']]
 
     # Boto3 query problem FINISHED
     def get_subobjective_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_subobjective_list(group_id, problem_id)
+        query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
         print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
@@ -159,7 +160,7 @@ class VASSARClient:
             }
         })
 
-        result = self.dbClient.subscribe_to_architecture(inputs, problem_id)
+        result = self.dbClient.subscribe_to_architecture(inputs, self.problem_id)
         
         if result == False:
             raise ValueError('---> Evaluation Timeout!!!!')
@@ -174,7 +175,7 @@ class VASSARClient:
 
 
     def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):
-        query_info = self.dbClient.get_false_architectures(problem_id)
+        query_info = self.dbClient.get_false_architectures(self.problem_id)
         all_archs = query_info['data']['Architecture']
         evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
         for arch in all_archs:
@@ -206,7 +207,7 @@ class VASSARClient:
         for x in range(4):
             new_design = self.random_local_change(inputs)
             print('---> NEW DESIGN: ', str(new_design))
-            new_design_result = self.evaluate_architecture('SMAP', new_design, problem_id, eval_queue_name)
+            new_design_result = self.evaluate_architecture('SMAP', new_design, self.problem_id, eval_queue_name)
             print('---> RESULT: ', str(new_design_result))
             designs.append(new_design_result)
 
@@ -279,7 +280,7 @@ class VASSARClient:
                 'DataType': 'String'
             },
             'problem_id': {
-                'StringValue': '5',
+                'StringValue': str(self.problem_id),
                 'DataType': 'String'
             },
             'ga_id': {
