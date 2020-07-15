@@ -1,5 +1,6 @@
 import time
 
+import redis
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import AT.global_objects as global_obj
@@ -60,9 +61,11 @@ def hub_routine(front_to_hub, sEclss_to_hub, Sim_to_hub, hub_to_sEclss, hub_to_S
                 # Reset the ping timeout
                 timer_start = time.time()
             elif signal['type'] == 'add_to_sEclss_group':
-                if not request.user.groups.filter(name="sEclss_group").exists():
+                r = redis.Redis()
+                if r.sismember("seclss-group-users", channel_name) == 0:
                     async_to_sync(channel_layer.group_add)("sEclss_group", channel_name)
-                    global_obj.users_in_sEclss_group += 1
+                    r.sadd("seclss-group-users", channel_name)
+                    print(f"Channel {channel_name} added to group")
 
         # Check sEclss input queue
         if not sEclss_to_hub.empty():
