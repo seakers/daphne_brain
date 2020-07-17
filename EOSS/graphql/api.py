@@ -21,7 +21,6 @@ class GraphqlClient:
         query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}}) { id input cost science eval_status } } '
         return self.execute_query(query)
 
-
     def get_orbit_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
@@ -52,7 +51,28 @@ class GraphqlClient:
         query = ' query MyQuery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
         return self.execute_query(query)
 
+    def get_instrument_from_objective(self, objective):
+        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
+        return self.execute_query(query)
 
+    def get_instrument_from_panel(self, panel):
+        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}, index_id: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
+        return self.execute_query(query)
+
+    def get_architecture_score_explanation(self, arch_id):
+        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
+        return self.execute_query(query)
+
+    def get_panel_score_explanation(self, arch_id):
+        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
+        return self.execute_query(query)
+
+    def get_objective_score_explanation(self, arch_id):
+        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
+        return self.execute_query(query)
+    
+    
+    
     def execute_query(self, query):
         r = requests.post(self.hasura_url, json={'query': query })
         result = json.loads(r.text)
