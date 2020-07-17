@@ -52,15 +52,17 @@ class VASSARClient:
         # Graphql Client
         self.dbClient = GraphqlClient()
 
-    # This will now connect to SQS with Boto3 FINISHED
+    
+    
+    # deprecated
     def start_connection(self):
         return 0
     
-    # End SQS connection with Boto3 FINISHED
+    # deprecated
     def end_connection(self):
         return 0
 
-
+    # deprecated
     def initialize_vassar_containers(self, group_id=1, problem_id=5):
         queues = self.sqs_client.list_queues()
 
@@ -81,6 +83,10 @@ class VASSARClient:
 
         return 0
 
+    
+    
+    
+    # working
     def send_initialize_message(self, url, group_id, problem_id):
         # Send init message
         privateQueue = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
@@ -98,15 +104,14 @@ class VASSARClient:
             }
         })
 
-
-    # Boto3 query problem FINISHED
+    # working
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_orbit_list(group_id, self.problem_id)
         orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
         # hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
         return orbits
 
-    # Boto3 query problem FINISHED
+    # working
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_instrument_list(group_id, self.problem_id)
         instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
@@ -114,28 +119,19 @@ class VASSARClient:
         # return hardcode
         return instruments
 
-    # Boto3 query problem FINISHED
+    # working
     def get_objective_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_objective_list(group_id, self.problem_id)
         print([obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']])
         return [obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']]
 
-    # Boto3 query problem FINISHED
+    # working
     def get_subobjective_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
         print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
-    
-    # Move to frontend later -- dialogue functions
-    def get_instruments_for_objective(self, problem, objective):
-        return self.client.getInstrumentsForObjective(problem, objective)
-
-    def get_instruments_for_panel(self, problem, panel):
-        return self.client.getInstrumentsForPanel(problem, panel)
-
-
-    # FINISHED
+    # working
     def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue'):
         inputs = ''
         for x in input_str:
@@ -173,7 +169,7 @@ class VASSARClient:
         print('--> Arch: ' + str(arch))
         return arch
 
-
+    # working
     def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):
         query_info = self.dbClient.get_false_architectures(self.problem_id)
         all_archs = query_info['data']['Architecture']
@@ -197,10 +193,7 @@ class VASSARClient:
 
         return 0
 
-
-    
-    
-    # FINISHED  
+    # working: test  
     def run_local_search(self, problem, inputs, problem_id=5, eval_queue_name='vassar_queue'):
         designs = []
 
@@ -213,6 +206,7 @@ class VASSARClient:
 
         return designs
 
+    # working
     def random_local_change(self, inputs):
         index = random.randint(0, len(inputs)-1)
         new_bit = '1'
@@ -221,13 +215,7 @@ class VASSARClient:
         new_design = inputs[:index] + new_bit + inputs[index + 1:]
         return new_design
 
-
-    # TO BE IMPLEMENTED AFTER DEMO not
-    def is_ga_running(self, ga_id):
-        return self.client.isGARunning(ga_id)
-
-
-    # TO BE IMPLEMENTED AFTER DEMO not
+    # working
     def stop_ga(self, ga_id, ga_queue_name='algorithm_queue'):
 
         # Connect to queue
@@ -247,8 +235,7 @@ class VASSARClient:
 
         return 1 # return 0 if failure
 
-    # TO BE IMPLEMENTED AFTER DEMO not
-    # def start_ga(self, problem, username, thrift_list):
+    # working
     def start_ga(self, ga_queue_name='algorithm_queue'):
 
         # Connect to queue
@@ -291,11 +278,8 @@ class VASSARClient:
 
         return ga_id
     
-    
-    
-    
-    
-    # TO BE IMPLEMENTED AFTER DEMO
+
+    # deprecated 
     def create_thrift_arch(self, problem, arch):
         if problem in assignation_problems:
             return BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
@@ -304,19 +288,56 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
+    # working
+    def get_instruments_for_objective(self, problem, objective):
+        # return self.client.getInstrumentsForObjective(problem, objective)
+        print("--> Getting instrument for objective:", objective)
+        query = self.dbClient.get_instrument_from_objective(objective)
+        insts = [inst['name'] for inst in query['data']['Instrument']]
+        return insts
 
+    # working
+    def get_instruments_for_panel(self, problem, panel):
+        # return self.client.getInstrumentsForPanel(problem, panel)
+        print("--> Getting instrument for panel:", panel)
+        query = self.dbClient.get_instrument_from_panel(panel)
+        insts = [inst['name'] for inst in query['data']['Instrument']]
+        return insts
+    
+    
+    # working - retrieve arch_id from arch
     def get_architecture_score_explanation(self, problem, arch):
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        return self.client.getArchitectureScoreExplanation(problem, thrift_arch)
+        # thrift_arch = self.create_thrift_arch(problem, arch)
+        # return self.client.getArchitectureScoreExplanation(problem, thrift_arch)
+        print("--> Getting architecture score explanation for arch id:", arch)
+        query = self.dbClient.get_architecture_score_explanation(arch)
+        explanations = [ { 'objective_name': expla['Stakeholder_Needs_Panel']['index_id'], 'satisfaction': expla['satisfaction'], 'weight': expla['Stakeholder_Needs_Panel']['weight'] } for expla in query['data']['ArchitectureScoreExplanation'] ]
+        print("--> explanations", explanations)
+        return explanations
 
+    # working - retrieve arch_id from arch
     def get_panel_score_explanation(self, problem, arch, panel):
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        return self.client.getPanelScoreExplanation(problem, thrift_arch, panel)
+        # thrift_arch = self.create_thrift_arch(problem, arch)
+        # return self.client.getPanelScoreExplanation(problem, thrift_arch, panel)
+        print("--> Getting panel score explanation for arch id:", arch)
+        query = self.dbClient.get_panel_score_explanation(arch)
+        explanations = [ { 'objective_name': expla['Stakeholder_Needs_Objective']['name'], 'satisfaction': expla['satisfaction'], 'weight': expla['Stakeholder_Needs_Objective']['weight'] } for expla in query['data']['PanelScoreExplanation'] ]
+        print("--> explanations", explanations)
+        return explanations
 
+    # working - retrieve arch_id from arch
     def get_objective_score_explanation(self, problem, arch, objective):
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
+        # thrift_arch = self.create_thrift_arch(problem, arch)
+        # return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
+        print("--> Getting objective score explanation for arch id:", arch)
+        query = self.dbClient.get_objective_score_explanation(arch)
+        explanations = [ { 'objective_name': expla['Stakeholder_Needs_Subobjective']['name'], 'satisfaction': expla['satisfaction'], 'weight': expla['Stakeholder_Needs_Subobjective']['weight'] } for expla in query['data']['ObjectiveScoreExplanation'] ]
+        print("--> explanations", explanations)
+        return explanations
 
+    
+    
+    # rewrite - all info in db
     def get_arch_science_information(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
@@ -326,6 +347,7 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
+    # rewrite - move info to db: lucidchart - vassar sqs - output database
     def get_arch_cost_information(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
@@ -335,6 +357,7 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
+    # rewrite
     def get_subscore_details(self, problem, arch, subobjective):
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
@@ -344,6 +367,7 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
+    # rewrite
     def critique_architecture(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
@@ -352,11 +376,12 @@ class VASSARClient:
             return self.client.getCritiqueDiscreteInputArch(problem, thrift_arch)
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
+    
+    # rewrite
+    def is_ga_running(self, ga_id):
+        return self.client.isGARunning(ga_id)
 
-
-
-
-
+    # rewrite
     def ping(self):
         self.client.ping()
         print('ping()')
