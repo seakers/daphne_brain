@@ -43,7 +43,38 @@ class ATConsumer(DaphneConsumer):
             print(r.scard("seclss-group-users"))
             if r.scard("seclss-group-users") == 0:
                 global_obj.hub_to_sEclss_queue.put({"type": "stop", "content": None})
+                global_obj.hub_to_sEclss_at_queue.put({"type": "stop", "content": None})
+                global_obj.sEclss_thread = None
+                global_obj.sEclss_at_thread = None
                 print("sEclss thread killed because it has no listeners")
+        elif r.sismember("fake_telemetry_one", self.channel_name) == 1:
+            r.srem("fake_telemetry_one", self.channel_name)
+            global_obj.hub_to_simulator_queues[0].put({"type": "stop", "content": None})
+            global_obj.hub_to_simulator_at_queues[0].put({"type": "stop", "content": None})
+            global_obj.simulator_threads[0] = None
+            global_obj.simulator_at_threads[0] = None
+            print(f"Channel {self.channel_name} unassigned from fake telemetry one")
+        elif r.sismember("fake_telemetry_two", self.channel_name) == 1:
+            r.srem("fake_telemetry_two", self.channel_name)
+            global_obj.hub_to_simulator_queues[1].put({"type": "stop", "content": None})
+            global_obj.hub_to_simulator_at_queues[1].put({"type": "stop", "content": None})
+            global_obj.simulator_threads[1] = None
+            global_obj.simulator_at_threads[1] = None
+            print(f"Channel {self.channel_name} unassigned from fake telemetry two")
+        elif r.sismember("fake_telemetry_three", self.channel_name) == 1:
+            r.srem("fake_telemetry_three", self.channel_name)
+            global_obj.hub_to_simulator_queues[2].put({"type": "stop", "content": None})
+            global_obj.hub_to_simulator_at_queues[2].put({"type": "stop", "content": None})
+            global_obj.simulator_threads[2] = None
+            global_obj.simulator_at_threads[2] = None
+            print(f"Channel {self.channel_name} unassigned from fake telemetry three")
+        elif r.sismember("fake_telemetry_four", self.channel_name) == 1:
+            r.srem("fake_telemetry_four", self.channel_name)
+            global_obj.hub_to_simulator_queues[3].put({"type": "stop", "content": None})
+            global_obj.hub_to_simulator_at_queues[3].put({"type": "stop", "content": None})
+            global_obj.simulator_threads[3] = None
+            global_obj.simulator_at_threads[3] = None
+            print(f"Channel {self.channel_name} unassigned from fake telemetry four")
 
         # Then call function from base class, and then add the new behavior
         super(ATConsumer, self).disconnect(close_code)
@@ -72,7 +103,7 @@ class ATConsumer(DaphneConsumer):
             signal = {'type': 'get_real_telemetry_params', 'content': None}
             frontend_to_hub_queue.put(signal)
         elif content.get('msg_type') == 'get_fake_telemetry_params':
-            signal = {'type': 'get_fake_telemetry_params', 'content': None}
+            signal = {'type': 'get_fake_telemetry_params', 'content': user_info.channel_name}
             frontend_to_hub_queue.put(signal)
         elif content.get('msg_type') == 'ping':
             signal = {'type': 'ping', 'content': None}
