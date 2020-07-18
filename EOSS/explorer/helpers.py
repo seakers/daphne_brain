@@ -57,6 +57,6 @@ def generate_background_search_message(user_info):
                                    voice_message=message["voice_message"],
                                    visual_message_type=json.dumps(message["visual_message_type"]),
                                    visual_message=json.dumps(message["visual_message"]),
-                                   writer="daphne",
+                                   dwriter="daphne",
                                    date=datetime.datetime.utcnow())
     return message

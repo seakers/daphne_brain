@@ -38,6 +38,15 @@ ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
 SECRET_KEY = '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'
 
 
+
+class ObjectiveSatisfaction:
+    def __init__(self, objective_name, satisfaction, weight):
+        self.objective_name = objective_name
+        self.satisfaction = satisfaction
+        self.weight = weight
+
+
+
 class VASSARClient:
     
     def __init__(self, port=9090, queue_name='test_queue', region_name='us-east-2'):
@@ -165,7 +174,7 @@ class VASSARClient:
         outputs = []
         outputs.append(result_formatted['science'])
         outputs.append(result_formatted['cost'])
-        arch = {'id': result_formatted['id'], 'inputs': result_formatted['input'], 'outputs': outputs}
+        arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
         print('--> Arch: ' + str(arch))
         return arch
 
@@ -305,33 +314,36 @@ class VASSARClient:
         return insts
     
     
-    # working - retrieve arch_id from arch
+    # working
     def get_architecture_score_explanation(self, problem, arch):
         # thrift_arch = self.create_thrift_arch(problem, arch)
         # return self.client.getArchitectureScoreExplanation(problem, thrift_arch)
         print("--> Getting architecture score explanation for arch id:", arch)
-        query = self.dbClient.get_architecture_score_explanation(arch)
-        explanations = [ { 'objective_name': expla['Stakeholder_Needs_Panel']['index_id'], 'satisfaction': expla['satisfaction'], 'weight': expla['Stakeholder_Needs_Panel']['weight'] } for expla in query['data']['ArchitectureScoreExplanation'] ]
+        arch_id = self.dbClient.get_arch_id(arch)
+        query = self.dbClient.get_architecture_score_explanation(arch_id)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['data']['ArchitectureScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
-    # working - retrieve arch_id from arch
+    # working
     def get_panel_score_explanation(self, problem, arch, panel):
         # thrift_arch = self.create_thrift_arch(problem, arch)
         # return self.client.getPanelScoreExplanation(problem, thrift_arch, panel)
-        print("--> Getting panel score explanation for arch id:", arch)
-        query = self.dbClient.get_panel_score_explanation(arch)
-        explanations = [ { 'objective_name': expla['Stakeholder_Needs_Objective']['name'], 'satisfaction': expla['satisfaction'], 'weight': expla['Stakeholder_Needs_Objective']['weight'] } for expla in query['data']['PanelScoreExplanation'] ]
+        print("--> get_panel_score_explanation:", arch.id, arch.inputs, arch.outputs, panel)
+        arch_id = self.dbClient.get_arch_id(arch)
+        query = self.dbClient.get_panel_score_explanation(arch_id, panel)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['data']['PanelScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
-    # working - retrieve arch_id from arch
+    # working 
     def get_objective_score_explanation(self, problem, arch, objective):
         # thrift_arch = self.create_thrift_arch(problem, arch)
         # return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
         print("--> Getting objective score explanation for arch id:", arch)
-        query = self.dbClient.get_objective_score_explanation(arch)
-        explanations = [ { 'objective_name': expla['Stakeholder_Needs_Subobjective']['name'], 'satisfaction': expla['satisfaction'], 'weight': expla['Stakeholder_Needs_Subobjective']['weight'] } for expla in query['data']['ObjectiveScoreExplanation'] ]
+        arch_id = self.dbClient.get_arch_id(arch)
+        query = self.dbClient.get_objective_score_explanation(arch_id, objective)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['data']['ObjectiveScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -339,6 +351,7 @@ class VASSARClient:
     
     # rewrite - all info in db
     def get_arch_science_information(self, problem, arch):
+        print("\n\n----> get_arch_science_information", problem, arch)
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
             return self.client.getArchScienceInformationBinaryInput(problem, thrift_arch)
@@ -349,6 +362,7 @@ class VASSARClient:
 
     # rewrite - move info to db: lucidchart - vassar sqs - output database
     def get_arch_cost_information(self, problem, arch):
+        print("\n\n----> get_arch_cost_information", problem, arch)
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
             return self.client.getArchCostInformationBinaryInput(problem, thrift_arch)
@@ -359,6 +373,7 @@ class VASSARClient:
 
     # rewrite
     def get_subscore_details(self, problem, arch, subobjective):
+        print("\n\n----> get_subscore_details", problem, arch, subobjective)
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
             return self.client.getSubscoreDetailsBinaryInput(problem, thrift_arch, subobjective)
@@ -369,6 +384,7 @@ class VASSARClient:
 
     # rewrite
     def critique_architecture(self, problem, arch):
+        print("\n\n----> critique_architecture", problem, arch)
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
             return self.client.getCritiqueBinaryInputArch(problem, thrift_arch)
@@ -379,6 +395,7 @@ class VASSARClient:
     
     # rewrite
     def is_ga_running(self, ga_id):
+        print("\n\n----> is_ga_running", ga_id)
         return self.client.isGARunning(ga_id)
 
     # rewrite

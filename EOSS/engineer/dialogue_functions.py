@@ -108,6 +108,7 @@ def get_panel_scores(design_id, designs, panel, context):
 
         # End the connection before return statement
         client.end_connection()
+        print("--> returning panel scores")
         return panel_scores
 
     except TException:

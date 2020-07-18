@@ -90,6 +90,7 @@ class ImportData(APIView):
                                                     inputs=json.dumps(inputs),
                                                     outputs=json.dumps(outputs)))
                     architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
+                    # architectures_json.append({'id': arch['id'], 'inputs': inputs, 'outputs': outputs})
                     user_info.eosscontext.last_arch_id = counter
                     inputs_unique_set.add(hashed_input)
                 counter = counter + 1

@@ -7,6 +7,21 @@ import time
 
 
 
+def bool_list_to_string(bool_list_str):
+    bool_list = json.loads(bool_list_str)
+    print("--> bool_list_to_string", bool_list)
+    return_str = ''
+    for bool_pos in bool_list:
+        if bool_pos:
+            return_str = return_str + '1'
+        else:
+            return_str = return_str + '0'
+    return return_str
+
+def boolean_string_to_boolean_array(self, boolean_string):
+        return [b == "1" for b in boolean_string]
+
+
 
 class GraphqlClient:
 
@@ -63,22 +78,39 @@ class GraphqlClient:
         query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
         return self.execute_query(query)
 
-    def get_panel_score_explanation(self, arch_id):
-        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
+    def get_panel_score_explanation(self, arch_id, panel):
+        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Panel: {index_id: {_eq: "' + panel + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
         return self.execute_query(query)
 
-    def get_objective_score_explanation(self, arch_id):
-        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
+    def get_objective_score_explanation(self, arch_id, objective):
+        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
         return self.execute_query(query)
     
     
     
+    
+    
+    def get_arch_id(self, arch_object):
+        id = arch_object.id
+        inputs = bool_list_to_string(arch_object.inputs)
+        outputs = arch_object.outputs
+        print("--> Finding django arch:", self.problem_id, inputs)
+        query = 'query myquery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, input: {_eq: "' + inputs + '"}}) { id } }'
+        return self.execute_query(query)['data']['Architecture'][0]['id']
+        
+
+
+
+
+
+
+
     def execute_query(self, query):
         r = requests.post(self.hasura_url, json={'query': query })
         result = json.loads(r.text)
-        print('\n\n-------- Query Result --------')
+        print('\n-------- Query Result --------')
         print(result)
-        print('-------------------------\n\n')
+        print('-------------------------\n')
 
         return result
 
