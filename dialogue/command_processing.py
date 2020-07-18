@@ -113,7 +113,7 @@ def answer_command(processed_command, question_type, command_class, condition_na
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
                                                       visual_message=json.dumps(answer["visual_answer"]),
-                                                      writer="daphne",
+                                                      dwriter="daphne",
                                                       date=datetime.datetime.utcnow())
 
     return dialogue_history
@@ -140,7 +140,7 @@ def choose_command(command_types, daphne_version, command_role, command_class, c
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
                                                       visual_message=json.dumps(answer["visual_answer"]),
-                                                      writer="daphne",
+                                                      dwriter="daphne",
                                                       date=datetime.datetime.utcnow())
     DialogueContext.objects.create(dialogue_history=dialogue_history,
                                    is_clarifying_input=True,
@@ -160,7 +160,7 @@ def not_answerable(context: UserInformation):
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
                                                       visual_message=json.dumps(answer["visual_answer"]),
-                                                      writer="daphne",
+                                                      dwriter="daphne",
                                                       date=datetime.datetime.utcnow())
 
     DialogueContext.objects.create(dialogue_history=dialogue_history,
