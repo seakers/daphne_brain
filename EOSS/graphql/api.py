@@ -6,6 +6,10 @@ import time
 
 
 
+powerBudgetSlots    = [ "payload-peak-power#", "satellite-BOL-power#" ]
+costBudgetSlots     = [ "payload-cost#", "bus-cost#", "launch-cost#", "program-cost#", "IAT-cost#", "operations-cost#" ]
+massBudgetSlots     = [ "adapter-mass", "propulsion-mass#", "structure-mass#", "avionics-mass#", "ADCS-mass#", "EPS-mass#", "propellant-mass-injection", "propellant-mass-ADCS", "thermal-mass#", "payload-mass#" ]
+
 
 def bool_list_to_string(bool_list_str):
     bool_list = json.loads(bool_list_str)
@@ -22,13 +26,36 @@ def boolean_string_to_boolean_array(self, boolean_string):
         return [b == "1" for b in boolean_string]
 
 
+class SubscoreInformation:
+    def __init__(self, name, description, value, weight, subscores=None):
+        self.name = name
+        self.description = description
+        self.value = value
+        self.weight = weight
+        self.subscores = subscores
+
+
+class MissionCostInformation:
+    def __init__(self, orbit_name, payload, launch_vehicle, total_mass, total_power, total_cost, mass_budget, power_budget, cost_budget):
+        self.orbit_name = orbit_name
+        self.payload = payload
+        self.launch_vehicle = launch_vehicle
+        self.total_mass = total_mass
+        self.total_power = total_power
+        self.total_cost = total_cost
+
+        self.mass_budget = mass_budget       # dict
+        self.power_budget = power_budget     # dict
+        self.cost_budget = cost_budget       # dict
+
+
+
 
 class GraphqlClient:
 
     def __init__(self, hasura_url='http://graphql:8080/v1/graphql'):
         self.hasura_url = hasura_url
         self.problem_id = str(5)
-
 
 
     def get_architectures(self, problem_id=5):
@@ -86,9 +113,104 @@ class GraphqlClient:
         query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
         return self.execute_query(query)
     
-    
-    
-    
+    def get_arch_science_information(self, arch_id):
+        query = f''' query myquery {{
+            panels: Stakeholder_Needs_Panel(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                code: index_id
+                description
+                name
+                weight
+                satisfaction: ArchitectureScoreExplanations(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
+                value: satisfaction
+                }}
+                objectives: Stakeholder_Needs_Objectives {{
+                    code: name
+                    description
+                    weight
+                    satisfaction: PanelScoreExplanations(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
+                        value: satisfaction
+                    }}
+                    subobjectives: Stakeholder_Needs_Subobjectives {{
+                        code: name
+                        description
+                        weight
+                        satisfaction: ObjectiveScoreExplanations {{
+                        value: satisfaction
+                        }}
+                    }}
+                }}
+            }}
+
+        }}
+        '''
+        panels = self.execute_query(query)['data']['panels']
+        information = []
+        for panel in panels:
+            objective_info = []
+            for obj in panel['objectives']:
+                subobjective_info = []
+                for subobj in obj['subobjectives']:
+                    subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
+                objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
+            information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
+        print("\n---> all stakeholder info", information)
+        return information
+
+    def get_arch_cost_information(self, arch_id):
+        query = f''' query myquery {{
+            cost_info: ArchitectureCostInformation(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
+                mission_name
+                launch_vehicle
+                mass
+                power
+                cost
+                others
+                payloads: ArchitecturePayloads {{
+                    Instrument {{
+                        name
+                    }}
+                }}
+                budgets: ArchitectureBudgets {{
+                    value
+                    Mission_Attribute {{
+                        name
+                    }}
+                }}
+            }}
+
+        }}
+        '''
+        cost_info = self.execute_query(query)['data']['cost_info']
+        information = []
+        for info in cost_info:
+
+            # payload
+            payloads = []
+            for inst in info['payloads']:
+                if inst['Instrument'] != None:
+                    payloads.append(inst['Instrument']['name'])
+
+            # budgets
+            mass_budget = {}
+            power_budget = {}
+            cost_budget = {}
+            for budget in info['budgets']:
+                budget_type = budget['Mission_Attribute']['name']
+                if budget_type in powerBudgetSlots:
+                    power_budget[budget_type] = budget['value']
+                if budget_type in massBudgetSlots:
+                    mass_budget[budget_type] = budget['value']
+                if budget_type in costBudgetSlots:
+                    cost_budget[budget_type] = budget['value']
+            cost_info_obj = MissionCostInformation(info['mission_name'], payloads, info['launch_vehicle'], info['mass'], info['power'], info['cost'], mass_budget, power_budget, cost_budget)
+            information.append(cost_info_obj)
+        return information
+
+
+
+
+
+
     
     def get_arch_id(self, arch_object):
         id = arch_object.id
@@ -98,9 +220,6 @@ class GraphqlClient:
         query = 'query myquery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, input: {_eq: "' + inputs + '"}}) { id } }'
         return self.execute_query(query)['data']['Architecture'][0]['id']
         
-
-
-
 
 
 

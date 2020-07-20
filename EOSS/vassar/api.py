@@ -352,25 +352,24 @@ class VASSARClient:
     # rewrite - all info in db
     def get_arch_science_information(self, problem, arch):
         print("\n\n----> get_arch_science_information", problem, arch)
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        if problem in assignation_problems:
-            return self.client.getArchScienceInformationBinaryInput(problem, thrift_arch)
-        elif problem in partition_problems:
-            return self.client.getArchScienceInformationDiscreteInput(problem, thrift_arch)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
+        arch_id = self.dbClient.get_arch_id(arch)
+        return self.dbClient.get_arch_science_information(arch_id)
 
     # rewrite - move info to db: lucidchart - vassar sqs - output database
     def get_arch_cost_information(self, problem, arch):
         print("\n\n----> get_arch_cost_information", problem, arch)
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        if problem in assignation_problems:
-            return self.client.getArchCostInformationBinaryInput(problem, thrift_arch)
-        elif problem in partition_problems:
-            return self.client.getArchCostInformationDiscreteInput(problem, thrift_arch)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
+        arch_id = self.dbClient.get_arch_id(arch)
+        return self.dbClient.get_arch_cost_information(arch_id)
+        # thrift_arch = self.create_thrift_arch(problem, arch)
+        # if problem in assignation_problems:
+        #     return self.client.getArchCostInformationBinaryInput(problem, thrift_arch)
+        # elif problem in partition_problems:
+        #     return self.client.getArchCostInformationDiscreteInput(problem, thrift_arch)
+        # else:
+        #     raise ValueError('Problem {0} not recognized'.format(problem))
 
+    
+    
     # rewrite
     def get_subscore_details(self, problem, arch, subobjective):
         print("\n\n----> get_subscore_details", problem, arch, subobjective)
