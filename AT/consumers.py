@@ -40,6 +40,8 @@ class ATConsumer(DaphneConsumer):
         r.delete('seclss-group-users')
         r.delete('fake_telemetry_one')
         r.delete('fake_telemetry_two')
+        r.delete('fake_telemetry_three')
+        r.delete('fake_telemetry_four')
         print(f"Real telemetry group {r.smembers('seclss-group-users')}")
         print(f"Real telemetry group {r.smembers('fake_telemetry_one')}")
         print(f"Real telemetry group {r.smembers('fake_telemetry_two')}")
