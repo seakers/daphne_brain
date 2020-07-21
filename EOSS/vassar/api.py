@@ -92,9 +92,6 @@ class VASSARClient:
 
         return 0
 
-    
-    
-    
     # working
     def send_initialize_message(self, url, group_id, problem_id):
         # Send init message
@@ -287,7 +284,6 @@ class VASSARClient:
 
         return ga_id
     
-
     # deprecated 
     def create_thrift_arch(self, problem, arch):
         if problem in assignation_problems:
@@ -312,7 +308,6 @@ class VASSARClient:
         query = self.dbClient.get_instrument_from_panel(panel)
         insts = [inst['name'] for inst in query['data']['Instrument']]
         return insts
-    
     
     # working
     def get_architecture_score_explanation(self, problem, arch):
@@ -347,26 +342,17 @@ class VASSARClient:
         print("--> explanations", explanations)
         return explanations
 
-    
-    
-    # rewrite - all info in db
+    # working
     def get_arch_science_information(self, problem, arch):
         print("\n\n----> get_arch_science_information", problem, arch)
         arch_id = self.dbClient.get_arch_id(arch)
         return self.dbClient.get_arch_science_information(arch_id)
 
-    # rewrite - move info to db: lucidchart - vassar sqs - output database
+    # working
     def get_arch_cost_information(self, problem, arch):
         print("\n\n----> get_arch_cost_information", problem, arch)
         arch_id = self.dbClient.get_arch_id(arch)
         return self.dbClient.get_arch_cost_information(arch_id)
-        # thrift_arch = self.create_thrift_arch(problem, arch)
-        # if problem in assignation_problems:
-        #     return self.client.getArchCostInformationBinaryInput(problem, thrift_arch)
-        # elif problem in partition_problems:
-        #     return self.client.getArchCostInformationDiscreteInput(problem, thrift_arch)
-        # else:
-        #     raise ValueError('Problem {0} not recognized'.format(problem))
 
     
     
@@ -384,13 +370,8 @@ class VASSARClient:
     # rewrite
     def critique_architecture(self, problem, arch):
         print("\n\n----> critique_architecture", problem, arch)
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        if problem in assignation_problems:
-            return self.client.getCritiqueBinaryInputArch(problem, thrift_arch)
-        elif problem in partition_problems:
-            return self.client.getCritiqueDiscreteInputArch(problem, thrift_arch)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
+        arch_id = self.dbClient.get_arch_id(arch)
+        return self.dbClient.get_arch_critique(arch_id)
     
     # rewrite
     def is_ga_running(self, ga_id):

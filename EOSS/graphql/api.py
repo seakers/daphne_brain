@@ -207,7 +207,19 @@ class GraphqlClient:
         return information
 
 
-
+    def get_arch_critique(self, arch_id):
+        query = f''' query myquery {{
+            Architecture_by_pk(id: {arch_id}) {{
+                id
+                critique
+            }}
+        }}
+        '''
+        critique = self.execute_query(query)['data']['Architecture_by_pk']['critique']
+        if critique == None:
+            return []
+        critiques = critique.split('|')
+        return critiques[:-1]
 
 
 
