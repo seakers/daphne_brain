@@ -144,7 +144,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                                'info': json_info}
                     command = {'type': 'telemetry_update',
                                'content': content}
-                    async_to_sync(channel_layer_real[0].group_send)(sEclss_group_name, command)
+                    if channel_layer_real.length > 0:
+                        async_to_sync(channel_layer_real[0].group_send)(sEclss_group_name, command)
             elif signal['type'] == 'initialize_telemetry':
                 # Parse the signal
                 tf_window = signal['content']
@@ -154,7 +155,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                async_to_sync(channel_layer_real[0].group_send)("sEclss_group", command)
+                if channel_layer_real.length > 0:
+                    async_to_sync(channel_layer_real[0].group_send)("sEclss_group", command)
 
         # Check the simulator input queues
         if not sim_to_hub_one.empty():
@@ -245,12 +247,14 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
         if not sim_at_to_hub_one.empty():
             signal = sim_at_to_hub_one.get()
             if signal['type'] == 'symptoms_report':
-                async_to_sync(channel_layer_fake_one.send)(channel_name_fake_one, signal)
+                if channel_layer_fake_one is not None:
+                    async_to_sync(channel_layer_fake_one.send)(channel_name_fake_one, signal)
 
         if not sim_at_to_hub_two.empty():
             signal = sim_at_to_hub_two.get()
             if signal['type'] == 'symptoms_report':
-                async_to_sync(channel_layer_fake_two.send)(channel_name_fake_two, signal)
+                if channel_layer_fake_two is not None:
+                    async_to_sync(channel_layer_fake_two.send)(channel_name_fake_two, signal)
 
         # Update while loop condition and wait
         time_since_last_ping = time.time() - timer_start
