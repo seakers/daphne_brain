@@ -144,7 +144,7 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                                'info': json_info}
                     command = {'type': 'telemetry_update',
                                'content': content}
-                    if channel_layer_real.length > 0:
+                    if len(channel_layer_real) > 0:
                         async_to_sync(channel_layer_real[0].group_send)(sEclss_group_name, command)
             elif signal['type'] == 'initialize_telemetry':
                 # Parse the signal
@@ -155,7 +155,7 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                if channel_layer_real.length > 0:
+                if len(channel_layer_real) > 0:
                     async_to_sync(channel_layer_real[0].group_send)("sEclss_group", command)
 
         # Check the simulator input queues
