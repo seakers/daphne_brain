@@ -34,19 +34,6 @@ class ATConsumer(DaphneConsumer):
         signal = {'type': 'ws_configuration_update', 'content': None}
         frontend_to_hub_queue.put(signal)
 
-        print(f"Real telemetry group {r.smembers('seclss-group-users')}")
-        print(f"Real telemetry group {r.smembers('fake_telemetry_one')}")
-        print(f"Real telemetry group {r.smembers('fake_telemetry_two')}")
-        r.delete('seclss-group-users')
-        r.delete('fake_telemetry_one')
-        r.delete('fake_telemetry_two')
-        r.delete('fake_telemetry_three')
-        r.delete('fake_telemetry_four')
-        print(f"Real telemetry group {r.smembers('seclss-group-users')}")
-        print(f"Real telemetry group {r.smembers('fake_telemetry_one')}")
-        print(f"Real telemetry group {r.smembers('fake_telemetry_two')}")
-
-
     def disconnect(self, close_code):
         # remove user from real telemetry group if they were in it
         r = redis.Redis()
