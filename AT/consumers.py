@@ -27,6 +27,11 @@ class ATConsumer(DaphneConsumer):
         # First call function from base class, and then add the new behavior
         super(ATConsumer, self).connect()
         r = redis.Redis()
+        r.delete("seclss-group-users")
+        r.delete("fake_telemetry_one")
+        r.delete("fake_telemetry_two")
+        r.delete("fake_telemetry_three")
+        r.delete("fake_telemetry_four")
 
         # Send a message to the threads with the updated user information
         # user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
@@ -49,21 +54,6 @@ class ATConsumer(DaphneConsumer):
                 global_obj.sEclss_thread = None
                 global_obj.sEclss_at_thread = None
                 print("sEclss thread killed because it has no listeners")
-
-        elif r.sismember("fake_telemetry_one", self.channel_name) == 1:
-            r.srem("fake_telemetry_one", self.channel_name)
-            global_obj.frontend_to_hub_queue.put({"type": "stop_fake_telemetry_one"})
-            global_obj.simulator_threads[0] = None
-            global_obj.simulator_at_threads[0] = None
-            print(f"Channel {self.channel_name} unassigned from fake telemetry one")
-
-        elif r.sismember("fake_telemetry_two", self.channel_name) == 1:
-            r.srem("fake_telemetry_two", self.channel_name)
-            global_obj.frontend_to_hub_queue.put({"type": "stop_fake_telemetry_two"})
-            global_obj.simulator_threads[1] = None
-            global_obj.simulator_at_threads[1] = None
-            print(f"Channel {self.channel_name} unassigned from fake telemetry two")
-
 
         # Then call function from base class, and then add the new behavior
         super(ATConsumer, self).disconnect(close_code)
