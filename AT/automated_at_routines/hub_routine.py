@@ -19,11 +19,13 @@ def update_channel_layer_and_name(signal):
 def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim_to_hub_three, sim_to_hub_four,
                 hub_to_sEclss, hub_to_sim_one, hub_to_sim_two, hub_to_sim_three, hub_to_sim_four, hub_to_sEclss_at,
                 hub_to_sim_at_one, hub_to_sim_at_two, hub_to_sim_at_three, hub_to_sim_at_four,sEclss_at_to_hub,
-                sim_at_to_hub_one, sim_at_to_hub_two, sim_at_to_hub_three, sim_at_to_hub_four, request):
+                sim_at_to_hub_one, sim_at_to_hub_two, sim_at_to_hub_three, sim_at_to_hub_four):
     # Get the user information and channel layer
     # user_info = get_or_create_user_information(request.session, request.user, 'AT')
     # channel_layer = get_channel_layer()
     # channel_name = user_info.channel_name
+
+    r = redis.Redis()
 
     # Set the "checking frequency"
     check_delay = 0.1
@@ -36,7 +38,7 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     timer_start = time.time()
 
     # Real telemetry group
-    sEclss_group_name = "sEclss_group"
+    sEclss_group_name = 'seclss-group'
     channel_layer_real = []
 
     # Fake telemetry users
@@ -48,6 +50,12 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     channel_name_fake_two = None
     channel_name_fake_three = None
     channel_name_fake_four = None
+
+    # Params flags
+    paramsOneSent = False
+    paramsTwoSent = False
+    paramsThreeSent = False
+    paramsFourSent = False
 
     # Start the hub routine
     while time_since_last_ping < life_limit:
@@ -62,38 +70,55 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 channel_layer_fake_two = signal['channel_layer']
                 channel_name_fake_two = signal['channel_name']
 
+            elif signal['type'] == 'unassign_fake_telemetry_one':
+                channel_layer_fake_one = None
+                channel_name_fake_one = None
+                paramsOneSent = False
+            elif signal['type'] == 'unassign_fake_telemetry_two':
+                channel_layer_fake_two = None
+                channel_name_fake_two = None
+                paramsTwoSent = False
+
             elif signal['type'] == 'get_fake_telemetry_params':
-                if signal['channel_name'] == channel_name_fake_one:
-                    hub_to_sim_one.put({"type": "get_fake_telemetry_params", "content": None})
+                if signal['channel_name'] == channel_name_fake_one and not paramsOneSent:
+                    hub_to_sim_one.put({"type": "get_fake_telemetry_params"})
                     print(f"Channel {channel_name_fake_one} got fake telemetry params")
-                elif signal['channel_name'] == channel_name_fake_two:
-                    hub_to_sim_two.put({"type": "get_fake_telemetry_params", "content": None})
+                    paramsOneSent = True
+                elif signal['channel_name'] == channel_name_fake_two and not paramsTwoSent:
+                    hub_to_sim_two.put({"type": "get_fake_telemetry_params"})
                     print(f"Channel {channel_name_fake_one} got fake telemetry params")
+                    paramsTwoSent = True
                 else:
                     print(f"{signal['channel_name']} was did not get fake telemetry params")
 
             elif signal['type'] == 'stop_fake_telemetry_one':
-                hub_to_sim_one.put({"type": "stop", "content": None})
-                hub_to_sim_at_one.put({"type": "stop", "content": None})
+                hub_to_sim_one.put({"type": "stop"})
+                hub_to_sim_at_one.put({"type": "stop"})
                 channel_layer_fake_one = None
                 channel_name_fake_one = None
+                paramsOneSent = False
+                print("Fake telemetry 1 and fake at thread 1 stopped.")
             elif signal['type'] == 'stop_fake_telemetry_two':
                 hub_to_sim_two.put({"type": "stop", "content": None})
                 hub_to_sim_at_two.put({"type": "stop", "content": None})
                 channel_layer_fake_two = None
                 channel_name_fake_two = None
+                paramsTwoSent = False
+                print("Fake telemetry 2 and fake at thread 2 stopped.")
 
             elif signal['type'] == 'add_to_sEclss_group':
-                r = redis.Redis()
                 channel_layer_real.append(signal['channel_layer'])
                 channel_name = signal['channel_name']
                 if r.sismember("seclss-group-users", channel_name) == 0:
                     async_to_sync(channel_layer_real[0].group_add)(sEclss_group_name, channel_name)
                     r.sadd("seclss-group-users", channel_name)
-                    print(f"Channel {channel_name} added to group")
+                    if r.sismember("seclss-group-users", channel_name) == 1:
+                        print(f"Channel {channel_name} added to group")
+                    else:
+                        print(f"{channel_name} was not probably added to the seclss group users.")
 
             elif signal['type'] == 'get_real_telemetry_params':
-                hub_to_sEclss.put({"type": "get_real_telemetry_params", "content": None})
+                hub_to_sEclss.put({"type": "get_real_telemetry_params"})
 
             elif signal['type'] == 'remove_channel_layer_from_real':
                 channel_layer_to_remove = signal['channel_layer']
@@ -146,6 +171,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                                'content': content}
                     if len(channel_layer_real) > 0:
                         async_to_sync(channel_layer_real[0].group_send)(sEclss_group_name, command)
+                    else:
+                        print("No channel layer for seclss group.")
             elif signal['type'] == 'initialize_telemetry':
                 # Parse the signal
                 tf_window = signal['content']
@@ -157,6 +184,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                            'content': content}
                 if len(channel_layer_real) > 0:
                     async_to_sync(channel_layer_real[0].group_send)("sEclss_group", command)
+                else:
+                    print("No channel layer for seclss group.")
 
         # Check the simulator input queues
         if not sim_to_hub_one.empty():
@@ -186,6 +215,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                                'content': content}
                     if channel_layer_fake_one is not None:
                         async_to_sync(channel_layer_fake_one.send)(channel_name_fake_one, command)
+                    else:
+                        print("No channel assigned to fake telemetry one.")
             elif signal['type'] == 'initialize_telemetry':
                 # Parse the signal
                 tf_window = signal['content']
@@ -197,6 +228,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                            'content': content}
                 if channel_layer_fake_one is not None:
                     async_to_sync(channel_layer_fake_one.send)(channel_name_fake_one, command)
+                else:
+                    print("No channel assigned to fake telemetry one.")
 
         if not sim_to_hub_two.empty():
             signal = sim_to_hub_two.get()
@@ -225,6 +258,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                                'content': content}
                     if channel_layer_fake_two is not None:
                         async_to_sync(channel_layer_fake_two.send)(channel_name_fake_two, command)
+                    else:
+                        print("No channel assigned to fake telemetry two.")
             elif signal['type'] == 'initialize_telemetry':
                 # Parse the signal
                 tf_window = signal['content']
@@ -236,6 +271,8 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                            'content': content}
                 if channel_layer_fake_two is not None:
                     async_to_sync(channel_layer_fake_two.send)(channel_name_fake_two, command)
+                else:
+                    print("No channel assigned to fake telemetry two.")
 
         # Check the anomaly treatment output queue for sEclss
         if not sEclss_at_to_hub.empty():
@@ -260,12 +297,12 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
         time_since_last_ping = time.time() - timer_start
         time.sleep(check_delay)
 
-    hub_to_sEclss.put({'type': 'stop', 'content': ''})
-    hub_to_sim_one.put({'type': 'stop', 'content': ''})
-    hub_to_sim_two.put({'type': 'stop', 'content': ''})
-    hub_to_sEclss_at.put({'type': 'stop', 'content': ''})
-    hub_to_sim_at_one.put({'type': 'stop', 'content': ''})
-    hub_to_sim_at_two.put({'type': 'stop', 'content': ''})
+    hub_to_sEclss.put({'type': 'stop'})
+    hub_to_sim_one.put({'type': 'stop'})
+    hub_to_sim_two.put({'type': 'stop'})
+    hub_to_sEclss_at.put({'type': 'stop'})
+    hub_to_sim_at_one.put({'type': 'stop'})
+    hub_to_sim_at_two.put({'type': 'stop'})
 
     # Clear the queues and print a stop message
     front_to_hub.queue.clear()
