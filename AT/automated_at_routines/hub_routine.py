@@ -57,6 +57,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     paramsThreeSent = False
     paramsFourSent = False
 
+    # Real channel layer and name to send params to
+    channel_layer_real_params = None
+    channel_name_real_params = None
+
     # Start the hub routine
     while time_since_last_ping < life_limit:
         # Check the frontend input queue
@@ -119,6 +123,9 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
 
             elif signal['type'] == 'get_real_telemetry_params':
                 hub_to_sEclss.put({"type": "get_real_telemetry_params"})
+                channel_layer_real_params = signal['channel_layer']
+                channel_name_real_params = signal['channel_name']
+                print("Get Real telemetry params")
 
             elif signal['type'] == 'remove_channel_layer_from_real':
                 channel_layer_to_remove = signal['channel_layer']
@@ -182,10 +189,14 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                if len(channel_layer_real) > 0:
-                    async_to_sync(channel_layer_real[0].group_send)("sEclss_group", command)
+                print("Real telemetry initialization collected.")
+                if channel_layer_real_params is not None:
+                    async_to_sync(channel_layer_real_params.send)(channel_name_real_params, command)
+                    channel_layer_real_params = None
+                    channel_name_real_params = None
+                    print("Real telemetry initialization sent.")
                 else:
-                    print("No channel layer for seclss group.")
+                    print("No channel layer to initialize params.")
 
         # Check the simulator input queues
         if not sim_to_hub_one.empty():
