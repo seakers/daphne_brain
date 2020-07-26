@@ -40,14 +40,6 @@ class ATConsumer(DaphneConsumer):
         else:
             print(f"{self.channel_name} was not successfully added to the all users group.")
 
-        # Clear all redis variables if no one is on
-        r.delete("seclss-group-users")
-        r.delete("fake-telemetry-one")
-        r.delete("fake-telemetry-two")
-        r.delete("fake-telemetry-three")
-        r.delete("fake-telemetry-four")
-        r.delete("all-users")
-        print("Cleared on redis variables.")
         # Send a message to the threads with the updated user information
         # user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
         # signal = {'type': 'ws_configuration_update', 'content': user_info}
@@ -448,7 +440,8 @@ class ATConsumer(DaphneConsumer):
                 global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
                                                       "channel_layer": self.channel_layer,
                                                       "channel_name": self.channel_name})
-                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params'})
+                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params', 'channel_layer': self.channel_layer,
+                                           'channel_name': self.channel_name})
                 self.send(json.dumps({
                     'type': 'real_telemetry_response',
                     'content': {'status': 'already_running',
@@ -490,6 +483,7 @@ class ATConsumer(DaphneConsumer):
                             }
                         }))
                         frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                   'channel_layer': self.channel_layer,
                                                    'channel_name': self.channel_name})
 
                     else:
@@ -931,7 +925,8 @@ class ATConsumer(DaphneConsumer):
 
         elif content.get('type') == 'get_parameters':
             if r.sismember('seclss-group-users', self.channel_name) == 1:
-                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params'})
+                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params', 'channel_layer': self.channel_layer,
+                                           'channel_name': self.channel_name})
             elif r.sismember('fake-telemetry-one', self.channel_name) == 1:
                 frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params', 'channel_name': self.channel_name})
             elif r.sismember('fake-telemetry-two', self.channel_name) == 1:
