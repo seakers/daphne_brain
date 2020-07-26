@@ -40,6 +40,14 @@ class ATConsumer(DaphneConsumer):
         else:
             print(f"{self.channel_name} was not successfully added to the all users group.")
 
+        # Clear all redis variables if no one is on
+        r.delete("seclss-group-users")
+        r.delete("fake-telemetry-one")
+        r.delete("fake-telemetry-two")
+        r.delete("fake-telemetry-three")
+        r.delete("fake-telemetry-four")
+        r.delete("all-users")
+        print("Cleared on redis variables.")
         # Send a message to the threads with the updated user information
         # user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
         # signal = {'type': 'ws_configuration_update', 'content': user_info}
