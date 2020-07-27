@@ -9,6 +9,8 @@ from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.models import Design
 from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
+from EOSS.data.design_helpers import add_design
+
 
 
 class ImportData(APIView):
@@ -42,7 +44,7 @@ class ImportData(APIView):
             problem_id = request.data['problem_id']
 
 
-
+            # Remove all design objects
             Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
             architectures = []
             architectures_json = []
@@ -323,6 +325,27 @@ class SetProblem(APIView):
         user_info.eosscontext.problem = problem
         user_info.eosscontext.save()
         user_info.save()
+        return Response({
+            "status": "Problem has been set successfully."
+        })
+
+
+class AddDesign(APIView):
+    """ Adds a design to the problem
+    """
+    def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        design = json.loads(request.data['design'])
+
+        db_design = {}
+        db_design['id'] = design['id']
+        db_design['inputs'] = design['inputs']
+        db_design['outputs'] = design['outputs']
+
+        print("--> Design being added to context:", db_design)
+        architecture = add_design(db_design, request.session, request.user, False)
+        user_info.save()
+
         return Response({
             "status": "Problem has been set successfully."
         })
