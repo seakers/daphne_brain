@@ -39,7 +39,7 @@ hub_to_simulator_at_queue_one = Queue()
 hub_to_simulator_at_queue_two = Queue()
 hub_to_simulator_at_queue_three = Queue()
 hub_to_simulator_at_queue_four = Queue()
-hub_to_simulator_at_queues = [hub_to_simulator_at_queue_one, hub_to_simulator_at_queue_two, hub_to_simulator_queue_three,
+hub_to_simulator_at_queues = [hub_to_simulator_at_queue_one, hub_to_simulator_at_queue_two, hub_to_simulator_at_queue_three,
                               hub_to_simulator_at_queue_four]
 simulator_at_to_hub_queue_one = Queue()
 simulator_at_to_hub_queue_two = Queue()

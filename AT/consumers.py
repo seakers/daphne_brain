@@ -40,89 +40,702 @@ class ATConsumer(DaphneConsumer):
         else:
             print(f"{self.channel_name} was not successfully added to the all users group.")
 
-        # Send a message to the threads with the updated user information
-        # user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
-        # signal = {'type': 'ws_configuration_update', 'content': user_info}
+        # Clear all redis variables if no one is on
+        r.delete("seclss-group-users")
+        r.delete("fake-telemetry-one")
+        r.delete("fake-telemetry-two")
+        r.delete("fake-telemetry-three")
+        r.delete("fake-telemetry-four")
+        r.delete("all-users")
+        print("Cleared on redis variables.")
+        global_obj.frontend_to_hub_queue.queue.clear()
+        global_obj.sEclss_to_hub_queue.queue.clear()
+        global_obj.hub_to_sEclss_queue.queue.clear()
+        global_obj.hub_to_sEclss_at_queue.queue.clear()
+        global_obj.sEclss_at_to_hub_queue.queue.clear()
+        global_obj.server_to_sEclss_queue.queue.clear()
+        global_obj.simulator_to_hub_queues[0].queue.clear()
+        global_obj.simulator_to_hub_queues[1].queue.clear()
+        global_obj.simulator_to_hub_queues[2].queue.clear()
+        global_obj.simulator_to_hub_queues[3].queue.clear()
+        global_obj.hub_to_simulator_queues[0].queue.clear()
+        global_obj.hub_to_simulator_queues[1].queue.clear()
+        global_obj.hub_to_simulator_queues[2].queue.clear()
+        global_obj.hub_to_simulator_queues[3].queue.clear()
+        global_obj.hub_to_simulator_at_queues[0].queue.clear()
+        global_obj.hub_to_simulator_at_queues[1].queue.clear()
+        global_obj.hub_to_simulator_at_queues[2].queue.clear()
+        global_obj.hub_to_simulator_at_queues[3].queue.clear()
+        global_obj.simulator_at_to_hub_queues[0].queue.clear()
+        global_obj.simulator_at_to_hub_queues[1].queue.clear()
+        global_obj.simulator_at_to_hub_queues[2].queue.clear()
+        global_obj.simulator_at_to_hub_queues[3].queue.clear()
+        print("Cleared all queues.")
+        # Reset ping timer
         signal = {'type': 'ws_configuration_update', 'content': None}
         frontend_to_hub_queue.put(signal)
 
     def disconnect(self, close_code):
-        # remove user from real telemetry group if they were in it
         r = redis.Redis()
-        if r.sismember("seclss-group-users", self.channel_name) == 1:
-            async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
-            r.srem("seclss-group-users", self.channel_name)
-            print(f"Channel {self.channel_name} removed from seclss group")
-            # Kill the sEclss thread if no more users are on
-            print(r.scard("seclss-group-users"))
-            if r.scard("seclss-group-users") == 0:
-                global_obj.hub_to_sEclss_queue.put({"type": "stop", "content": None})
-                global_obj.hub_to_sEclss_at_queue.put({"type": "stop", "content": None})
-                # Ensure the stop queues get processed
-                global_obj.sEclss_thread.join(2.0)
-                if global_obj.sEclss_thread.is_alive():
-                    global_obj.sEclss_thread = None
-                    print("sEclss thread didn't get killed.")
-                    global_obj.hub_to_sEclss_queue.queue.clear()
-                else:
-                    global_obj.sEclss_thread = None
-                    global_obj.hub_to_sEclss_queue.queue.clear()
-                global_obj.sEclss_at_thread.join(2.0)
+
+        # remove user from real telemetry group if they were in it
+        if r.sismember('seclss-group-users', self.channel_name) == 1:
+            # Check if both telemetry and at thread are not initialized
+            if global_obj.sEclss_thread is None and global_obj.sEclss_at_thread is None:
+                r.srem('seclss-group-users', self.channel_name)
+                async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
+                print(f"{self.channel_name} removed from the seclss group users.")
+                print(f"{r.scard('seclss-group-users')}")
+
+            # Check if only telemetry thread is not initialized
+            elif global_obj.sEclss_thread is None:
+                # Check if at thread is alive, then kill that thread
                 if global_obj.sEclss_at_thread.is_alive():
-                    global_obj.simulator_at_threads[0] = None
-                    print("sEclss at thread didn't get killed.")
-                    global_obj.hub_to_sEclss_at_queue.queue.clear()
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    if r.scard("seclss-group-users") == 0:
+                        global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.sEclss_at_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.sEclss_at_thread.is_alive():
+                            print('There was an error stopping real at thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                # If it is not alive then it is already stopped, send back success
                 else:
-                    global_obj.sEclss_at_thread = None
-                    global_obj.hub_to_sEclss_at_queue.queue.clear()
-                print("sEclss thread killed because it has no listeners")
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                          'channel_layer': self.channel_layer})
+                    print(f"{self.channel_name} removed from the seclss group users.")
+                    print(f"{r.scard('seclss-group-users')}")
 
-        elif r.sismember("fake-telemetry-one", self.channel_name) == 1:
-            global_obj.frontend_to_hub_queue.put({"type": "stop_fake_telemetry_one", "channel_name": self.channel_name})
-            # Ensure the queues get processed
-            global_obj.simulator_threads[0].join(2.0)
-            if global_obj.simulator_threads[0].is_alive():
-                global_obj.simulator_threads[0] = None
-                print("Fake telemetry thread didn't get killed.")
-                global_obj.hub_to_simulator_queues[0].queue.clear()
-            else:
-                global_obj.simulator_threads[0] = None
-                global_obj.hub_to_simulator_queues[0].queue.clear()
-            global_obj.simulator_at_threads[0].join(2.0)
-            if global_obj.simulator_at_threads[0].is_alive():
-                global_obj.simulator_at_threads[0] = None
-                global_obj.hub_to_simulator_at_queues[0].queue.clear()
-                print("Fake at thread one didn't get killed.")
-            else:
-                global_obj.simulator_at_threads[0] = None
-                global_obj.hub_to_simulator_at_queues[0].queue.clear()
-            r.srem("fake-telemetry-one", self.channel_name)
-            print(f"Channel {self.channel_name} unassigned from fake telemetry one.")
-            if r.scard("fake-telemetry-one") != 0:
-                r.delete("fake-telemetry-one")
-        elif r.sismember("fake-telemetry-two", self.channel_name) == 1:
-            global_obj.frontend_to_hub_queue.put({"type": "stop_fake_telemetry_two", "channel_name": self.channel_name})
-            global_obj.simulator_threads[1].join(2.0)
-            if global_obj.simulator_threads[1].is_alive():
-                global_obj.simulator_threads[1] = None
-                print("Fake telemetry thread two didn't get killed.")
-                global_obj.hub_to_simulator_queues[1].queue.clear()
-            else:
-                global_obj.simulator_threads[1] = None
-                global_obj.hub_to_simulator_queues[1].queue.clear()
-            global_obj.simulator_at_threads[1].join(2.0)
-            if global_obj.simulator_at_threads[1].is_alive():
-                global_obj.simulator_at_threads[1] = None
-                print("Fake at thread two didn't get killed.")
-                global_obj.hub_to_simulator_at_queues[1].queue.clear()
-            else:
-                global_obj.simulator_at_threads[1] = None
-                global_obj.hub_to_simulator_at_queues[1].queue.clear()
-            r.srem("fake-telemetry-two", self.channel_name)
-            print(f"Channel {self.channel_name} unassigned from fake telemetry two.")
-            if r.scard("fake-telemetry-two") != 0:
-                r.delete("fake-telemetry-two")
+            # Check if only telemetry thread is not initialized
+            elif global_obj.sEclss_at_thread is None:
+                # Check if telemetry thread is alive, then kill that thread
+                if global_obj.sEclss_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    if r.scard("seclss-group-users") == 0:
+                        global_obj.hub_to_sEclss_queue.put({'type': 'stop'})
 
+                        # Ensure it gets stopped
+                        global_obj.sEclss_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.sEclss_thread.is_alive():
+                            print('There was an error stopping real telemetry thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                # If it is not alive then it is already stopped, send back success
+                else:
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                          'channel_layer': self.channel_layer})
+                    print(f"{self.channel_name} removed from the seclss group users.")
+                    print(f"{r.scard('seclss-group-users')}")
+            # Check if both have been initialized
+            else:
+                # Check if both are alive then kill both
+                if global_obj.sEclss_thread.is_alive() and global_obj.sEclss_at_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    # If no more users are listening to the real telemetry then stop it
+                    if r.scard("seclss-group-users") == 0:
+                        global_obj.frontend_to_hub_queue.put({'type': 'stop_real_telemetry'})
+
+                        # Ensure that the thread stops
+                        global_obj.sEclss_thread.join(2.0)
+                        if global_obj.sEclss_thread.is_alive():
+                            print('There was an error stopping the real telemetry thread.')
+
+                        global_obj.sEclss_at_thread.join(2.0)
+                        if global_obj.sEclss_at_thread.is_alive():
+                            print('There was an error stopping the real at thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                # Check if only sEclss thread is alive
+                elif global_obj.sEclss_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    if r.scard("seclss-group-users") == 0:
+                        global_obj.hub_to_sEclss_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.sEclss_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.sEclss_thread.is_alive():
+                            print('There was an error stopping real telemetry thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+                # Check if only at thread is alive
+                elif global_obj.sEclss_at_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    if r.scard("seclss-group-users") == 0:
+                        global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.sEclss_at_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.sEclss_at_thread.is_alive():
+                            print('There was an error stopping real at thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the seclss group users.")
+                        print(f"{r.scard('seclss-group-users')}")
+                # Check if both are not running
+                else:
+                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                    r.srem("seclss-group-users", self.channel_name)
+                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                          'channel_layer': self.channel_layer})
+                    print(f"{self.channel_name} removed from the seclss group users.")
+                    print(f"{r.scard('seclss-group-users')}")
+
+        # remove the user from the fake telemetry group if they were in one
+        elif r.sismember('fake-telemetry-one', self.channel_name) == 1:
+            # Check if both simulator and at threads are not initialized
+            if global_obj.simulator_threads[0] is None and global_obj.simulator_at_threads[0] is None:
+                r.srem('fake-telemetry-one', self.channel_name)
+                if r.scard("fake-telemetry-one") != 0:
+                    r.delete("fake-telemetry-one")
+                global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+            # Check if only simulator thread is not initialized
+            elif global_obj.simulator_threads[0] is None:
+                # Check if at thread is alive, then kill that thread
+                if global_obj.simulator_at_threads[0].is_alive():
+                    global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[0].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[0].is_alive():
+                        print('There was an error stopping fake at thread one.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+            # Check if only at thread is not initialized
+            elif global_obj.simulator_at_threads[0] is None:
+                # Check if simulator thread is alive, then kill that thread
+                if global_obj.simulator_threads[0].is_alive():
+                    global_obj.hub_to_simulator_queues[0].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[0].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[0].is_alive():
+                        print('There was an error stopping fake simulator thread one.')
+
+                    # unassign anyway
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+            # Check if both have been initialized
+            else:
+                # Check if both are alive, then kill both
+                if global_obj.simulator_threads[0].is_alive and global_obj.simulator_at_threads[0].is_alive():
+                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_one'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[0].join(2.0)
+                    if global_obj.simulator_threads[0].is_alive():
+                        print('There was an error stopping fake telemetry thread one.')
+
+                    global_obj.simulator_at_threads[0].join(2.0)
+                    if global_obj.simulator_at_threads[0].is_alive():
+                        print('There was an error stopping fake at thread one.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+                # Check if only simulator thread is alive, then only kill simulator thread
+                elif global_obj.simulator_threads[0].is_alive():
+                    global_obj.hub_to_simulator_queues[0].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[0].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[0].is_alive():
+                        print('There was an error stopping fake simulator thread one.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+                # Check if only at thread is alive, then only kill at thread
+                elif global_obj.simulator_at_threads[0].is_alive():
+                    global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[0].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[0].is_alive():
+                        print('There was an error stopping fake at thread one.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+
+                # Check if both are dead then unassign
+                else:
+                    r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+        elif r.sismember('fake-telemetry-two', self.channel_name) == 1:
+            # Check if both simulator and at threads are not initialized
+            if global_obj.simulator_threads[1] is None and global_obj.simulator_at_threads[1] is None:
+                r.srem('fake-telemetry-two', self.channel_name)
+                if r.scard("fake-telemetry-two") != 0:
+                    r.delete("fake-telemetry-two")
+                global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+            # Check if only simulator thread is not initialized
+            elif global_obj.simulator_threads[1] is None:
+                # Check if at thread is alive, then kill that thread
+                if global_obj.simulator_at_threads[1].is_alive():
+                    global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[1].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[1].is_alive():
+                        print('There was an error stopping fake at thread two.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+            # Check if only at thread is not initialized
+            elif global_obj.simulator_at_threads[1] is None:
+                # Check if simulator thread is alive, then kill that thread
+                if global_obj.simulator_threads[1].is_alive():
+                    global_obj.hub_to_simulator_queues[1].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[1].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[1].is_alive():
+                        print('There was an error stopping fake simulator thread two.')
+
+                    # unassign anyway
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+            # Check if both have been initialized
+            else:
+                # Check if both are alive, then kill both
+                if global_obj.simulator_threads[1].is_alive and global_obj.simulator_at_threads[1].is_alive():
+                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_two'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[1].join(2.0)
+                    if global_obj.simulator_threads[1].is_alive():
+                        print('There was an error stopping fake telemetry thread two.')
+
+                    global_obj.simulator_at_threads[1].join(2.0)
+                    if global_obj.simulator_at_threads[1].is_alive():
+                        print('There was an error stopping fake at thread two.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+                # Check if only simulator thread is alive, then only kill simulator thread
+                elif global_obj.simulator_threads[1].is_alive():
+                    global_obj.hub_to_simulator_queues[1].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[1].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[1].is_alive():
+                        print('There was an error stopping fake simulator thread two.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+                # Check if only at thread is alive, then only kill at thread
+                elif global_obj.simulator_at_threads[1].is_alive():
+                    global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[1].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[1].is_alive():
+                        print('There was an error stopping fake at thread two.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+
+                # Check if both are dead then unassign
+                else:
+                    r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+        elif r.sismember('fake-telemetry-three', self.channel_name) == 1:
+            # Check if both simulator and at threads are not initialized
+            if global_obj.simulator_threads[2] is None and global_obj.simulator_at_threads[2] is None:
+                r.srem('fake-telemetry-three', self.channel_name)
+                if r.scard("fake-telemetry-three") != 0:
+                    r.delete("fake-telemetry-three")
+                global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+            # Check if only simulator thread is not initialized
+            elif global_obj.simulator_threads[2] is None:
+                # Check if at thread is alive, then kill that thread
+                if global_obj.simulator_at_threads[2].is_alive():
+                    global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[2].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[2].is_alive():
+                        print('There was an error stopping fake at thread three.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+            # Check if only at thread is not initialized
+            elif global_obj.simulator_at_threads[2] is None:
+                # Check if simulator thread is alive, then kill that thread
+                if global_obj.simulator_threads[2].is_alive():
+                    global_obj.hub_to_simulator_queues[2].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[2].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[2].is_alive():
+                        print('There was an error stopping fake simulator thread three.')
+
+                    # unassign anyway
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+            # Check if both have been initialized
+            else:
+                # Check if both are alive, then kill both
+                if global_obj.simulator_threads[2].is_alive and global_obj.simulator_at_threads[2].is_alive():
+                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_three'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[2].join(2.0)
+                    if global_obj.simulator_threads[2].is_alive():
+                        print('There was an error stopping fake telemetry thread three.')
+
+                    global_obj.simulator_at_threads[2].join(2.0)
+                    if global_obj.simulator_at_threads[2].is_alive():
+                        print('There was an error stopping fake at thread three.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+                # Check if only simulator thread is alive, then only kill simulator thread
+                elif global_obj.simulator_threads[2].is_alive():
+                    global_obj.hub_to_simulator_queues[2].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[2].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[2].is_alive():
+                        print('There was an error stopping fake simulator thread three.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+                # Check if only at thread is alive, then only kill at thread
+                elif global_obj.simulator_at_threads[2].is_alive():
+                    global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[2].join(2.0)
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[2].is_alive():
+                        print('There was an error stopping fake at thread three.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+
+                # Check if both are dead then unassign
+                else:
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+        elif r.sismember('fake-telemetry-four', self.channel_name) == 1:
+            # Check if both simulator and at threads are not initialized
+            if global_obj.simulator_threads[3] is None and global_obj.simulator_at_threads[3] is None:
+                r.srem('fake-telemetry-four', self.channel_name)
+                if r.scard("fake-telemetry-four") != 0:
+                    r.delete("fake-telemetry-four")
+                global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+            # Check if only simulator thread is not initialized
+            elif global_obj.simulator_threads[3] is None:
+                # Check if at thread is alive, then kill that thread
+                if global_obj.simulator_at_threads[3].is_alive():
+                    global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[3].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[3].is_alive():
+                        print('There was an error stopping fake at thread four.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+            # Check if only at thread is not initialized
+            elif global_obj.simulator_at_threads[3] is None:
+                # Check if simulator thread is alive, then kill that thread
+                if global_obj.simulator_threads[3].is_alive():
+                    global_obj.hub_to_simulator_queues[3].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[3].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[3].is_alive():
+                        print('There was an error stopping fake simulator thread four.')
+
+                    # unassign anyway
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+                # If it is not alive then it is already stopped
+                else:
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+            # Check if both have been initialized
+            else:
+                # Check if both are alive, then kill both
+                if global_obj.simulator_threads[3].is_alive and global_obj.simulator_at_threads[3].is_alive():
+                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_four'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[3].join(2.0)
+                    if global_obj.simulator_threads[3].is_alive():
+                        print('There was an error stopping fake telemetry thread four.')
+
+                    global_obj.simulator_at_threads[3].join(2.0)
+                    if global_obj.simulator_at_threads[3].is_alive():
+                        print('There was an error stopping fake at thread four.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+                # Check if only simulator thread is alive, then only kill simulator thread
+                elif global_obj.simulator_threads[3].is_alive():
+                    global_obj.hub_to_simulator_queues[3].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_threads[3].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_threads[3].is_alive():
+                        print('There was an error stopping fake simulator thread four.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+                # Check if only at thread is alive, then only kill at thread
+                elif global_obj.simulator_at_threads[3].is_alive():
+                    global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+
+                    # Ensure it gets stopped
+                    global_obj.simulator_at_threads[3].join(2.0)
+
+                    # If not successful send back error message
+                    if global_obj.simulator_at_threads[3].is_alive():
+                        print('There was an error stopping fake at thread four.')
+
+                    # Unassign anyway
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+                # Check if both are dead then unassign
+                else:
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+
+        # Remove the user from the all users group
         r.srem("all-users", self.channel_name)
         if r.sismember("all-users", self.channel_name) == 1:
             print(f"Error removing {self.channel_name} from the all users group.")
@@ -166,16 +779,8 @@ class ATConsumer(DaphneConsumer):
             user_info.save()
 
         elif content.get('type') == 'start_hub_thread':
-            # Check if the hub thread has already started
-            if global_obj.hub_thread is not None:
-                self.send(json.dumps({
-                    'type': 'hub_thread_response',
-                    'content': {'status': 'success',
-                                'message': 'The hub thread is already started. This is fine if someone else on using '
-                                           'Daphne AT.',
-                                'attempt': content.get('attempt')}
-                }))
-            else:
+            # If the hub thread is none then it has never been started so start it
+            if global_obj.hub_thread is None:
                 # Hub thread initialization
                 global_obj.hub_thread = threading.Thread(target=hub_routine,
                                                          name="Hub Thread",
@@ -212,14 +817,71 @@ class ATConsumer(DaphneConsumer):
                                     'message': 'Success starting the hub thread.',
                                     'attempt': content.get('attempt')}
                     }))
+                # If it hasn't started then send back an error
                 else:
-                    global_obj.hub_thread = None
                     self.send(json.dumps({
                         'type': 'hub_thread_response',
                         'content': {'status': 'error',
                                     'message': 'Error starting the hub thread.',
                                     'attempt': content.get('attempt')}
                     }))
+            # If the hub thread is not None then check to see if it is alive or not
+            else:
+                # If it is alive then send back already running
+                if global_obj.hub_thread.is_alive():
+                    self.send(json.dumps({
+                        'type': 'hub_thread_response',
+                        'content': {'status': 'already_running',
+                                    'message': 'The hub thread was already running. This is fine if someone else is '
+                                               'using Daphne at.',
+                                    'attempt': content.get('attempt')}
+                    }))
+                # If it is not alive then reinitialize it and restart it
+                else:
+                    # Hub thread initialization
+                    global_obj.hub_thread = threading.Thread(target=hub_routine,
+                                                             name="Hub Thread",
+                                                             args=(global_obj.frontend_to_hub_queue,
+                                                                   global_obj.sEclss_to_hub_queue,
+                                                                   global_obj.simulator_to_hub_queues[0],
+                                                                   global_obj.simulator_to_hub_queues[1],
+                                                                   global_obj.simulator_to_hub_queues[2],
+                                                                   global_obj.simulator_to_hub_queues[3],
+                                                                   global_obj.hub_to_sEclss_queue,
+                                                                   global_obj.hub_to_simulator_queues[0],
+                                                                   global_obj.hub_to_simulator_queues[1],
+                                                                   global_obj.hub_to_simulator_queues[2],
+                                                                   global_obj.hub_to_simulator_queues[3],
+                                                                   global_obj.hub_to_sEclss_at_queue,
+                                                                   global_obj.hub_to_simulator_at_queues[0],
+                                                                   global_obj.hub_to_simulator_at_queues[1],
+                                                                   global_obj.hub_to_simulator_at_queues[2],
+                                                                   global_obj.hub_to_simulator_at_queues[3],
+                                                                   global_obj.sEclss_at_to_hub_queue,
+                                                                   global_obj.simulator_at_to_hub_queues[0],
+                                                                   global_obj.simulator_at_to_hub_queues[1],
+                                                                   global_obj.simulator_at_to_hub_queues[2],
+                                                                   global_obj.simulator_at_to_hub_queues[3]
+                                                                   ))
+                    global_obj.hub_thread.start()
+
+                    # Ensure the hub thread started
+                    if global_obj.hub_thread.is_alive():
+                        print("Hub thread started.")
+                        self.send(json.dumps({
+                            'type': 'hub_thread_response',
+                            'content': {'status': 'success',
+                                        'message': 'Success starting the hub thread.',
+                                        'attempt': content.get('attempt')}
+                        }))
+                    # If it hasn't started then send back an error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'hub_thread_response',
+                            'content': {'status': 'error',
+                                        'message': 'Error starting the hub thread.',
+                                        'attempt': content.get('attempt')}
+                        }))
 
         elif content.get('type') == 'start_fake_telemetry':
             # Check if this user is already assigned to a fake telemetry
@@ -241,188 +903,1601 @@ class ATConsumer(DaphneConsumer):
                         'attempt': content.get('attempt')
                     }
                 }))
+            elif r.sismember("fake-telemetry-three", self.channel_name):
+                self.send(json.dumps({
+                    'type': 'fake_telemetry_response',
+                    'content': {
+                        'status': 'already_assigned',
+                        'message': 'This user is already assigned to fake telemetry three.',
+                        'attempt': content.get('attempt')
+                    }
+                }))
+            elif r.sismember("fake-telemetry-four", self.channel_name):
+                self.send(json.dumps({
+                    'type': 'fake_telemetry_response',
+                    'content': {
+                        'status': 'already_assigned',
+                        'message': 'This user is already assigned to fake telemetry four.',
+                        'attempt': content.get('attempt')
+                    }
+                }))
+            # Check if simulator 1 is assigned to a user
+            elif r.scard('fake-telemetry-one') == 0:
+                # Check if simulator at thread 1 has not been initialized, then initialize it
+                if global_obj.simulator_at_threads[0] is None:
+                    # Anomaly detection thread initialization
+                    global_obj.simulator_at_threads[0] = threading.Thread(target=anomaly_treatment_routine,
+                                                                          name="Fake AT Thread 1",
+                                                                          args=(
+                                                                              global_obj.hub_to_simulator_at_queues[0],
+                                                                              global_obj.simulator_at_to_hub_queues[0],
+                                                                          ))
+                    global_obj.simulator_at_threads[0].start()
 
-            # Check if all threads are full, if not then find the first available
-            if global_obj.simulator_threads[0] is not None and global_obj.simulator_threads[1] is not None:
+                    # If simulator at thread 1 start was successful then proceed to start the telemetry thread
+                    if global_obj.simulator_at_threads[0].is_alive():
+                        print("Fake AT Thread 1 started.")
+                        # Check if simulator thread 1 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[0] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 1",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       0],
+                                                                                   global_obj.hub_to_simulator_queues[0]
+                                                                               ))
+                            global_obj.simulator_threads[0].start()
+
+                            # If simulator thread 1 start was successful then assign it to fake telemetry 1 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[0].is_alive():
+                                print("Fake Telemetry Thread 1 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-one', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 1 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Fake AT Thread 1 but failure to start fake'
+                                                   'telemetry thread 1. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 1 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[0].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-one', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Success starting fake at thread 1 and fake telemetry thread 1 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 1",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           0],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           0]
+                                                                                   ))
+                                global_obj.simulator_threads[0].start()
+
+                                # If simulator thread 1 start was successful then assign it to fake telemetry 1 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[0].is_alive():
+                                    print("Fake Telemetry Thread 1 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-one', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 1 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 1 but failure to start fake'
+                                                       'telemetry thread 1. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+
+                    # If simulator at thread 1 start was a failure then don't start the fake telemetry thread
+                    # and send error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'fake_telemetry_response',
+                            'content': {
+                                'status': 'error',
+                                'message': 'Error starting fake at thread 1. Fake telemetry 1 was not started.',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Simulator at thread 1 has already been initialized
+                else:
+                    # Check if alive then handle telemetry feed normally
+                    if global_obj.simulator_at_threads[0].is_alive():
+                        # Check if simulator thread 1 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[0] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 1",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       0],
+                                                                                   global_obj.hub_to_simulator_queues[0]
+                                                                               ))
+                            global_obj.simulator_threads[0].start()
+
+                            # If simulator thread 1 start was successful then assign it to fake telemetry 1 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[0].is_alive():
+                                print("Fake Telemetry Thread 1 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-one', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1 was '
+                                                   'already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 1 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Fake at thread 1 was already running but failure to start fake'
+                                                   'telemetry thread 1. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 1 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[0].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-one', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Fake at thread 1 and fake telemetry thread 1 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 1",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           0],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           0]
+                                                                                   ))
+                                global_obj.simulator_threads[0].start()
+
+                                # If simulator thread 1 start was successful then assign it to fake telemetry 1 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[0].is_alive():
+                                    print("Fake Telemetry Thread 1 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-one', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1 '
+                                                       'was already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 1 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Fake at thread 1 was already running but failure to start fake'
+                                                       'telemetry thread 1. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                    # If not alive then reinitialize it and handle telemetry feed normally
+                    else:
+                        # Anomaly detection thread initialization
+                        global_obj.simulator_at_threads[0] = threading.Thread(target=anomaly_treatment_routine,
+                                                                              name="Fake AT Thread 1",
+                                                                              args=(
+                                                                                  global_obj.hub_to_simulator_at_queues[
+                                                                                      0],
+                                                                                  global_obj.simulator_at_to_hub_queues[
+                                                                                      0],
+                                                                              ))
+                        global_obj.simulator_at_threads[0].start()
+
+                        # If simulator at thread 1 start was successful then proceed to start the telemetry thread
+                        if global_obj.simulator_at_threads[0].is_alive():
+                            print("Fake AT Thread 1 started.")
+                            # Check if simulator thread 1 has not been initialized, then initialize it
+                            if global_obj.simulator_threads[0] is None:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 1",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           0],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           0]
+                                                                                   ))
+                                global_obj.simulator_threads[0].start()
+
+                                # If simulator thread 1 start was successful then assign it to fake telemetry 1 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[0].is_alive():
+                                    print("Fake Telemetry Thread 1 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-one', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 1 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 1 but failure to start fake'
+                                                       'telemetry thread 1. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                            # Simulator thread 1 has been initialized before
+                            else:
+                                # Check if the thread is alive then send already running message
+                                if global_obj.simulator_threads[0].is_alive():
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-one', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'already_running',
+                                            'message': 'Success starting fake at thread 1 and fake telemetry thread 1 was'
+                                                       ' already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # If not running, then reinitialize
+                                else:
+                                    # Telemetry Feed thread initialization
+                                    global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                       name="Fake Telemetry Thread 1",
+                                                                                       args=(
+                                                                                           global_obj.simulator_to_hub_queues[
+                                                                                               0],
+                                                                                           global_obj.hub_to_simulator_queues[
+                                                                                               0]
+                                                                                       ))
+                                    global_obj.simulator_threads[0].start()
+
+                                    # If simulator thread 1 start was successful then assign it to fake telemetry 1 and
+                                    # give the channel name and layer to the hub thread
+                                    if global_obj.simulator_threads[0].is_alive():
+                                        print("Fake Telemetry Thread 1 started.")
+                                        global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
+                                                                              "channel_layer": self.channel_layer,
+                                                                              "channel_name": self.channel_name})
+
+                                        r.sadd('fake-telemetry-one', self.channel_name)
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'success',
+                                                'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                                        # Get telemetry parameters
+                                        frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                                   'channel_name': self.channel_name})
+                                    # Else stop the fake at thread 1 and send back error message
+                                    else:
+                                        global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'error',
+                                                'message': 'Success starting Fake AT Thread 1 but failure to start fake'
+                                                           'telemetry thread 1. Fake AT Thread stopped. Try again.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                        # If simulator at thread 1 start was a failure then don't start the fake telemetry thread
+                        # and send error
+                        else:
+                            self.send(json.dumps({
+                                'type': 'fake_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Error starting fake at thread 1. Fake telemetry 1 was not started.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+            # Fake telemetry 2 check
+            elif r.scard('fake-telemetry-two') == 0:
+                # Check if simulator at thread 2 has not been initialized, then initialize it
+                if global_obj.simulator_at_threads[1] is None:
+                    # Anomaly detection thread initialization
+                    global_obj.simulator_at_threads[1] = threading.Thread(target=anomaly_treatment_routine,
+                                                                          name="Fake AT Thread 2",
+                                                                          args=(
+                                                                              global_obj.hub_to_simulator_at_queues[1],
+                                                                              global_obj.simulator_at_to_hub_queues[1],
+                                                                          ))
+                    global_obj.simulator_at_threads[1].start()
+
+                    # If simulator at thread 2 start was successful then proceed to start the telemetry thread
+                    if global_obj.simulator_at_threads[1].is_alive():
+                        print("Fake AT Thread 2 started.")
+                        # Check if simulator thread 2 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[1] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 2",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       1],
+                                                                                   global_obj.hub_to_simulator_queues[1]
+                                                                               ))
+                            global_obj.simulator_threads[1].start()
+
+                            # If simulator thread 2 start was successful then assign it to fake telemetry 2 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[1].is_alive():
+                                print("Fake Telemetry Thread 2 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-two', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 2 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Fake AT Thread 2 but failure to start fake'
+                                                   'telemetry thread 2. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 2 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[1].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-two', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Success starting fake at thread 2 and fake telemetry thread 2 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 2",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           1],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           1]
+                                                                                   ))
+                                global_obj.simulator_threads[1].start()
+
+                                # If simulator thread 2 start was successful then assign it to fake telemetry 2 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[1].is_alive():
+                                    print("Fake Telemetry Thread 2 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-two', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 2 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 2 but failure to start fake'
+                                                       'telemetry thread 2. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+
+                    # If simulator at thread 2 start was a failure then don't start the fake telemetry thread
+                    # and send error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'fake_telemetry_response',
+                            'content': {
+                                'status': 'error',
+                                'message': 'Error starting fake at thread 2. Fake telemetry 2 was not started.',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Simulator at thread 2 has already been initialized
+                else:
+                    # Check if alive then handle telemetry feed normally
+                    if global_obj.simulator_at_threads[1].is_alive():
+                        # Check if simulator thread 2 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[1] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 2",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       1],
+                                                                                   global_obj.hub_to_simulator_queues[1]
+                                                                               ))
+                            global_obj.simulator_threads[1].start()
+
+                            # If simulator thread 2 start was successful then assign it to fake telemetry 2 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[1].is_alive():
+                                print("Fake Telemetry Thread 2 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-two', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2 was '
+                                                   'already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 2 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Fake at thread 2 was already running but failure to start fake'
+                                                   'telemetry thread 2. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 2 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[1].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-two', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Fake at thread 2 and fake telemetry thread 2 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 2",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           1],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           1]
+                                                                                   ))
+                                global_obj.simulator_threads[1].start()
+
+                                # If simulator thread 2 start was successful then assign it to fake telemetry 2 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[1].is_alive():
+                                    print("Fake Telemetry Thread 2 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-two', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2 '
+                                                       'was already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 2 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Fake at thread 2 was already running but failure to start fake'
+                                                       'telemetry thread 2. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                    # If not alive then reinitialize it and handle telemetry feed normally
+                    else:
+                        # Anomaly detection thread initialization
+                        global_obj.simulator_at_threads[1] = threading.Thread(target=anomaly_treatment_routine,
+                                                                              name="Fake AT Thread 2",
+                                                                              args=(
+                                                                                  global_obj.hub_to_simulator_at_queues[
+                                                                                      1],
+                                                                                  global_obj.simulator_at_to_hub_queues[
+                                                                                      1],
+                                                                              ))
+                        global_obj.simulator_at_threads[1].start()
+
+                        # If simulator at thread 2 start was successful then proceed to start the telemetry thread
+                        if global_obj.simulator_at_threads[1].is_alive():
+                            print("Fake AT Thread 2 started.")
+                            # Check if simulator thread 2 has not been initialized, then initialize it
+                            if global_obj.simulator_threads[1] is None:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 2",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           1],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           1]
+                                                                                   ))
+                                global_obj.simulator_threads[1].start()
+
+                                # If simulator thread 2 start was successful then assign it to fake telemetry 2 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[1].is_alive():
+                                    print("Fake Telemetry Thread 2 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-two', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 2 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 2 but failure to start fake'
+                                                       'telemetry thread 2. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                            # Simulator thread 2 has been initialized before
+                            else:
+                                # Check if the thread is alive then send already running message
+                                if global_obj.simulator_threads[1].is_alive():
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-two', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'already_running',
+                                            'message': 'Success starting fake at thread 2 and fake telemetry thread 2 was'
+                                                       ' already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # If not running, then reinitialize
+                                else:
+                                    # Telemetry Feed thread initialization
+                                    global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                       name="Fake Telemetry Thread 2",
+                                                                                       args=(
+                                                                                           global_obj.simulator_to_hub_queues[
+                                                                                               1],
+                                                                                           global_obj.hub_to_simulator_queues[
+                                                                                               1]
+                                                                                       ))
+                                    global_obj.simulator_threads[1].start()
+
+                                    # If simulator thread 2 start was successful then assign it to fake telemetry 2 and
+                                    # give the channel name and layer to the hub thread
+                                    if global_obj.simulator_threads[1].is_alive():
+                                        print("Fake Telemetry Thread 2 started.")
+                                        global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
+                                                                              "channel_layer": self.channel_layer,
+                                                                              "channel_name": self.channel_name})
+
+                                        r.sadd('fake-telemetry-two', self.channel_name)
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'success',
+                                                'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                                        # Get telemetry parameters
+                                        frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                                   'channel_name': self.channel_name})
+                                    # Else stop the fake at thread 2 and send back error message
+                                    else:
+                                        global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'error',
+                                                'message': 'Success starting Fake AT Thread 2 but failure to start fake'
+                                                           'telemetry thread 2. Fake AT Thread stopped. Try again.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                        # If simulator at thread 2 start was a failure then don't start the fake telemetry thread
+                        # and send error
+                        else:
+                            self.send(json.dumps({
+                                'type': 'fake_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Error starting fake at thread 2. Fake telemetry 2 was not started.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+            # Fake telemetry 3 check
+            elif r.scard('fake-telemetry-three') == 0:
+                # Check if simulator at thread 3 has not been initialized, then initialize it
+                if global_obj.simulator_at_threads[2] is None:
+                    # Anomaly detection thread initialization
+                    global_obj.simulator_at_threads[2] = threading.Thread(target=anomaly_treatment_routine,
+                                                                          name="Fake AT Thread 3",
+                                                                          args=(
+                                                                              global_obj.hub_to_simulator_at_queues[2],
+                                                                              global_obj.simulator_at_to_hub_queues[2],
+                                                                          ))
+                    global_obj.simulator_at_threads[2].start()
+
+                    # If simulator at thread 3 start was successful then proceed to start the telemetry thread
+                    if global_obj.simulator_at_threads[2].is_alive():
+                        print("Fake AT Thread 3 started.")
+                        # Check if simulator thread 3 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[2] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[2] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 3",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       2],
+                                                                                   global_obj.hub_to_simulator_queues[2]
+                                                                               ))
+                            global_obj.simulator_threads[2].start()
+
+                            # If simulator thread 3 start was successful then assign it to fake telemetry 3 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[2].is_alive():
+                                print("Fake Telemetry Thread 3 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-three', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 3 and Fake AT Thread 3.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 3 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Fake AT Thread 3 but failure to start fake'
+                                                   'telemetry thread 3. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 1 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[2].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-three', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Success starting fake at thread 3 and fake telemetry thread 3 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[2] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 3",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           2],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           2]
+                                                                                   ))
+                                global_obj.simulator_threads[2].start()
+
+                                # If simulator thread 3 start was successful then assign it to fake telemetry 3 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[2].is_alive():
+                                    print("Fake Telemetry Thread 3 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-three', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 3 and Fake AT Thread 3.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 3 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 3 but failure to start fake'
+                                                       'telemetry thread 3. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+
+                    # If simulator at thread 3 start was a failure then don't start the fake telemetry thread
+                    # and send error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'fake_telemetry_response',
+                            'content': {
+                                'status': 'error',
+                                'message': 'Error starting fake at thread 3. Fake telemetry 3 was not started.',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Simulator at thread 1 has already been initialized
+                else:
+                    # Check if alive then handle telemetry feed normally
+                    if global_obj.simulator_at_threads[2].is_alive():
+                        # Check if simulator thread 3 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[2] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[2] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 3",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       2],
+                                                                                   global_obj.hub_to_simulator_queues[2]
+                                                                               ))
+                            global_obj.simulator_threads[2].start()
+
+                            # If simulator thread 3 start was successful then assign it to fake telemetry 3 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[2].is_alive():
+                                print("Fake Telemetry Thread 3 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-three', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 3 and Fake AT Thread 3 was '
+                                                   'already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 3 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Fake at thread 3 was already running but failure to start fake'
+                                                   'telemetry thread 3. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 1 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[2].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-three', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Fake at thread 3 and fake telemetry thread 3 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[2] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 3",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           2],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           2]
+                                                                                   ))
+                                global_obj.simulator_threads[2].start()
+
+                                # If simulator thread 3 start was successful then assign it to fake telemetry 3 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[2].is_alive():
+                                    print("Fake Telemetry Thread 3 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-three', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 3 and Fake AT Thread 3 '
+                                                       'was already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 1 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Fake at thread 3 was already running but failure to start fake'
+                                                       'telemetry thread 3. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                    # If not alive then reinitialize it and handle telemetry feed normally
+                    else:
+                        # Anomaly detection thread initialization
+                        global_obj.simulator_at_threads[2] = threading.Thread(target=anomaly_treatment_routine,
+                                                                              name="Fake AT Thread 3",
+                                                                              args=(
+                                                                              global_obj.hub_to_simulator_at_queues[2],
+                                                                              global_obj.simulator_at_to_hub_queues[2],
+                                                                              ))
+                        global_obj.simulator_at_threads[2].start()
+
+                        # If simulator at thread 3 start was successful then proceed to start the telemetry thread
+                        if global_obj.simulator_at_threads[2].is_alive():
+                            print("Fake AT Thread 3 started.")
+                            # Check if simulator thread 3 has not been initialized, then initialize it
+                            if global_obj.simulator_threads[2] is None:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[2] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 3",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           2],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           2]
+                                                                                   ))
+                                global_obj.simulator_threads[2].start()
+
+                                # If simulator thread 3 start was successful then assign it to fake telemetry 3 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[2].is_alive():
+                                    print("Fake Telemetry Thread 3 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-three', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 3 and Fake AT Thread 3.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 1 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 3 but failure to start fake'
+                                                       'telemetry thread 3. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                            # Simulator thread 3 has been initialized before
+                            else:
+                                # Check if the thread is alive then send already running message
+                                if global_obj.simulator_threads[2].is_alive():
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-three', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'already_running',
+                                            'message': 'Success starting fake at thread 3 and fake telemetry thread 3 was'
+                                                       ' already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # If not running, then reinitialize
+                                else:
+                                    # Telemetry Feed thread initialization
+                                    global_obj.simulator_threads[2] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                       name="Fake Telemetry Thread 3",
+                                                                                       args=(
+                                                                                           global_obj.simulator_to_hub_queues[
+                                                                                               2],
+                                                                                           global_obj.hub_to_simulator_queues[
+                                                                                               2]
+                                                                                       ))
+                                    global_obj.simulator_threads[2].start()
+
+                                    # If simulator thread 3 start was successful then assign it to fake telemetry 3 and
+                                    # give the channel name and layer to the hub thread
+                                    if global_obj.simulator_threads[2].is_alive():
+                                        print("Fake Telemetry Thread 3 started.")
+                                        global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_three",
+                                                                              "channel_layer": self.channel_layer,
+                                                                              "channel_name": self.channel_name})
+
+                                        r.sadd('fake-telemetry-three', self.channel_name)
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'success',
+                                                'message': 'Success starting Fake Telemetry Thread 3 and Fake AT Thread 3.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                                        # Get telemetry parameters
+                                        frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                                   'channel_name': self.channel_name})
+                                    # Else stop the fake at thread 3 and send back error message
+                                    else:
+                                        global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'error',
+                                                'message': 'Success starting Fake AT Thread 3 but failure to start fake'
+                                                           'telemetry thread 3. Fake AT Thread stopped. Try again.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                        # If simulator at thread 3 start was a failure then don't start the fake telemetry thread
+                        # and send error
+                        else:
+                            self.send(json.dumps({
+                                'type': 'fake_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Error starting fake at thread 3. Fake telemetry 3 was not started.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+            # Fake telemtry 4 check
+            elif r.scard('fake-telemetry-four') == 0:
+                # Check if simulator at thread 4 has not been initialized, then initialize it
+                if global_obj.simulator_at_threads[3] is None:
+                    # Anomaly detection thread initialization
+                    global_obj.simulator_at_threads[3] = threading.Thread(target=anomaly_treatment_routine,
+                                                                          name="Fake AT Thread 4",
+                                                                          args=(
+                                                                              global_obj.hub_to_simulator_at_queues[3],
+                                                                              global_obj.simulator_at_to_hub_queues[3],
+                                                                          ))
+                    global_obj.simulator_at_threads[3].start()
+
+                    # If simulator at thread 4 start was successful then proceed to start the telemetry thread
+                    if global_obj.simulator_at_threads[3].is_alive():
+                        print("Fake AT Thread 4 started.")
+                        # Check if simulator thread 4 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[3] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[3] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 4",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       3],
+                                                                                   global_obj.hub_to_simulator_queues[3]
+                                                                               ))
+                            global_obj.simulator_threads[3].start()
+
+                            # If simulator thread 4 start was successful then assign it to fake telemetry 4 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[3].is_alive():
+                                print("Fake Telemetry Thread 4 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-four', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 4 and Fake AT Thread 4.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 1 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Fake AT Thread 4 but failure to start fake'
+                                                   'telemetry thread 4. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 4 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[3].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-four', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Success starting fake at thread 4 and fake telemetry thread 4 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[3] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 4",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           3],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           3]
+                                                                                   ))
+                                global_obj.simulator_threads[3].start()
+
+                                # If simulator thread 4 start was successful then assign it to fake telemetry 4 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[3].is_alive():
+                                    print("Fake Telemetry Thread 4 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-four', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 4 and Fake AT Thread 4.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 1 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 4 but failure to start fake'
+                                                       'telemetry thread 4. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+
+                    # If simulator at thread 4 start was a failure then don't start the fake telemetry thread
+                    # and send error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'fake_telemetry_response',
+                            'content': {
+                                'status': 'error',
+                                'message': 'Error starting fake at thread 4. Fake telemetry 4 was not started.',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Simulator at thread 4 has already been initialized
+                else:
+                    # Check if alive then handle telemetry feed normally
+                    if global_obj.simulator_at_threads[3].is_alive():
+                        # Check if simulator thread 4 has not been initialized, then initialize it
+                        if global_obj.simulator_threads[3] is None:
+                            # Telemetry Feed thread initialization
+                            global_obj.simulator_threads[3] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                               name="Fake Telemetry Thread 4",
+                                                                               args=(
+                                                                                   global_obj.simulator_to_hub_queues[
+                                                                                       3],
+                                                                                   global_obj.hub_to_simulator_queues[3]
+                                                                               ))
+                            global_obj.simulator_threads[3].start()
+
+                            # If simulator thread 4 start was successful then assign it to fake telemetry 4 and
+                            # give the channel name and layer to the hub thread
+                            if global_obj.simulator_threads[3].is_alive():
+                                print("Fake Telemetry Thread 4 started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-four', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting Fake Telemetry Thread 4 and Fake AT Thread 4 was '
+                                                   'already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # Else stop the fake at thread 1 and send back error message
+                            else:
+                                global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Fake at thread 4 was already running but failure to start fake'
+                                                   'telemetry thread 4. Fake AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # Simulator thread 1 has been initialized before
+                        else:
+                            # Check if the thread is alive then send already running message
+                            if global_obj.simulator_threads[3].is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+
+                                r.sadd('fake-telemetry-four', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'fake_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Fake at thread 4 and fake telemetry thread 4 was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                # Get telemetry parameters
+                                frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                           'channel_name': self.channel_name})
+                            # If not running, then reinitialize
+                            else:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[3] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 4",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           3],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           3]
+                                                                                   ))
+                                global_obj.simulator_threads[3].start()
+
+                                # If simulator thread 4 start was successful then assign it to fake telemetry 4 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[3].is_alive():
+                                    print("Fake Telemetry Thread 4 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-four', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 4 and Fake AT Thread 4 '
+                                                       'was already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 4 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Fake at thread 4 was already running but failure to start fake'
+                                                       'telemetry thread 4. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                    # If not alive then reinitialize it and handle telemetry feed normally
+                    else:
+                        # Anomaly detection thread initialization
+                        global_obj.simulator_at_threads[3] = threading.Thread(target=anomaly_treatment_routine,
+                                                                              name="Fake AT Thread 4",
+                                                                              args=(
+                                                                                  global_obj.hub_to_simulator_at_queues[
+                                                                                      3],
+                                                                                  global_obj.simulator_at_to_hub_queues[
+                                                                                      3],
+                                                                              ))
+                        global_obj.simulator_at_threads[3].start()
+
+                        # If simulator at thread 4 start was successful then proceed to start the telemetry thread
+                        if global_obj.simulator_at_threads[3].is_alive():
+                            print("Fake AT Thread 4 started.")
+                            # Check if simulator thread 4 has not been initialized, then initialize it
+                            if global_obj.simulator_threads[3] is None:
+                                # Telemetry Feed thread initialization
+                                global_obj.simulator_threads[3] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                   name="Fake Telemetry Thread 4",
+                                                                                   args=(
+                                                                                       global_obj.simulator_to_hub_queues[
+                                                                                           3],
+                                                                                       global_obj.hub_to_simulator_queues[
+                                                                                           3]
+                                                                                   ))
+                                global_obj.simulator_threads[3].start()
+
+                                # If simulator thread 4 start was successful then assign it to fake telemetry 4 and
+                                # give the channel name and layer to the hub thread
+                                if global_obj.simulator_threads[3].is_alive():
+                                    print("Fake Telemetry Thread 4 started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-four', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting Fake Telemetry Thread 4 and Fake AT Thread 4.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # Else stop the fake at thread 4 and send back error message
+                                else:
+                                    global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Fake AT Thread 4 but failure to start fake'
+                                                       'telemetry thread 4. Fake AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                            # Simulator thread 4 has been initialized before
+                            else:
+                                # Check if the thread is alive then send already running message
+                                if global_obj.simulator_threads[3].is_alive():
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+
+                                    r.sadd('fake-telemetry-four', self.channel_name)
+                                    self.send(json.dumps({
+                                        'type': 'fake_telemetry_response',
+                                        'content': {
+                                            'status': 'already_running',
+                                            'message': 'Success starting fake at thread 4 and fake telemetry thread 4 was'
+                                                       ' already running.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    # Get telemetry parameters
+                                    frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                               'channel_name': self.channel_name})
+                                # If not running, then reinitialize
+                                else:
+                                    # Telemetry Feed thread initialization
+                                    global_obj.simulator_threads[3] = threading.Thread(target=simulate_by_dummy_eclss,
+                                                                                       name="Fake Telemetry Thread 4",
+                                                                                       args=(
+                                                                                           global_obj.simulator_to_hub_queues[
+                                                                                               3],
+                                                                                           global_obj.hub_to_simulator_queues[
+                                                                                               3]
+                                                                                       ))
+                                    global_obj.simulator_threads[3].start()
+
+                                    # If simulator thread 4 start was successful then assign it to fake telemetry 4 and
+                                    # give the channel name and layer to the hub thread
+                                    if global_obj.simulator_threads[3].is_alive():
+                                        print("Fake Telemetry Thread 4 started.")
+                                        global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_four",
+                                                                              "channel_layer": self.channel_layer,
+                                                                              "channel_name": self.channel_name})
+
+                                        r.sadd('fake-telemetry-four', self.channel_name)
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'success',
+                                                'message': 'Success starting Fake Telemetry Thread 4 and Fake AT Thread 4.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                                        # Get telemetry parameters
+                                        frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
+                                                                   'channel_name': self.channel_name})
+                                    # Else stop the fake at thread 1 and send back error message
+                                    else:
+                                        global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+                                        self.send(json.dumps({
+                                            'type': 'fake_telemetry_response',
+                                            'content': {
+                                                'status': 'error',
+                                                'message': 'Success starting Fake AT Thread 4 but failure to start fake'
+                                                           'telemetry thread 4. Fake AT Thread stopped. Try again.',
+                                                'attempt': content.get('attempt')
+                                            }
+                                        }))
+                        # If simulator at thread 4 start was a failure then don't start the fake telemetry thread
+                        # and send error
+                        else:
+                            self.send(json.dumps({
+                                'type': 'fake_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Error starting fake at thread 4. Fake telemetry 4 was not started.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+            # Check if all are full
+            elif r.scard('fake-telemetry-one') == 1 and r.scard('fake-telemetry-two') == 1 and \
+                    r.scard('fake-telemetry-three') == 1 and r.scard('fake-telemetry-four') == 1:
                 self.send(json.dumps({
                     'type': 'fake_telemetry_response',
                     'content': {
                         'status': 'full',
-                        'message': 'All fake telemetries are being used.',
+                        'message': 'All fake telemetries are in use.',
                         'attempt': content.get('attempt')
                     }
                 }))
-            # Fake telemetry 1 check
-            elif global_obj.simulator_threads[0] is None and r.scard('fake-telemetry-one') == 0:
-                # Anomaly detection thread initialization
-                global_obj.simulator_at_threads[0] = threading.Thread(target=anomaly_treatment_routine,
-                                                                      name="Fake AT Thread 1",
-                                                                      args=(global_obj.hub_to_simulator_at_queues[0],
-                                                                            global_obj.simulator_at_to_hub_queues[0],))
-                global_obj.simulator_at_threads[0].start()
-
-                # Telemetry Feed thread initialization
-                global_obj.simulator_threads[0] = threading.Thread(target=simulate_by_dummy_eclss,
-                                                                   name="Fake Telemetry Thread 1",
-                                                                   args=(global_obj.simulator_to_hub_queues[0],
-                                                                         global_obj.hub_to_simulator_queues[0]))
-                global_obj.simulator_threads[0].start()
-
-                # Check that the anomaly detection thread is working
-                if global_obj.simulator_at_threads[0].is_alive():
-                    print("Fake AT Thread 1 started.")
-                    # Check that the telemetry thread has started
-                    if global_obj.simulator_threads[0].is_alive():
-                        print("Fake Telemetry Thread 1 started.")
-                        global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_one",
-                                                              "channel_layer": self.channel_layer,
-                                                              "channel_name": self.channel_name})
-
-                        r.sadd('fake-telemetry-one', self.channel_name)
-                        self.send(json.dumps({
-                            'type': 'fake_telemetry_response',
-                            'content': {
-                                'status': 'success',
-                                'message': 'Success starting Fake Telemetry Thread 1 and Fake AT Thread 1.',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-                        frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
-                                                   'channel_name': self.channel_name})
-
-                    else:
-                        # Stop the AT thread and send error back to frontend
-                        global_obj.hub_to_simulator_at_queues[0].put({"type": "stop"})
-                        global_obj.simulator_threads[0] = None
-                        global_obj.hub_to_simulator_queues[0].queue.clear()
-                        global_obj.simulator_at_threads[0].join(2.0)
-                        if global_obj.simulator_at_threads[0].is_alive():
-                            global_obj.simulator_at_threads[0] = None
-                            print("Fake at thread 1 not killed.")
-                            global_obj.hub_to_simulator_at_queues[0].queue.clear()
-                        else:
-                            global_obj.simulator_at_threads[0] = None
-                            global_obj.hub_to_simulator_at_queues[0].queue.clear()
-                        global_obj.frontend_to_hub_queue.put({"type": "unassign_fake_telemetry_one"})
-                        self.send(json.dumps({
-                            'type': 'fake_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': 'Success starting Fake AT Thread 1 but failure starting Fake Telemetry 1.'
-                                           'Both threads stopped from running.',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-
-                else:
-                    # Ensure the fake telemetry gets stopped and send back error
-                    if global_obj.simulator_threads[0].is_alive():
-                        global_obj.hub_to_simulator_queues[0].put({"type": "stop"})
-                    global_obj.simulator_threads[0].join(2.0)
-                    if global_obj.simulator_threads[0].is_alive():
-                        global_obj.simulator_threads[0] = None
-                        print("Fake telemetry thread one not stopped.")
-                        global_obj.hub_to_simulator_queues[0].queue.clear()
-                    else:
-                        global_obj.simulator_threads[0] = None
-                        global_obj.hub_to_simulator_queues[0].queue.clear()
-                    global_obj.simulator_at_threads[0] = None
-                    global_obj.hub_to_simulator_at_queues[0].queue.clear()
-                    global_obj.frontend_to_hub_queue.put({"type": "unassign_fake_telemetry_one"})
-                    self.send(json.dumps({
-                        'type': 'fake_telemetry_response',
-                        'content': {
-                            'status': 'error',
-                            'message': 'Error starting Fake AT Thread 1. Try again.',
-                            'attempt': content.get('attempt')
-                        }
-                    }))
-            # Fake telemetry 2 check
-            elif global_obj.simulator_threads[1] is None and r.scard('fake-telemetry-two') == 0:
-                # Anomaly detection thread initialization
-                global_obj.simulator_at_threads[1] = threading.Thread(target=anomaly_treatment_routine,
-                                                                      name="Fake AT Thread 2",
-                                                                      args=(
-                                                                      global_obj.hub_to_simulator_at_queues[1],
-                                                                      global_obj.simulator_at_to_hub_queues[1],))
-                global_obj.simulator_at_threads[1].start()
-
-                # Telemetry Feed thread initialization
-                global_obj.simulator_threads[1] = threading.Thread(target=simulate_by_dummy_eclss,
-                                                                   name="Fake Telemetry Thread 2",
-                                                                   args=(global_obj.simulator_to_hub_queues[1],
-                                                                         global_obj.hub_to_simulator_queues[1]))
-                global_obj.simulator_threads[1].start()
-
-                # Check that the anomaly detection thread is working
-                if global_obj.simulator_at_threads[1].is_alive():
-                    print("Fake AT Thread 2 started.")
-                    # Check that the telemetry thread has started
-                    if global_obj.simulator_threads[1].is_alive():
-                        print("Fake Telemetry Thread 2 started.")
-                        global_obj.frontend_to_hub_queue.put({"type": "add_fake_telemetry_two",
-                                                              "channel_layer": self.channel_layer,
-                                                              "channel_name": self.channel_name})
-
-                        r.sadd('fake-telemetry-two', self.channel_name)
-                        self.send(json.dumps({
-                            'type': 'fake_telemetry_response',
-                            'content': {
-                                'status': 'success',
-                                'message': 'Success starting Fake Telemetry Thread 2 and Fake AT Thread 2.',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-                        frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params',
-                                                   'channel_name': self.channel_name})
-
-                    else:
-                        # Stop the AT thread and send error back to frontend
-                        global_obj.hub_to_simulator_at_queues[1].put({"type": "stop"})
-                        global_obj.simulator_at_threads[1].join(2.0)
-                        if global_obj.simulator_at_threads[1].is_alive():
-                            global_obj.simulator_at_threads[1] = None
-                            print("Fake at thread 2 not killed.")
-                            global_obj.hub_to_simulator_at_queues[1].queue.clear()
-                        else:
-                            global_obj.simulator_at_threads[1] = None
-                            global_obj.hub_to_simulator_at_queues[1].queue.clear()
-                        global_obj.simulator_threads[1] = None
-                        global_obj.hub_to_simulator_queues[1].queue.clear()
-                        global_obj.frontend_to_hub_queue.put({"type": "unassign_fake_telemetry_two"})
-                        self.send(json.dumps({
-                            'type': 'fake_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': 'Success starting Fake AT Thread 2 but failure starting Fake Telemetry 2.'
-                                           'Both threads stopped from running.',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-
-                else:
-                    # Ensure the fake telemetry gets stopped and send back error
-                    if global_obj.simulator_threads[1].is_alive():
-                        global_obj.hub_to_simulator_queues[1].put({"type": "stop"})
-                    global_obj.simulator_threads[1].join(2.0)
-                    if global_obj.simulator_threads[1].is_alive():
-                        global_obj.simulator_threads[1] = None
-                        print("Fake telemetry 2 thread not killed.")
-                        global_obj.hub_to_simulator_queues[1].queue.clear()
-                    else:
-                        global_obj.simulator_threads[1] = None
-                        global_obj.hub_to_simulator_queues[1].queue.clear()
-                    global_obj.simulator_at_threads[1] = None
-                    global_obj.hub_to_simulator_at_queues[1].queue.clear()
-                    global_obj.frontend_to_hub_queue.put({"type": "unassign_fake_telemetry_two"})
-                    self.send(json.dumps({
-                        'type': 'fake_telemetry_response',
-                        'content': {
-                            'status': 'error',
-                            'message': 'Error starting Fake AT Thread 2. Try again.',
-                            'attempt': content.get('attempt')
-                        }
-                    }))
             # Should not get to here
             else:
                 self.send(json.dumps({
@@ -435,21 +2510,8 @@ class ATConsumer(DaphneConsumer):
                 }))
 
         elif content.get('type') == 'start_real_telemetry':
-            # Check to see if the thread is already running, add that user to the group if it is, else start it
-            if global_obj.sEclss_thread is not None:
-                global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
-                                                      "channel_layer": self.channel_layer,
-                                                      "channel_name": self.channel_name})
-                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params', 'channel_layer': self.channel_layer,
-                                           'channel_name': self.channel_name})
-                self.send(json.dumps({
-                    'type': 'real_telemetry_response',
-                    'content': {'status': 'already_running',
-                                'message': 'The real telemetry is already started. This is fine if someone else on '
-                                           'using Daphne AT.',
-                                'attempt': content.get('attempt')}
-                }))
-            else:
+            # Check if sEclss at thread is not initialized then initialize it and handle sEclss thread
+            if global_obj.sEclss_at_thread is None:
                 # Anomaly detection thread initialization for real telemetry
                 global_obj.sEclss_at_thread = threading.Thread(target=anomaly_treatment_routine,
                                                                name="Real AT Thread",
@@ -457,462 +2519,1683 @@ class ATConsumer(DaphneConsumer):
                                                                      global_obj.sEclss_at_to_hub_queue,))
                 global_obj.sEclss_at_thread.start()
 
-                # Simulator thread initialization
-                global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
-                                                            name="Real Telemetry Thread",
-                                                            args=(global_obj.sEclss_to_hub_queue,
-                                                                  global_obj.hub_to_sEclss_queue,
-                                                                  global_obj.server_to_sEclss_queue))
-                global_obj.sEclss_thread.start()
-
-                # Check that the anomaly detection thread is working
+                # Check that the anomaly detection thread is working then check sEclss thread
                 if global_obj.sEclss_at_thread.is_alive():
                     print("Real AT Thread started.")
-                    # Check that the telemetry thread has started
-                    if global_obj.sEclss_thread.is_alive():
-                        print("Real telemetry started.")
-                        global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
-                                                              "channel_layer": self.channel_layer,
-                                                              "channel_name": self.channel_name})
-                        self.send(json.dumps({
-                            'type': 'real_telemetry_response',
-                            'content': {
-                                'status': 'success',
-                                'message': 'Success starting real telemetry and real AT thread.',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-                        frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
-                                                   'channel_layer': self.channel_layer,
-                                                   'channel_name': self.channel_name})
+                    # Check if sEclss thread has not been initialized, then initialize it
+                    if global_obj.sEclss_thread is None:
+                        # Simulator thread initialization
+                        global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
+                                                                    name="Real Telemetry Thread",
+                                                                    args=(global_obj.sEclss_to_hub_queue,
+                                                                          global_obj.hub_to_sEclss_queue,
+                                                                          global_obj.server_to_sEclss_queue))
+                        global_obj.sEclss_thread.start()
 
-                    else:
-                        # Stop the AT thread and send error back to frontend
-                        global_obj.hub_to_sEclss_at_queue.put({"type": "stop"})
-                        global_obj.sEclss_at_thread.join(2.0)
-                        if global_obj.sEclss_at_thread.is_alive():
-                            global_obj.sEclss_at_thread = None
-                            print("Real at thread not killed.")
-                            global_obj.hub_to_sEclss_at_queue.queue.clear()
+                        # Check that the telemetry thread has started, then send success
+                        if global_obj.sEclss_thread.is_alive():
+                            print("Real telemetry started.")
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'real_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success starting real telemetry and real AT thread.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If not working then stop at thread and send back error
                         else:
-                            global_obj.sEclss_at_thread = None
-                            global_obj.hub_to_sEclss_at_queue.queue.clear()
-                        global_obj.sEclss_thread = None
-                        global_obj.hub_to_sEclss_queue.queue.clear()
-                        self.send(json.dumps({
-                            'type': 'real_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': 'Success starting real AT Thread but failure starting real Telemetry.'
-                                           'Both threads stopped from running.',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-
-                else:
-                    # Ensure the fake telemetry gets stopped and send back error
-                    if global_obj.sEclss_thread.is_alive():
-                        global_obj.hub_to_sEclss_queue.put({"type": "stop"})
-                    global_obj.sEclss_thread.join(2.0)
-                    if global_obj.sEclss_thread.is_alive():
-                        global_obj.sEclss_thread = None
-                        print("Real telemetry thread was not killed.")
-                        global_obj.hub_to_sEclss_queue.queue.clear()
+                            global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                            self.send(json.dumps({
+                                'type': 'real_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Success starting Real AT Thread but failure to start real'
+                                               'telemetry thread. Real AT Thread stopped. Try again.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If sEclss thread has been initialized then handle if it alive or not
                     else:
-                        global_obj.sEclss_thread = None
-                        global_obj.hub_to_sEclss_queue.queue.clear()
-                    global_obj.sEclss_at_thread = None
-                    global_obj.hub_to_sEclss_at_queue.queue.clear()
+                        # If it is alive then join it
+                        if global_obj.sEclss_thread.is_alive():
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'real_telemetry_response',
+                                'content': {
+                                    'status': 'already_running',
+                                    'message': 'Success starting real at thread and real telemetry was'
+                                               ' already running.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If it is not alive then reinitialize it
+                        else:
+                            # Simulator thread initialization
+                            global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
+                                                                        name="Real Telemetry Thread",
+                                                                        args=(global_obj.sEclss_to_hub_queue,
+                                                                              global_obj.hub_to_sEclss_queue,
+                                                                              global_obj.server_to_sEclss_queue))
+                            global_obj.sEclss_thread.start()
+
+                            # Check that the telemetry thread has started, then send success
+                            if global_obj.sEclss_thread.is_alive():
+                                print("Real telemetry started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting real telemetry and real AT thread.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If not working then stop at thread and send back error
+                            else:
+                                global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Real AT Thread but failure to start real'
+                                                   'telemetry thread. Real AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                # If sEclss at thread does not start then don't start real telemetry and send back error
+                else:
                     self.send(json.dumps({
                         'type': 'real_telemetry_response',
                         'content': {
                             'status': 'error',
-                            'message': 'Error starting real AT thread. Try again.',
+                            'message': 'Error starting real at thread. Real telemetry was not started.',
                             'attempt': content.get('attempt')
                         }
                     }))
+            # If sEclss at thread has been initialized then handle if it is alive or not
+            else:
+                # If alive then check telemetry as normal
+                if global_obj.sEclss_at_thread.is_alive():
+                    # Check if sEclss thread has not been initialized, then initialize it
+                    if global_obj.sEclss_thread is None:
+                        # Simulator thread initialization
+                        global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
+                                                                    name="Real Telemetry Thread",
+                                                                    args=(global_obj.sEclss_to_hub_queue,
+                                                                          global_obj.hub_to_sEclss_queue,
+                                                                          global_obj.server_to_sEclss_queue))
+                        global_obj.sEclss_thread.start()
+
+                        # Check that the telemetry thread has started, then send success
+                        if global_obj.sEclss_thread.is_alive():
+                            print("Real telemetry started.")
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'real_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success starting real telemetry and real AT thread was already'
+                                               ' running.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If not working then stop at thread and send back error
+                        else:
+                            global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                            self.send(json.dumps({
+                                'type': 'real_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Real at thread was already running but failure to start real'
+                                               'telemetry thread. Real AT Thread stopped. Try again.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If sEclss thread has been initialized then handle if it alive or not
+                    else:
+                        # If it is alive then join it
+                        if global_obj.sEclss_thread.is_alive():
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'real_telemetry_response',
+                                'content': {
+                                    'status': 'already_running',
+                                    'message': 'Real at thread and real telemetry was'
+                                               ' already running.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If it is not alive then reinitialize it
+                        else:
+                            # Simulator thread initialization
+                            global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
+                                                                        name="Real Telemetry Thread",
+                                                                        args=(global_obj.sEclss_to_hub_queue,
+                                                                              global_obj.hub_to_sEclss_queue,
+                                                                              global_obj.server_to_sEclss_queue))
+                            global_obj.sEclss_thread.start()
+
+                            # Check that the telemetry thread has started, then send success
+                            if global_obj.sEclss_thread.is_alive():
+                                print("Real telemetry started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting real telemetry and real AT thread was '
+                                                   'already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If not working then stop at thread and send back error
+                            else:
+                                global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Real AT Thread was already running but failure to start real'
+                                                   'telemetry thread. Real AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+
+                # If not alive then reinitialize it and handle telemetry normally
+                else:
+                    # Anomaly detection thread initialization for real telemetry
+                    global_obj.sEclss_at_thread = threading.Thread(target=anomaly_treatment_routine,
+                                                                   name="Real AT Thread",
+                                                                   args=(global_obj.hub_to_sEclss_at_queue,
+                                                                         global_obj.sEclss_at_to_hub_queue,))
+                    global_obj.sEclss_at_thread.start()
+
+                    # Check that the anomaly detection thread is working then check sEclss thread
+                    if global_obj.sEclss_at_thread.is_alive():
+                        print("Real AT Thread started.")
+                        # Check if sEclss thread has not been initialized, then initialize it
+                        if global_obj.sEclss_thread is None:
+                            # Simulator thread initialization
+                            global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
+                                                                        name="Real Telemetry Thread",
+                                                                        args=(global_obj.sEclss_to_hub_queue,
+                                                                              global_obj.hub_to_sEclss_queue,
+                                                                              global_obj.server_to_sEclss_queue))
+                            global_obj.sEclss_thread.start()
+
+                            # Check that the telemetry thread has started, then send success
+                            if global_obj.sEclss_thread.is_alive():
+                                print("Real telemetry started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting real telemetry and real AT thread.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If not working then stop at thread and send back error
+                            else:
+                                global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Real AT Thread but failure to start real'
+                                                   'telemetry thread. Real AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # If sEclss thread has been initialized then handle if it alive or not
+                        else:
+                            # If it is alive then join it
+                            if global_obj.sEclss_thread.is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Success starting real at thread and real telemetry was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If it is not alive then reinitialize it
+                            else:
+                                # Simulator thread initialization
+                                global_obj.sEclss_thread = threading.Thread(target=handle_eclss_update,
+                                                                            name="Real Telemetry Thread",
+                                                                            args=(global_obj.sEclss_to_hub_queue,
+                                                                                  global_obj.hub_to_sEclss_queue,
+                                                                                  global_obj.server_to_sEclss_queue))
+                                global_obj.sEclss_thread.start()
+
+                                # Check that the telemetry thread has started, then send success
+                                if global_obj.sEclss_thread.is_alive():
+                                    print("Real telemetry started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_to_sEclss_group",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+                                    self.send(json.dumps({
+                                        'type': 'real_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting real telemetry and real AT thread.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    frontend_to_hub_queue.put({'type': 'get_real_telemetry_params',
+                                                               'channel_layer': self.channel_layer,
+                                                               'channel_name': self.channel_name})
+                                # If not working then stop at thread and send back error
+                                else:
+                                    global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'real_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Real AT Thread but failure to start real'
+                                                       'telemetry thread. Real AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                    # If sEclss at thread does not start then don't start real telemetry and send back error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'real_telemetry_response',
+                            'content': {
+                                'status': 'error',
+                                'message': 'Error starting real at thread. Real telemetry was not started.',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
 
         elif content.get('type') == 'stop_telemetry':
             # Find what telemetry this user is assigned to if any
             if r.sismember('seclss-group-users', self.channel_name) == 1:
-                # Stop if it is running
+                # Check if both telemetry and at thread are not initialized
                 if global_obj.sEclss_thread is None and global_obj.sEclss_at_thread is None:
                     r.srem('seclss-group-users', self.channel_name)
+                    async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
                     self.send(json.dumps({
                         'type': 'stop_telemetry_response',
                         'content': {
                             'status': 'success',
-                            'message': 'This user is assigned to real telemetry but it is not running currently.',
+                            'message': 'This user is assigned to real telemetry but real telemetry and real at threads'
+                                       ' are not initialized.',
                             'attempt': content.get('attempt')
                         }
                     }))
+                # Check if only telemetry thread is not initialized
                 elif global_obj.sEclss_thread is None:
-                    # Remove user from listening to the real telemetry
-                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
-                    r.srem("seclss-group-users", self.channel_name)
+                    # Check if at thread is alive, then kill that thread
+                    if global_obj.sEclss_at_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        if r.scard("seclss-group-users") == 0:
+                            global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
 
-                    # If no more users are listening to the real telemetry then stop it
-                    if r.scard("seclss-group-users") == 0:
-                        global_obj.frontend_to_hub_queue.put({'type': 'stop_real_telemetry'})
+                            # Ensure it gets stopped
+                            successful = True
+                            atMessage = ''
+                            global_obj.sEclss_at_thread.join(2.0)
 
-                        # Ensure that the thread stops
-                        successful = True
-                        atsEclssMessage = ''
+                            # If not successful send back error message
+                            if global_obj.sEclss_at_thread.is_alive():
+                                successful = False
+                                atMessage = 'There was an error stopping real at thread.'
 
-                        global_obj.sEclss_at_thread.join(2.0)
-                        if global_obj.sEclss_at_thread.is_alive():
-                            successful = False
-                            atsEclssMessage = 'There was an error stopping the real at thread.'
-
-                        if successful:
-                            global_obj.sEclss_at_thread = None
-                            global_obj.hub_to_sEclss_at_queue.queue.clear()
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping real at thread and real telemetry was not '
+                                                   'initialized. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('seclss-group', self.channel_name)
+                                r.sadd("seclss-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': atMessage + ' Real telemetry thread was never initialized.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                  'channel_layer': self.channel_layer})
                             self.send(json.dumps({
                                 'type': 'stop_telemetry_response',
                                 'content': {
                                     'status': 'success',
-                                    'message': 'Success stopping the real telemetry. Proceed',
+                                    'message': 'Success removing user from seclss group users. Proceed',
                                     'attempt': content.get('attempt')
                                 }
                             }))
-                        else:
-                            r.sadd('seclss-group-users', self.channel_name)
-                            self.send(json.dumps({
-                                'type': 'stop_telemetry_response',
-                                'content': {
-                                    'status': 'error',
-                                    'message': atsEclssMessage,
-                                    'attempt': content.get('attempt')
-                                }
-                            }))
-                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
-                                                          'channel_layer': self.channel_layer})
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Real telemetry thread was not initialized and real at thread was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if only telemetry thread is not initialized
                 elif global_obj.sEclss_at_thread is None:
-                    # Remove user from listening to the real telemetry
-                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
-                    r.srem("seclss-group-users", self.channel_name)
+                    # Check if telemetry thread is alive, then kill that thread
+                    if global_obj.sEclss_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        if r.scard("seclss-group-users") == 0:
+                            global_obj.hub_to_sEclss_queue.put({'type': 'stop'})
 
-                    # If no more users are listening to the real telemetry then stop it
-                    if r.scard("seclss-group-users") == 0:
-                        global_obj.frontend_to_hub_queue.put({'type': 'stop_real_telemetry'})
+                            # Ensure it gets stopped
+                            successful = True
+                            telemetryMessage = ''
+                            global_obj.sEclss_thread.join(2.0)
 
-                        # Ensure that the thread stops
-                        successful = True
-                        sEclssMessage = ''
-                        global_obj.sEclss_thread.join(2.0)
-                        if global_obj.sEclss_thread.is_alive():
-                            successful = False
-                            sEclssMessage = 'There was an error stopping the real telemetry thread.'
+                            # If not successful send back error message
+                            if global_obj.sEclss_thread.is_alive():
+                                successful = False
+                                telemetryMessage = 'There was an error stopping real telemetry thread.'
 
-                        if successful:
-                            global_obj.sEclss_thread = None
-                            global_obj.hub_to_sEclss_queue.queue.clear()
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping real telemetry thread and real at was not '
+                                                   'initialized. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('seclss-group', self.channel_name)
+                                r.sadd("seclss-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': telemetryMessage + ' Real at thread was never initialized.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                  'channel_layer': self.channel_layer})
                             self.send(json.dumps({
                                 'type': 'stop_telemetry_response',
                                 'content': {
                                     'status': 'success',
-                                    'message': 'Success stopping the real telemetry. Proceed',
+                                    'message': 'Success removing user from seclss group users. Proceed',
                                     'attempt': content.get('attempt')
                                 }
                             }))
-                        else:
-                            r.sadd('seclss-group-users', self.channel_name)
-                            self.send(json.dumps({
-                                'type': 'stop_telemetry_response',
-                                'content': {
-                                    'status': 'error',
-                                    'message': sEclssMessage,
-                                    'attempt': content.get('attempt')
-                                }
-                            }))
-                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
-                                                          'channel_layer': self.channel_layer})
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Real at thread was not initialized and real telemetry thread was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if both have been initialized
                 else:
-                    # Remove user from listening to the real telemetry
-                    async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
-                    r.srem("seclss-group-users", self.channel_name)
+                    # Check if both are alive then kill both
+                    if global_obj.sEclss_thread.is_alive() and global_obj.sEclss_at_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        # If no more users are listening to the real telemetry then stop it
+                        if r.scard("seclss-group-users") == 0:
+                            global_obj.frontend_to_hub_queue.put({'type': 'stop_real_telemetry'})
 
-                    # If no more users are listening to the real telemetry then stop it
-                    if r.scard("seclss-group-users") == 0:
-                        global_obj.frontend_to_hub_queue.put({'type': 'stop_real_telemetry'})
+                            # Ensure that the thread stops
+                            successful = True
+                            sEclssMessage = ''
+                            atsEclssMessage = ''
+                            global_obj.sEclss_thread.join(2.0)
+                            if global_obj.sEclss_thread.is_alive():
+                                successful = False
+                                sEclssMessage = 'There was an error stopping the real telemetry thread.'
 
-                        # Ensure that the thread stops
-                        successful = True
-                        sEclssMessage = ''
-                        atsEclssMessage = ''
-                        global_obj.sEclss_thread.join(2.0)
-                        if global_obj.sEclss_thread.is_alive():
-                            successful = False
-                            sEclssMessage = 'There was an error stopping the real telemetry thread.'
+                            global_obj.sEclss_at_thread.join(2.0)
+                            if global_obj.sEclss_at_thread.is_alive():
+                                successful = False
+                                atsEclssMessage = 'There was an error stopping the real at thread.'
 
-                        global_obj.sEclss_at_thread.join(2.0)
-                        if global_obj.sEclss_at_thread.is_alive():
-                            successful = False
-                            atsEclssMessage = 'There was an error stopping the real at thread.'
-
-                        if successful:
-                            global_obj.sEclss_thread = None
-                            global_obj.sEclss_at_thread = None
-                            global_obj.hub_to_sEclss_queue.queue.clear()
-                            global_obj.hub_to_sEclss_at_queue.queue.clear()
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping the real telemetry. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('seclss-group', self.channel_name)
+                                r.sadd('seclss-group-users', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': sEclssMessage + ' ' + atsEclssMessage,
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                  'channel_layer': self.channel_layer})
                             self.send(json.dumps({
                                 'type': 'stop_telemetry_response',
                                 'content': {
                                     'status': 'success',
-                                    'message': 'Success stopping the real telemetry. Proceed',
+                                    'message': 'Success removing user from seclss group users. Proceed',
                                     'attempt': content.get('attempt')
                                 }
                             }))
+                    # Check if only sEclss thread is alive
+                    elif global_obj.sEclss_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        if r.scard("seclss-group-users") == 0:
+                            global_obj.hub_to_sEclss_queue.put({'type': 'stop'})
+
+                            # Ensure it gets stopped
+                            successful = True
+                            telemetryMessage = ''
+                            global_obj.sEclss_thread.join(2.0)
+
+                            # If not successful send back error message
+                            if global_obj.sEclss_thread.is_alive():
+                                successful = False
+                                telemetryMessage = 'There was an error stopping real telemetry thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping real telemetry thread and real at was not '
+                                                   'alive. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('seclss-group', self.channel_name)
+                                r.sadd("seclss-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': telemetryMessage + ' Real at thread was never alive.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
                         else:
-                            r.sadd('seclss-group-users', self.channel_name)
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                  'channel_layer': self.channel_layer})
                             self.send(json.dumps({
                                 'type': 'stop_telemetry_response',
                                 'content': {
-                                    'status': 'error',
-                                    'message': sEclssMessage + ' ' + atsEclssMessage,
+                                    'status': 'success',
+                                    'message': 'Success removing user from seclss group users. Proceed',
                                     'attempt': content.get('attempt')
                                 }
                             }))
-                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
-                                                          'channel_layer': self.channel_layer})
+                    # Check if only at thread is alive
+                    elif global_obj.sEclss_at_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        if r.scard("seclss-group-users") == 0:
+                            global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+
+                            # Ensure it gets stopped
+                            successful = True
+                            atMessage = ''
+                            global_obj.sEclss_at_thread.join(2.0)
+
+                            # If not successful send back error message
+                            if global_obj.sEclss_at_thread.is_alive():
+                                successful = False
+                                atMessage = 'There was an error stopping real at thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping real at thread and real telemetry was not '
+                                                   'alive. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('seclss-group', self.channel_name)
+                                r.sadd("seclss-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': atMessage + ' Real telemetry thread was never alive.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                                  'channel_layer': self.channel_layer})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success removing user from seclss group users. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if both are not running
+                    else:
+                        async_to_sync(self.channel_layer.group_discard)('seclss-group', self.channel_name)
+                        r.srem("seclss-group-users", self.channel_name)
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_real',
+                                                              'channel_layer': self.channel_layer})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Real at thread was not alive and real telemetry thread was '
+                                           'already alive. Success removing using from seclss group users. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
             elif r.sismember('fake-telemetry-one', self.channel_name) == 1:
-                # Stop this thread if it is running
+                # Check if both simulator and at threads are not initialized
                 if global_obj.simulator_threads[0] is None and global_obj.simulator_at_threads[0] is None:
                     r.srem('fake-telemetry-one', self.channel_name)
+                    if r.scard("fake-telemetry-one") != 0:
+                        r.delete("fake-telemetry-one")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
                     self.send(json.dumps({
                         'type': 'stop_telemetry_response',
                         'content': {
                             'status': 'success',
-                            'message': 'This user is assigned to telemetry one but it is not running currently.',
+                            'message': 'This user is assigned to telemetry one but the fake at thread 1 and fake '
+                                       'telemetry thread 1 are not running currently.',
                             'attempt': content.get('attempt')
                         }
                     }))
+                # Check if only simulator thread is not initialized
                 elif global_obj.simulator_threads[0] is None:
-                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_one'})
-
-                    # Ensure it gets stopped
-                    successful = True
-                    atSimulatorMessage = ''
-
-                    global_obj.simulator_at_threads[0].join(2.0)
+                    # Check if at thread is alive, then kill that thread
                     if global_obj.simulator_at_threads[0].is_alive():
-                        successful = False
-                        atSimulatorMessage = 'There was an error stopping fake at thread one.'
+                        global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
 
-                    if successful:
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[0].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[0].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread one.'
+
+                        if successful:
+                            r.srem('fake-telemetry-one', self.channel_name)
+                            if r.scard("fake-telemetry-one") != 0:
+                                r.delete("fake-telemetry-one")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 1 and fake telemetry 1 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 1 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
                         r.srem('fake-telemetry-one', self.channel_name)
-                        global_obj.simulator_at_threads[0] = None
-                        global_obj.hub_to_simulator_at_queues[0].queue.clear()
+                        if r.scard("fake-telemetry-one") != 0:
+                            r.delete("fake-telemetry-one")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
                         self.send(json.dumps({
                             'type': 'stop_telemetry_response',
                             'content': {
                                 'status': 'success',
-                                'message': 'Success stopping fake telemetry one. Proceed',
+                                'message': 'Fake telemetry 1 thread was not initialized and fake at thread 1 was '
+                                           'already killed. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
-                    else:
-                        self.send(json.dumps({
-                            'type': 'stop_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': atSimulatorMessage,
-                                'attempt': content.get('attempt')
-                            }
-                        }))
+                # Check if only at thread is not initialized
                 elif global_obj.simulator_at_threads[0] is None:
-                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_one'})
-
-                    # Ensure it gets stopped
-                    successful = True
-                    simulatorMessage = ''
-                    global_obj.simulator_threads[0].join(2.0)
+                    # Check if simulator thread is alive, then kill that thread
                     if global_obj.simulator_threads[0].is_alive():
-                        successful = False
-                        simulatorMessage = 'There was an error stopping fake telemetry thread one.'
+                        global_obj.hub_to_simulator_queues[0].put({'type': 'stop'})
 
-                    if successful:
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[0].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[0].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread one.'
+
+                        if successful:
+                            r.srem('fake-telemetry-one', self.channel_name)
+                            if r.scard("fake-telemetry-one") != 0:
+                                r.delete("fake-telemetry-one")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 1 and fake at 1 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 1 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
                         r.srem('fake-telemetry-one', self.channel_name)
-                        global_obj.simulator_threads[0] = None
-                        global_obj.hub_to_simulator_queues[0].queue.clear()
+                        if r.scard("fake-telemetry-one") != 0:
+                            r.delete("fake-telemetry-one")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
                         self.send(json.dumps({
                             'type': 'stop_telemetry_response',
                             'content': {
                                 'status': 'success',
-                                'message': 'Success stopping fake telemetry one. Proceed',
+                                'message': 'Fake at thread 1 thread was not initialized and fake telemetry 1 was '
+                                           'already killed. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
-                    else:
-                        self.send(json.dumps({
-                            'type': 'stop_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': simulatorMessage,
-                                'attempt': content.get('attempt')
-                            }
-                        }))
+                # Check if both have been initialized
                 else:
-                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_one'})
+                    # Check if both are alive, then kill both
+                    if global_obj.simulator_threads[0].is_alive and global_obj.simulator_at_threads[0].is_alive():
+                        global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_one'})
 
-                    # Ensure it gets stopped
-                    successful = True
-                    simulatorMessage = ''
-                    atSimulatorMessage = ''
-                    global_obj.simulator_threads[0].join(2.0)
-                    if global_obj.simulator_threads[0].is_alive():
-                        successful = False
-                        simulatorMessage = 'There was an error stopping fake telemetry thread one.'
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        atSimulatorMessage = ''
+                        global_obj.simulator_threads[0].join(2.0)
+                        if global_obj.simulator_threads[0].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake telemetry thread one.'
 
-                    global_obj.simulator_at_threads[0].join(2.0)
-                    if global_obj.simulator_at_threads[0].is_alive():
-                        successful = False
-                        atSimulatorMessage = 'There was an error stopping fake at thread one.'
+                        global_obj.simulator_at_threads[0].join(2.0)
+                        if global_obj.simulator_at_threads[0].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread one.'
 
-                    if successful:
+                        if successful:
+                            r.srem('fake-telemetry-one', self.channel_name)
+                            if r.scard("fake-telemetry-one") != 0:
+                                r.delete("fake-telemetry-one")
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry one. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + '' + atSimulatorMessage,
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only simulator thread is alive, then only kill simulator thread
+                    elif global_obj.simulator_threads[0].is_alive():
+                        global_obj.hub_to_simulator_queues[0].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[0].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[0].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread one.'
+
+                        if successful:
+                            r.srem('fake-telemetry-one', self.channel_name)
+                            if r.scard("fake-telemetry-one") != 0:
+                                r.delete("fake-telemetry-one")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 1 and fake at 1 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 1 thread was alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only at thread is alive, then only kill at thread
+                    elif global_obj.simulator_at_threads[0].is_alive():
+                        global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[0].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[0].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread one.'
+
+                        if successful:
+                            r.srem('fake-telemetry-one', self.channel_name)
+                            if r.scard("fake-telemetry-one") != 0:
+                                r.delete("fake-telemetry-one")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 1 and fake telemetry 1 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 1 thread was never alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if both are dead then said back already killed message
+                    else:
                         r.srem('fake-telemetry-one', self.channel_name)
-                        global_obj.simulator_threads[0] = None
-                        global_obj.simulator_at_threads[0] = None
-                        global_obj.hub_to_simulator_queues[0].queue.clear()
-                        global_obj.hub_to_simulator_at_queues[0].queue.clear()
+                        if r.scard("fake-telemetry-one") != 0:
+                            r.delete("fake-telemetry-one")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_one'})
                         self.send(json.dumps({
                             'type': 'stop_telemetry_response',
                             'content': {
                                 'status': 'success',
-                                'message': 'Success stopping fake telemetry one. Proceed',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-                    else:
-                        self.send(json.dumps({
-                            'type': 'stop_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': simulatorMessage + '' + atSimulatorMessage,
+                                'message': 'Fake telemetry thread 1 and fake at thread 1 were both dead. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
             elif r.sismember('fake-telemetry-two', self.channel_name) == 1:
-                # Stop this thread if it is running
+                # Check if both simulator and at threads are not initialized
                 if global_obj.simulator_threads[1] is None and global_obj.simulator_at_threads[1] is None:
                     r.srem('fake-telemetry-two', self.channel_name)
+                    if r.scard("fake-telemetry-two") != 0:
+                        r.delete("fake-telemetry-two")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
                     self.send(json.dumps({
                         'type': 'stop_telemetry_response',
                         'content': {
                             'status': 'success',
-                            'message': 'This user is assigned to telemetry two but it is not running currently.',
+                            'message': 'This user is assigned to telemetry two but the fake at thread 2 and fake '
+                                       'telemetry thread 2 are not running currently.',
                             'attempt': content.get('attempt')
                         }
                     }))
+                # Check if only simulator thread is not initialized
                 elif global_obj.simulator_threads[1] is None:
-                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_two'})
-
-                    # Ensure it gets stopped
-                    successful = True
-                    atSimulatorMessage = ''
-
-                    global_obj.simulator_at_threads[1].join(2.0)
+                    # Check if at thread is alive, then kill that thread
                     if global_obj.simulator_at_threads[1].is_alive():
-                        successful = False
-                        atSimulatorMessage = 'There was an error stopping fake at thread two.'
+                        global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
 
-                    if successful:
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[1].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[1].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread two.'
+
+                        if successful:
+                            r.srem('fake-telemetry-two', self.channel_name)
+                            if r.scard("fake-telemetry-two") != 0:
+                                r.delete("fake-telemetry-two")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 2 and fake telemetry 2 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 2 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
                         r.srem('fake-telemetry-two', self.channel_name)
-                        global_obj.simulator_at_threads[1] = None
-                        global_obj.hub_to_simulator_at_queues[1].queue.clear()
+                        if r.scard("fake-telemetry-two") != 0:
+                            r.delete("fake-telemetry-two")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
                         self.send(json.dumps({
                             'type': 'stop_telemetry_response',
                             'content': {
                                 'status': 'success',
-                                'message': 'Success stopping fake telemetry two. Proceed',
+                                'message': 'Fake telemetry 2 thread was not initialized and fake at thread 2 was '
+                                           'already killed. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
-                    else:
-                        self.send(json.dumps({
-                            'type': 'stop_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': atSimulatorMessage,
-                                'attempt': content.get('attempt')
-                            }
-                        }))
+                # Check if only at thread is not initialized
                 elif global_obj.simulator_at_threads[1] is None:
-                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_two'})
-
-                    # Ensure it gets stopped
-                    successful = True
-                    simulatorMessage = ''
-                    global_obj.simulator_threads[1].join(2.0)
+                    # Check if simulator thread is alive, then kill that thread
                     if global_obj.simulator_threads[1].is_alive():
-                        successful = False
-                        simulatorMessage = 'There was an error stopping fake telemetry thread two.'
+                        global_obj.hub_to_simulator_queues[1].put({'type': 'stop'})
 
-                    if successful:
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[1].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[1].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread two.'
+
+                        if successful:
+                            r.srem('fake-telemetry-two', self.channel_name)
+                            if r.scard("fake-telemetry-two") != 0:
+                                r.delete("fake-telemetry-two")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 2 and fake at 2 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 2 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
                         r.srem('fake-telemetry-two', self.channel_name)
-                        global_obj.simulator_threads[1] = None
-                        global_obj.hub_to_simulator_queues[1].queue.clear()
+                        if r.scard("fake-telemetry-two") != 0:
+                            r.delete("fake-telemetry-two")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
                         self.send(json.dumps({
                             'type': 'stop_telemetry_response',
                             'content': {
                                 'status': 'success',
-                                'message': 'Success stopping fake telemetry two. Proceed',
+                                'message': 'Fake at thread 2 thread was not initialized and fake telemetry 2 was '
+                                           'already killed. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
-                    else:
-                        self.send(json.dumps({
-                            'type': 'stop_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': simulatorMessage,
-                                'attempt': content.get('attempt')
-                            }
-                        }))
+                # Check if both have been initialized
                 else:
-                    global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_two'})
+                    # Check if both are alive, then kill both
+                    if global_obj.simulator_threads[1].is_alive and global_obj.simulator_at_threads[1].is_alive():
+                        global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_two'})
 
-                    # Ensure it gets stopped
-                    successful = True
-                    simulatorMessage = ''
-                    atSimulatorMessage = ''
-                    global_obj.simulator_threads[1].join(2.0)
-                    if global_obj.simulator_threads[1].is_alive():
-                        successful = False
-                        simulatorMessage = 'There was an error stopping fake telemetry thread two.'
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        atSimulatorMessage = ''
+                        global_obj.simulator_threads[1].join(2.0)
+                        if global_obj.simulator_threads[1].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake telemetry thread two.'
 
-                    global_obj.simulator_at_threads[1].join(2.0)
-                    if global_obj.simulator_at_threads[1].is_alive():
-                        successful = False
-                        atSimulatorMessage = 'There was an error stopping fake at thread two.'
+                        global_obj.simulator_at_threads[1].join(2.0)
+                        if global_obj.simulator_at_threads[1].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread two.'
 
-                    if successful:
+                        if successful:
+                            r.srem('fake-telemetry-two', self.channel_name)
+                            if r.scard("fake-telemetry-two") != 0:
+                                r.delete("fake-telemetry-two")
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry two. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + '' + atSimulatorMessage,
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only simulator thread is alive, then only kill simulator thread
+                    elif global_obj.simulator_threads[1].is_alive():
+                        global_obj.hub_to_simulator_queues[1].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[1].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[1].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread two.'
+
+                        if successful:
+                            r.srem('fake-telemetry-two', self.channel_name)
+                            if r.scard("fake-telemetry-two") != 0:
+                                r.delete("fake-telemetry-two")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 2 and fake at 2 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 2 thread was alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only at thread is alive, then only kill at thread
+                    elif global_obj.simulator_at_threads[1].is_alive():
+                        global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[1].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[1].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread two.'
+
+                        if successful:
+                            r.srem('fake-telemetry-two', self.channel_name)
+                            if r.scard("fake-telemetry-two") != 0:
+                                r.delete("fake-telemetry-two")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 2 and fake telemetry 2 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 2 thread was never alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if both are dead then said back already killed message
+                    else:
                         r.srem('fake-telemetry-two', self.channel_name)
-                        global_obj.simulator_threads[1] = None
-                        global_obj.simulator_at_threads[1] = None
-                        global_obj.hub_to_simulator_queues[1].queue.clear()
-                        global_obj.hub_to_simulator_at_queues[1].queue.clear()
+                        if r.scard("fake-telemetry-two") != 0:
+                            r.delete("fake-telemetry-two")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_two'})
                         self.send(json.dumps({
                             'type': 'stop_telemetry_response',
                             'content': {
                                 'status': 'success',
-                                'message': 'Success stopping fake telemetry two. Proceed',
-                                'attempt': content.get('attempt')
-                            }
-                        }))
-                    else:
-                        self.send(json.dumps({
-                            'type': 'stop_telemetry_response',
-                            'content': {
-                                'status': 'error',
-                                'message': simulatorMessage + '' + atSimulatorMessage,
+                                'message': 'Fake telemetry thread 2 and fake at thread 2 were both dead. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
             elif r.sismember('fake-telemetry-three', self.channel_name) == 1:
-                print("fake telemetry three")
+                # Check if both simulator and at threads are not initialized
+                if global_obj.simulator_threads[2] is None and global_obj.simulator_at_threads[2] is None:
+                    r.srem('fake-telemetry-three', self.channel_name)
+                    if r.scard("fake-telemetry-three") != 0:
+                        r.delete("fake-telemetry-three")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                    self.send(json.dumps({
+                        'type': 'stop_telemetry_response',
+                        'content': {
+                            'status': 'success',
+                            'message': 'This user is assigned to telemetry three but the fake at thread 3 and fake '
+                                       'telemetry thread 3 are not running currently.',
+                            'attempt': content.get('attempt')
+                        }
+                    }))
+                # Check if only simulator thread is not initialized
+                elif global_obj.simulator_threads[2] is None:
+                    # Check if at thread is alive, then kill that thread
+                    if global_obj.simulator_at_threads[2].is_alive():
+                        global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[2].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[2].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread three.'
+
+                        if successful:
+                            r.srem('fake-telemetry-three', self.channel_name)
+                            if r.scard("fake-telemetry-three") != 0:
+                                r.delete("fake-telemetry-three")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 3 and fake telemetry 3 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 3 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        r.srem('fake-telemetry-three', self.channel_name)
+                        if r.scard("fake-telemetry-three") != 0:
+                            r.delete("fake-telemetry-three")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Fake telemetry 3 thread was not initialized and fake at thread 3 was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if only at thread is not initialized
+                elif global_obj.simulator_at_threads[2] is None:
+                    # Check if simulator thread is alive, then kill that thread
+                    if global_obj.simulator_threads[2].is_alive():
+                        global_obj.hub_to_simulator_queues[2].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[2].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[2].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread three.'
+
+                        if successful:
+                            r.srem('fake-telemetry-three', self.channel_name)
+                            if r.scard("fake-telemetry-three") != 0:
+                                r.delete("fake-telemetry-three")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 3 and fake at 3 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 3 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        r.srem('fake-telemetry-three', self.channel_name)
+                        if r.scard("fake-telemetry-three") != 0:
+                            r.delete("fake-telemetry-three")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Fake at thread 3 thread was not initialized and fake telemetry 3 was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if both have been initialized
+                else:
+                    # Check if both are alive, then kill both
+                    if global_obj.simulator_threads[2].is_alive and global_obj.simulator_at_threads[2].is_alive():
+                        global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_three'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        atSimulatorMessage = ''
+                        global_obj.simulator_threads[2].join(2.0)
+                        if global_obj.simulator_threads[2].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake telemetry thread three.'
+
+                        global_obj.simulator_at_threads[2].join(2.0)
+                        if global_obj.simulator_at_threads[2].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread three.'
+
+                        if successful:
+                            r.srem('fake-telemetry-three', self.channel_name)
+                            if r.scard("fake-telemetry-three") != 0:
+                                r.delete("fake-telemetry-three")
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry three. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + '' + atSimulatorMessage,
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only simulator thread is alive, then only kill simulator thread
+                    elif global_obj.simulator_threads[2].is_alive():
+                        global_obj.hub_to_simulator_queues[2].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[2].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[2].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread three.'
+
+                        if successful:
+                            r.srem('fake-telemetry-three', self.channel_name)
+                            if r.scard("fake-telemetry-three") != 0:
+                                r.delete("fake-telemetry-three")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 3 and fake at 3 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 3 thread was alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only at thread is alive, then only kill at thread
+                    elif global_obj.simulator_at_threads[2].is_alive():
+                        global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[2].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[2].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread three.'
+
+                        if successful:
+                            r.srem('fake-telemetry-three', self.channel_name)
+                            if r.scard("fake-telemetry-three") != 0:
+                                r.delete("fake-telemetry-three")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 3 and fake telemetry 3 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 3 thread was never alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if both are dead then said back already killed message
+                    else:
+                        r.srem('fake-telemetry-three', self.channel_name)
+                        if r.scard("fake-telemetry-three") != 0:
+                            r.delete("fake-telemetry-three")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_three'})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Fake telemetry thread 3 and fake at thread 3 were both dead. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
             elif r.sismember('fake-telemetry-four', self.channel_name) == 1:
-                print("fake telemetry four")
+                # Check if both simulator and at threads are not initialized
+                if global_obj.simulator_threads[3] is None and global_obj.simulator_at_threads[3] is None:
+                    r.srem('fake-telemetry-four', self.channel_name)
+                    if r.scard("fake-telemetry-four") != 0:
+                        r.delete("fake-telemetry-four")
+                    global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                    self.send(json.dumps({
+                        'type': 'stop_telemetry_response',
+                        'content': {
+                            'status': 'success',
+                            'message': 'This user is assigned to telemetry one but the fake at thread 4 and fake '
+                                       'telemetry thread 4 are not running currently.',
+                            'attempt': content.get('attempt')
+                        }
+                    }))
+                # Check if only simulator thread is not initialized
+                elif global_obj.simulator_threads[3] is None:
+                    # Check if at thread is alive, then kill that thread
+                    if global_obj.simulator_at_threads[3].is_alive():
+                        global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[3].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[3].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread four.'
+
+                        if successful:
+                            r.srem('fake-telemetry-four', self.channel_name)
+                            if r.scard("fake-telemetry-four") != 0:
+                                r.delete("fake-telemetry-four")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 4 and fake telemetry 4 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 4 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        r.srem('fake-telemetry-four', self.channel_name)
+                        if r.scard("fake-telemetry-four") != 0:
+                            r.delete("fake-telemetry-four")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Fake telemetry 4 thread was not initialized and fake at thread 4 was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if only at thread is not initialized
+                elif global_obj.simulator_at_threads[3] is None:
+                    # Check if simulator thread is alive, then kill that thread
+                    if global_obj.simulator_threads[3].is_alive():
+                        global_obj.hub_to_simulator_queues[3].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[3].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[3].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread four.'
+
+                        if successful:
+                            r.srem('fake-telemetry-four', self.channel_name)
+                            if r.scard("fake-telemetry-four") != 0:
+                                r.delete("fake-telemetry-four")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 4 and fake at 4 was not '
+                                               'initialized. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 4 thread was never initialized.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        r.srem('fake-telemetry-four', self.channel_name)
+                        if r.scard("fake-telemetry-four") != 0:
+                            r.delete("fake-telemetry-four")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Fake at thread 4 thread was not initialized and fake telemetry 4 was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if both have been initialized
+                else:
+                    # Check if both are alive, then kill both
+                    if global_obj.simulator_threads[3].is_alive and global_obj.simulator_at_threads[3].is_alive():
+                        global_obj.frontend_to_hub_queue.put({'type': 'stop_fake_telemetry_four'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        atSimulatorMessage = ''
+                        global_obj.simulator_threads[3].join(2.0)
+                        if global_obj.simulator_threads[3].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake telemetry thread four.'
+
+                        global_obj.simulator_at_threads[3].join(2.0)
+                        if global_obj.simulator_at_threads[3].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread four.'
+
+                        if successful:
+                            r.srem('fake-telemetry-four', self.channel_name)
+                            if r.scard("fake-telemetry-four") != 0:
+                                r.delete("fake-telemetry-four")
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry four. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + '' + atSimulatorMessage,
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only simulator thread is alive, then only kill simulator thread
+                    elif global_obj.simulator_threads[3].is_alive():
+                        global_obj.hub_to_simulator_queues[3].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        simulatorMessage = ''
+                        global_obj.simulator_threads[3].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_threads[3].is_alive():
+                            successful = False
+                            simulatorMessage = 'There was an error stopping fake simulator thread four.'
+
+                        if successful:
+                            r.srem('fake-telemetry-four', self.channel_name)
+                            if r.scard("fake-telemetry-four") != 0:
+                                r.delete("fake-telemetry-four")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake telemetry thread 4 and fake at 4 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': simulatorMessage + ' Fake telemetry 4 thread was alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only at thread is alive, then only kill at thread
+                    elif global_obj.simulator_at_threads[3].is_alive():
+                        global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        successful = True
+                        atSimulatorMessage = ''
+                        global_obj.simulator_at_threads[3].join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.simulator_at_threads[3].is_alive():
+                            successful = False
+                            atSimulatorMessage = 'There was an error stopping fake at thread four.'
+
+                        if successful:
+                            r.srem('fake-telemetry-four', self.channel_name)
+                            if r.scard("fake-telemetry-four") != 0:
+                                r.delete("fake-telemetry-four")
+                            global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success stopping fake at thread 4 and fake telemetry 4 was not '
+                                               'alive. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                        else:
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': atSimulatorMessage + ' Fake telemetry 4 thread was never alive.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if both are dead then said back already killed message
+                    else:
+                        r.srem('fake-telemetry-four', self.channel_name)
+                        if r.scard("fake-telemetry-four") != 0:
+                            r.delete("fake-telemetry-four")
+                        global_obj.frontend_to_hub_queue.put({'type': 'unassign_fake_telemetry_four'})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Fake telemetry thread 4 and fake at thread 4 were both dead. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
             else:
                 self.send(json.dumps({
                     'type': 'stop_telemetry_response',
