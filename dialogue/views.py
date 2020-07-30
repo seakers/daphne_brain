@@ -143,7 +143,7 @@ class Dialogue(APIView):
                 "voice_message": piece.voice_message,
                 "visual_message_type": json.loads(piece.visual_message_type),
                 "visual_message": json.loads(piece.visual_message),
-                "writer": piece.writer
+                "writer": piece.dwriter
             } for piece in last_dialogue
         ]
         dialogue_list.reverse()

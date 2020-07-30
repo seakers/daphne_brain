@@ -57,22 +57,17 @@ class ImportData(APIView):
             print("---> Architecture Query:", query)
             counter = 0
             for arch in query['data']['Architecture']:
-
                 if not arch['eval_status']:
                     continue
-                
                 # Inputs
                 inputs = []
                 string_input = arch['input']
                 inputs = self.boolean_string_to_boolean_array(string_input)
-                print("---> Input transformation:", string_input, ' -> ', inputs)
+                # print("---> Input transformation:", string_input, ' -> ', inputs)
 
                 # Outputs
                 outputs = [float(arch['science']), float(arch['cost'])]
 
-
-
-                
                 inputs_unique_set = set()
                 hashed_input = hash(tuple(inputs))
 
