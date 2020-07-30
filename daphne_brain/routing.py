@@ -12,6 +12,7 @@ if "AT" in settings.ACTIVE_MODULES:
     from AT.I_Forest import iForest
 
 from experiment.consumers import ExperimentConsumer
+from daphne_ws.consumers import MycroftConsumer
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties
@@ -29,6 +30,9 @@ if "AT" in settings.ACTIVE_MODULES:
     ])
 ws_routes.extend([
     path('api/experiment', ExperimentConsumer),
+])
+ws_routes.extend([
+    path('api/mycroft', MycroftConsumer),
 ])
 
 application = ProtocolTypeRouter({

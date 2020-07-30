@@ -34,6 +34,7 @@ urlpatterns.extend([
     path('api/ifeed/', include('iFEED_API.urls')),
     path('api/experiment/', include('experiment.urls')),
     path('api/auth/', include('auth_API.urls')),
+    path('api/mycroft/', include('mycroft.urls')),
 
     path('server/accounts/', include('django.contrib.auth.urls')),
 
