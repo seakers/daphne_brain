@@ -99,22 +99,18 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 paramsFourSent = False
 
             elif signal['type'] == 'get_fake_telemetry_params':
-                if signal['channel_name'] == channel_name_fake_one and not paramsOneSent:
+                if signal['channel_name'] == channel_name_fake_one:
                     hub_to_sim_one.put({"type": "get_fake_telemetry_params"})
                     print(f"Channel {channel_name_fake_one} got fake telemetry params")
-                    paramsOneSent = True
-                elif signal['channel_name'] == channel_name_fake_two and not paramsTwoSent:
+                elif signal['channel_name'] == channel_name_fake_two:
                     hub_to_sim_two.put({"type": "get_fake_telemetry_params"})
                     print(f"Channel {channel_name_fake_one} got fake telemetry params")
-                    paramsTwoSent = True
-                elif signal['channel_name'] == channel_name_fake_three and not paramsThreeSent:
+                elif signal['channel_name'] == channel_name_fake_three:
                     hub_to_sim_three.put({"type": "get_fake_telemetry_params"})
                     print(f"Channel {channel_name_fake_one} got fake telemetry params")
-                    paramsThreeSent = True
-                elif signal['channel_name'] == channel_name_fake_four and not paramsFourSent:
+                elif signal['channel_name'] == channel_name_fake_four:
                     hub_to_sim_four.put({"type": "get_fake_telemetry_params"})
                     print(f"Channel {channel_name_fake_one} got fake telemetry params")
-                    paramsFourSent = True
                 else:
                     print(f"{signal['channel_name']} was did not get fake telemetry params")
 
@@ -276,8 +272,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                if channel_layer_fake_one is not None:
+                if channel_layer_fake_one is not None and not paramsOneSent:
                     async_to_sync(channel_layer_fake_one.send)(channel_name_fake_one, command)
+                    paramsOneSent = True
+                    print(f"{channel_name_fake_one} got telemetry params.")
                 else:
                     print("No channel assigned to fake telemetry one.")
 
@@ -319,8 +317,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                if channel_layer_fake_two is not None:
+                if channel_layer_fake_two is not None and not paramsTwoSent:
                     async_to_sync(channel_layer_fake_two.send)(channel_name_fake_two, command)
+                    paramsTwoSent = True
+                    print(f"{channel_name_fake_two} got telemetry params.")
                 else:
                     print("No channel assigned to fake telemetry two.")
 
@@ -362,8 +362,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                if channel_layer_fake_three is not None:
+                if channel_layer_fake_three is not None and not paramsThreeSent:
                     async_to_sync(channel_layer_fake_three.send)(channel_name_fake_three, command)
+                    paramsThreeSent = True
+                    print(f"{channel_name_fake_three} got telemetry params.")
                 else:
                     print("No channel assigned to fake telemetry three.")
 
@@ -405,8 +407,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 content = {'variables_names': tf_variables}
                 command = {'type': 'initialize_telemetry',
                            'content': content}
-                if channel_layer_fake_four is not None:
+                if channel_layer_fake_four is not None and not paramsFourSent:
                     async_to_sync(channel_layer_fake_four.send)(channel_name_fake_four, command)
+                    paramsFourSent = True
+                    print(f"{channel_name_fake_four} got telemetry params.")
                 else:
                     print("No channel assigned to fake telemetry four.")
 
