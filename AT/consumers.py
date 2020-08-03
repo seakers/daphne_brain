@@ -36,9 +36,42 @@ class ATConsumer(DaphneConsumer):
         r = redis.Redis()
         r.sadd("all-users", self.channel_name)
         if r.sismember("all-users", self.channel_name) == 1:
-            print(f"{self.channel_name} was successfully added to the all users group.")
+            print(f"{self.channel_name} was successfully added to the all users group. The all users group contains "
+                  f"{r.smembers('all-users')}")
         else:
             print(f"{self.channel_name} was not successfully added to the all users group.")
+
+        # Clear all redis variables if no one is on
+        r.delete("seclss-group-users")
+        r.delete("fake-telemetry-one")
+        r.delete("fake-telemetry-two")
+        r.delete("fake-telemetry-three")
+        r.delete("fake-telemetry-four")
+        r.delete("all-users")
+        print("Cleared on redis variables.")
+        global_obj.frontend_to_hub_queue.queue.clear()
+        global_obj.sEclss_to_hub_queue.queue.clear()
+        global_obj.hub_to_sEclss_queue.queue.clear()
+        global_obj.hub_to_sEclss_at_queue.queue.clear()
+        global_obj.sEclss_at_to_hub_queue.queue.clear()
+        global_obj.server_to_sEclss_queue.queue.clear()
+        global_obj.simulator_to_hub_queues[0].queue.clear()
+        global_obj.simulator_to_hub_queues[1].queue.clear()
+        global_obj.simulator_to_hub_queues[2].queue.clear()
+        global_obj.simulator_to_hub_queues[3].queue.clear()
+        global_obj.hub_to_simulator_queues[0].queue.clear()
+        global_obj.hub_to_simulator_queues[1].queue.clear()
+        global_obj.hub_to_simulator_queues[2].queue.clear()
+        global_obj.hub_to_simulator_queues[3].queue.clear()
+        global_obj.hub_to_simulator_at_queues[0].queue.clear()
+        global_obj.hub_to_simulator_at_queues[1].queue.clear()
+        global_obj.hub_to_simulator_at_queues[2].queue.clear()
+        global_obj.hub_to_simulator_at_queues[3].queue.clear()
+        global_obj.simulator_at_to_hub_queues[0].queue.clear()
+        global_obj.simulator_at_to_hub_queues[1].queue.clear()
+        global_obj.simulator_at_to_hub_queues[2].queue.clear()
+        global_obj.simulator_at_to_hub_queues[3].queue.clear()
+        print("Cleared all queues.")
 
         # Reset ping timer
         signal = {'type': 'ws_configuration_update', 'content': None}
@@ -710,7 +743,7 @@ class ATConsumer(DaphneConsumer):
             print(f"Error removing {self.channel_name} from the all users group.")
         else:
             print(f"Success removing {self.channel_name} from the all users group. There are {r.scard('all-users')} "
-                  f"left in the all channels group.")
+                  f"left in the all channels group. The all users group contains {r.smembers('all-users')}")
             if r.scard("all-users") == 0:
                 # Clear all redis variables if no one is on
                 r.delete("seclss-group-users")
