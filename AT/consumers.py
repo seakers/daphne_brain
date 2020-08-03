@@ -712,6 +712,7 @@ class ATConsumer(DaphneConsumer):
         else:
             print(f"Success removing {self.channel_name} from the all users group. There are {r.scard('all-users')} "
                   f"left in the all channels group. The all users group contains {r.smembers('all-users')}")
+            r.delete("all-users")
             if r.scard("all-users") == 0:
                 # Clear all redis variables if no one is on
                 r.delete("seclss-group-users")
