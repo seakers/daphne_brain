@@ -97,7 +97,8 @@ class ImportData(APIView):
             Design.objects.bulk_create(architectures)
             user_info.eosscontext.problem = problem_id
             user_info.eosscontext.dataset_name = str(problem_id)
-            user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'
+            # user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'
+            user_info.eosscontext.dataset_user = True
             user_info.eosscontext.save()
             user_info.save()
             return Response(architectures_json)
