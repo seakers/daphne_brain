@@ -35,12 +35,12 @@ class ATConsumer(DaphneConsumer):
         # Keep track of everyone that is on
         r = redis.Redis()
         r.sadd("all-users", self.channel_name)
-        if r.sismember("all-users", self.channel_name) == 1:
+        """if r.sismember("all-users", self.channel_name) == 1:
             print(f"{self.channel_name} was successfully added to the all users group. The all users group contains "
                   f"{r.smembers('all-users')}")
         else:
-            print(f"{self.channel_name} was not successfully added to the all users group.")
-
+            print(f"{self.channel_name} was not successfully added to the all users group.")"""
+        r.delete("all-users")
         # Reset ping timer
         signal = {'type': 'ws_configuration_update', 'content': None}
         frontend_to_hub_queue.put(signal)
