@@ -60,7 +60,8 @@ class GetDrivingFeatures(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
+
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeatures() called ... ')
@@ -130,7 +131,7 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
             print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset))
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
@@ -209,7 +210,7 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesWithGeneralization() called ...')
@@ -261,7 +262,7 @@ class GetMarginalDrivingFeatures(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getMarginalDrivingFeatures() called ... ')
@@ -408,7 +409,7 @@ class GeneralizeFeature(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('generalizeFeature() called ... ')
@@ -449,7 +450,7 @@ class SimplifyFeatureExpression(APIView):
             self.DataMiningClient.startConnection()
 
             # Get problem name
-            problem = request.data['problem']
+            problem = 'SMAP'
 
             # Get the expression
             expression = request.data['expression']
@@ -472,7 +473,7 @@ class ClusterData(APIView):
         try:
             param = int(request.data['param'])
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             # Get selected arch id's
@@ -717,7 +718,7 @@ class GetProblemParameters(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
             
-            problem = request.data['problem']
+            problem = 'SMAP'
 
             params = None
             if problem == "ClimateCentric":
@@ -783,8 +784,7 @@ class SetProblemParameters(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
 
-            # problem = request.data['problem']
-            problem = 'SMAP'  # temporary hard code
+            problem = 'SMAP'
             params = json.loads(request.data['params'])
 
             print("---> SetProblemParameters:", problem, problem_specific.assignation_problems)
@@ -821,7 +821,7 @@ class SetProblemGeneralizedConcepts(APIView):
             session_key = request.session.session_key
             logger.debug("SetProblemGeneralizedConcepts (session key: {0})".format(session_key))
             
-            problem = request.data['problem']
+            problem = 'SMAP'
             params = json.loads(request.data['params'])
 
             if problem == "ClimateCentric":
@@ -867,7 +867,7 @@ class GetProblemConceptHierarchy(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
             
-            problem = request.data['problem']
+            problem = 'SMAP'
             params = json.loads(request.data['params'])
 
             concept_hierarchy = None
@@ -934,7 +934,7 @@ class ImportTargetSelection(APIView):
 class ExportTargetSelection(APIView):
     def post(self, request, format=None):
         try:
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
             filename = request.data['name']
 
