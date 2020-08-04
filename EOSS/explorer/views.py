@@ -35,7 +35,8 @@ class StartGA(APIView):
                 client = VASSARClient(port)
                 client.start_connection()
 
-                problem = request.data['problem']
+                # problem = request.data['problem']
+                problem = 'SMAP'
 
                 # Restart archs queue before starting the GA again
                 Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
