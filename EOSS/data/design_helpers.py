@@ -22,7 +22,6 @@ def add_design(design, session, user, active: bool):
     with design_lock:
         eosscontext = get_user_information(session, user).eosscontext
         print("--> last_arch_id:", eosscontext.last_arch_id)
-        print("--> insert_arch_id:", design['id'])
         if 'id' in design:
             set_id = design['id']
         else:
