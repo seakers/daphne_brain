@@ -21,8 +21,8 @@ def add_design(design, session, user, active: bool):
 
     with design_lock:
         eosscontext = get_user_information(session, user).eosscontext
-        design["id"] = eosscontext.last_arch_id + 1
-        print("--> add_design id:", eosscontext.last_arch_id)
+        print("--> last_arch_id:", eosscontext.last_arch_id)
+        print("--> insert_arch_id:", design['id'])
         if active:
             Design.objects.create(activecontext=eosscontext.activecontext,
                                   id=design["id"],
@@ -35,8 +35,8 @@ def add_design(design, session, user, active: bool):
                                   outputs=json.dumps(design['outputs']))
             eosscontext.added_archs_count += 1
 
-        # eosscontext.last_arch_id += 1
-        eosscontext.last_arch_id += design['id']
+        eosscontext.last_arch_id += 1
+        # eosscontext.last_arch_id += design['id']
 
         if eosscontext.added_archs_count >= 5:
             eosscontext.added_archs_count = 0

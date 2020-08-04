@@ -128,6 +128,7 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+            print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset))
 
             problem = request.data['problem']
             input_type = request.data['input_type']
@@ -782,15 +783,20 @@ class SetProblemParameters(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
 
-            problem = request.data['problem']
+            # problem = request.data['problem']
+            problem = 'SMAP'  # temporary hard code
             params = json.loads(request.data['params'])
 
-            if problem in problem_specific.assignation_problems:
-                entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
-                self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
+            print("---> SetProblemParameters:", problem, problem_specific.assignation_problems)
+            entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
+            self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
 
-            else:
-                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
+            # if problem in problem_specific.assignation_problems:
+            #     entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
+            #     self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
+            #
+            # else:
+            #     raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 

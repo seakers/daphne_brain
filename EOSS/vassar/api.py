@@ -37,6 +37,19 @@ from EOSS.graphql.api import GraphqlClient
 ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
 SECRET_KEY = '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'
 
+def bool_list_to_string(bool_list_str):
+    bool_list = json.loads(bool_list_str)
+    print("--> bool_list_to_string", bool_list)
+    return_str = ''
+    for bool_pos in bool_list:
+        if bool_pos:
+            return_str = return_str + '1'
+        else:
+            return_str = return_str + '0'
+    return return_str
+
+def boolean_string_to_boolean_array(boolean_string):
+    return [b == "1" for b in boolean_string]
 
 
 class ObjectiveSatisfaction:
@@ -172,7 +185,6 @@ class VASSARClient:
         outputs.append(result_formatted['science'])
         outputs.append(result_formatted['cost'])
         arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
-        print('--> Arch: ' + str(arch))
         return arch
 
     # working
@@ -205,15 +217,20 @@ class VASSARClient:
 
         for x in range(4):
             new_design = self.random_local_change(inputs)
-            print('---> NEW DESIGN: ', str(new_design))
-            new_design_result = self.evaluate_architecture('SMAP', new_design, self.problem_id, eval_queue_name)
+            new_design_bool_ary = boolean_string_to_boolean_array(str(new_design))
+            print('---> NEW DESIGN string: ', str(new_design))
+            print('---> NEW DESIGN ary: ', new_design_bool_ary)
+            new_design_result = self.evaluate_architecture('SMAP', new_design_bool_ary, self.problem_id, eval_queue_name)
             print('---> RESULT: ', str(new_design_result))
             designs.append(new_design_result)
 
         return designs
 
     # working
-    def random_local_change(self, inputs):
+    def random_local_change(self, design):
+        input_list = design.inputs
+        inputs = bool_list_to_string(input_list)
+
         index = random.randint(0, len(inputs)-1)
         new_bit = '1'
         if(inputs[index] == '0'):
@@ -354,8 +371,16 @@ class VASSARClient:
         arch_id = self.dbClient.get_arch_id(arch)
         return self.dbClient.get_arch_cost_information(arch_id)
 
+    # working
+    def critique_architecture(self, problem, arch):
+        print("\n\n----> critique_architecture", problem, arch)
+        arch_id = self.dbClient.get_arch_id(arch)
+        print("---> architecture id", arch_id)
+        return self.dbClient.get_arch_critique(arch_id)
     
-    
+
+
+
     # rewrite
     def get_subscore_details(self, problem, arch, subobjective):
         print("\n\n----> get_subscore_details", problem, arch, subobjective)
@@ -367,12 +392,6 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
-    # rewrite
-    def critique_architecture(self, problem, arch):
-        print("\n\n----> critique_architecture", problem, arch)
-        arch_id = self.dbClient.get_arch_id(arch)
-        return self.dbClient.get_arch_critique(arch_id)
-    
     # rewrite
     def is_ga_running(self, ga_id):
         print("\n\n----> is_ga_running", ga_id)
