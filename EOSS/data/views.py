@@ -54,7 +54,6 @@ class ImportData(APIView):
             query = dbClient.get_architectures(problem_id)
 
             # Iterate over architectures
-            print("---> Architecture Query:", query)
             counter = 0
             for arch in query['data']['Architecture']:
                 if not arch['eval_status']:
@@ -64,7 +63,6 @@ class ImportData(APIView):
                 string_input = arch['input']
                 arch_id = arch['id']
                 inputs = self.boolean_string_to_boolean_array(string_input)
-                # print("---> Input transformation:", string_input, ' -> ', inputs)
 
                 # Outputs
                 outputs = [float(arch['science']), float(arch['cost'])]
@@ -83,6 +81,7 @@ class ImportData(APIView):
 
                 # arch['id'] --> counter
                 if hashed_input not in inputs_unique_set:
+                    print("-----> ImportData DesignID:", counter)
                     architectures.append(Design(id=counter,
                                                     eosscontext=user_info.eosscontext,
                                                     inputs=json.dumps(inputs),
@@ -92,12 +91,14 @@ class ImportData(APIView):
                     user_info.eosscontext.last_arch_id = counter
                     inputs_unique_set.add(hashed_input)
                     counter = counter + 1
-                # counter = counter + 1
 
 
             # Define context and see if it was already defined for this session
             Design.objects.bulk_create(architectures)
-            user_info.eosscontext.problem = problem_id
+
+            # user_info.eosscontext.problem = problem_id
+            user_info.eosscontext.problem = 'SMAP'  # HARDCODE
+
             user_info.eosscontext.dataset_name = str(problem_id)
             # user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'
             user_info.eosscontext.dataset_user = True
@@ -319,10 +320,12 @@ class SetProblem(APIView):
     """
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        problem = request.data['problem']
+        # problem = request.data['problem']
+        problem = 'SMAP'  # HARDCODE
         user_info.eosscontext.problem = problem
         user_info.eosscontext.save()
         user_info.save()
+        print("---> SetProblem", problem)
         return Response({
             "status": "Problem has been set successfully."
         })
@@ -340,7 +343,7 @@ class AddDesign(APIView):
         db_design['inputs'] = design['inputs']
         db_design['outputs'] = design['outputs']
 
-        print("--> Design being added to context:", db_design)
+        print("\n---> AddDesign --> add_design", db_design)
         architecture = add_design(db_design, request.session, request.user, False)
         user_info.save()
 
