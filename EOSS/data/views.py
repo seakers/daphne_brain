@@ -62,6 +62,7 @@ class ImportData(APIView):
                 # Inputs
                 inputs = []
                 string_input = arch['input']
+                arch_id = arch['id']
                 inputs = self.boolean_string_to_boolean_array(string_input)
                 # print("---> Input transformation:", string_input, ' -> ', inputs)
 
@@ -90,7 +91,8 @@ class ImportData(APIView):
                     # architectures_json.append({'id': arch['id'], 'inputs': inputs, 'outputs': outputs})
                     user_info.eosscontext.last_arch_id = counter
                     inputs_unique_set.add(hashed_input)
-                counter = counter + 1
+                    counter = counter + 1
+                # counter = counter + 1
 
 
             # Define context and see if it was already defined for this session
