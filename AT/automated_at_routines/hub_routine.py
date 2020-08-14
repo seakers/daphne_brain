@@ -413,7 +413,7 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
         # Check the anomaly treatment output queue for sEclss
         if not sEclss_at_to_hub.empty():
             signal = sEclss_at_to_hub.get()
-            if signal['type'] == 'symptoms_report':
+            if  len(channel_layer_real) > 0 and signal['type'] == 'symptoms_report':
                 async_to_sync(channel_layer_real[0].group_send)(sEclss_group_name, signal)
 
         # Check the anomaly treatment output queues for simulated telemetry
