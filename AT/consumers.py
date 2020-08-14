@@ -41,6 +41,72 @@ class ATConsumer(DaphneConsumer):
         else:
             print(f"{self.channel_name} was not successfully added to the all users group.")
 
+        # Kill all the threads if they are running so that a stop message doesn't get left in the queue
+        if global_obj.sEclss_thread is not None:
+            if global_obj.sEclss_thread.is_alive():
+                global_obj.hub_to_sEclss_queue.put({'type': 'stop'})
+        if global_obj.sEclss_at_thread is not None:
+            if global_obj.sEclss_at_thread.is_alive():
+                global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+        if global_obj.simulator_threads[0] is not None:
+            if global_obj.simulator_threads[0].is_alive():
+                global_obj.hub_to_simulator_queues[0].put({'type': 'stop'})
+        if global_obj.simulator_at_threads[0] is not None:
+            if global_obj.simulator_at_threads[0].is_alive():
+                global_obj.hub_to_simulator_at_queues[0].put({'type': 'stop'})
+        if global_obj.simulator_threads[1] is not None:
+            if global_obj.simulator_threads[1].is_alive():
+                global_obj.hub_to_simulator_queues[1].put({'type': 'stop'})
+        if global_obj.simulator_at_threads[1] is not None:
+            if global_obj.simulator_at_threads[1].is_alive():
+                global_obj.hub_to_simulator_at_queues[1].put({'type': 'stop'})
+        if global_obj.simulator_threads[2] is not None:
+            if global_obj.simulator_threads[2].is_alive():
+                global_obj.hub_to_simulator_queues[2].put({'type': 'stop'})
+        if global_obj.simulator_at_threads[2] is not None:
+            if global_obj.simulator_at_threads[2].is_alive():
+                global_obj.hub_to_simulator_at_queues[2].put({'type': 'stop'})
+        if global_obj.simulator_threads[3] is not None:
+            if global_obj.simulator_threads[3].is_alive():
+                global_obj.hub_to_simulator_queues[3].put({'type': 'stop'})
+        if global_obj.simulator_at_threads[3] is not None:
+            if global_obj.simulator_at_threads[3].is_alive():
+                global_obj.hub_to_simulator_at_queues[3].put({'type': 'stop'})
+
+        # Clear all redis variables if no one is on
+        r.delete("seclss-group-users")
+        r.delete("fake-telemetry-one")
+        r.delete("fake-telemetry-two")
+        r.delete("fake-telemetry-three")
+        r.delete("fake-telemetry-four")
+        r.delete("all-users")
+        print("Cleared on redis variables.")
+
+        # Clear the queues and print a stop message, queues between hub and other threads get cleared in their threads
+        # But ensure all get cleared anyway to ensure everything starts on a clean slate
+        global_obj.frontend_to_hub_queue.queue.clear()
+        global_obj.sEclss_to_hub_queue.queue.clear()
+        global_obj.simulator_to_hub_queues[0].queue.clear()
+        global_obj.simulator_to_hub_queues[1].queue.clear()
+        global_obj.simulator_to_hub_queues[2].queue.clear()
+        global_obj.simulator_to_hub_queues[3].queue.clear()
+        global_obj.hub_to_sEclss_queue.queue.clear()
+        global_obj.hub_to_simulator_queues[0].queue.clear()
+        global_obj.hub_to_simulator_queues[1].queue.clear()
+        global_obj.hub_to_simulator_queues[2].queue.clear()
+        global_obj.hub_to_simulator_queues[3].queue.clear()
+        global_obj.hub_to_sEclss_at_queue.queue.clear()
+        global_obj.hub_to_simulator_at_queues[0].queue.clear()
+        global_obj.hub_to_simulator_at_queues[1].queue.clear()
+        global_obj.hub_to_simulator_at_queues[2].queue.clear()
+        global_obj.hub_to_simulator_at_queues[3].queue.clear()
+        global_obj.sEclss_at_to_hub_queue.queue.clear()
+        global_obj.simulator_at_to_hub_queues[0].queue.clear()
+        global_obj.simulator_at_to_hub_queues[1].queue.clear()
+        global_obj.simulator_at_to_hub_queues[2].queue.clear()
+        global_obj.simulator_at_to_hub_queues[3].queue.clear()
+        print("Cleared all queues.")
+
         # Reset ping timer
         signal = {'type': 'ws_configuration_update', 'content': None}
         frontend_to_hub_queue.put(signal)
