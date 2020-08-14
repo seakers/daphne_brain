@@ -21,10 +21,6 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 hub_to_sEclss, hub_to_sim_one, hub_to_sim_two, hub_to_sim_three, hub_to_sim_four, hub_to_sEclss_at,
                 hub_to_sim_at_one, hub_to_sim_at_two, hub_to_sim_at_three, hub_to_sim_at_four, sEclss_at_to_hub,
                 sim_at_to_hub_one, sim_at_to_hub_two, sim_at_to_hub_three, sim_at_to_hub_four):
-    # Get the user information and channel layer
-    # user_info = get_or_create_user_information(request.session, request.user, 'AT')
-    # channel_layer = get_channel_layer()
-    # channel_name = user_info.channel_name
 
     r = redis.Redis()
 
@@ -481,7 +477,40 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
         if global_obj.simulator_at_threads[3].is_alive():
             hub_to_sim_at_four.put({'type': 'stop'})
 
+    # Clear all redis variables if no one is on
+    r.delete("seclss-group-users")
+    r.delete("fake-telemetry-one")
+    r.delete("fake-telemetry-two")
+    r.delete("fake-telemetry-three")
+    r.delete("fake-telemetry-four")
+    r.delete("all-users")
+    print("Cleared on redis variables.")
+
     # Clear the queues and print a stop message, queues between hub and other threads get cleared in their threads
+    # But ensure all get cleared anyway to ensure everything starts on a clean slate
     front_to_hub.queue.clear()
+    sEclss_to_hub.queue.clear()
+    sim_to_hub_one.queue.clear()
+    sim_to_hub_two.queue.clear()
+    sim_to_hub_three.queue.clear()
+    sim_to_hub_four.queue.clear()
+    hub_to_sEclss.queue.clear()
+    hub_to_sim_one.queue.clear()
+    hub_to_sim_two.queue.clear()
+    hub_to_sim_three.queue.clear()
+    hub_to_sim_four.queue.clear()
+    hub_to_sEclss_at.queue.clear()
+    hub_to_sim_at_one.queue.clear()
+    hub_to_sim_at_two.queue.clear()
+    hub_to_sim_at_three.queue.clear()
+    hub_to_sim_at_four.queue.clear()
+    sEclss_at_to_hub.queue.clear()
+    sim_at_to_hub_one.queue.clear()
+    sim_at_to_hub_two.queue.clear()
+    sim_at_to_hub_three.queue.clear()
+    sim_at_to_hub_four.queue.clear()
+    print("Cleared all queues.")
+
+    # Everything should be cleared as if the code had just gotten pushed except for threads being dead threads
     print('Hub thread stopped.')
     return

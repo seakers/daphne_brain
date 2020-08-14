@@ -4196,7 +4196,7 @@ class ATConsumer(DaphneConsumer):
             frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params', 'channel_name': self.channel_name})
 
         elif content.get('type') == 'ping':
-            signal = {'type': 'ping', 'content': None}
+            signal = {'type': 'ping', 'channel_name': self.channel_name}
             frontend_to_hub_queue.put(signal)
 
     def hub_thread_response(self, event):
@@ -4227,4 +4227,7 @@ class ATConsumer(DaphneConsumer):
         self.send(json.dumps(event))
 
     def finish_experiment_from_mcc(self, event):
+        self.send(json.dumps(event))
+
+    def turn_off_alarms(self, event):
         self.send(json.dumps(event))

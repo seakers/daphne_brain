@@ -27,12 +27,12 @@ class StartExperiment(APIView):
 
         # Check for experiments folder
         results_dir = './experiment_at/results'
-        #TODO create folders for each user if doesn't exist, otherwise...
+        # TODO create folders for each user if doesn't exist, otherwise...
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
 
         # Obtain ID number
-        new_id = len(os.listdir(results_dir)) #TODO save in user dir
+        new_id = len(os.listdir(results_dir))  # TODO save in user dir
 
         # Create File so ID does not get repeated
         open(os.path.join(results_dir, str(new_id) + '.json'), 'w')
@@ -115,9 +115,9 @@ class ReloadExperiment(APIView):
                 else:
                     experiment_data = json.loads(experiment_state)
                 return Response({'is_running': True, 'experiment_data': experiment_data})
-        return Response({ 'is_running': False })
-        
-        
+        return Response({'is_running': False})
+
+
 class FinishExperiment(APIView):
 
     def get(self, request, format=None):
@@ -206,6 +206,24 @@ class FinishExperimentFromMcc(APIView):
             # Build and send a command to the frontend
             command = {'type': 'finish_experiment_from_mcc',
                        'content': ''}
+            async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
+
+
+class TurnOffAlarms(APIView):
+    def post(self, request, format=None):
+        # Retrieve user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
+
+            # Build command to send to frontend
+            command = {'type': 'turn_off_alarms'}
             async_to_sync(channel_layer.send)(channel_name, command)
 
         return Response()
