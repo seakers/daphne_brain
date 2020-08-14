@@ -41,6 +41,7 @@ class ATConsumer(DaphneConsumer):
         else:
             print(f"{self.channel_name} was not successfully added to the all users group.")
 
+        """ In the event daphne at needs to have all variables and queues cleared and threads killed
         # Kill all the threads if they are running so that a stop message doesn't get left in the queue
         if global_obj.sEclss_thread is not None:
             if global_obj.sEclss_thread.is_alive():
@@ -105,7 +106,7 @@ class ATConsumer(DaphneConsumer):
         global_obj.simulator_at_to_hub_queues[1].queue.clear()
         global_obj.simulator_at_to_hub_queues[2].queue.clear()
         global_obj.simulator_at_to_hub_queues[3].queue.clear()
-        print("Cleared all queues.")
+        print("Cleared all queues.")"""
 
         # Reset ping timer
         signal = {'type': 'ws_configuration_update', 'content': None}
