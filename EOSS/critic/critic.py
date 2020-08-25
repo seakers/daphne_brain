@@ -158,7 +158,7 @@ class Critic:
         # Criticize architecture (based on rules)
         port = self.context.vassar_port
         problem = self.context.problem
-        client = VASSARClient(port)
+        client = VASSARClient(port, problem_id=self.context.problem_id)
         client.start_connection()
 
         result_list = client.critique_architecture(problem, design)
@@ -214,7 +214,7 @@ class Critic:
         original_inputs = json.loads(design.inputs)
         problem = self.context.problem
         port = self.context.vassar_port
-        client = VASSARClient(port)
+        client = VASSARClient(port, problem_id=self.context.problem_id)
         client.start_connection()
 
         archs = None
