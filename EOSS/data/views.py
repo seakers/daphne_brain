@@ -37,76 +37,61 @@ class ImportData(APIView):
     """
     def post(self, request, format=None):
         try:
-            print("---> LOADING DATA ----------------------------------------------------------------------------------------------------------------------------------------------------------")
 
+            # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-
             problem_id = request.data['problem_id']
-
+            group_id = request.data['group_id']
 
             # Remove all design objects
             Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
-            architectures = []
-            architectures_json = []
 
-            # Graphql Client
-            dbClient = GraphqlClient()
+            # Get problem architectures
+            dbClient = GraphqlClient(problem_id=problem_id)
             query = dbClient.get_architectures(problem_id)
 
             # Iterate over architectures
+            # Create: user context Designs
+            # Create: object to send designs to front-end
+            architectures = []
+            architectures_json = []
             counter = 0
             for arch in query['data']['Architecture']:
+
+                # If the arch needs to be re-evaluated due to a problem definition change, do not add
                 if not arch['eval_status']:
                     continue
-                # Inputs
-                inputs = []
-                string_input = arch['input']
-                arch_id = arch['id']
-                inputs = self.boolean_string_to_boolean_array(string_input)
 
-                # Outputs
+                # Arch: inputs / outputs
+                inputs = self.boolean_string_to_boolean_array(arch['input'])
                 outputs = [float(arch['science']), float(arch['cost'])]
 
-                inputs_unique_set = set()
-                hashed_input = hash(tuple(inputs))
+                # Append design object and front-end design object
+                architectures.append(Design(id=counter,
+                                            eosscontext=user_info.eosscontext,
+                                            inputs=json.dumps(inputs),
+                                            outputs=json.dumps(outputs)))
+                architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
 
-                # if hashed_input not in inputs_unique_set:
-                #     architectures.append(Design(id=user_info.eosscontext.last_arch_id,
-                #                                     eosscontext=user_info.eosscontext,
-                #                                     inputs=json.dumps(inputs),
-                #                                     outputs=json.dumps(outputs)))
-                #     architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
-                #     user_info.eosscontext.last_arch_id += 1
-                #     inputs_unique_set.add(hashed_input)
-
-                # arch['id'] --> counter
-                if hashed_input not in inputs_unique_set:
-                    print("-----> ImportData DesignID:", counter)
-                    architectures.append(Design(id=counter,
-                                                    eosscontext=user_info.eosscontext,
-                                                    inputs=json.dumps(inputs),
-                                                    outputs=json.dumps(outputs)))
-                    architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
-                    # architectures_json.append({'id': arch['id'], 'inputs': inputs, 'outputs': outputs})
-                    user_info.eosscontext.last_arch_id = counter
-                    inputs_unique_set.add(hashed_input)
-                    counter = counter + 1
+                # Increment counters
+                user_info.eosscontext.last_arch_id = counter
+                counter = counter + 1
 
 
-            # Define context and see if it was already defined for this session
+            # Index user context Design objects
             Design.objects.bulk_create(architectures)
 
-            print("---> Problem id:", problem_id)
 
-            # user_info.eosscontext.problem = problem_id
+            # Set user context
             user_info.eosscontext.problem = 'SMAP'  # HARDCODE
             user_info.eosscontext.problem_id = problem_id
-
+            user_info.eosscontext.group_id = group_id
             user_info.eosscontext.dataset_name = str(problem_id)
-            # user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'
             user_info.eosscontext.dataset_user = True
             user_info.eosscontext.save()
             user_info.save()
+
+            # Return architectures
             return Response(architectures_json)
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")

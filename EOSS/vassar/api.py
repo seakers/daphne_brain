@@ -63,8 +63,10 @@ class ObjectiveSatisfaction:
 
 class VASSARClient:
     
-    def __init__(self, port=9090, request=None, problem_id=None):
-        if problem_id is not None:
+    def __init__(self, port=9090, request=None, problem_id=None, user_info=None):
+        if user_info is not None:
+            self.problem_id = user_info.eosscontext.problem_id
+        elif problem_id is not None:
             self.problem_id = str(problem_id)
         elif request is not None:
             user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
@@ -79,9 +81,8 @@ class VASSARClient:
         self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
         self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
-
         # Graphql Client
-        self.dbClient = GraphqlClient()
+        self.dbClient = GraphqlClient(problem_id=self.problem_id)
 
     
     
