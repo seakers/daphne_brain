@@ -167,6 +167,8 @@ class CheckStatus(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         problem = user_info.eosscontext.problem
+        problem_id = user_info.eosscontext.problem_id
+        group_id = user_info.eosscontext.group_id
         dataset_filename = user_info.eosscontext.dataset_name
         dataset_user = user_info.eosscontext.dataset_user
 
@@ -174,6 +176,8 @@ class CheckStatus(APIView):
         response = {
             'username': request.user.username,
             'permissions': [],
+            'problem_id': problem_id,
+            'group_id': group_id,
             'problem': problem,
             'dataset_filename': dataset_filename,
             'dataset_user': dataset_user
@@ -185,9 +189,6 @@ class CheckStatus(APIView):
             # Transform the database design data into a json for the frontend
             response['data'] = []
             if user_info.eosscontext.design_set.count() > 0:
-                for design in user_info.eosscontext.design_set.order_by('id').all():
-                    response['data'].append(
-                        {'id': design.id, 'inputs': json.loads(design.inputs), 'outputs': json.loads(design.outputs)})
                 response['modified_dataset'] = True
             else:
                 response['modified_dataset'] = False

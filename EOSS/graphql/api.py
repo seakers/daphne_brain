@@ -3,6 +3,8 @@
 import requests
 import json
 import time
+from auth_API.helpers import get_or_create_user_information
+
 
 
 
@@ -53,9 +55,17 @@ class MissionCostInformation:
 
 class GraphqlClient:
 
-    def __init__(self, hasura_url='http://graphql:8080/v1/graphql'):
+    def __init__(self, hasura_url='http://graphql:8080/v1/graphql', request=None, problem_id=None, user_info=None):
         self.hasura_url = hasura_url
-        self.problem_id = str(4)
+        if user_info is not None:
+            self.problem_id = user_info.eosscontext.problem_id
+        elif problem_id is not None:
+            self.problem_id = str(problem_id)
+        elif request is not None:
+            user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+            self.problem_id = str(user_info.eosscontext.problem_id)
+        else:
+            self.problem_id = str(4)
 
 
     def get_architectures(self, problem_id=5):
