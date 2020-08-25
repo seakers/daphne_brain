@@ -192,6 +192,7 @@ class CheckStatus(APIView):
             else:
                 response['modified_dataset'] = False
         else:
+            response['is_guest'] = request.session['is_guest']
             response['is_logged_in'] = False
         return Response(response)
 
@@ -202,15 +203,14 @@ class GenerateSession(APIView):
     Simply generate a session for the user (solves a ton of bugs)
     """
     def post(self, request, format=None):
-        request.session.save()
+        # Is this the first visit for this cookie?
+        if request.session.session_key is None:
+            request.session['is_guest'] = False
+        request.session.save()                        # If None, create new session key and save
         return Response("Session generated")
 
 
-
-
 # Vassar Problem Editor
-
-
 class GetUserPk(APIView):
     """
     Simply generate a session for the user (solves a ton of bugs)
@@ -224,6 +224,7 @@ class GetUserPk(APIView):
             return Response({'user_id': users[0].id})
         else:
             return Response({'status': 'query returned more than one users'})
+
 
 class CheckStatusHasura(APIView):
     """
@@ -261,8 +262,6 @@ class CheckStatusHasura(APIView):
         # return Response(response)
 
 
-
-
 def get_user_pk(username):
     users = User.objects.filter(username__exact=username)
     if len(users) == 1:
@@ -271,3 +270,9 @@ def get_user_pk(username):
     else:
         print("---> USER PK ERROR")
         return False
+
+
+class ConfirmGuest(APIView):
+    def post(self, request, format=None):
+        request.session['is_guest'] = True
+        request.session.save()
