@@ -96,8 +96,11 @@ class ImportData(APIView):
             # Define context and see if it was already defined for this session
             Design.objects.bulk_create(architectures)
 
+            print("---> Problem id:", problem_id)
+
             # user_info.eosscontext.problem = problem_id
             user_info.eosscontext.problem = 'SMAP'  # HARDCODE
+            user_info.eosscontext.problem_id = problem_id
 
             user_info.eosscontext.dataset_name = str(problem_id)
             # user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'

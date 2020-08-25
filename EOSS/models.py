@@ -15,6 +15,8 @@ class EOSSContext(models.Model):
     last_arch_id = models.IntegerField()
     selected_arch_id = models.IntegerField()
 
+    problem_id = models.IntegerField(default=4)
+
     # Counter for manually added designs
     added_archs_count = models.IntegerField()
 
