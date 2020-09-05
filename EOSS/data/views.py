@@ -217,6 +217,7 @@ class DatasetList(APIView):
         problem = request.data['problem']
         default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", 'default', problem)
         default_datasets.extend(os.listdir(default_path))
+
         if request.user.is_authenticated:
             username = request.user.username
             user_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", username, problem)

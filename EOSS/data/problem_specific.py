@@ -140,7 +140,10 @@ AC_ORBIT_DATASET = [
     {"alias": "2000", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
     {"alias": "3000", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
     {"alias": "4000", "name": "SSO-800-SSO-AM", "type": "Sun-synchronous", "altitude": 800, "LST": "AM"},
-    {"alias": "5000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"}]
+    {"alias": "5000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
+    {"alias": "6000", "name": "SSO-800-SSO-PM", "type": "Sun-synchronous", "altitude": 800, "LST": "PM"},
+    {"alias": "7000", "name": "SSO-400-SSO-PM", "type": "Sun-synchronous", "altitude": 400, "LST": "PM"},
+    {"alias": "8000", "name": "SSO-705-SSO-DD", "type": "Sun-synchronous", "altitude": 705, "LST": "PM"}]
 
 
 AC_INSTRUMENT_DATASET = [
@@ -175,6 +178,15 @@ AC_INSTRUMENT_DATASET = [
      "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
     {"alias": "ICI", "name": "ICI", "type": "Ice cloud imagers",
      "technology": "Conical scanning microwave radiometer", "geometry": "Nadir-viewing",
+     "wavebands": ["W-band", "mm", "THF"]},
+    {"alias": "AQUARIUS", "name": "AQUARIUS", "type": "Ice cloud imagers",
+     "technology": "Conical scanning microwave radiometer", "geometry": "Nadir-viewing",
+     "wavebands": ["W-band", "mm", "THF"]},
+    {"alias": "DIAL", "name": "DIAL", "type": "Ice cloud imagers",
+     "technology": "Conical scanning microwave radiometer", "geometry": "Nadir-viewing",
+     "wavebands": ["W-band", "mm", "THF"]},
+    {"alias": "IR-Spectrometer", "name": "IR-Spectrometer", "type": "Ice cloud imagers",
+     "technology": "Conical scanning microwave radiometer", "geometry": "Nadir-viewing",
      "wavebands": ["W-band", "mm", "THF"]}
 ]
 
@@ -203,7 +215,10 @@ ac_orbits_info = [
     "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
     "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
     "SSO-800-SSO-AM: Low Earth, Sun-synchronous, High Altitude (800 km), Morning",
-    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk"
+    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk",
+    "SSO-800-SSO-PM: Low Earth, Sun-synchronous, High Altitude (800 km), Afternoon",
+    "SSO-400-SSO-PM: Low Earth, Sun-synchronous, Low Altitude (400 km), Afternoon",
+    "SSO-705-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (705 km), Afternoon",
 ]
 
 
@@ -220,10 +235,14 @@ ac_instruments_info = [
     " ",
     " ",
     " ",
+    " ",
+    " ",
+    " ",
     " "
+
 ]
 
-ac_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
+ac_stakeholder_list = ["Weather", "Climate", "Land and Ecosystems", "Water", "Earth Surface and Interior"]
 
 
 def get_orbit_dataset(problem):
