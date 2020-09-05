@@ -44,12 +44,19 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  int stopGA(string id)')
     print('  string startGABinaryInput(string problem,  dataset, string username)')
     print('  string startGADiscreteInput(string problem,  dataset, string username)')
+    print('  string startGAScheduling(string problem,  dataset,  inputArches,  historicalInfo, string username)')
     print('   getArchScienceInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('   getArchCostInformationBinaryInput(string problem, BinaryInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsBinaryInput(string problem, BinaryInputArchitecture arch, string subobj)')
     print('   getArchScienceInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('   getArchCostInformationDiscreteInput(string problem, DiscreteInputArchitecture arch)')
     print('  SubobjectiveDetails getSubscoreDetailsDiscreteInput(string problem, DiscreteInputArchitecture arch, string subobj)')
+    print('   getCommonMeasurements(string problem,  arch_list)')
+    print('   getMeasurements(string problem, BinaryInputArchitecture arch)')
+    print('   getPanelScoresForArch(string problem, BinaryInputArchitecture arch)')
+    print('  double evaluateDataContinuityScore( missionMeasurements,  historical_missionMeasurements)')
+    print('  double evaluateFairnessScore( missionMeasurements)')
+    print('  double enumeratedDesigns(string problem,  input_arches,  historical_info)')
     print('')
     sys.exit(0)
 
@@ -249,6 +256,12 @@ elif cmd == 'startGADiscreteInput':
         sys.exit(1)
     pp.pprint(client.startGADiscreteInput(args[0], eval(args[1]), args[2],))
 
+elif cmd == 'startGAScheduling':
+    if len(args) != 5:
+        print('startGAScheduling requires 5 args')
+        sys.exit(1)
+    pp.pprint(client.startGAScheduling(args[0], eval(args[1]), eval(args[2]), eval(args[3]), args[4],))
+
 elif cmd == 'getArchScienceInformationBinaryInput':
     if len(args) != 2:
         print('getArchScienceInformationBinaryInput requires 2 args')
@@ -284,6 +297,42 @@ elif cmd == 'getSubscoreDetailsDiscreteInput':
         print('getSubscoreDetailsDiscreteInput requires 3 args')
         sys.exit(1)
     pp.pprint(client.getSubscoreDetailsDiscreteInput(args[0], eval(args[1]), args[2],))
+
+elif cmd == 'getCommonMeasurements':
+    if len(args) != 2:
+        print('getCommonMeasurements requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getCommonMeasurements(args[0], eval(args[1]),))
+
+elif cmd == 'getMeasurements':
+    if len(args) != 2:
+        print('getMeasurements requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getMeasurements(args[0], eval(args[1]),))
+
+elif cmd == 'getPanelScoresForArch':
+    if len(args) != 2:
+        print('getPanelScoresForArch requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.getPanelScoresForArch(args[0], eval(args[1]),))
+
+elif cmd == 'evaluateDataContinuityScore':
+    if len(args) != 2:
+        print('evaluateDataContinuityScore requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.evaluateDataContinuityScore(eval(args[0]), eval(args[1]),))
+
+elif cmd == 'evaluateFairnessScore':
+    if len(args) != 1:
+        print('evaluateFairnessScore requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.evaluateFairnessScore(eval(args[0]),))
+
+elif cmd == 'enumeratedDesigns':
+    if len(args) != 3:
+        print('enumeratedDesigns requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.enumeratedDesigns(args[0], eval(args[1]), eval(args[2]),))
 
 else:
     print('Unrecognized method %s' % cmd)
