@@ -133,6 +133,30 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
+    def get_measurement_list(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        if problem in assignation_problems:
+            return self.client.getMeasurements(problem, thrift_arch)
+        elif problem in partition_problems:
+            return null
+        else:
+            raise ValueError('Problem {0} not recognized'.format(problem))
+
+    def get_panel_subscores(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        if problem in assignation_problems:
+            return self.client.getPanelScoresFromArch(problem, thrift_arch)
+        elif problem in partition_problems:
+            return null
+        else:
+            raise ValueError('Problem {0} not recognized'.format(problem))
+
+    def get_data_continuity_eval(self, measurements, mission_measurements):
+        return self.client.evaluateDataContinuityScore(measurements, mission_measurements)
+
+    def get_fairness_eval(self, measurements):
+        return self.client.evaluateFairnessScore(measurements, mission_measurements)
+
     def get_subscore_details(self, problem, arch, subobjective):
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
@@ -164,6 +188,22 @@ class VASSARClient:
             ga_id = self.client.startGADiscreteInput(problem, thrift_list, username)
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
+        return ga_id
+
+    def start_enumeration(self, problem, input_arches, historical_info):
+        thrift_arches = []
+        for arch in input_arches:
+            thrift_arch = self.create_thrift_arch(problem, arch)
+            thrift_arches.append(thrift_arch)
+        score = self.client.enumeratedDesigns(problem, thrift_arches, historical_info)
+        return score
+
+    def start_scheduling_ga(self, problem, username, thrift_list, input_arches, historical_info):
+        thrift_arches = []
+        for arch in input_arches:
+            thrift_arch = self.create_thrift_arch(problem, arch)
+            thrift_arches.append(thrift_arch)
+        ga_id = self.client.startGAScheduling(problem, thrift_list, thrift_arches, historical_info, username)
         return ga_id
 
     def ping(self):
