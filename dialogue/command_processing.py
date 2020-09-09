@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import pickle
+import glob
 
 import numpy as np
 
@@ -66,8 +67,8 @@ def get_top_types(logits, daphne_version, module_name, top_number):
 
     named_labels = []
     type_info_folder = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name)
-    for filename in sorted(os.listdir(type_info_folder)):
-        specific_label = int(filename.split('.', 1)[0])
+    for filename in sorted(glob.glob(os.path.join(type_info_folder, "*.json"))):
+        specific_label = int(os.path.basename(filename).split('.', 1)[0])
         named_labels.append(specific_label)
     command_types = []
     for label in numerical_labels:
