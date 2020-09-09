@@ -2,17 +2,25 @@
   "type": "run_function",
   "params": [
     {
-      "name": "",
-      "type": "",
+      "name": "current_step_pointer",
+      "type": "context",
       "options": "",
       "from_context": true,
-      "context_path": ["screen"],
+      "context_path": ["dialogue", "atdialoguecontext"],
+      "mandatory": true
+    },
+    {
+      "name": "all_steps_from_procedure",
+      "type": "context",
+      "options": "",
+      "from_context": true,
+      "context_path": ["dialogue", "atdialoguecontext"],
       "mandatory": true
     }
   ],
   "objective": "Repeats the last/current step of a certain procedure from context",
   "function": {
-    "run_template": "dialogue_functions.get_current_step_from_context(context)",
+    "run_template": "dialogue_functions.get_current_step_from_context(data['all_steps_from_procedure'], data['current_step_pointer'], context, new_dialogue_contexts)",
     "results": [
       {
         "result_type": "single",

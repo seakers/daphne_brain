@@ -2,6 +2,7 @@ import json
 import pandas as pd
 
 import AT.recommendation.dialogue_functions as recommendation
+from AT.models import ATContext
 from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_units_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_risks_from_anomaly
@@ -155,52 +156,54 @@ def get_anomaly_affected_subsystem(anomaly):
     return subsystems
 
 
-def get_procedure_steps_from_procedure_name(procedure_name, context):
+def get_procedure_steps_from_procedure_name(procedure_name, context, new_dialogue_contexts):
+    atcontext = ATContext.objects.get(id=context["screen"]["id"])
     # Query the neo4j graph for procedure steps from procedure name
     procedure_infolist = retrieve_fancy_steps_from_procedure(procedure_name)
-    context['screen']['selected_procedures'] = procedure_name
+    atcontext.selected_procedures = json.dumps([procedure_name])
     procedure_steps = []
     for procedure_step in procedure_infolist:
         procedure_info = {'label': procedure_step['label'], 'action': procedure_step['action']}
         procedure_steps.append(procedure_info)
-    context['screen']['all_steps_from_procedure'] = procedure_steps
+    new_dialogue_contexts["atdialogue_context"].all_steps_from_procedure = json.dumps(procedure_steps)
+    atcontext.save()
+    return procedure_steps
 
 
-def get_first_step_from_procedure_name(procedure_name, context):
-    get_procedure_steps_from_procedure_name(procedure_name, context)
-    first_step = context['screen']['all_steps_from_procedure'][0]
-    context['screen']['next_step_pointer'] = 1
-    context['screen']['previous_step_pointer'] = 0
-    context['screen']['current_step_pointer'] = 0
+def get_first_step_from_procedure_name(procedure_name, context, new_dialogue_contexts):
+    procedure_steps = get_procedure_steps_from_procedure_name(procedure_name, context, new_dialogue_contexts)
+    first_step = procedure_steps[0]
+    new_dialogue_contexts["atdialogue_context"].next_step_pointer = 1
+    new_dialogue_contexts["atdialogue_context"].previous_step_pointer = 0
+    new_dialogue_contexts["atdialogue_context"].current_step_pointer = 0
     return first_step
 
 
-def get_next_step_from_context(context):
-    next_step_pointer = context['screen']['next_step_pointer']
+def get_next_step_from_context(all_steps_from_procedure, next_step_pointer, context, new_dialogue_contexts):
     if next_step_pointer == -1:
         return ""
     else:
-        next_step = context['screen']['all_steps_from_procedure'][next_step_pointer]
-        context['screen']['next_step_pointer'] += 1
-        context['screen']['previous_step_pointer'] += 1
-        context['screen']['current_step_pointer'] = context['screen']['next_step_pointer']
+        next_step = json.loads(all_steps_from_procedure)[next_step_pointer]
+        new_dialogue_contexts["atdialogue_context"].all_steps_from_procedure = all_steps_from_procedure
+        new_dialogue_contexts["atdialogue_context"].next_step_pointer = next_step_pointer + 1
+        new_dialogue_contexts["atdialogue_context"].previous_step_pointer = next_step_pointer - 1
+        new_dialogue_contexts["atdialogue_context"].current_step_pointer = next_step_pointer
         return next_step
 
 
-def get_previous_step_from_context(context):
-    previous_step_pointer = context['screen']['previous_step_pointer']
+def get_previous_step_from_context(all_steps_from_procedure, previous_step_pointer, context, new_dialogue_contexts):
     if previous_step_pointer == -1:
         previous_step_pointer += 1
         return ""
     else:
-        previous_step = context['screen']['all_steps_from_procedure'][previous_step_pointer]
-        context['screen']['next_step_pointer'] -= 1
-        context['screen']['previous_step_pointer'] -= 1
-        context['screen']['current_step_pointer'] = context['screen']['previous_step_pointer']
+        previous_step = json.loads(all_steps_from_procedure)[previous_step_pointer]
+        new_dialogue_contexts["atdialogue_context"].all_steps_from_procedure = all_steps_from_procedure
+        new_dialogue_contexts["atdialogue_context"].next_step_pointer = previous_step_pointer + 1
+        new_dialogue_contexts["atdialogue_context"].previous_step_pointer = previous_step_pointer - 1
+        new_dialogue_contexts["atdialogue_context"].current_step_pointer = previous_step_pointer
         return previous_step
 
 
-def get_current_step_from_context(context):
-    current_step_pointer = context['screen']['current_step_pointer']
-    current_step = context['screen']['all_steps_from_procedure'][current_step_pointer]
+def get_current_step_from_context(all_steps_from_procedure, current_step_pointer, context, new_dialogue_contexts):
+    current_step = json.loads(all_steps_from_procedure)[current_step_pointer]
     return current_step
