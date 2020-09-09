@@ -24,12 +24,6 @@ class ATContext(models.Model):
     # Thread deployment status bool
     are_at_threads_deployed = models.BooleanField(default=False)
 
-    # All, Current, Next and Previous procedural steps
-    all_steps_from_procedure = models.TextField(default='')
-    next_step_pointer = models.IntegerField(default=-1)
-    previous_step_pointer = models.IntegerField(default=-1)
-    current_step_pointer = models.IntegerField(default=-1)
-
 
 class ATContextSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,4 +39,20 @@ class ActiveATContext(models.Model):
 class ActiveContextSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActiveATContext
+        fields = '__all__'
+
+
+class ATDialogueContext(models.Model):
+    dialoguecontext = models.OneToOneField(DialogueContext, on_delete=models.CASCADE)
+
+    # All, Current, Next and Previous procedural steps
+    all_steps_from_procedure = models.TextField(default='')
+    next_step_pointer = models.IntegerField(default=-1)
+    previous_step_pointer = models.IntegerField(default=-1)
+    current_step_pointer = models.IntegerField(default=-1)
+
+
+class ATDialogueContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ATDialogueContext
         fields = '__all__'

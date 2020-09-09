@@ -1,6 +1,8 @@
+from collections import OrderedDict
+
 from dialogue.views import Command, ClearHistory
 from daphne_context.models import UserInformation, DialogueContext, DialogueContextSerializer
-from AT.models import ATContextSerializer
+from AT.models import ATContextSerializer, ATDialogueContextSerializer, ATDialogueContext
 
 
 class ATCommand(Command):
@@ -37,12 +39,24 @@ class ATCommand(Command):
     def generate_at_dialogue_context(self, dialogue_context: DialogueContext):
         dialogue_context_serializer = DialogueContextSerializer(dialogue_context)
         dialogue_context_dict = dialogue_context_serializer.data
-        # if hasattr(dialogue_context, "eossdialoguecontext"):
-        #     eossdialogue_context_serializer = EOSSDialogueContextSerializer(dialogue_context.eossdialoguecontext)
-        #     engineer_context_serializer = EngineerContextSerializer(dialogue_context.eossdialoguecontext.engineercontext)
-        #     dialogue_context_dict["eossdialoguecontext"] = eossdialogue_context_serializer.data
-        #     dialogue_context_dict["eossdialoguecontext"]["engineercontext"] = engineer_context_serializer.data
+        if hasattr(dialogue_context, "atdialoguecontext"):
+            atdialogue_context_serializer = ATDialogueContextSerializer(dialogue_context.atdialoguecontext)
+            dialogue_context_dict["atdialoguecontext"] = atdialogue_context_serializer.data
         return dialogue_context_dict
+
+    def create_dialogue_contexts(self):
+        dialogue_context = DialogueContext(is_clarifying_input=False)
+        atdialogue_context = ATDialogueContext()
+        contexts = OrderedDict()
+        contexts["dialogue_context"] = dialogue_context
+        contexts["atdialogue_context"] = atdialogue_context
+        return contexts
+
+    def save_dialogue_contexts(self, dialogue_contexts, dialogue_turn):
+        dialogue_contexts["dialogue_context"].dialogue_history = dialogue_turn
+        dialogue_contexts["dialogue_context"].save()
+        dialogue_contexts["atdialogue_context"].dialoguecontext = dialogue_contexts["dialogue_context"]
+        dialogue_contexts["atdialogue_context"].save()
 
 
 class ATClearHistory(ClearHistory):
