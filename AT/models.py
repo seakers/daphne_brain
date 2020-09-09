@@ -24,6 +24,12 @@ class ATContext(models.Model):
     # Thread deployment status bool
     are_at_threads_deployed = models.BooleanField(default=False)
 
+    # All, Current, Next and Previous procedural steps
+    all_steps_from_procedure = models.TextField(default='')
+    next_step_pointer = models.IntegerField(default=-1)
+    previous_step_pointer = models.IntegerField(default=-1)
+    current_step_pointer = models.IntegerField(default=-1)
+
 
 class ATContextSerializer(serializers.ModelSerializer):
     class Meta:

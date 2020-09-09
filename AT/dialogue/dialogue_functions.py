@@ -10,6 +10,7 @@ from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_affected_subsystems_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_affected_components_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_time_from_procedure
+from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.dialogue.data_helpers import last_measurement_value_from_context
 from AT.dialogue.data_helpers import pdf_link_from_procedure
 
@@ -29,7 +30,6 @@ def get_measurement_current_value(measurement, parameter_group, context):
         text_response = 'There is no measurement with this name and parameter group within the current sensor data.'
 
     result = text_response
-
     return result
 
 
@@ -53,7 +53,6 @@ def get_measurement_thresholds(measurement, parameter_group):
                   'threshold_value': thresholds[key],
                   'threshold_units': units}
         result_list.append(result)
-
     return result_list
 
 
@@ -89,28 +88,24 @@ def check_measurement_status(measurement, parameter_group, context):
     else:
         text = 'The ' + measurement_display_name + ' measurement is currently ' + zone + '.'
         result = text
-
     return result
 
 
 def get_anomaly_risks(anomaly):
     # Query the neo4j graph for the anomaly risks
     risks = retrieve_risks_from_anomaly(anomaly)
-
     return risks
 
 
 def get_anomaly_symptoms(anomaly):
     # Query the neo4j graph for the anomaly risks
     symptoms = retrieve_symptoms_from_anomaly(anomaly)
-
     return symptoms
 
 
 def get_procedure_affected_components(procedure):
     # Query the neo4j graph for the anomaly risks
     components = retrieve_affected_components_from_procedure(procedure)
-
     return components
 
 
@@ -126,7 +121,7 @@ def get_anomaly_procedures(anomaly):
 
 
 def get_anomaly_etr(anomaly):
-    # Query the neo4j graph for the anomaly procedures
+    # Query the neo4j graph for the anomaly procedures for estimated time of resolution (etr)
     procedures = retrieve_procedures_from_anomaly(anomaly)
     total_time = 0
     procedure_info_list = []
@@ -141,7 +136,7 @@ def get_anomaly_etr(anomaly):
 
 
 def get_procedure_etr(procedure_name):
-    # Query the neo4j graph for the procedure etr
+    # Query the neo4j graph for the procedure estimated time of resolution (etr)
     procedures_time = retrieve_time_from_procedure(procedure_name)
     procedure_info = {'procedure_name': procedure_name, 'procedure_time': procedures_time}
     return procedure_info
@@ -157,5 +152,55 @@ def get_procedure_pdf(procedure):
 def get_anomaly_affected_subsystem(anomaly):
     # Query the neo4j graph for the anomaly risks
     subsystems = retrieve_affected_subsystems_from_anomaly(anomaly)
-
     return subsystems
+
+
+def get_procedure_steps_from_procedure_name(procedure_name, context):
+    # Query the neo4j graph for procedure steps from procedure name
+    procedure_infolist = retrieve_fancy_steps_from_procedure(procedure_name)
+    context['screen']['selected_procedures'] = procedure_name
+    procedure_steps = []
+    for procedure_step in procedure_infolist:
+        procedure_info = {'label': procedure_step['label'], 'action': procedure_step['action']}
+        procedure_steps.append(procedure_info)
+    context['screen']['all_steps_from_procedure'] = procedure_steps
+
+
+def get_first_step_from_procedure_name(procedure_name, context):
+    get_procedure_steps_from_procedure_name(procedure_name, context)
+    first_step = context['screen']['all_steps_from_procedure'][0]
+    context['screen']['next_step_pointer'] = 1
+    context['screen']['previous_step_pointer'] = 0
+    context['screen']['current_step_pointer'] = 0
+    return first_step
+
+
+def get_next_step_from_context(context):
+    next_step_pointer = context['screen']['next_step_pointer']
+    if next_step_pointer == -1:
+        return ""
+    else:
+        next_step = context['screen']['all_steps_from_procedure'][next_step_pointer]
+        context['screen']['next_step_pointer'] += 1
+        context['screen']['previous_step_pointer'] += 1
+        context['screen']['current_step_pointer'] = context['screen']['next_step_pointer']
+        return next_step
+
+
+def get_previous_step_from_context(context):
+    previous_step_pointer = context['screen']['previous_step_pointer']
+    if previous_step_pointer == -1:
+        previous_step_pointer += 1
+        return ""
+    else:
+        previous_step = context['screen']['all_steps_from_procedure'][previous_step_pointer]
+        context['screen']['next_step_pointer'] -= 1
+        context['screen']['previous_step_pointer'] -= 1
+        context['screen']['current_step_pointer'] = context['screen']['previous_step_pointer']
+        return previous_step
+
+
+def get_current_step_from_context(context):
+    current_step_pointer = context['screen']['current_step_pointer']
+    current_step = context['screen']['all_steps_from_procedure'][current_step_pointer]
+    return current_step
