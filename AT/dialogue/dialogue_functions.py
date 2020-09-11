@@ -171,15 +171,18 @@ def get_procedure_steps_from_procedure_name(procedure_name, context, new_dialogu
 
 
 def get_first_step_from_procedure_name(procedure_name, context, new_dialogue_contexts):
+    atcontext = ATContext.objects.get(id=context["screen"]["id"])
     procedure_steps = get_procedure_steps_from_procedure_name(procedure_name, context, new_dialogue_contexts)
     first_step = procedure_steps[0]
     new_dialogue_contexts["atdialogue_context"].next_step_pointer = 1
     new_dialogue_contexts["atdialogue_context"].previous_step_pointer = 0
     new_dialogue_contexts["atdialogue_context"].current_step_pointer = 0
+    atcontext.save()
     return first_step
 
 
 def get_next_step_from_context(all_steps_from_procedure, next_step_pointer, context, new_dialogue_contexts):
+    atcontext = ATContext.objects.get(id=context["screen"]["id"])
     if next_step_pointer == -1:
         return ""
     else:
@@ -188,10 +191,12 @@ def get_next_step_from_context(all_steps_from_procedure, next_step_pointer, cont
         new_dialogue_contexts["atdialogue_context"].next_step_pointer = next_step_pointer + 1
         new_dialogue_contexts["atdialogue_context"].previous_step_pointer = next_step_pointer - 1
         new_dialogue_contexts["atdialogue_context"].current_step_pointer = next_step_pointer
-        return next_step
+    atcontext.save()
+    return next_step
 
 
 def get_previous_step_from_context(all_steps_from_procedure, previous_step_pointer, context, new_dialogue_contexts):
+    atcontext = ATContext.objects.get(id=context["screen"]["id"])
     if previous_step_pointer == -1:
         previous_step_pointer += 1
         return ""
@@ -201,9 +206,15 @@ def get_previous_step_from_context(all_steps_from_procedure, previous_step_point
         new_dialogue_contexts["atdialogue_context"].next_step_pointer = previous_step_pointer + 1
         new_dialogue_contexts["atdialogue_context"].previous_step_pointer = previous_step_pointer - 1
         new_dialogue_contexts["atdialogue_context"].current_step_pointer = previous_step_pointer
-        return previous_step
+    atcontext.save()
+    return previous_step
 
 
 def get_current_step_from_context(all_steps_from_procedure, current_step_pointer, context, new_dialogue_contexts):
+    atcontext = ATContext.objects.get(id=context["screen"]["id"])
     current_step = json.loads(all_steps_from_procedure)[current_step_pointer]
+    new_dialogue_contexts["atdialogue_context"].all_steps_from_procedure = all_steps_from_procedure
+    new_dialogue_contexts["atdialogue_context"].next_step_pointer = current_step_pointer + 1
+    new_dialogue_contexts["atdialogue_context"].previous_step_pointer = current_step_pointer - 1
+    atcontext.save()
     return current_step

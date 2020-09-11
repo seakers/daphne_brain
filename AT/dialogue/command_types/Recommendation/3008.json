@@ -34,7 +34,7 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "${procedure_step_number}     ${procedure_step_action}"
+      "template": "Previous step is ${procedure_step_number}     ${procedure_step_action}"
     }
   ],
   "visual_response": [
