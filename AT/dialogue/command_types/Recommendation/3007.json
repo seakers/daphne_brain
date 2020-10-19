@@ -34,14 +34,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "Next step is ${procedure_step_number}     ${procedure_step_action}"
+      "template": "${procedure_step_number}, ${procedure_step_action}"
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "${procedure_step_number}     ${procedure_step_action}"
+      "template": "${procedure_step_number}, ${procedure_step_action}"
     }
   ]
 }
