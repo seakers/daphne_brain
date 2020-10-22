@@ -531,6 +531,7 @@ def retrieve_fancy_steps_from_procedure(procedure):
         'subsubsteps': 0
     }
     for index, step in enumerate(step_labels):
+        isStep = True
         # Retrieve the depth from the label points
         label_points = 0
         for char in step_labels[index]:
@@ -548,10 +549,12 @@ def retrieve_fancy_steps_from_procedure(procedure):
             if label_counter['steps'] == 1 and label_counter['substeps'] == 0:
                 is_enabled = True
             label_counter['substeps'] += 1
-        if depth == 1:
+            isStep = False
+        if depth == 2:
             if label_counter['steps'] == 1 and label_counter['substeps'] == 1 and label_counter['subsubsteps'] == 0:
                 is_enabled = True
             label_counter['subsubsteps'] += 1
+            isStep = False
 
         # Build the parsed item
         step_item = {'depth': depth,
@@ -563,7 +566,8 @@ def retrieve_fancy_steps_from_procedure(procedure):
                      'figure2': step_figures2[index],
                      'fNumber2': step_fNumbers2[index],
                      'hasFigure2': step_hasFigure2[index],
-                     'isDone': False}
+                     'isDone': False,
+                     'isStep': isStep}
 
         steps.append(step_item)
 
