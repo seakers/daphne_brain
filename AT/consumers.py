@@ -286,6 +286,176 @@ class ATConsumer(DaphneConsumer):
                                                           'channel_layer': self.channel_layer})
                     print(f"{self.channel_name} removed from the seclss group users.")
                     print(f"{r.scard('seclss-group-users')}")
+        elif r.sismember('hera-group-users', self.channel_name) == 1:
+            # Check if both telemetry and at thread are not initialized
+            if global_obj.hera_thread is None and global_obj.hera_at_thread is None:
+                r.srem('hera-group-users', self.channel_name)
+                async_to_sync(self.channel_layer.group_discard)("hera_group", self.channel_name)
+                print(f"{self.channel_name} removed from the hera group users.")
+                print(f"{r.scard('hera-group-users')}")
+
+            # Check if only telemetry thread is not initialized
+            elif global_obj.hera_thread is None:
+                # Check if at thread is alive, then kill that thread
+                if global_obj.hera_at_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    if r.scard("hera-group-users") == 0:
+                        global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.hera_at_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.hera_at_thread.is_alive():
+                            print('There was an error stopping hera at thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                # If it is not alive then it is already stopped, send back success
+                else:
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                          'channel_layer': self.channel_layer})
+                    print(f"{self.channel_name} removed from the hera group users.")
+                    print(f"{r.scard('hera-group-users')}")
+
+            # Check if only telemetry thread is not initialized
+            elif global_obj.hera_at_thread is None:
+                # Check if telemetry thread is alive, then kill that thread
+                if global_obj.hera_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    if r.scard("hera-group-users") == 0:
+                        global_obj.hub_to_hera_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.hera_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.hera_thread.is_alive():
+                            print('There was an error stopping hera telemetry thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                # If it is not alive then it is already stopped, send back success
+                else:
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                          'channel_layer': self.channel_layer})
+                    print(f"{self.channel_name} removed from the hera group users.")
+                    print(f"{r.scard('hera-group-users')}")
+            # Check if both have been initialized
+            else:
+                # Check if both are alive then kill both
+                if global_obj.hera_thread.is_alive() and global_obj.hera_at_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    # If no more users are listening to the real telemetry then stop it
+                    if r.scard("hera-group-users") == 0:
+                        global_obj.frontend_to_hub_queue.put({'type': 'stop_real_telemetry'})
+
+                        # Ensure that the thread stops
+                        global_obj.hera_thread.join(2.0)
+                        if global_obj.hera_thread.is_alive():
+                            print('There was an error stopping the hera telemetry thread.')
+
+                        global_obj.hera_at_thread.join(2.0)
+                        if global_obj.hera_at_thread.is_alive():
+                            print('There was an error stopping the hera at thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                # Check if only sEclss thread is alive
+                elif global_obj.hera_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    if r.scard("hera-group-users") == 0:
+                        global_obj.hub_to_hera_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.hera_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.hera_thread.is_alive():
+                            print('There was an error stopping hera telemetry thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+                # Check if only at thread is alive
+                elif global_obj.hera_at_thread.is_alive():
+                    # Remove user from listening to the real telemetry
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    if r.scard("hera-group-users") == 0:
+                        global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+
+                        # Ensure it gets stopped
+                        global_obj.hera_at_thread.join(2.0)
+
+                        # If not successful send back error message
+                        if global_obj.hera_at_thread.is_alive():
+                            print('There was an error stopping real at thread.')
+
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+
+                    else:
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        print(f"{self.channel_name} removed from the hera group users.")
+                        print(f"{r.scard('hera-group-users')}")
+                # Check if both are not running
+                else:
+                    async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                    r.srem("hera-group-users", self.channel_name)
+                    global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                          'channel_layer': self.channel_layer})
+                    print(f"{self.channel_name} removed from the hera group users.")
+                    print(f"{r.scard('hera-group-users')}")
 
         # remove the user from the fake telemetry group if they were in one
         elif r.sismember('fake-telemetry-one', self.channel_name) == 1:
@@ -823,21 +993,25 @@ class ATConsumer(DaphneConsumer):
                                                          name="Hub Thread",
                                                          args=(global_obj.frontend_to_hub_queue,
                                                                global_obj.sEclss_to_hub_queue,
+                                                               global_obj.hera_to_hub_queue,
                                                                global_obj.simulator_to_hub_queues[0],
                                                                global_obj.simulator_to_hub_queues[1],
                                                                global_obj.simulator_to_hub_queues[2],
                                                                global_obj.simulator_to_hub_queues[3],
                                                                global_obj.hub_to_sEclss_queue,
+                                                               global_obj.hub_to_hera_queue,
                                                                global_obj.hub_to_simulator_queues[0],
                                                                global_obj.hub_to_simulator_queues[1],
                                                                global_obj.hub_to_simulator_queues[2],
                                                                global_obj.hub_to_simulator_queues[3],
                                                                global_obj.hub_to_sEclss_at_queue,
+                                                               global_obj.hub_to_hera_at_queue,
                                                                global_obj.hub_to_simulator_at_queues[0],
                                                                global_obj.hub_to_simulator_at_queues[1],
                                                                global_obj.hub_to_simulator_at_queues[2],
                                                                global_obj.hub_to_simulator_at_queues[3],
                                                                global_obj.sEclss_at_to_hub_queue,
+                                                               global_obj.hera_at_to_hub_queue,
                                                                global_obj.simulator_at_to_hub_queues[0],
                                                                global_obj.simulator_at_to_hub_queues[1],
                                                                global_obj.simulator_at_to_hub_queues[2],
@@ -2002,8 +2176,10 @@ class ATConsumer(DaphneConsumer):
                         global_obj.simulator_at_threads[2] = threading.Thread(target=anomaly_treatment_routine,
                                                                               name="Fake AT Thread 3",
                                                                               args=(
-                                                                              global_obj.hub_to_simulator_at_queues[2],
-                                                                              global_obj.simulator_at_to_hub_queues[2],
+                                                                                  global_obj.hub_to_simulator_at_queues[
+                                                                                      2],
+                                                                                  global_obj.simulator_at_to_hub_queues[
+                                                                                      2],
                                                                               ))
                         global_obj.simulator_at_threads[2].start()
 
@@ -2890,13 +3066,357 @@ class ATConsumer(DaphneConsumer):
                             }
                         }))
 
+        elif content.get('type') == 'start_hera_telemetry':
+            # Check if sEclss at thread is not initialized then initialize it and handle sEclss thread
+            if global_obj.hera_at_thread is None:
+                # Anomaly detection thread initialization for real telemetry
+                global_obj.hera_at_thread = threading.Thread(target=anomaly_treatment_routine,
+                                                             name="Hera AT Thread",
+                                                             args=(global_obj.hub_to_hera_at_queue,
+                                                                   global_obj.hera_at_to_hub_queue,))
+                global_obj.hera_at_thread.start()
+
+                # Check that the anomaly detection thread is working then check sEclss thread
+                if global_obj.hera_at_thread.is_alive():
+                    print("Hera AT Thread started.")
+                    # Check if sEclss thread has not been initialized, then initialize it
+                    if global_obj.hera_thread is None:
+                        # Simulator thread initialization
+                        global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
+                                                                  name="Hera Telemetry Thread",
+                                                                  args=(global_obj.hera_to_hub_queue,
+                                                                        global_obj.hub_to_hera_queue,
+                                                                        global_obj.server_to_hera_queue))
+                        global_obj.hera_thread.start()
+
+                        # Check that the telemetry thread has started, then send success
+                        if global_obj.hera_thread.is_alive():
+                            print("Hera telemetry started.")
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'hera_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success starting hera telemetry and hera AT thread.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If not working then stop at thread and send back error
+                        else:
+                            global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+                            self.send(json.dumps({
+                                'type': 'hera_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Success starting Hera AT Thread but failure to start hera'
+                                               'telemetry thread. Real AT Thread stopped. Try again.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If sEclss thread has been initialized then handle if it alive or not
+                    else:
+                        # If it is alive then join it
+                        if global_obj.hera_thread.is_alive():
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'hera_telemetry_response',
+                                'content': {
+                                    'status': 'already_running',
+                                    'message': 'Success starting hera at thread and real telemetry was'
+                                               ' already running.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If it is not alive then reinitialize it
+                        else:
+                            # Simulator thread initialization
+                            global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
+                                                                      name="Hera Telemetry Thread",
+                                                                      args=(global_obj.hera_to_hub_queue,
+                                                                            global_obj.hub_to_hera_queue,
+                                                                            global_obj.server_to_hera_queue))
+                            global_obj.hera_thread.start()
+
+                            # Check that the telemetry thread has started, then send success
+                            if global_obj.hera_thread.is_alive():
+                                print("Hera telemetry started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'hera_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting hera telemetry and hera AT thread.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If not working then stop at thread and send back error
+                            else:
+                                global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'hera_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Hera AT Thread but failure to start hera'
+                                                   'telemetry thread. Real AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                # If sEclss at thread does not start then don't start real telemetry and send back error
+                else:
+                    self.send(json.dumps({
+                        'type': 'hera_telemetry_response',
+                        'content': {
+                            'status': 'error',
+                            'message': 'Error starting hera at thread. Hera telemetry was not started.',
+                            'attempt': content.get('attempt')
+                        }
+                    }))
+            # If sEclss at thread has been initialized then handle if it is alive or not
+            else:
+                # If alive then check telemetry as normal
+                if global_obj.hera_at_thread.is_alive():
+                    # Check if sEclss thread has not been initialized, then initialize it
+                    if global_obj.hera_thread is None:
+                        # Simulator thread initialization
+                        global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
+                                                                  name="Hera Telemetry Thread",
+                                                                  args=(global_obj.hera_to_hub_queue,
+                                                                        global_obj.hub_to_hera_queue,
+                                                                        global_obj.server_to_hera_queue))
+                        global_obj.hera_thread.start()
+
+                        # Check that the telemetry thread has started, then send success
+                        if global_obj.hera_thread.is_alive():
+                            print("Hera telemetry started.")
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'hera_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success starting hera telemetry and hera AT thread was already'
+                                               ' running.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If not working then stop at thread and send back error
+                        else:
+                            global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+                            self.send(json.dumps({
+                                'type': 'hera_telemetry_response',
+                                'content': {
+                                    'status': 'error',
+                                    'message': 'Hera at thread was already running but failure to start hera'
+                                               'telemetry thread. Hera AT Thread stopped. Try again.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If sEclss thread has been initialized then handle if it alive or not
+                    else:
+                        # If it is alive then join it
+                        if global_obj.hera_thread.is_alive():
+                            global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                  "channel_layer": self.channel_layer,
+                                                                  "channel_name": self.channel_name})
+                            self.send(json.dumps({
+                                'type': 'hera_telemetry_response',
+                                'content': {
+                                    'status': 'already_running',
+                                    'message': 'Hera at thread and hera telemetry was'
+                                               ' already running.',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                            frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                       'channel_layer': self.channel_layer,
+                                                       'channel_name': self.channel_name})
+                        # If it is not alive then reinitialize it
+                        else:
+                            # Simulator thread initialization
+                            global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
+                                                                      name="Hera Telemetry Thread",
+                                                                      args=(global_obj.hera_to_hub_queue,
+                                                                            global_obj.hub_to_hera_queue,
+                                                                            global_obj.server_to_hera_queue))
+                            global_obj.hera_thread.start()
+
+                            # Check that the telemetry thread has started, then send success
+                            if global_obj.hera_thread.is_alive():
+                                print("Hera telemetry started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'hera_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting hera telemetry and hera AT thread was '
+                                                   'already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If not working then stop at thread and send back error
+                            else:
+                                global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'real_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Hera AT Thread was already running but failure to start hera'
+                                                   'telemetry thread. Hera AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+
+                # If not alive then reinitialize it and handle telemetry normally
+                else:
+                    # Anomaly detection thread initialization for real telemetry
+                    global_obj.hera_at_thread = threading.Thread(target=anomaly_treatment_routine,
+                                                                 name="Hera AT Thread",
+                                                                 args=(global_obj.hub_to_hera_at_queue,
+                                                                       global_obj.hera_at_to_hub_queue,))
+                    global_obj.hera_at_thread.start()
+
+                    # Check that the anomaly detection thread is working then check sEclss thread
+                    if global_obj.hera_at_thread.is_alive():
+                        print("Hera AT Thread started.")
+                        # Check if sEclss thread has not been initialized, then initialize it
+                        if global_obj.hera_thread is None:
+                            # Simulator thread initialization
+                            global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
+                                                                      name="Hera Telemetry Thread",
+                                                                      args=(global_obj.hera_to_hub_queue,
+                                                                            global_obj.hub_to_hera_queue,
+                                                                            global_obj.server_to_hera_queue))
+                            global_obj.hera_thread.start()
+
+                            # Check that the telemetry thread has started, then send success
+                            if global_obj.hera_thread.is_alive():
+                                print("Hera telemetry started.")
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'hera_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success starting hera telemetry and hera AT thread.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If not working then stop at thread and send back error
+                            else:
+                                global_obj.hub_to_sEclss_at_queue.put({'type': 'stop'})
+                                self.send(json.dumps({
+                                    'type': 'hera_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': 'Success starting Hera AT Thread but failure to start hera'
+                                                   'telemetry thread. hera AT Thread stopped. Try again.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        # If sEclss thread has been initialized then handle if it alive or not
+                        else:
+                            # If it is alive then join it
+                            if global_obj.hera_thread.is_alive():
+                                global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                      "channel_layer": self.channel_layer,
+                                                                      "channel_name": self.channel_name})
+                                self.send(json.dumps({
+                                    'type': 'hera_telemetry_response',
+                                    'content': {
+                                        'status': 'already_running',
+                                        'message': 'Success starting hera at thread and hera telemetry was'
+                                                   ' already running.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                                frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                           'channel_layer': self.channel_layer,
+                                                           'channel_name': self.channel_name})
+                            # If it is not alive then reinitialize it
+                            else:
+                                # Simulator thread initialization
+                                global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
+                                                                            name="Hera Telemetry Thread",
+                                                                            args=(global_obj.hera_to_hub_queue,
+                                                                                  global_obj.hub_to_hera_queue,
+                                                                                  global_obj.server_to_hera_queue))
+                                global_obj.hera_thread.start()
+
+                                # Check that the telemetry thread has started, then send success
+                                if global_obj.hera_thread.is_alive():
+                                    print("Hera telemetry started.")
+                                    global_obj.frontend_to_hub_queue.put({"type": "add_to_hera_group",
+                                                                          "channel_layer": self.channel_layer,
+                                                                          "channel_name": self.channel_name})
+                                    self.send(json.dumps({
+                                        'type': 'hera_telemetry_response',
+                                        'content': {
+                                            'status': 'success',
+                                            'message': 'Success starting hera telemetry and hera AT thread.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                                    frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params',
+                                                               'channel_layer': self.channel_layer,
+                                                               'channel_name': self.channel_name})
+                                # If not working then stop at thread and send back error
+                                else:
+                                    global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+                                    self.send(json.dumps({
+                                        'type': 'real_telemetry_response',
+                                        'content': {
+                                            'status': 'error',
+                                            'message': 'Success starting Hera AT Thread but failure to start hera'
+                                                       'telemetry thread. Hera AT Thread stopped. Try again.',
+                                            'attempt': content.get('attempt')
+                                        }
+                                    }))
+                    # If sEclss at thread does not start then don't start real telemetry and send back error
+                    else:
+                        self.send(json.dumps({
+                            'type': 'hera_telemetry_response',
+                            'content': {
+                                'status': 'error',
+                                'message': 'Error starting hera at thread. Hera telemetry was not started.',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+
         elif content.get('type') == 'stop_telemetry':
             # Find what telemetry this user is assigned to if any
             if r.sismember('seclss-group-users', self.channel_name) == 1:
                 # Check if both telemetry and at thread are not initialized
                 if global_obj.sEclss_thread is None and global_obj.sEclss_at_thread is None:
                     r.srem('seclss-group-users', self.channel_name)
-                    async_to_sync(self.channel_layer.group_discard)("sEclss_group", self.channel_name)
+                    async_to_sync(self.channel_layer.group_discard)("sEclss-group", self.channel_name)
                     self.send(json.dumps({
                         'type': 'stop_telemetry_response',
                         'content': {
@@ -3218,6 +3738,335 @@ class ATConsumer(DaphneConsumer):
                                 'status': 'success',
                                 'message': 'Real at thread was not alive and real telemetry thread was '
                                            'already alive. Success removing using from seclss group users. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+            elif r.sismember('hera-group-users', self.channel_name) == 1:
+                # Check if both telemetry and at thread are not initialized
+                if global_obj.hera_thread is None and global_obj.hera_at_thread is None:
+                    r.srem('hera-group-users', self.channel_name)
+                    async_to_sync(self.channel_layer.group_discard)("hera-group", self.channel_name)
+                    self.send(json.dumps({
+                        'type': 'stop_telemetry_response',
+                        'content': {
+                            'status': 'success',
+                            'message': 'This user is assigned to hera telemetry but hera telemetry and hera at threads'
+                                       ' are not initialized.',
+                            'attempt': content.get('attempt')
+                        }
+                    }))
+                # Check if only telemetry thread is not initialized
+                elif global_obj.hera_thread is None:
+                    # Check if at thread is alive, then kill that thread
+                    if global_obj.hera_at_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        if r.scard("hera-group-users") == 0:
+                            global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+
+                            # Ensure it gets stopped
+                            successful = True
+                            atMessage = ''
+                            global_obj.hera_at_thread.join(2.0)
+
+                            # If not successful send back error message
+                            if global_obj.hera_at_thread.is_alive():
+                                successful = False
+                                atMessage = 'There was an error stopping hera at thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping hera at thread and hera telemetry was not '
+                                                   'initialized. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('hera-group', self.channel_name)
+                                r.sadd("hera-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': atMessage + ' Hera telemetry thread was never initialized.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                  'channel_layer': self.channel_layer})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success removing user from hera group users. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Hera telemetry thread was not initialized and hera at thread was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if only telemetry thread is not initialized
+                elif global_obj.hera_at_thread is None:
+                    # Check if telemetry thread is alive, then kill that thread
+                    if global_obj.hera_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        if r.scard("hera-group-users") == 0:
+                            global_obj.hub_to_hera_queue.put({'type': 'stop'})
+
+                            # Ensure it gets stopped
+                            successful = True
+                            telemetryMessage = ''
+                            global_obj.hera_thread.join(2.0)
+
+                            # If not successful send back error message
+                            if global_obj.hera_thread.is_alive():
+                                successful = False
+                                telemetryMessage = 'There was an error stopping hera telemetry thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping hera telemetry thread and hera at was not '
+                                                   'initialized. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('hera-group', self.channel_name)
+                                r.sadd("hera-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': telemetryMessage + ' Hera at thread was never initialized.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                  'channel_layer': self.channel_layer})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success removing user from hera group users. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # If it is not alive then it is already stopped, send back success
+                    else:
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Hera at thread was not initialized and hera telemetry thread was '
+                                           'already killed. Proceed',
+                                'attempt': content.get('attempt')
+                            }
+                        }))
+                # Check if both have been initialized
+                else:
+                    # Check if both are alive then kill both
+                    if global_obj.hera_thread.is_alive() and global_obj.hera_at_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        # If no more users are listening to the real telemetry then stop it
+                        if r.scard("hera-group-users") == 0:
+                            global_obj.frontend_to_hub_queue.put({'type': 'stop_hera_telemetry'})
+
+                            # Ensure that the thread stops
+                            successful = True
+                            sEclssMessage = ''
+                            atsEclssMessage = ''
+                            global_obj.hera_thread.join(2.0)
+                            if global_obj.hera_thread.is_alive():
+                                successful = False
+                                sEclssMessage = 'There was an error stopping the hera telemetry thread.'
+
+                            global_obj.hera_at_thread.join(2.0)
+                            if global_obj.hera_at_thread.is_alive():
+                                successful = False
+                                atsEclssMessage = 'There was an error stopping the hera at thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping the hera telemetry. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('hera-group', self.channel_name)
+                                r.sadd('hera-group-users', self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': sEclssMessage + ' ' + atsEclssMessage,
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                  'channel_layer': self.channel_layer})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success removing user from hera group users. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only sEclss thread is alive
+                    elif global_obj.hera_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        if r.scard("hera-group-users") == 0:
+                            global_obj.hub_to_hera_queue.put({'type': 'stop'})
+
+                            # Ensure it gets stopped
+                            successful = True
+                            telemetryMessage = ''
+                            global_obj.hera_thread.join(2.0)
+
+                            # If not successful send back error message
+                            if global_obj.hera_thread.is_alive():
+                                successful = False
+                                telemetryMessage = 'There was an error stopping hera telemetry thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping hera telemetry thread and hera at was not '
+                                                   'alive. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('hera-group', self.channel_name)
+                                r.sadd("hera-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': telemetryMessage + 'Hera at thread was never alive.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                  'channel_layer': self.channel_layer})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success removing user from hera group users. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if only at thread is alive
+                    elif global_obj.hera_at_thread.is_alive():
+                        # Remove user from listening to the real telemetry
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        if r.scard("hera-group-users") == 0:
+                            global_obj.hub_to_hera_at_queue.put({'type': 'stop'})
+
+                            # Ensure it gets stopped
+                            successful = True
+                            atMessage = ''
+                            global_obj.hera_at_thread.join(2.0)
+
+                            # If not successful send back error message
+                            if global_obj.hera_at_thread.is_alive():
+                                successful = False
+                                atMessage = 'There was an error stopping hera at thread.'
+
+                            if successful:
+                                global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                      'channel_layer': self.channel_layer})
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'success',
+                                        'message': 'Success stopping hera at thread and hera telemetry was not '
+                                                   'alive. Proceed',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                            else:
+                                async_to_sync(self.channel_layer.group_add)('hera-group', self.channel_name)
+                                r.sadd("hera-group-users", self.channel_name)
+                                self.send(json.dumps({
+                                    'type': 'stop_telemetry_response',
+                                    'content': {
+                                        'status': 'error',
+                                        'message': atMessage + ' Hera telemetry thread was never alive.',
+                                        'attempt': content.get('attempt')
+                                    }
+                                }))
+                        else:
+                            global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                                  'channel_layer': self.channel_layer})
+                            self.send(json.dumps({
+                                'type': 'stop_telemetry_response',
+                                'content': {
+                                    'status': 'success',
+                                    'message': 'Success removing user from hera group users. Proceed',
+                                    'attempt': content.get('attempt')
+                                }
+                            }))
+                    # Check if both are not running
+                    else:
+                        async_to_sync(self.channel_layer.group_discard)('hera-group', self.channel_name)
+                        r.srem("hera-group-users", self.channel_name)
+                        global_obj.frontend_to_hub_queue.put({'type': 'remove_channel_layer_from_hera',
+                                                              'channel_layer': self.channel_layer})
+                        self.send(json.dumps({
+                            'type': 'stop_telemetry_response',
+                            'content': {
+                                'status': 'success',
+                                'message': 'Hera at thread was not alive and hera telemetry thread was '
+                                           'already alive. Success removing using from hera group users. Proceed',
                                 'attempt': content.get('attempt')
                             }
                         }))
@@ -4247,6 +5096,9 @@ class ATConsumer(DaphneConsumer):
             if r.sismember('seclss-group-users', self.channel_name) == 1:
                 frontend_to_hub_queue.put({'type': 'get_real_telemetry_params', 'channel_layer': self.channel_layer,
                                            'channel_name': self.channel_name})
+            elif r.sismember('hera-group-users', self.channel_name) == 1:
+                frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params', 'channel_layer': self.channel_layer,
+                                           'channel_name': self.channel_name})
             elif r.sismember('fake-telemetry-one', self.channel_name) == 1:
                 frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params', 'channel_name': self.channel_name})
             elif r.sismember('fake-telemetry-two', self.channel_name) == 1:
@@ -4258,6 +5110,9 @@ class ATConsumer(DaphneConsumer):
 
         elif content.get('msg_type') == 'get_real_telemetry_params':
             frontend_to_hub_queue.put({'type': 'get_real_telemetry_params'})
+
+        elif content.get('msg_type') == 'get_hera_telemetry_params':
+            frontend_to_hub_queue.put({'type': 'get_hera_telemetry_params'})
 
         elif content.get('msg_type') == 'get_fake_telemetry_params':
             frontend_to_hub_queue.put({'type': 'get_fake_telemetry_params', 'channel_name': self.channel_name})
@@ -4276,6 +5131,9 @@ class ATConsumer(DaphneConsumer):
         self.send(json.dumps(event))
 
     def real_telemetry_response(self, event):
+        self.send(json.dumps(event))
+
+    def hera_telemetry_response(self, event):
         self.send(json.dumps(event))
 
     def console_text(self, event):

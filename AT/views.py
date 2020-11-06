@@ -100,6 +100,25 @@ class SeclssFeed(APIView):
                 "message": "ERROR retrieving the sensor data from the ECLSS simulator"
             })
 
+class HeraFeed(APIView):
+    def post(self, request):
+        if 'habitatStatus' in request.POST:
+            parameters_data = request.data['habitatStatus']
+            parsed_sensor_data = json.loads(parameters_data)
+            if global_obj.sEclss_thread is not None \
+                    and global_obj.sEclss_thread.is_alive() \
+                    and global_obj.sEclss_thread.name == "Real Telemetry Thread":
+                global_obj.server_to_hera_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
+            return Response(parsed_sensor_data)
+        else:
+            print(request.data)
+            print(request.headers)
+            print('ERROR retrieving the sensor data from the Hera simulator')
+            return Response({
+                "status": "error",
+                "message": "ERROR retrieving the sensor data from the Hera simulator"
+            })
+
 
 class RequestDiagnosis(APIView):
     def post(self, request):
