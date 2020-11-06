@@ -102,15 +102,22 @@ class SeclssFeed(APIView):
 
 class HeraFeed(APIView):
     def post(self, request):
-        # habitatStatus
-        if 'parameters' in request.POST:
-            parameters_data = request.data['parameters']
+        '''if 'habitatStatus' in request.POST:
+            parameters_data = request.data['habitatStatus']
             parsed_sensor_data = json.loads(parameters_data)
             if global_obj.hera_thread is not None \
                     and global_obj.hera_thread.is_alive() \
                     and global_obj.hera_thread.name == "Hera Telemetry Thread":
+                global_obj.server_to_hera_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
+            return Response(parsed_sensor_data)'''
+        if 'parameters' in request.data:
+            sensor_data = request.data['parameters']
+            # print(sensor_data)
+            parsed_sensor_data = json.loads(sensor_data)
+            if global_obj.hera_thread is not None \
+                    and global_obj.hera_thread.is_alive() \
+                    and global_obj.hera_thread.name == "Hera Telemetry Thread":
                 global_obj.server_to_hera_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
-                #global_obj.server_to_hera_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
             return Response(parsed_sensor_data)
         else:
             print(request.data)
