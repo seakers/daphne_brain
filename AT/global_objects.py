@@ -4,6 +4,8 @@ from queue import Queue
 hub_thread = None
 sEclss_thread = None
 sEclss_at_thread = None
+hera_thread = None
+hera_at_thread = None
 simulator_thread_one = None
 simulator_thread_two = None
 simulator_thread_three = None
@@ -23,6 +25,11 @@ hub_to_sEclss_queue = Queue()
 hub_to_sEclss_at_queue = Queue()
 sEclss_at_to_hub_queue = Queue()
 server_to_sEclss_queue = Queue(maxsize=3600)
+hera_to_hub_queue = Queue()
+hub_to_hera_queue = Queue()
+hub_to_hera_at_queue = Queue()
+hera_at_to_hub_queue = Queue()
+server_to_hera_queue = Queue(maxsize=3600)
 simulator_to_hub_queue_one = Queue()
 simulator_to_hub_queue_two = Queue()
 simulator_to_hub_queue_three = Queue()

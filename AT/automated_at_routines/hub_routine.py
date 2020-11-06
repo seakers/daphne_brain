@@ -17,10 +17,10 @@ def update_channel_layer_and_name(signal):
     return channel_layer, channel_name
 
 
-def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim_to_hub_three, sim_to_hub_four,
-                hub_to_sEclss, hub_to_sim_one, hub_to_sim_two, hub_to_sim_three, hub_to_sim_four, hub_to_sEclss_at,
-                hub_to_sim_at_one, hub_to_sim_at_two, hub_to_sim_at_three, hub_to_sim_at_four, sEclss_at_to_hub,
-                sim_at_to_hub_one, sim_at_to_hub_two, sim_at_to_hub_three, sim_at_to_hub_four):
+def hub_routine(front_to_hub, sEclss_to_hub, hera_to_hub, sim_to_hub_one, sim_to_hub_two, sim_to_hub_three, sim_to_hub_four,
+                hub_to_sEclss, hub_to_hera, hub_to_sim_one, hub_to_sim_two, hub_to_sim_three, hub_to_sim_four, hub_to_sEclss_at,
+                hub_to_hera_at, hub_to_sim_at_one, hub_to_sim_at_two, hub_to_sim_at_three, hub_to_sim_at_four, sEclss_at_to_hub,
+                hera_at_to_hub, sim_at_to_hub_one, sim_at_to_hub_two, sim_at_to_hub_three, sim_at_to_hub_four):
 
     r = redis.Redis()
 
@@ -37,6 +37,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     # Real telemetry group
     sEclss_group_name = 'seclss-group'
     channel_layer_real = []
+
+    # Hera telemetry group
+    hera_group_name = 'hera-group'
+    channel_layer_hera = []
 
     # Fake telemetry users
     channel_layer_fake_one = None
@@ -57,6 +61,10 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     # Real channel layer and name to send params to
     channel_layer_real_params = None
     channel_name_real_params = None
+
+    # Hera channel layer and name to send params to
+    channel_layer_hera_params = None
+    channel_name_hera_params = None
 
     # Start the hub routine
     while time_since_last_ping < life_limit:
@@ -164,14 +172,41 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                 hub_to_sEclss.put({"type": "stop", "content": None})
                 hub_to_sEclss_at.put({"type": "stop", "content": None})
 
+            elif signal['type'] == 'add_to_hera_group':
+                channel_layer_hera.append(signal['channel_layer'])
+                channel_name = signal['channel_name']
+                if r.sismember("hera-group-users", channel_name) == 0:
+                    async_to_sync(channel_layer_hera[0].group_add)(hera_group_name, channel_name)
+                    r.sadd("hera-group-users", channel_name)
+                    if r.sismember("hera-group-users", channel_name) == 1:
+                        print(f"Channel {channel_name} added to hera group")
+                    else:
+                        print(f"{channel_name} was not probably added to the hera group users.")
+
+            elif signal['type'] == 'get_hera_telemetry_params':
+                channel_layer_hera_params = signal['channel_layer']
+                channel_name_hera_params = signal['channel_name']
+                hub_to_hera.put({"type": "get_real_telemetry_params"})
+                print("Get hera telemetry params")
+
+            elif signal['type'] == 'remove_channel_layer_from_hera':
+                channel_layer_to_remove = signal['channel_layer']
+                channel_layer_hera.remove(channel_layer_to_remove)
+
+            elif signal['type'] == 'stop_hera_telemetry':
+                hub_to_hera.put({"type": "stop", "content": None})
+                hub_to_hera_at.put({"type": "stop", "content": None})
+
             elif signal['type'] == 'ping':
                 timer_start = time.time()
                 hub_to_sEclss.put({"type": "ping", "content": None})
+                hub_to_hera.put({"type": "ping", "content": None})
                 hub_to_sim_one.put({"type": "ping", "content": None})
                 hub_to_sim_two.put({"type": "ping", "content": None})
                 hub_to_sim_three.put({"type": "ping", "content": None})
                 hub_to_sim_four.put({"type": "ping", "content": None})
                 hub_to_sEclss_at.put({"type": "ping", "content": None})
+                hub_to_hera_at.put({"type": "ping", "content": None})
                 hub_to_sim_at_one.put({"type": "ping", "content": None})
                 hub_to_sim_at_two.put({"type": "ping", "content": None})
                 hub_to_sim_at_three.put({"type": "ping", "content": None})
@@ -226,6 +261,54 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
                     channel_layer_real_params = None
                     channel_name_real_params = None
                     print("Real telemetry initialization sent.")
+                else:
+                    print("No channel layer to initialize params.")
+
+        # Check sEclss input queue
+        if not hera_to_hub.empty():
+            signal = hera_to_hub.get()
+            if signal['type'] == 'window':
+                # Parse the signal
+                tf_window = signal['content']
+
+                # Send the telemetry feed window to the anomaly detection queue
+                last_window = {'type': 'window', 'content': tf_window}
+                hub_to_hera_at.put(last_window)
+
+                # Try to convert the dataframes to json format (this fails from time to time with no explanation)
+                json_values = ''
+                json_info = ''
+                try:
+                    json_values = tf_window['values'].to_json()
+                    json_info = tf_window['info'].to_json()
+                except:
+                    print('Dataframe conversion failed')
+
+                # If the conversion was successful, update and send the telemetry update command for the frontend
+                if json_values != '' and json_info != '':
+                    content = {'values': json_values,
+                               'info': json_info}
+                    command = {'type': 'telemetry_update',
+                               'content': content}
+                    if len(channel_layer_hera) > 0:
+                        async_to_sync(channel_layer_hera[0].group_send)(hera_group_name, command)
+                    else:
+                        print("No channel layer for seclss group.")
+            elif signal['type'] == 'initialize_telemetry':
+                # Parse the signal
+                tf_window = signal['content']
+
+                # Retrieve the telemetry feed variables and send an initialization command to the frontend
+                tf_variables = list(tf_window['info'].columns.values)
+                content = {'variables_names': tf_variables}
+                command = {'type': 'initialize_telemetry',
+                           'content': content}
+                print("Hera telemetry initialization collected.")
+                if channel_layer_hera_params is not None:
+                    async_to_sync(channel_layer_hera_params.send)(channel_name_hera_params, command)
+                    channel_layer_hera_params = None
+                    channel_name_hera_params = None
+                    print("Hera telemetry initialization sent.")
                 else:
                     print("No channel layer to initialize params.")
 
@@ -416,6 +499,11 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
             if len(channel_layer_real) > 0 and signal['type'] == 'symptoms_report':
                 async_to_sync(channel_layer_real[0].group_send)(sEclss_group_name, signal)
 
+        if not hera_at_to_hub.empty():
+            signal = hera_at_to_hub.get()
+            if len(channel_layer_hera) > 0 and signal['type'] == 'symptoms_report':
+                async_to_sync(channel_layer_hera[0].group_send)(hera_group_name, signal)
+
         # Check the anomaly treatment output queues for simulated telemetry
         if not sim_at_to_hub_one.empty():
             signal = sim_at_to_hub_one.get()
@@ -452,6 +540,12 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     if global_obj.sEclss_at_thread is not None:
         if global_obj.sEclss_at_thread.is_alive():
             hub_to_sEclss_at.put({'type': 'stop'})
+    if global_obj.hera_thread is not None:
+        if global_obj.hera_thread.is_alive():
+            hub_to_hera.put({'type': 'stop'})
+    if global_obj.hera_at_thread is not None:
+        if global_obj.hera_at_thread.is_alive():
+            hub_to_hera_at.put({'type': 'stop'})
     if global_obj.simulator_threads[0] is not None:
         if global_obj.simulator_threads[0].is_alive():
             hub_to_sim_one.put({'type': 'stop'})
@@ -479,6 +573,7 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
 
     # Clear all redis variables if no one is on
     r.delete("seclss-group-users")
+    r.delete("hera-group-users")
     r.delete("fake-telemetry-one")
     r.delete("fake-telemetry-two")
     r.delete("fake-telemetry-three")
@@ -490,21 +585,25 @@ def hub_routine(front_to_hub, sEclss_to_hub, sim_to_hub_one, sim_to_hub_two, sim
     # But ensure all get cleared anyway to ensure everything starts on a clean slate
     front_to_hub.queue.clear()
     sEclss_to_hub.queue.clear()
+    hera_to_hub.queue.clear()
     sim_to_hub_one.queue.clear()
     sim_to_hub_two.queue.clear()
     sim_to_hub_three.queue.clear()
     sim_to_hub_four.queue.clear()
     hub_to_sEclss.queue.clear()
+    hub_to_hera.queue.clear()
     hub_to_sim_one.queue.clear()
     hub_to_sim_two.queue.clear()
     hub_to_sim_three.queue.clear()
     hub_to_sim_four.queue.clear()
     hub_to_sEclss_at.queue.clear()
+    hub_to_hera_at.queue.clear()
     hub_to_sim_at_one.queue.clear()
     hub_to_sim_at_two.queue.clear()
     hub_to_sim_at_three.queue.clear()
     hub_to_sim_at_four.queue.clear()
     sEclss_at_to_hub.queue.clear()
+    hera_at_to_hub.queue.clear()
     sim_at_to_hub_one.queue.clear()
     sim_at_to_hub_two.queue.clear()
     sim_at_to_hub_three.queue.clear()
