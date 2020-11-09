@@ -123,9 +123,9 @@ class Register(APIView):
                 subfolder_name = os.path.join(folder_name, problem)
                 os.mkdir(subfolder_name)
 
-            # We must give the user access to the default group: seakers (default)
+            # We must give the user access to the default group: seakers (default) - all users will be admins
             URL = 'http://graphql:8080/v1/graphql'
-            mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: 1, user_id: ' + str(user_id) + '}) { returning { group_id user_id id }}}'
+            mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: 1, user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
             request_data = json.dumps({'query': mutation})
             r = requests.post(url=URL, data=request_data)
 
