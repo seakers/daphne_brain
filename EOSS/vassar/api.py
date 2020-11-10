@@ -161,7 +161,7 @@ class VASSARClient:
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
     # working
-    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue', fast=False):
+    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue', fast=False, ga=False):
         inputs = ''
         for x in input_str:
             if x:
@@ -185,6 +185,10 @@ class VASSARClient:
             },
             'fast': {
                 'StringValue': str(fast),
+                'DataType': 'String'
+            },
+            'ga': {
+                'StringValue': str(ga),
                 'DataType': 'String'
             }
         })
@@ -238,7 +242,7 @@ class VASSARClient:
             new_design_bool_ary = boolean_string_to_boolean_array(str(new_design))
             print('---> NEW DESIGN string: ', str(new_design))
             print('---> NEW DESIGN ary: ', new_design_bool_ary)
-            new_design_result = self.evaluate_architecture('SMAP', new_design_bool_ary, self.problem_id, eval_queue_name, fast=True)
+            new_design_result = self.evaluate_architecture('SMAP', new_design_bool_ary, self.problem_id, eval_queue_name, fast=True, ga=True)
             print('---> RESULT: ', str(new_design_result))
             designs.append(new_design_result)
 
