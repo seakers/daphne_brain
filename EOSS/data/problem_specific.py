@@ -74,25 +74,29 @@ cc_stakeholder_list = ["Atmospheric", "Oceanic", "Terrestrial"]
 
 SMAP_ORBIT_DATASET = [
     {"alias": "1000", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
-    {"alias": "2000", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
-    {"alias": "3000", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
-    {"alias": "4000", "name": "SSO-800-SSO-AM", "type": "Sun-synchronous", "altitude": 800, "LST": "AM"},
-    {"alias": "5000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"}]
-
+    {"alias": "2000", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
+    {"alias": "3000", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
+    {"alias": "4000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
+    {"alias": "5000", "name": "SSO-800-SSO-AM", "type": "Sun-synchronous", "altitude": 800, "LST": "AM"}]
 
 SMAP_INSTRUMENT_DATASET = [
-    {"alias": "A", "name": "BIOMASS", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
-     "geometry": "Conical scanning", "wavebands": ["P-band"]},
-    {"alias": "B", "name": "SMAP_RAD", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
-     "geometry": "Conical scanning", "wavebands": ["L-band"]},
-    {"alias": "C", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
+    {"alias": "A", "name": "SMAP_RAD", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
+         "geometry": "Conical scanning", "wavebands": ["L-band"]},
+
+    {"alias": "B", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
      "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L-band"]},
+
+    {"alias": "C", "name": "VIIRS", "type": "High-resolution nadir-scanning IR spectrometer",
+     "technology": "Atmospheric temperature and humidity sounders", "geometry": "Nadir-viewing",
+     "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
+
     {"alias": "D", "name": "CMIS", "type": "Imaging multi-spectral radiometers (passive microwave)",
      "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning",
      "wavebands": ["C-band", "X-band", "K-band", "Ka-band", "W-band"]},
-    {"alias": "E", "name": "VIIRS", "type": "High-resolution nadir-scanning IR spectrometer",
-     "technology": "Atmospheric temperature and humidity sounders", "geometry": "Nadir-viewing",
-     "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
+
+    {"alias": "E", "name": "BIOMASS", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
+     "geometry": "Conical scanning", "wavebands": ["P-band"]},
+
 ]
 
 
