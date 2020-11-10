@@ -161,7 +161,7 @@ class VASSARClient:
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
     # working
-    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue', fast=False, ga=False):
+    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue', fast=False, ga=False, redo=False):
         inputs = ''
         for x in input_str:
             if x:
@@ -189,6 +189,10 @@ class VASSARClient:
             },
             'ga': {
                 'StringValue': str(ga),
+                'DataType': 'String'
+            },
+            'redo': {
+                'StringValue': str(redo),
                 'DataType': 'String'
             }
         })
@@ -398,7 +402,13 @@ class VASSARClient:
         print("\n\n----> critique_architecture", problem, arch)
         arch_id = self.dbClient.get_arch_id(arch)
         print("---> architecture id", arch_id)
-        return self.dbClient.get_arch_critique(arch_id)
+        critique = self.dbClient.get_arch_critique(arch_id)
+        if critique == []:
+            print("---> Re-evaluating architecture ")
+            self.evaluate_architecture('SMAP', json.loads(arch.inputs), redo=True)
+            critique = self.dbClient.wait_for_critique(arch_id)
+        print("--> FINAL CRITIQUE ", critique)
+        return critique
     
 
 
