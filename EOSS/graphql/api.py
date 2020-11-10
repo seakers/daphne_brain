@@ -217,6 +217,16 @@ class GraphqlClient:
         return information
 
 
+    def wait_for_critique(self, arch_id, timeout=20):
+        results = self.get_arch_critique(arch_id)
+        for x in range(0, timeout):
+            results = self.get_arch_critique(arch_id)
+            if results:
+                return results
+            time.sleep(1)
+        return results
+
+
     def get_arch_critique(self, arch_id):
         query = f''' query myquery {{
             Architecture_by_pk(id: {arch_id}) {{
