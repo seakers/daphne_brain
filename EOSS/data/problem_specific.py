@@ -1,5 +1,12 @@
 import pandas
 
+'''
+    Because this functionality is hardcoded, it is not compatible with daphne's new aws architecture. The current issue
+    specifically being addressed in these changes is the fluid ordering of both satellites and instruments in the aws
+    architecture implementation.
+'''
+
+
 assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric']
 partition_problems = ['Decadal2017Aerosols']
 
@@ -156,6 +163,10 @@ def get_instrument_dataset(problem):
         return SMAP_INSTRUMENT_DATASET
     if problem == "Decadal2017Aerosols":
         return SMAP_INSTRUMENT_DATASET
+
+
+
+
 
 
 def get_capabilities_sheet(problem):
