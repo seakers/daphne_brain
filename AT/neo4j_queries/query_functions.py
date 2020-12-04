@@ -618,6 +618,40 @@ def retrieve_equipment_from_procedure(procedure_name):
     return equipment
 
 
+def retrieve_references_from_procedure(procedure_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.Title='" + procedure_name + "' RETURN r.Title"
+    result = session.run(query)
+
+    # Parse the result
+    reference_list = []
+    for item in result:
+        reference_list.append(item[0])
+
+    return reference_list
+
+
+def retrieve_reference_links_from_procedure(procedure_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.Title='" + procedure_name + "' RETURN r.Procedure"
+    result = session.run(query)
+
+    # Parse the result
+    reference_list = []
+    for item in result:
+        reference_list.append(item[0])
+
+    return reference_list
+
+
 def retrieve_figures_from_procedure(procedure_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
