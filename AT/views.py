@@ -9,7 +9,7 @@ from AT.automated_at_routines.hub_routine import hub_routine
 from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
 from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly, \
-    retrieve_figures_from_procedure
+    retrieve_figures_from_procedure, retrieve_references_from_procedure, retrieve_reference_links_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
@@ -100,17 +100,19 @@ class SeclssFeed(APIView):
                 "message": "ERROR retrieving the sensor data from the ECLSS simulator"
             })
 
+
 class HeraFeed(APIView):
     def post(self, request):
         # habitatStatus
         if 'habitatStatus' in request.data:
             habitat_status = request.data['habitatStatus']
             parsed_sensor_data = json.loads(habitat_status)['Parameters']
+
             if global_obj.hera_thread is not None \
                     and global_obj.hera_thread.is_alive() \
                     and global_obj.hera_thread.name == "Hera Telemetry Thread":
-                global_obj.server_to_hera_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
-                #global_obj.server_to_hera_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
+                global_obj.server_to_hera_queue.put(
+                    {'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
             return Response(parsed_sensor_data)
         else:
             print(request.data)
@@ -175,6 +177,8 @@ class RetrieveInfoFromProcedure(APIView):
         steps_list = retrieve_fancy_steps_from_procedure(procedure_name)
         objective = retrieve_objective_from_procedure(procedure_name)
         equipment = retrieve_equipment_from_procedure(procedure_name)
+        references = retrieve_references_from_procedure(procedure_name)
+        referenceLinks = retrieve_reference_links_from_procedure(procedure_name)
         figures = retrieve_figures_from_procedure(procedure_name)
 
         # Build the output dictionary
@@ -182,6 +186,8 @@ class RetrieveInfoFromProcedure(APIView):
             'procedureStepsList': steps_list,
             'procedureObjective': objective,
             'procedureEquipment': equipment,
+            'procedureReferences': references,
+            'procedureReferenceLinks': referenceLinks,
             'procedureFigures': figures,
         }
 
