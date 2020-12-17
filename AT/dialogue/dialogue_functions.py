@@ -3,7 +3,7 @@ import pandas as pd
 
 import AT.recommendation.dialogue_functions as recommendation
 from AT.models import ATContext
-from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement
+from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement, retrieve_all_components
 from AT.neo4j_queries.query_functions import retrieve_units_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_risks_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_symptoms_from_anomaly
@@ -218,3 +218,15 @@ def get_current_step_from_context(all_steps_from_procedure, current_step_pointer
     new_dialogue_contexts["atdialogue_context"].previous_step_pointer = current_step_pointer - 1
     atcontext.save()
     return current_step
+
+
+def get_component_images(component):
+    component_list = retrieve_all_components()
+    for item in component_list:
+            stripped = item.replace(".png", "")
+            spaced = stripped.replace("_", " ")
+            if spaced == component:
+                component = item
+                break
+    return component
+

@@ -8,13 +8,13 @@ from AT.automated_at_routines.at_routine import anomaly_treatment_routine
 from AT.automated_at_routines.hub_routine import hub_routine
 from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
 from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
-from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly
+from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly, \
+    retrieve_figures_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
-from AT.neo4j_queries.query_functions import retrieve_figures_from_procedure
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
@@ -103,9 +103,9 @@ class SeclssFeed(APIView):
 class HeraFeed(APIView):
     def post(self, request):
         # habitatStatus
-        if 'parameters' in request.POST:
-            parameters_data = request.data['parameters']
-            parsed_sensor_data = json.loads(parameters_data)
+        if 'habitatStatus' in request.data:
+            habitat_status = request.data['habitatStatus']
+            parsed_sensor_data = json.loads(habitat_status)['Parameters']
             if global_obj.hera_thread is not None \
                     and global_obj.hera_thread.is_alive() \
                     and global_obj.hera_thread.name == "Hera Telemetry Thread":
