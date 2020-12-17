@@ -1077,7 +1077,7 @@ class ATConsumer(DaphneConsumer):
                                                                global_obj.simulator_at_to_hub_queues[1],
                                                                global_obj.simulator_at_to_hub_queues[2],
                                                                global_obj.simulator_at_to_hub_queues[3]
-                                                                   ))
+                                                                ))
                     global_obj.hub_thread.start()
 
                     # Ensure the hub thread started
@@ -3368,10 +3368,10 @@ class ATConsumer(DaphneConsumer):
                             else:
                                 # Simulator thread initialization
                                 global_obj.hera_thread = threading.Thread(target=handle_eclss_update,
-                                                                            name="Hera Telemetry Thread",
-                                                                            args=(global_obj.hera_to_hub_queue,
-                                                                                  global_obj.hub_to_hera_queue,
-                                                                                  global_obj.server_to_hera_queue))
+                                                                          name="Hera Telemetry Thread",
+                                                                          args=(global_obj.hera_to_hub_queue,
+                                                                                global_obj.hub_to_hera_queue,
+                                                                                global_obj.server_to_hera_queue))
                                 global_obj.hera_thread.start()
 
                                 # Check that the telemetry thread has started, then send success
