@@ -4,7 +4,8 @@ from daphne_context.models import UserInformation
 from AT.diagnosis.models import ECLSSAnomalies
 from AT.diagnosis import models
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index
-from AT.neo4j_queries.query_functions import retrieve_all_measurements, retrieve_all_anomalies, retrieve_all_procedures, retrieve_all_measurements_parameter_groups
+from AT.neo4j_queries.query_functions import retrieve_all_measurements, retrieve_all_anomalies, retrieve_all_procedures, \
+    retrieve_all_measurements_parameter_groups, retrieve_all_components
 
 
 def extract_anomaly_ids(processed_question, number_of_features, context: UserInformation):
@@ -38,10 +39,17 @@ def extract_anomalies(processed_question, number_of_features, context: UserInfor
     measurements = retrieve_all_anomalies()
     return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
 
+def extract_components(processed_question, number_of_features, context: UserInformation):
+    # Get a list of components
+    components = retrieve_all_components()
+    return sorted_list_of_features_by_index(processed_question, components, number_of_features)
+
 extract_function = {}
 
 extract_function["anomaly_id"] = extract_anomaly_ids
 extract_function["procedure"] = extract_procedures
 extract_function["measurement"] = extract_measurements
 extract_function["anomaly"] = extract_anomalies
-extract_function['parameter_group'] = extract_measurements_parameter_groups
+extract_function["parameter_group"] = extract_measurements_parameter_groups
+extract_function["component"] = extract_components
+

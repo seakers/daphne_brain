@@ -1,3 +1,5 @@
+import itertools
+
 from neo4j import GraphDatabase, basic_auth
 
 
@@ -16,7 +18,8 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     # build the query based on the symptoms list
     query = ''
     for index, symp in enumerate(symptoms):
-        query = query + 'MATCH (m' + str(index) + ':Measurement)-[r' + str(index) + ':' + symp['relationship'] + ']->(g:Anomaly) '
+        query = query + 'MATCH (m' + str(index) + ':Measurement)-[r' + str(index) + ':' + symp[
+            'relationship'] + ']->(g:Anomaly) '
     query = query + 'WHERE '
     for index, symp in enumerate(symptoms):
         if (index + 1) < len(symptoms):
@@ -31,7 +34,6 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
 
 
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
-
     # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
     # of all the VA code.
 
@@ -371,7 +373,7 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
     session = driver.session()
 
     # Build and send the query to obtain the affected measurements that exceed the UWL
-    query_uwl = "MATCH (a:Anomaly)-[r:Exceeds_UWL]-(m:Measurement) WHERE a.Title='" + anomaly_name +\
+    query_uwl = "MATCH (a:Anomaly)-[r:Exceeds_UWL]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
                 "' RETURN DISTINCT m.Name, m.ParameterGroup"
     result_uwl = session.run(query_uwl)
 
@@ -410,7 +412,7 @@ def retrieve_thresholds_from_measurement(measurement_name, parameter_group):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' AND m.ParameterGroup='" + parameter_group +\
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' AND m.ParameterGroup='" + parameter_group + \
             "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL"
     result = session.run(query)
 
@@ -436,7 +438,7 @@ def retrieve_units_from_measurement(measurement_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name +\
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + \
             "' RETURN DISTINCT m.Unit"
     result = session.run(query)
 
@@ -456,7 +458,7 @@ def retrieve_ordered_steps_from_procedure(procedure_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure)-[:Has]-(st:Step) WHERE p.Title='" +\
+    query = "MATCH (p:Procedure)-[:Has]-(st:Step) WHERE p.Title='" + \
             procedure_name + "' RETURN st.Action ORDER BY st.Title"
     result = session.run(query)
 
@@ -635,3 +637,23 @@ def retrieve_figures_from_procedure(procedure_name):
 
     return figure_list
 
+
+def retrieve_all_components():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query1 = 'MATCH (n) WHERE EXISTS(n.Link) RETURN DISTINCT n.Link AS Link UNION ALL MATCH ()-[r]-() WHERE ' \
+             'EXISTS(r.Link) RETURN DISTINCT r.Link AS Link '
+    query2 = 'MATCH (n) WHERE EXISTS(n.Link2) RETURN DISTINCT n.Link2 AS Link2 UNION ALL MATCH ()-[r]-() WHERE ' \
+             'EXISTS(r.Link2) RETURN DISTINCT r.Link2 AS Link2 '
+    result1 = session.run(query1)
+    result2 = session.run(query2)
+
+    components_list = []
+    for items in itertools.chain(result1, result2):
+        for item in items:
+            components_list.append(item)
+
+    return components_list

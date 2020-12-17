@@ -1,6 +1,6 @@
 import time
 import pandas as pd
-
+from AT.global_objects import server_to_sEclss_queue, server_to_hera_queue
 
 def get_param_values(sensor_data):
     new_row = {}
@@ -24,6 +24,40 @@ def get_param_values(sensor_data):
         lwt = item['LowerWarningLimit']
         hwt = item['UpperWarningLimit']
         hct = item['UpperCriticalLimit']
+
+        display_name = name + ' (' + group + ')'
+        kg_name = name
+
+        tf_info_dict[display_name] = [display_name, kg_name, group, units, lct, lwt, nominal, hwt, hct]
+        new_row[display_name] = simulated_value
+
+    tf_info = pd.DataFrame(tf_info_dict)
+    tf_info = tf_info.set_index('parameter')
+    parsed_sensor_data = {'new_values': new_row, 'info': tf_info}
+    return parsed_sensor_data
+
+def get_hss_param_values(sensor_data):
+    new_row = {}
+    tf_info_dict = {'parameter': ['display_name',
+                                  'kg_name',
+                                  'group',
+                                  'units',
+                                  'low_critic_threshold',
+                                  'low_warning_threshold',
+                                  'nominal',
+                                  'high_warning_threshold',
+                                  'high_critic_threshold', ]}
+
+    for item in sensor_data:
+        name = item['Name']
+        nominal = item['NominalValue']
+        simulated_value = item['SimValue']
+        units = item['Unit']
+        group = item['ParameterGroup']
+        lct = item['LowerWarningLimit']
+        lwt = item['LowerCautionLimit']
+        hwt = item['UpperCautionLimit']
+        hct = item['UpperWarningLimit']
 
         display_name = name + ' (' + group + ')'
         kg_name = name
@@ -104,7 +138,10 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
             signal = ser_to_sEclss.get()
             if signal['type'] == 'sensor_data':
                 sensor_data = signal['content']
-                parsed_sensor_data = get_param_values(sensor_data)
+                if server_to_sEclss_queue == ser_to_sEclss:
+                    parsed_sensor_data = get_param_values(sensor_data)
+                else:
+                    parsed_sensor_data = get_hss_param_values(sensor_data)
 
                 if first_update:
                     print("Initialized tf window.")

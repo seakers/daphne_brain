@@ -1,0 +1,33 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "component", "type": "component", "options": "", "from_context": false, "mandatory": false }
+  ],
+  "objective": "Provide the image for a certain component",
+  "function":
+  {
+    "run_template": "dialogue_functions.get_component_images(data['component'])",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "component": "command_results[0]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "A link to the component's image has been provided."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "See the image for <a href=\"javascript:window.open(window.location.href+'src/images/${component}');\">${component}</a>."
+    }
+  ]
+}
