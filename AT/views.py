@@ -105,8 +105,8 @@ class HeraFeed(APIView):
     def post(self, request):
         # habitatStatus
         if 'habitatStatus' in request.data:
-            habitat_status = request.data['habitatStatus']
-            parsed_sensor_data = json.loads(habitat_status)['Parameters']
+            parameters_data = request.data['habitatStatus']
+            parsed_sensor_data = json.loads(parameters_data)
 
             if global_obj.hera_thread is not None \
                     and global_obj.hera_thread.is_alive() \
