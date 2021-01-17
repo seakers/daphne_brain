@@ -74,17 +74,55 @@ class GraphqlClient:
         return self.execute_query(query)
 
     def get_orbit_list(self, group_id, problem_id):
-        group_id = str(group_id)
-        problem_id = str(problem_id)
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
         query = ' query get_orbit_list { Join__Problem_Orbit(where: {problem_id: {_eq: ' + self.problem_id + '}}){ Orbit { id name } } } '
         return self.execute_query(query)
+
+    def get_orbits_and_attributes(self):
+        query = f'''
+            query MyQuery {{
+                items: Join__Problem_Orbit(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                    orbit: Orbit {{
+                      name
+                      attributes: Join__Orbit_Attributes {{
+                        value
+                        Orbit_Attribute {{
+                          name
+                        }}
+                      }}
+                    }}
+                }}
+            }}
+        '''
+        orbit_info = self.execute_query(query)['data']['items']
+        return orbit_info
 
     def get_instrument_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
         query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + self.problem_id + '}}) { Instrument { id name } } } '
         return self.execute_query(query)
+
+    def get_instruments_and_attributes(self):
+        query = f'''
+            query MyQuery {{
+                items: Join__Problem_Instrument(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                    instrument: Instrument {{
+                      name
+                      attributes: Join__Instrument_Characteristics(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                        value
+                        Orbit_Attribute {{
+                          name
+                        }}
+                      }}
+                    }}
+                }}
+            }}
+        '''
+        instrument_info = self.execute_query(query)['data']['items']
+        return instrument_info
+
+
 
     def get_objective_list(self, group_id, problem_id):
         group_id = str(group_id)
@@ -254,7 +292,9 @@ class GraphqlClient:
         
 
 
-
+    def insert_user_into_group(self, user_id, group_id=1):
+        mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
+        return self.execute_query(mutation)
 
     def execute_query(self, query):
         r = requests.post(self.hasura_url, json={'query': query })
@@ -262,7 +302,6 @@ class GraphqlClient:
         # print('\n-------- Query Result --------')
         # print(result)
         # print('-------------------------\n')
-
         return result
 
     # Return architecture details after vassar evaluates

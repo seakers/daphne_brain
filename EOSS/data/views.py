@@ -48,6 +48,8 @@ class ImportData(APIView):
 
             # Get problem architectures
             dbClient = GraphqlClient(problem_id=problem_id)
+
+            print("--> PROBLEM IDER: ", problem_id)
             query = dbClient.get_architectures(problem_id)
 
             # Iterate over architectures
