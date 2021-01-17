@@ -11,7 +11,7 @@ from rest_framework import serializers
 
 
 class MycroftUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     # Mycroft Code
     mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)  # four digit session number
 
