@@ -291,6 +291,10 @@ class GraphqlClient:
         return self.execute_query(query)['data']['Architecture'][0]['id']
         
 
+    def get_problems(self):
+        query = 'query MyQuery { Problem { id name group_id } }'
+        return self.execute_query(query)['data']['Problem']
+
 
     def insert_user_into_group(self, user_id, group_id=1):
         mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
