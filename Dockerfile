@@ -16,5 +16,5 @@ RUN apt-get -y update &&\
 
 
 # Commands to start daphne_brain
-RUN python3 manage.py migrate --run-syncdb &&\
-    python3 manage.py collectstatic --clear --noinput
+#RUN python3 manage.py migrate --run-syncdb &&\
+#    python3 manage.py collectstatic --clear --noinput
