@@ -12,6 +12,7 @@ services:
       - postgres
     tty: true
     container_name: daphne_brain
+    # command: daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
   postgres:
     image: postgres:latest
     ports:
