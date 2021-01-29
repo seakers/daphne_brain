@@ -42,8 +42,8 @@ services:
       - "7687:7687"
     container_name: daphne_neo4j
     volumes:
-      - ${ROOT_DIR}/databases/neo4j/data:/data
-      - ${ROOT_DIR}/databases/neo4j/logs:/logs
+      - ${NEO_DIR}/data:/data
+      - ${NEO_DIR}/logs:/logs
     environment:
       - NEO4J_AUTH=neo4j/test
   graphql:
@@ -60,17 +60,3 @@ services:
       - HASURA_GRAPHQL_AUTH_HOOK=http://daphne:8000/api/auth/check-status-hasura
       - HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL=100
     container_name: daphne_graphql
-  nodejs:
-    image: node:latest
-    ports:
-      - "4001:4000"
-      - "3000:3000"
-    tty: true
-    container_name: daphne_nodejs
-    volumes:
-      - type: bind
-        source: ${ROOT_DIR}/databases/apollo
-        target: /repos/apollo
-      - type: bind
-        source: ${ROOT_DIR}/databases/apollo-api
-        target: /repos/apollo-api
