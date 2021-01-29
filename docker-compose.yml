@@ -2,7 +2,7 @@ version: '3.7'
 services:
   daphne_brain:
     build:
-      dockerfile: dockerfiles/BrainDockerfile
+      dockerfile: Dockerfile
       context: .
     image: apazagab/daphne_brain
     ports:
