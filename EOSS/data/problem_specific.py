@@ -36,17 +36,17 @@ CC_INSTRUMENT_DATASET = [
     {"alias": "L", "name": "CNES_KaRIN", "type": "Radar altimeters", "technology": "Radar altimeter", "geometry": "Nadir-viewing", "wavebands": ["MW", "Ku-Band"]}]
 
 
-cc_capabilities_sheet = pandas.read_excel('../VASSAR_resources/problems/ClimateCentric/xls/Instrument Capability Definition.xls',
+cc_capabilities_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Instrument Capability Definition.xls',
                                        sheet_name='CHARACTERISTICS')
 
-cc_instrument_sheet = lambda vassar_instrument: pandas.read_excel('../VASSAR_resources/problems/ClimateCentric/xls/Instrument Capability Definition.xls',
+cc_instrument_sheet = lambda vassar_instrument: pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Instrument Capability Definition.xls',
                                         sheet_name=vassar_instrument, header=None)
 
-cc_requirements_sheet = pandas.read_excel('../VASSAR_resources/problems/ClimateCentric/xls/Requirement Rules.xls',
+cc_requirements_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Requirement Rules.xls',
                                            sheet_name='Attributes')
 
-cc_instruments_sheet = pandas.read_excel('../VASSAR_resources/problems/ClimateCentric/xls/AttributeSet.xls', sheet_name='Instrument')
-cc_measurements_sheet = pandas.read_excel('../VASSAR_resources/problems/ClimateCentric/xls/AttributeSet.xls', sheet_name='Measurement')
+cc_instruments_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/AttributeSet.xls', sheet_name='Instrument')
+cc_measurements_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/AttributeSet.xls', sheet_name='Measurement')
 cc_param_names = []
 for row in cc_measurements_sheet.itertuples(index=True, name='Measurement'):
     if row[2] == 'Parameter':
@@ -186,7 +186,7 @@ def get_instrument_dataset(problem):
 
 
 
-smap_capabilities_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name='CHARACTERISTICS')
+smap_capabilities_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name='CHARACTERISTICS')
 def get_capabilities_sheet(problem):
     if problem == "ClimateCentric":
         return cc_capabilities_sheet
@@ -199,7 +199,7 @@ def get_capabilities_sheet(problem):
 
 
 
-smap_instrument_sheet = lambda vassar_instrument: pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name=vassar_instrument, header=None)
+smap_instrument_sheet = lambda vassar_instrument: pandas.read_excel('EOSS/data/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name=vassar_instrument, header=None)
 def get_instrument_sheet(problem, instrument):
     if problem == "ClimateCentric":
         return cc_instrument_sheet(instrument)
@@ -212,7 +212,7 @@ def get_instrument_sheet(problem, instrument):
 
 
 
-smap_instruments_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Instrument')
+smap_instruments_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/AttributeSet.xls', sheet_name='Instrument')
 def get_instruments_sheet(problem):
     if problem == "ClimateCentric":
         return cc_instruments_sheet
@@ -227,7 +227,7 @@ def get_instruments_sheet(problem):
 
 
 
-smap_requirements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Requirement Rules.xls', sheet_name='Attributes')
+smap_requirements_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/Requirement Rules.xls', sheet_name='Attributes')
 def get_requirements_sheet(problem):
     if problem == "ClimateCentric":
         return cc_requirements_sheet
@@ -237,7 +237,7 @@ def get_requirements_sheet(problem):
 
 
 
-smap_measurements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Measurement')
+smap_measurements_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/AttributeSet.xls', sheet_name='Measurement')
 smap_param_names = []
 for row in smap_measurements_sheet.itertuples(index=True, name='Measurement'):
     if row[2] == 'Parameter':
