@@ -20,6 +20,8 @@ RUN apt-get -y update &&\
     apt-get -y install build-essential manpages-dev &&\
     pip3 install --no-cache-dir -r ./requirements.txt
 
+RUN spacy download en
+
 
 # Commands to start daphne_brain
 #RUN python3 manage.py migrate --run-syncdb &&\
