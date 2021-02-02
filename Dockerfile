@@ -1,18 +1,18 @@
 FROM python:3.7-slim-stretch
 
 # The working directory where daphne_brain is placed is /usr/src/app/daphne_brain
-WORKDIR /usr/src/app/daphne_brain
+WORKDIR /app/daphne_brain
 
 
 # Copy everything in the daphne_brain directory to /usr/src/app/daphne_brain
-COPY ./. /usr/src/app/daphne_brain/.
+COPY ./. /app/daphne_brain/.
 
 # Create logfile
-WORKDIR /usr/src/app/daphne_brain/logs
+WORKDIR /app/daphne_brain/logs
 RUN touch daphne.logs
 
 # Reset current directory
-WORKDIR /usr/src/app/daphne_brain
+WORKDIR /app/daphne_brain
 
 # Update apt-get package manager -- Install daphne_brain dependencies
 RUN apt-get -y update &&\
