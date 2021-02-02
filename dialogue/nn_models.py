@@ -21,5 +21,5 @@ for file in os.scandir(model_folder_path):
                 # load json and create model
                 model_path = os.path.join(daphne_role_path, "model.h5")
                 loaded_model = load_model(model_path)
-                loaded_model._make_predict_function()
+                # loaded_model._make_predict_function()
                 nn_models[daphne_version][role] = loaded_model
