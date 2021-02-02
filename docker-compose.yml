@@ -81,6 +81,7 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=test
     tty: true
+    container_name: historical_db
   command_classifier:
     image: apazagab/command_classifier
     depends_on:
@@ -91,3 +92,4 @@ services:
       - USER=daphne
       - PASSWORD=daphne
     tty: true
+    container_name: command_classifier
