@@ -27,10 +27,10 @@ class Command(BaseCommand):
     def remove_all_aws_eval_resources(self, dev):
         cluster_client = Cluster(dev=dev)
         cluster_client.remove_services()
-        task_client = Task(dev=dev)
-        task_client.delete_all_eval_task_definitions()
-        queue_client = EvalQueue(dev=dev)
-        queue_client.delete_all_eval_queues()
+        # task_client = Task(dev=dev)
+        # task_client.delete_all_eval_task_definitions()
+        # queue_client = EvalQueue(dev=dev)
+        # queue_client.delete_all_eval_queues()
 
 
 
