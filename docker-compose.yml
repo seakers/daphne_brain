@@ -102,3 +102,5 @@ services:
       - POSTGRES_PORT=5432
       - USER=daphne
       - PASSWORD=daphne
+    tty: true
+    container_name: vassar_resources
