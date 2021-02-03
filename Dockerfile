@@ -17,6 +17,7 @@ COPY ./. /app/daphne_brain/.
 WORKDIR /app/daphne_brain/logs
 RUN touch daphne.logs
 
+
 # Reset current directory
 WORKDIR /app/daphne_brain
 
