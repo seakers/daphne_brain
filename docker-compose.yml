@@ -64,7 +64,7 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=postgres://daphne:daphne@postgres:5432/daphne
       - HASURA_GRAPHQL_ENABLE_CONSOLE=true
       - HASURA_GRAPHQL_ADMIN_SECRET=daphne
-      - HASURA_GRAPHQL_AUTH_HOOK=http://daphne_brain:8000/api/auth/check-status-hasura
+      - HASURA_GRAPHQL_AUTH_HOOK=http://daphne:8000/api/auth/check-status-hasura
       - HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL=100
     container_name: daphne_graphql
   historical_db:
