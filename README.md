@@ -31,11 +31,11 @@ The server which serves all of the Daphne interfaces
     
 3. create command models with 
 
-    - `docker exec -it command_classifier`
+    - `docker exec -it command_classifier bash`
     - `python3 question_generator.py`
     - `python3 train.py`
     - `exit`
-    - `docker cp command_classifier:/app/command_classifier/models daphne_brain:/app/daphne_brain/dialogue`
+    - `docker cp command_classifier:/app/command_classifier/models ./dialogue`
 
 
 
