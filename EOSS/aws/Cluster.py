@@ -96,6 +96,11 @@ class Cluster:
 
 
     def get_cluster_service_arns(self):
+        # Check to see if the cluster exists first
+        cluster_arn = self.does_cluster_exist(self.cluster_name)
+        if cluster_arn is None:
+            return []
+
         response = self.client.list_services(
             cluster=self.cluster_name,
             launchType='FARGATE',
