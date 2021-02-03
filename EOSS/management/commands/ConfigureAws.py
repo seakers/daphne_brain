@@ -45,10 +45,10 @@ class Command(BaseCommand):
         self.pprint(problems)
 
         # 2. Delete all cluster services, task definitions, and pre-existing eval queues
-        self.remove_all_aws_eval_resources(dev=True)
+        self.remove_all_aws_eval_resources(dev=False)
 
         # 3. For each problem id, create an eval queue and store the url
-        # queue_client = EvalQueue(dev=True)
+        # queue_client = EvalQueue(dev=False)
         # for problem in problems:
         #     url = queue_client.create_eval_queue(problem['id'])
         #     problem['queue_url'] = url
