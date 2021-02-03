@@ -48,18 +48,18 @@ class Command(BaseCommand):
         self.remove_all_aws_eval_resources(dev=True)
 
         # 3. For each problem id, create an eval queue and store the url
-        queue_client = EvalQueue(dev=True)
-        for problem in problems:
-            url = queue_client.create_eval_queue(problem['id'])
-            problem['queue_url'] = url
-        self.pprint(problems)
+        # queue_client = EvalQueue(dev=True)
+        # for problem in problems:
+        #     url = queue_client.create_eval_queue(problem['id'])
+        #     problem['queue_url'] = url
+        # self.pprint(problems)
 
         # 4. For each problem, creating an auto scaling service
-        service_arns = []
-        cluster_arn = Cluster().get_or_create_cluster()
-        for problem in problems:
-            service = AutoScalingService(problem, cluster_arn)
-            service_arns.append(service.build())
+        # service_arns = []
+        # cluster_arn = Cluster().get_or_create_cluster()
+        # for problem in problems:
+        #     service = AutoScalingService(problem, cluster_arn)
+        #     service_arns.append(service.build())
 
 
 
