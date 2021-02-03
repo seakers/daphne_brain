@@ -1,6 +1,6 @@
 version: '3.7'
 services:
-  daphne_brain:
+  daphne:
     build:
       dockerfile: Dockerfile
       context: .
