@@ -29,6 +29,8 @@ class AutoScalingService:
 
     def build(self):
 
+        self.print_attributes()
+
         # 1. Create a new task definition for the problem
         task = Task(dev=self.dev)
         task_definition_arn = task.register_task_definition(
@@ -45,3 +47,14 @@ class AutoScalingService:
         # return service_arn
 
 
+        print('------------------------------------------\n\n\n')
+
+
+    def print_attributes(self):
+        print('\n\n\n---------- AUTO SCALING SERVICE ----------')
+        print('---> group_id', self.group_id)
+        print('---> problem_id', self.problem_id)
+        print('---> queue_url', self.queue_url)
+        print('---> graphql_server_address', self.graphql_server_address)
+        print('---> graphql_server_address_ws', self.graphql_server_address_ws)
+        print('---> cluster_arn', self.cluster_arn)
