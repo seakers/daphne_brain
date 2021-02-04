@@ -39,7 +39,7 @@ class Task:
                     {
                         "name": "vassar",
                         "image": "apazagab/design-evaluator",
-                        "privileged": True,
+                        "privileged": False,
                         "interactive": True,
                         "logConfiguration": {
                             "logDriver": "awslogs",
