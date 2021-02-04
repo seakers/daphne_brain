@@ -18,6 +18,8 @@ class Cluster:
     def get_or_create_cluster(self):
         cluster_arn = self.does_cluster_exist(self.cluster_name)
         if cluster_arn is None:
+            if not user_input('\n\n evaluator-cluster IS ABOUT TO BE CREATED, WOULD YOU LIKE TO CONTINUE (yes/no): '):
+                exit(0)
             response = self.client.create_cluster(
                 clusterName=self.cluster_name,
                 capacityProviders=['FARGATE'],
@@ -25,14 +27,21 @@ class Cluster:
                     {'key': 'name', 'value': 'evaluator-cluster'}
                 ]
             )
+            print('--> CLUSTER CREATE REQUEST RESPONSE', response)
             return response['cluster']['clusterArn']
         else:
             return cluster_arn
 
     def does_cluster_exist(self, cluster_name):
-        cluster_arns = self.client.list_clusters()['clusterArns']
+        print('\n\n ---> CHECKING IF CLUSTER EXISTS: ', cluster_name)
+        list_cluster_response = self.client.list_clusters()
+        if 'clusterArns' not in list_cluster_response:
+            print('--> NO CLUSTERS')
+            return None
+        cluster_arns = list_cluster_response['clusterArns']
         clusters = self.client.describe_clusters(clusters=cluster_arns, include=['ATTACHMENTS', 'SETTINGS'])['clusters']
         for cluster in clusters:
+            print('--> CLUSTER ', cluster['clusterName'])
             if cluster['clusterName'] == cluster_name:
                 return cluster['clusterArn']
         return None

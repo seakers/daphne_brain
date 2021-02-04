@@ -57,6 +57,15 @@ class Command(BaseCommand):
         return problems
 
 
+    def create_services(self, problems):
+        service_arns = []
+        cluster_arn = Cluster().get_or_create_cluster()
+        # for problem in problems:
+        #     service = AutoScalingService(problem, cluster_arn)
+        #     service_arns.append(service.build())
+        return 0
+
+
     def handle(self, *args, **options):
         print('---> CONFIGURING DAPHNE AWS ARCHITECTURE')
         if not self.user_input('\nWARNING: this command will wipe all AWS Queues and Task Definitions to create fresh ones. Type yes to proceed: '):
@@ -76,11 +85,7 @@ class Command(BaseCommand):
 
 
         # 4. For each problem, creating an auto scaling service
-        # service_arns = []
-        # cluster_arn = Cluster().get_or_create_cluster()
-        # for problem in problems:
-        #     service = AutoScalingService(problem, cluster_arn)
-        #     service_arns.append(service.build())
+        self.create_services(problems)
 
 
 
