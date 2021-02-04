@@ -48,6 +48,8 @@ class Service:
     def does_service_exist(self, problem_id):
         service_name = Service.formulate_service_name(problem_id)
         service_arns = self.get_cluster_service_arns()
+        if not service_arns:
+            return None
         response = self.client.describe_services(
             cluster=self.cluster_arn,
             services=service_arns,
