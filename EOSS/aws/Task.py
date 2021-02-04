@@ -45,7 +45,8 @@ class Task:
                             "logDriver": "awslogs",
                             'options': {
                                 'awslogs-region': 'us-east-2',
-                                'awslogs-group': 'seakers-evaluation-logs'
+                                'awslogs-group': 'seakers-evaluation-logs',
+                                'awslogs-stream-prefix': 'daphne-eval-logs'
                             }
                         },
                         "environment": [
