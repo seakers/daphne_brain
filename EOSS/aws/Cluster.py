@@ -59,22 +59,36 @@ class Cluster:
             self.update_service_desired_task_count(details)
             self.delete_service(details)
 
+    # Returns a list of service ARNs running on evaluator-cluster
+    def get_cluster_service_arns(self):
+        # Check to see if the cluster exists first
+        cluster_arn = self.does_cluster_exist(self.cluster_name)
+        if cluster_arn is None:
+            return []
 
-
-    def delete_service(self, service_details):
-        response = self.client.delete_service(
+        response = self.client.list_services(
             cluster=self.cluster_name,
-            service=service_details['serviceName'],
-            force=True
+            launchType='FARGATE',
         )
+        if 'serviceArns' not in response:
+            return []
+        else:
+            return response['serviceArns']
 
-    def update_service_desired_task_count(self, service_details, count=0):
-        response = self.client.update_service(
+    # Returns full info of all cluster services
+    def get_cluster_service_descriptions(self, service_arns):
+        response = self.client.describe_services(
             cluster=self.cluster_name,
-            service=service_details['serviceName'],
-            desiredCount=count
+            services=service_arns,
+            include=[
+                'TAGS',
+            ]
         )
-        return
+        if 'services' not in response:
+            return []
+        else:
+            return response['services']
+
 
     def stop_service_tasks(self, service_details):
         # 1. List all tasks and filter on service
@@ -94,34 +108,22 @@ class Cluster:
         return
 
 
-
-    def get_cluster_service_arns(self):
-        # Check to see if the cluster exists first
-        cluster_arn = self.does_cluster_exist(self.cluster_name)
-        if cluster_arn is None:
-            return []
-
-        response = self.client.list_services(
+    def update_service_desired_task_count(self, service_details, count=0):
+        response = self.client.update_service(
             cluster=self.cluster_name,
-            launchType='FARGATE',
+            service=service_details['serviceName'],
+            desiredCount=count
         )
-        if 'serviceArns' not in response:
-            return []
-        else:
-            return response['serviceArns']
+        print('---> UPDATING SERVICE DESIRED TASK COUNT')
+        return
 
-    def get_cluster_service_descriptions(self, service_arns):
-        response = self.client.describe_services(
+
+    def delete_service(self, service_details):
+        response = self.client.delete_service(
             cluster=self.cluster_name,
-            services=service_arns,
-            include=[
-                'TAGS',
-            ]
+            service=service_details['serviceName'],
+            force=True
         )
-        if 'services' not in response:
-            return []
-        else:
-            return response['services']
-
+        print('---> DELETING SERVICE', response)
 
 
