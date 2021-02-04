@@ -92,11 +92,13 @@ class Task:
         # 1. Get all task definition arns in the correct family
         list_response = self.client.list_task_definitions(familyPrefix='evaluator')
         if 'taskDefinitionArns' not in list_response:
+            print('---> NO TASK DEFINITIONS FOUND')
             return
         task_def_arns = list_response['taskDefinitionArns']
 
         # 2. Deregister all task definitions
         for task_def_arn in task_def_arns:
+            print('---> DEREGISTERING TASK', task_def_arn)
             self.client.deregister_task_definition(taskDefinition=task_def_arn)
         return
 
