@@ -42,7 +42,11 @@ class Task:
                         "privileged": True,
                         "interactive": True,
                         "logConfiguration": {
-                            "logDriver": "awslogs"
+                            "logDriver": "awslogs",
+                            'options': {
+                                'awslogs-region': 'us-east-2',
+                                'awslogs-group': 'seakers-evaluation-logs'
+                            }
                         },
                         "environment": [
                             {"name": "PROBLEM_ID", "value": str(problem_id)},
