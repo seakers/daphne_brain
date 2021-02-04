@@ -25,6 +25,7 @@ class EvalQueue:
                 'TYPE': 'EVAL'
             }
         )
+        print('---> CREATE QUEUE RESPONSE', response)
         queue_url = response['QueueUrl']
         return queue_url
 
