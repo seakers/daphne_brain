@@ -4,7 +4,7 @@ import time
 import boto3
 
 from EOSS.aws.utils import dev_client, prod_client
-from EOSS.aws.utils import eval_task_iam_arn
+from EOSS.aws.utils import eval_task_iam_arn, task_execution_role_arn
 
 
 class Task:
@@ -31,6 +31,7 @@ class Task:
             response = self.client.register_task_definition(
                 family='evaluator',
                 taskRoleArn=eval_task_iam_arn(),
+                executionRoleArn=task_execution_role_arn(),
                 networkMode='awsvpc',
                 requiresCompatibilities=['FARGATE'],
                 cpu='1 vCPU',

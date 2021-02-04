@@ -48,6 +48,8 @@ def graphql_server_address_ws(dev=False):
 def eval_task_iam_arn():
     return 'arn:aws:iam::923405430231:role/Daphne-EvaluatorTask'
 
+def task_execution_role_arn():
+    return 'arn:aws:iam::923405430231:role/Daphne-TaskExecutionRole'
 
 def eval_subnet():
     return 'subnet-0dccba7980012f057'
