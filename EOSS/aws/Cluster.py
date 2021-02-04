@@ -30,6 +30,7 @@ class Cluster:
             print('--> CLUSTER CREATE REQUEST RESPONSE', response)
             return response['cluster']['clusterArn']
         else:
+            print('---> evaluator-cluster ALREADY EXISTS WITH ARN ', cluster_arn)
             return cluster_arn
 
     def does_cluster_exist(self, cluster_name):
@@ -41,7 +42,7 @@ class Cluster:
         cluster_arns = list_cluster_response['clusterArns']
         clusters = self.client.describe_clusters(clusters=cluster_arns, include=['ATTACHMENTS', 'SETTINGS'])['clusters']
         for cluster in clusters:
-            print('--> CLUSTER ', cluster['clusterName'])
+            print('--> CLUSTER ', clusters)
             if cluster['clusterName'] == cluster_name:
                 return cluster['clusterArn']
         return None
