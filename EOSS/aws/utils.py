@@ -2,6 +2,15 @@ import boto3
 import os
 
 
+def user_input(yes_no_message):
+    response = input(yes_no_message)
+    if response != 'yes':
+        print('EXITING COMMAND')
+        return False
+    else:
+        return True
+
+
 def get_secret_access_key_env():
     return os.environ['AWS_SECRET_ACCESS_KEY']
 
