@@ -28,10 +28,7 @@ class EvalQueue:
         queue_url = response['QueueUrl']
         return queue_url
 
-    def delete_queue(self, queue_url):
-        self.client.delete_queue(
-            QueueUrl=queue_url
-        )
+
 
     def get_queue_url(self, problem_id):
         queue_name = self.queue_name_prefix + str(problem_id)
@@ -49,6 +46,15 @@ class EvalQueue:
                     return True
         return False
 
+
+
+    def delete_all_eval_queues(self):
+        urls = self.get_all_eval_queue_urls()
+        print('---> QUEUES TO DELETE', urls)
+        for url in urls:
+            self.delete_queue(url)
+
+
     def get_all_eval_queue_urls(self):
         list_response = self.client.list_queues()
         if 'QueueUrls' not in list_response:
@@ -64,11 +70,7 @@ class EvalQueue:
                         url_list.append(url)
             return url_list
 
-
-    def delete_all_eval_queues(self):
-        urls = self.get_all_eval_queue_urls()
-        for url in urls:
-            self.delete_queue(url)
-
-
-
+    def delete_queue(self, queue_url):
+        self.client.delete_queue(
+            QueueUrl=queue_url
+        )
