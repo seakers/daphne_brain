@@ -57,6 +57,7 @@ class Cluster:
 
 
     def remove_services(self):
+        print('\n\n---------- REMOVING CLUSTER SERVICES ----------')
         # 1. Get all the services in the evaluator cluster
         service_arns = self.get_cluster_service_arns()
         if not service_arns:
@@ -71,6 +72,7 @@ class Cluster:
             self.stop_service_tasks(details)
             self.update_service_desired_task_count(details)
             self.delete_service(details)
+        print('--- FINISHED\n\n')
 
     # Returns a list of service ARNs running on evaluator-cluster
     def get_cluster_service_arns(self):
