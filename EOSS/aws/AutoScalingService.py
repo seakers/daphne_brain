@@ -43,11 +43,11 @@ class AutoScalingService:
         print('--> TASK DEFINITION ARN', task_definition_arn)
 
         # 2. Create a new service to auto-scale the task definition
-        # service_arn = Service(self.cluster_arn).build_service(self.problem_id, task_definition_arn)
-        # return service_arn
-
-
+        service_arn = Service(self.cluster_arn).build_service(self.problem_id, task_definition_arn)
         print('------------------------------------------\n\n\n')
+        return service_arn
+
+
 
 
     def print_attributes(self):
