@@ -26,7 +26,6 @@ class Task:
                                  request_mode='CRISP-ATTRIBUTES'
                                  ):
         task_arn = self.does_task_exist(problem_id)
-        print('---> TASK DEFINITION VALUE:', task_arn)
         if task_arn is None:
             response = self.client.register_task_definition(
                 family='evaluator',
@@ -95,10 +94,10 @@ class Task:
 
 
     def delete_all_eval_task_definitions(self):
+        print('\n\n---------- REMOVING TASK DEFINITIONS ----------')
 
         # 1. Get all task definition arns in the correct family
         list_response = self.client.list_task_definitions(familyPrefix='evaluator')
-        print('---> TASK DEFINITIONS', list_response)
         if 'taskDefinitionArns' not in list_response:
             print('---> NO TASK DEFINITIONS FOUND')
             return
@@ -108,6 +107,7 @@ class Task:
         for task_def_arn in task_def_arns:
             print('---> DEREGISTERING TASK', task_def_arn)
             self.client.deregister_task_definition(taskDefinition=task_def_arn)
+        print('--- FINISHED')
         return
 
 
