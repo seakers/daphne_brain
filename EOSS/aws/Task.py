@@ -45,13 +45,13 @@ class Task:
                             "logDriver": "awslogs"
                         },
                         "environment": [
-                            {"name": "PROBLEM_ID", "value": problem_id},
-                            {"name": "GROUP_ID", "value": group_id},
-                            {"name": "REQUEST_MODE", "value": request_mode},
+                            {"name": "PROBLEM_ID", "value": str(problem_id)},
+                            {"name": "GROUP_ID", "value": str(group_id)},
+                            {"name": "REQUEST_MODE", "value": str(request_mode)},
                             {"name": "PRIVATE_QUEUE_NAME", "value": "RANDOM"},
-                            {"name": "EVAL_QUEUE_URL", "value": eval_queue_url},
-                            {"name": "APOLLO_URL_WS", "value": apollo_url},
-                            {"name": "APOLLO_URL", "value": apollo_ws_url}
+                            {"name": "EVAL_QUEUE_URL", "value": str(eval_queue_url)},
+                            {"name": "APOLLO_URL_WS", "value": str(apollo_url)},
+                            {"name": "APOLLO_URL", "value": str(apollo_ws_url)}
                         ]
                     }
                 ],
