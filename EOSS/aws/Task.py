@@ -91,6 +91,7 @@ class Task:
 
         # 1. Get all task definition arns in the correct family
         list_response = self.client.list_task_definitions(familyPrefix='evaluator')
+        print('---> TASK DEFINITIONS', list_response)
         if 'taskDefinitionArns' not in list_response:
             print('---> NO TASK DEFINITIONS FOUND')
             return
