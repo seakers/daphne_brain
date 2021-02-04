@@ -50,6 +50,8 @@ class Command(BaseCommand):
         if not self.user_input('Queues and services will be created for each of these problems. Would you like to continue? (yes/no): '):
             print('--- EXITING')
             exit(0)
+
+
         queue_client = EvalQueue(dev=False)
         for problem in problems:
             url = queue_client.create_eval_queue(problem['id'])
@@ -60,6 +62,10 @@ class Command(BaseCommand):
     def create_services(self, problems):
         service_arns = []
         cluster_arn = Cluster().get_or_create_cluster()
+
+        service = AutoScalingService(problems[0], cluster_arn)
+        service_arns.append(service.build())
+
         # for problem in problems:
         #     service = AutoScalingService(problem, cluster_arn)
         #     service_arns.append(service.build())

@@ -33,14 +33,14 @@ def instance_priv_ipv4():
 
 def graphql_server_address(dev=False):
     if not dev:
-        return 'http://' + instance_priv_ipv4() + ':6002/v1/graphql'
+        return 'https://dev.selva-research.com/v1/graphql'
     else:
         return 'http://graphql:8080/v1/graphql'
 
 
 def graphql_server_address_ws(dev=False):
     if not dev:
-        return 'ws://' + instance_priv_ipv4() + ':6002/v1/graphql'
+        return 'wss://dev.selva-research.com/v1/graphql'
     else:
         return 'ws://graphql:8080/v1/graphql'
 
