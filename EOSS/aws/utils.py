@@ -1,5 +1,15 @@
 import boto3
 import os
+import pprint
+
+
+
+
+
+def pprint(to_print):
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(to_print)
+
 
 
 def user_input(yes_no_message):

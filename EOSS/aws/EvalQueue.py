@@ -1,6 +1,6 @@
 import boto3
 
-from EOSS.aws.utils import dev_client, prod_client, user_input
+from EOSS.aws.utils import dev_client, prod_client, user_input, pprint
 
 
 class EvalQueue:
@@ -52,7 +52,7 @@ class EvalQueue:
     def delete_all_eval_queues(self):
         print('\n\n---------- REMOVING SQS QUEUES ----------')
         urls = self.get_all_eval_queue_urls()
-        print('---> QUEUES TO DELETE', urls)
+        pprint(urls)
         if not user_input('\n ---> The queues above are going to be deleted, would you like to continue? (yes/no):  '):
             exit(0)
         for url in urls:
