@@ -107,7 +107,7 @@ class Task:
         for task_def_arn in task_def_arns:
             print('---> DEREGISTERING TASK', task_def_arn)
             self.client.deregister_task_definition(taskDefinition=task_def_arn)
-        print('--- FINISHED')
+        print('--- FINISHED\n\n')
         return
 
 

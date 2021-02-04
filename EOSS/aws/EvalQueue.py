@@ -50,12 +50,14 @@ class EvalQueue:
 
 
     def delete_all_eval_queues(self):
+        print('\n\n---------- REMOVING SQS QUEUES ----------')
         urls = self.get_all_eval_queue_urls()
         print('---> QUEUES TO DELETE', urls)
         if not user_input('\n ---> The queues above are going to be deleted, would you like to continue? (yes/no):  '):
             exit(0)
         for url in urls:
             self.delete_queue(url)
+        print('--- FINISHED\n\n')
 
 
     def get_all_eval_queue_urls(self):
