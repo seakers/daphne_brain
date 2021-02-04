@@ -25,10 +25,21 @@ class Command(BaseCommand):
 
 
     def remove_all_aws_eval_resources(self, dev):
+
+        """
+            Stop and remove all the services on evaluator-cluster
+        """
         cluster_client = Cluster(dev=dev)
         cluster_client.remove_services()
-        # task_client = Task(dev=dev)
-        # task_client.delete_all_eval_task_definitions()
+
+
+        """
+            Deregister all task definitions of task family 'evaluator'
+        """
+        task_client = Task(dev=dev)
+        task_client.delete_all_eval_task_definitions()
+
+
         # queue_client = EvalQueue(dev=dev)
         # queue_client.delete_all_eval_queues()
 
