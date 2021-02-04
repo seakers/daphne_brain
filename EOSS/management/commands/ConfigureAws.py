@@ -15,9 +15,9 @@ class Command(BaseCommand):
         response = input(yes_no_message)
         if response != 'yes':
             print('EXITING COMMAND')
-            return True
-        else:
             return False
+        else:
+            return True
 
     def pprint(self, to_print):
         pp = pprint.PrettyPrinter(indent=4)
@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
     def create_queues(self, problems):
         self.pprint(problems)
-        if not self.user_input('Queues and services will be created for each of these problems. Would you like to continue? (yes/no)'):
+        if not self.user_input('Queues and services will be created for each of these problems. Would you like to continue? (yes/no): '):
             print('--- EXITING')
             exit(0)
         queue_client = EvalQueue(dev=False)
@@ -59,7 +59,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print('---> CONFIGURING DAPHNE AWS ARCHITECTURE')
-        if self.user_input('\nWARNING: this command will wipe all AWS Queues and Task Definitions to create fresh ones. Type yes to proceed: '):
+        if not self.user_input('\nWARNING: this command will wipe all AWS Queues and Task Definitions to create fresh ones. Type yes to proceed: '):
             return
 
         # 1. Get problem ids
