@@ -39,9 +39,11 @@ class Command(BaseCommand):
         task_client = Task(dev=dev)
         task_client.delete_all_eval_task_definitions()
 
-
-        # queue_client = EvalQueue(dev=dev)
-        # queue_client.delete_all_eval_queues()
+        """
+            Deletes all SQS queues for evaluation
+        """
+        queue_client = EvalQueue(dev=dev)
+        queue_client.delete_all_eval_queues()
 
 
 
