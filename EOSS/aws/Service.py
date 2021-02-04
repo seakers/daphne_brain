@@ -1,7 +1,7 @@
 import boto3
 
 from EOSS.aws.utils import dev_client, prod_client
-from EOSS.aws.utils import eval_subnet
+from EOSS.aws.utils import eval_subnet, pprint
 
 class Service:
 

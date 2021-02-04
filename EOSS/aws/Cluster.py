@@ -1,6 +1,6 @@
 import boto3
 
-from EOSS.aws.utils import dev_client, prod_client, user_input
+from EOSS.aws.utils import dev_client, prod_client, user_input, pprint
 
 
 
@@ -42,7 +42,7 @@ class Cluster:
         cluster_arns = list_cluster_response['clusterArns']
         clusters = self.client.describe_clusters(clusters=cluster_arns, include=['ATTACHMENTS', 'SETTINGS'])['clusters']
         for cluster in clusters:
-            print('--> CLUSTER ', clusters)
+            pprint(cluster)
             if cluster['clusterName'] == cluster_name:
                 return cluster['clusterArn']
         return None
