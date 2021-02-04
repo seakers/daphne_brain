@@ -26,6 +26,7 @@ class Task:
                                  request_mode='CRISP-ATTRIBUTES'
                                  ):
         task_arn = self.does_task_exist(problem_id)
+        print('---> TASK DEFINITION VALUE:', task_arn)
         if task_arn is None:
             response = self.client.register_task_definition(
                 family='evaluator',

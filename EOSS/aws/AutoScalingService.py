@@ -40,7 +40,7 @@ class AutoScalingService:
         )
 
         # 2. Create a new service to auto-scale the task definition
-        service_arn = Service(self.cluster_arn).build_service(self.problem_id, task_definition_arn)
-        return service_arn
+        # service_arn = Service(self.cluster_arn).build_service(self.problem_id, task_definition_arn)
+        # return service_arn
 
 
