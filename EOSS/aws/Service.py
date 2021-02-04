@@ -14,10 +14,13 @@ class Service:
 
 
     def build_service(self, problem_id, task_definition_arn):
+        print('\n\n---------- BUILDING NEW SERVICE ----------')
         service_arn = self.does_service_exist(problem_id)
         if service_arn is not None:
+            print('--> SERVICE ALREADY EXISTS')
             return service_arn
         else:
+            print('--> CREATING SERVICE')
             service_name = Service.formulate_service_name(problem_id)
             response = self.client.create_service(
                 cluster=self.cluster_arn,
@@ -38,6 +41,7 @@ class Service:
                     {'key': 'TYPE', 'value': 'EVAL'}
                 ]
             )
+            print('--> CREATE SERVICE RESPONSE', response)
             return response['service']['serviceArn']
 
 
