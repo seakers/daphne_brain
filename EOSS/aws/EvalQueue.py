@@ -60,7 +60,6 @@ class EvalQueue:
 
     def get_all_eval_queue_urls(self):
         list_response = self.client.list_queues()
-        print('---> LISTED QUEUES', list_response)
         if 'QueueUrls' not in list_response:
             print('--> NO EVAL QUEUES EXIST')
             return []

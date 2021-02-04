@@ -1,6 +1,6 @@
 import boto3
 
-from EOSS.aws.utils import dev_client, prod_client
+from EOSS.aws.utils import dev_client, prod_client, user_input
 
 
 
@@ -54,6 +54,9 @@ class Cluster:
 
         # 2. Stop all the tasks for each service in the cluster
         service_details = self.get_cluster_service_descriptions(service_arns)
+        print('\n\n', service_details)
+        if not user_input('---> Above are the services to be removed. Would you like to continue (yes/no): '):
+            exit(0)
         for details in service_details:
             self.stop_service_tasks(details)
             self.update_service_desired_task_count(details)
