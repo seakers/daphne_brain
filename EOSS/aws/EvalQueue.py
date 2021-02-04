@@ -54,13 +54,13 @@ class EvalQueue:
         print('---> QUEUES TO DELETE', urls)
         if not user_input('\n ---> The queues above are going to be deleted, would you like to continue? (yes/no):  '):
             exit(0)
-
         for url in urls:
             self.delete_queue(url)
 
 
     def get_all_eval_queue_urls(self):
         list_response = self.client.list_queues()
+        print('---> LISTED QUEUES', list_response)
         if 'QueueUrls' not in list_response:
             print('--> NO EVAL QUEUES EXIST')
             return []
