@@ -42,6 +42,8 @@ class EvalQueue:
 
     def get_or_create_ga_queue(self):
         list_response = self.client.list_queues()
+        if 'QueueUrls' not in list_response:
+            return self.create_ga_queue()
         queue_urls = list_response['QueueUrls']
         for url in queue_urls:
             tags = self.client.list_queue_tags(QueueUrl=url)['Tags']
