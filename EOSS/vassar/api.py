@@ -34,6 +34,7 @@ from auth_API.helpers import get_or_create_user_information
 
 from EOSS.graphql.api import GraphqlClient
 from EOSS.aws.utils import prod_client
+from EOSS.aws.EvalQueue import EvalQueue
 
 
 ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
@@ -88,6 +89,9 @@ class VASSARClient:
 
         # Graphql Client
         self.dbClient = GraphqlClient(problem_id=self.problem_id)
+
+        # Queue Client
+        self.queue_client = EvalQueue()
 
     
     
@@ -273,63 +277,66 @@ class VASSARClient:
     def stop_ga(self, ga_id, ga_queue_name='algorithm_queue'):
 
         # Connect to queue
-        gaQueue = self.sqs.get_queue_by_name(QueueName=ga_queue_name)
+        ga_queue_url = self.queue_client.get_or_create_ga_queue()
 
-        gaQueue.send_message(MessageBody='boto3', MessageAttributes={
-            'msgType': {
-                'StringValue': 'stop_ga',
-                'DataType': 'String'
-            },
-            'ga_id': {
-                'StringValue': str(ga_id),
-                'DataType': 'String'
+        prod_client('sqs').send_message(
+            QueueUrl=ga_queue_url,
+            MessageBody='boto3',
+            MessageAttributes={
+                'msgType': {
+                    'StringValue': 'stop_ga',
+                    'DataType': 'String'
+                },
+                'ga_id': {
+                    'StringValue': str(ga_id),
+                    'DataType': 'String'
+                }
             }
-        })
-
-
-        return 1 # return 0 if failure
+        )
+        return 1
 
     # working
     def start_ga(self, ga_queue_name='algorithm_queue'):
 
-        # Connect to queue
-        gaQueue = self.sqs.get_queue_by_name(QueueName=ga_queue_name)
-
         # Create ga_id
-        # ga_id = 'test_ga_' + str(random.random())
-        ga_id = 'test_ga_1'
+        ga_id = 'ga-' + str(random.random())
 
-        gaQueue.send_message(MessageBody='boto3', MessageAttributes={
-            'msgType': {
-                'StringValue': 'start_ga',
-                'DataType': 'String'
-            },
-            'maxEvals': {
-                'StringValue': '3000',
-                'DataType': 'String'
-            },
-            'crossoverProbability': {
-                'StringValue': '1',
-                'DataType': 'String'
-            },
-            'mutationProbability': {
-                'StringValue': '0.016666',
-                'DataType': 'String'
-            },
-            'group_id': {
-                'StringValue': '1',
-                'DataType': 'String'
-            },
-            'problem_id': {
-                'StringValue': str(self.problem_id),
-                'DataType': 'String'
-            },
-            'ga_id': {
-                'StringValue': ga_id,
-                'DataType': 'String'
+        ga_queue_url = self.queue_client.get_or_create_ga_queue()
+
+        prod_client('sqs').send_message(
+            QueueUrl=ga_queue_url,
+            MessageBody='boto3',
+            MessageAttributes={
+                'msgType': {
+                    'StringValue': 'start_ga',
+                    'DataType': 'String'
+                },
+                'maxEvals': {
+                    'StringValue': '3000',
+                    'DataType': 'String'
+                },
+                'crossoverProbability': {
+                    'StringValue': '1',
+                    'DataType': 'String'
+                },
+                'mutationProbability': {
+                    'StringValue': '0.016666',
+                    'DataType': 'String'
+                },
+                'group_id': {
+                    'StringValue': '1',
+                    'DataType': 'String'
+                },
+                'problem_id': {
+                    'StringValue': str(self.problem_id),
+                    'DataType': 'String'
+                },
+                'ga_id': {
+                    'StringValue': ga_id,
+                    'DataType': 'String'
+                }
             }
-        })
-
+        )
         return ga_id
     
     # deprecated 
