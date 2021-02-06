@@ -303,9 +303,9 @@ class GraphqlClient:
     def execute_query(self, query):
         r = requests.post(self.hasura_url, json={'query': query })
         result = json.loads(r.text)
-        # print('\n-------- Query Result --------')
-        # print(result)
-        # print('-------------------------\n')
+        print('\n-------- Query Result --------')
+        print(result)
+        print('-------------------------\n')
         return result
 
     # Return architecture details after vassar evaluates
