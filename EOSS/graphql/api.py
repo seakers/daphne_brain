@@ -4,7 +4,7 @@ import requests
 import json
 import time
 from auth_API.helpers import get_or_create_user_information
-
+from EOSS.aws.utils import pprint
 
 
 
@@ -304,7 +304,9 @@ class GraphqlClient:
         r = requests.post(self.hasura_url, json={'query': query })
         result = json.loads(r.text)
         print('\n-------- Query Result --------')
-        print(result)
+        print('----> URL:', self.hasura_url)
+        print('--> QUERY:', query)
+        pprint(result)
         print('-------------------------\n')
         return result
 
