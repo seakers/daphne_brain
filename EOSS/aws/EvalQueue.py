@@ -9,12 +9,23 @@ class EvalQueue:
     def __init__(self, dev=False):
         self.region = 'us-east-2'
         self.queue_name_prefix = 'evaluator-queue-'
+        self.ga_queue_name = 'ga-queue'
         if dev:
             self.client = dev_client('sqs')
         else:
             self.client = prod_client('sqs')
 
 
+    def create_ga_queue(self):
+        response = self.client.create_queue(
+            QueueName=self.ga_queue_name,
+            tags={
+                'TYPE': 'GA'
+            }
+        )
+        print('---> CREATE QUEUE RESPONSE', response)
+        queue_url = response['QueueUrl']
+        return queue_url
 
     def create_eval_queue(self, problem_id):
         queue_name = self.queue_name_prefix + str(problem_id)
@@ -28,6 +39,16 @@ class EvalQueue:
         print('---> CREATE QUEUE RESPONSE', response)
         queue_url = response['QueueUrl']
         return queue_url
+
+    def get_or_create_ga_queue(self):
+        list_response = self.client.list_queues()
+        queue_urls = list_response['QueueUrls']
+        for url in queue_urls:
+            tags = self.client.list_queue_tags(QueueUrl=url)['Tags']
+            if 'TYPE' in tags:
+                if tags['TYPE'] == 'GA':
+                    return url
+        return self.create_ga_queue()
 
 
 
@@ -71,7 +92,7 @@ class EvalQueue:
             for url in queue_urls:
                 tags = self.client.list_queue_tags(QueueUrl=url)['Tags']
                 if 'TYPE' in tags:
-                    if tags['TYPE'] == 'EVAL':
+                    if tags['TYPE'] == 'EVAL' or tags['TYPE'] == 'GA':
                         url_list.append(url)
             return url_list
 

@@ -51,11 +51,11 @@ class Command(BaseCommand):
             print('--- EXITING')
             exit(0)
 
-
         queue_client = EvalQueue(dev=False)
         for problem in problems:
             url = queue_client.create_eval_queue(problem['id'])
             problem['queue_url'] = url
+        queue_client.create_ga_queue()
         return problems
 
 
