@@ -80,10 +80,10 @@ class VASSARClient:
         self.queue_name = 'test_queue'
         self.region_name = 'us-east-2'
 
-        self.sqs = prod_client('sqs')
+        # self.sqs = prod_client('sqs')
         self.sqs_client = prod_client('sqs')
 
-        # self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+        self.sqs = boto3.resource('sqs', region_name=self.region_name)
         # self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
         # Graphql Client
