@@ -84,16 +84,13 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 
 class SeclssFeed(APIView):
     def post(self, request):
-        print("I ran")
         if 'habitatStatus' in request.data:
-            print("I ran here")
             parameters_data = request.data['habitatStatus']
             parsed_sensor_data = json.loads(parameters_data)
 
             if global_obj.sEclss_thread is not None \
                     and global_obj.sEclss_thread.is_alive() \
                     and global_obj.sEclss_thread.name == "Real Telemetry Thread":
-                print("I ran here here")
                 global_obj.server_to_sEclss_queue.put(
                     {'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
             return Response(parsed_sensor_data)

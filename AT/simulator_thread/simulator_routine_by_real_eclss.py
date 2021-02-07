@@ -103,7 +103,6 @@ def update_window(sensor_data, tf_window, counter):
 
 
 def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
-    print("I ran here here here")
     tf_window = {'values': None, 'info': None}
     keep_alive = True
     first_update = True
@@ -118,7 +117,6 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
 
     while keep_alive and time_since_last_ping < life_limit:
         time_since_last_ping = time.time() - current_time
-        print("I ran here here here here")
         if not hub_to_sEclss.empty():
             signal = hub_to_sEclss.get()
             if signal['type'] == 'stop':
@@ -135,10 +133,8 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
                     sEclss_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
         while not ser_to_sEclss.empty():
-            print("I ran here here here here here")
             signal = ser_to_sEclss.get()
             if signal['type'] == 'sensor_data':
-                print("I ran here here here here here here")
                 sensor_data = signal['content']
                 parsed_sensor_data = get_hss_param_values(sensor_data)
 
@@ -149,7 +145,6 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
                 else:
                     tf_window = update_window(parsed_sensor_data, tf_window, counter - 1)
 
-                print("I ran here here here here here here here")
                 sEclss_to_hub.put({'type': 'window', 'content': tf_window})
                 counter += 1
                 if counter % print_freq == 0:
