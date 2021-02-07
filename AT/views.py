@@ -84,14 +84,15 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 
 class SeclssFeed(APIView):
     def post(self, request):
-        if 'parameters' in request.data:
-            sensor_data = request.data['parameters']
-            # print(sensor_data)
-            parsed_sensor_data = json.loads(sensor_data)
+        if 'habitatStatus' in request.data:
+            parameters_data = request.data['habitatStatus']
+            parsed_sensor_data = json.laods(parameters_data)
+
             if global_obj.sEclss_thread is not None \
                     and global_obj.sEclss_thread.is_alive() \
                     and global_obj.sEclss_thread.name == "Real Telemetry Thread":
-                global_obj.server_to_sEclss_queue.put({'type': 'sensor_data', 'content': parsed_sensor_data})
+                global_obj.server_to_sEclss_queue.put(
+                    {'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
             return Response(parsed_sensor_data)
         else:
             print('ERROR retrieving the sensor data from the ECLSS simulator')
@@ -180,10 +181,17 @@ class RetrieveInfoFromProcedure(APIView):
         references = retrieve_references_from_procedure(procedure_name)
         referenceLinks = retrieve_reference_links_from_procedure(procedure_name)
         figures = retrieve_figures_from_procedure(procedure_name)
+        checkable_steps = 0
+
+        for step in steps_list:
+            if step['depth'] > 0:
+                checkable_steps += 1
+
 
         # Build the output dictionary
         info = {
             'procedureStepsList': steps_list,
+            'checkableSteps': checkable_steps,
             'procedureObjective': objective,
             'procedureEquipment': equipment,
             'procedureReferences': references,
