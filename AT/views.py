@@ -86,7 +86,7 @@ class SeclssFeed(APIView):
     def post(self, request):
         if 'habitatStatus' in request.data:
             parameters_data = request.data['habitatStatus']
-            parsed_sensor_data = json.laods(parameters_data)
+            parsed_sensor_data = json.loads(parameters_data)
 
             if global_obj.sEclss_thread is not None \
                     and global_obj.sEclss_thread.is_alive() \
