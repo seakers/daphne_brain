@@ -139,7 +139,7 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
             if signal['type'] == 'sensor_data':
                 sensor_data = signal['content']
                 if server_to_sEclss_queue == ser_to_sEclss:
-                    parsed_sensor_data = get_param_values(sensor_data)
+                    parsed_sensor_data = get_hss_param_values(sensor_data)
                 else:
                     parsed_sensor_data = get_hss_param_values(sensor_data)
 
