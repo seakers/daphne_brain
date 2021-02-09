@@ -476,12 +476,12 @@ def retrieve_fancy_steps_from_procedure(procedure):
     session = driver.session()
 
     # Build the queries
-    query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
 
     # Run the queries
     result_step_labels = session.run(query_step_labels)
@@ -582,7 +582,7 @@ def retrieve_objective_from_procedure(procedure_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure) WHERE p.Title='" + procedure_name + "' RETURN p.Objective"
+    query = "MATCH (p:Procedure) WHERE p.fTitle='" + procedure_name + "' RETURN p.Objective"
     result = session.run(query)
 
     # Parse the result
@@ -604,7 +604,7 @@ def retrieve_equipment_from_procedure(procedure_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.Title='" + procedure_name + "' RETURN e.Title"
+    query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.fTitle='" + procedure_name + "' RETURN e.Title"
     result = session.run(query)
 
     # Parse the result
@@ -626,7 +626,7 @@ def retrieve_references_from_procedure(procedure_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.Title='" + procedure_name + "' RETURN r.Title"
+    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.fTitle='" + procedure_name + "' RETURN r.Title"
     result = session.run(query)
 
     # Parse the result
@@ -643,7 +643,7 @@ def retrieve_reference_links_from_procedure(procedure_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.Title='" + procedure_name + "' RETURN r.Procedure"
+    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.fTitle='" + procedure_name + "' RETURN r.Procedure"
     result = session.run(query)
 
     # Parse the result
@@ -660,7 +660,7 @@ def retrieve_figures_from_procedure(procedure_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.Title=\'" + procedure_name + \
+    query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.fTitle=\'" + procedure_name + \
             "\'RETURN f.Link ORDER BY f.Number"
     result = session.run(query)
 
