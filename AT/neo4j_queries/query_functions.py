@@ -285,7 +285,7 @@ def retrieve_procedures_from_anomaly(anomaly_name):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (a:Anomaly)-[s:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.Title ORDER BY s.Order"
+    query = "MATCH (a:Anomaly)-[s:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.fTitle ORDER BY s.Order"
     result = session.run(query)
 
     # Parse the result
