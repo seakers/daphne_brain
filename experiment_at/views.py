@@ -12,6 +12,7 @@ from auth_API.helpers import get_or_create_user_information
 # Get an instance of a logger
 from daphne_context.models import UserInformation
 from experiment_at.models import ATExperimentContext
+from AT.global_objects import userChannelNames, userChannelLayers
 
 logger = logging.getLogger('experiment')
 
@@ -154,6 +155,7 @@ class FinishExperiment(APIView):
                 json_experiment["stages"].append(json_stage)
             json.dump(json_experiment, f)
 
+        experiment_context.is_running = False
         experiment_context.delete()
 
         return Response('Experiment finished correctly!')
@@ -195,18 +197,15 @@ class FinishExperimentFromMcc(APIView):
 
     def post(self, request, format=None):
         # Retrieve the user from the user id
-        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+        print(userChannelNames)
+        print(userChannelLayers)
+        channel_name = userChannelNames[request.data["user_name"]]
+        channel_layer = userChannelLayers[request.data["user_name"]]
 
-        # If found
-        if len(state_query) > 0:
-            # Retrieve the channel name and channel layer
-            channel_name = state_query[0].channel_name
-            channel_layer = get_channel_layer()
-
-            # Build and send a command to the frontend
-            command = {'type': 'finish_experiment_from_mcc',
-                       'content': ''}
-            async_to_sync(channel_layer.send)(channel_name, command)
+        # Build and send a command to the frontend
+        command = {'type': 'finish_experiment_from_mcc',
+                   'content': ''}
+        async_to_sync(channel_layer.send)(channel_name, command)
 
         return Response()
 

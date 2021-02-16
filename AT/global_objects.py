@@ -1,5 +1,9 @@
 from queue import Queue
 
+# Match username to channel layer and name
+userChannelNames = {}
+userChannelLayers = {}
+
 # Initialize threads
 hub_thread = None
 sEclss_thread = None
