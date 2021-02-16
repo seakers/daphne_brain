@@ -8,7 +8,7 @@ from queue import Queue
 
 from auth_API.helpers import get_user_information, get_or_create_user_information
 from daphne_ws.consumers import DaphneConsumer
-from AT.global_objects import frontend_to_hub_queue
+from AT.global_objects import frontend_to_hub_queue, userChannelNames, userChannelLayers
 from asgiref.sync import async_to_sync
 from AT.automated_at_routines.hub_routine import hub_routine
 from AT.automated_at_routines.at_routine import anomaly_treatment_routine
@@ -5124,6 +5124,17 @@ class ATConsumer(DaphneConsumer):
         elif content.get('type') == 'ping':
             signal = {'type': 'ping', 'channel_name': self.channel_name}
             frontend_to_hub_queue.put(signal)
+
+        elif content.get('type') == 'add_User':
+            username = content.get('userName')
+            userChannelNames[username] = self.channel_name
+            userChannelLayers[username] = self.channel_layer
+
+        elif content.get('type') == 'remove_User':
+            username = content.get('userName')
+            del userChannelNames[username]
+            del userChannelLayers[username]
+
 
     def hub_thread_response(self, event):
         self.send(json.dumps(event))
