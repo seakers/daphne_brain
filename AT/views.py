@@ -184,10 +184,12 @@ class RetrieveInfoFromProcedure(APIView):
         referenceLinks = retrieve_reference_links_from_procedure(procedure_name)
         figures = retrieve_figures_from_procedure(procedure_name)
         checkable_steps = 0
+        checkable_steps_list = []
 
         for step in steps_list:
             if step['depth'] > 0:
                 checkable_steps += 1
+                checkable_steps_list.append(step)
 
 
         # Build the output dictionary
@@ -199,6 +201,7 @@ class RetrieveInfoFromProcedure(APIView):
             'procedureReferences': references,
             'procedureReferenceLinks': referenceLinks,
             'procedureFigures': figures,
+            'checkableStepsList': checkable_steps_list,
         }
 
         return Response(info)
