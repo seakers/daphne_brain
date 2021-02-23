@@ -125,10 +125,10 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
             elif signal['type'] == 'ping':
                 current_time = time.time()
             elif signal['type'] == 'get_real_telemetry_params':
-                print("sEclss sending parameters.")
+                #print("sEclss sending parameters.")
                 if tf_window['info'] is None:
                     hub_to_sEclss.put(signal)
-                    print("No params to send.")
+                    #print("No params to send.")
                 else:
                     sEclss_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
