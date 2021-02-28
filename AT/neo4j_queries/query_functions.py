@@ -32,7 +32,6 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     diagnosis = [node[0] for node in result]
     return diagnosis
 
-
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
     # of all the VA code.
@@ -133,7 +132,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # of each anomaly is retrieved.
 
     # Let A and B be sets. A is looped. For each element in a, B is looped. For each element b in B, a and b are
-    # compared, and the cardinal is increased if equal. This could  be done more efficiently, but the alread poor
+    # compared, and the cardinal is increased if equal. This could  be done more efficiently, but the already poor
     # readability of this function would be completely obliterated.
     # A -> requested_symptoms
     # B -> anomaly_symptoms
