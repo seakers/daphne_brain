@@ -117,9 +117,9 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
         for symptom in anomaly_symptoms:
             relationship = symptom['relationship']
             if relationship == "Upper Warning Limit" or relationship == "Upper Critic Limit":
-                relationship = 'Exceeds_UWL'
+                relationship = 'Exceeds_UpperCautionLimit'
             else:
-                relationship = 'Exceeds_LWL'
+                relationship = 'Exceeds_LowerCautionLimit'
             symptom['relationship'] = relationship
             symptom_of_anomaly.append(symptom)
 
@@ -372,34 +372,34 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query to obtain the affected measurements that exceed the UWL
-    query_uwl = "MATCH (a:Anomaly)-[r:Exceeds_UWL]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
-                "' RETURN DISTINCT m.Name, m.ParameterGroup"
-    result_uwl = session.run(query_uwl)
+    # Build and send the query to obtain the affected measurements that exceed the upper caution limit
+    query_UpperCautionLimit = "MATCH (a:Anomaly)-[r:Exceeds_UpperCautionLimit]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
+                              "' RETURN DISTINCT m.Name, m.ParameterGroup"
+    result_UpperCautionLimit = session.run(query_UpperCautionLimit)
 
     # Parse the result
-    symptoms_list_uwl = []
-    for item in result_uwl:
+    symptoms_list_UpperCautionLimit = []
+    for item in result_UpperCautionLimit:
         measurement_name = item[0] + ' (' + item[1] + ')'
-        symptoms_list_uwl.append(measurement_name)
+        symptoms_list_UpperCautionLimit.append(measurement_name)
 
-    # Build and send the query to obtain the affected measurements that exceed the UWL
-    query_lwl = "MATCH (a:Anomaly)-[r:Exceeds_LWL]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
-                "' RETURN DISTINCT m.Name, m.ParameterGroup"
-    result_lwl = session.run(query_lwl)
+    # Build and send the query to obtain the affected measurements that exceed the lower caution limit
+    query_LowerCautionLimit = "MATCH (a:Anomaly)-[r:Exceeds_LowerCautionLimit]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
+                              "' RETURN DISTINCT m.Name, m.ParameterGroup"
+    result_LowerCautionLimit = session.run(query_LowerCautionLimit)
 
     # Parse the result
-    symptoms_list_lwl = []
-    for item in result_lwl:
+    symptoms_list_LowerCautionLimit = []
+    for item in result_LowerCautionLimit:
         measurement_name = item[0] + ' (' + item[1] + ')'
-        symptoms_list_lwl.append(measurement_name)
+        symptoms_list_LowerCautionLimit.append(measurement_name)
 
     # Build the output (making the relationship explicit)
     symptoms_list = []
-    for measurement in symptoms_list_lwl:
-        symptom = {'measurement': measurement, 'relationship': 'Lower Warning Limit'}
+    for measurement in symptoms_list_LowerCautionLimit:
+        symptom = {'measurement': measurement, 'relationship': 'Lower Caution Limit'}
         symptoms_list.append(symptom)
-    for measurement in symptoms_list_uwl:
+    for measurement in symptoms_list_UpperCautionLimit:
         symptom = {'measurement': measurement, 'relationship': 'Upper Warning Limit'}
         symptoms_list.append(symptom)
 
@@ -413,7 +413,7 @@ def retrieve_thresholds_from_measurement(measurement_name, parameter_group):
 
     # Build and send the query
     query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' AND m.ParameterGroup='" + parameter_group + \
-            "' RETURN DISTINCT m.LCL, m.LWL, m.UWL, m.UCL"
+            "' RETURN DISTINCT m.LowerWarningLimit, m.LowerCautionLimit, m.UpperCautionLimit, m.UpperWarningLimit"
     result = session.run(query)
 
     # Parse the result
@@ -423,11 +423,11 @@ def retrieve_thresholds_from_measurement(measurement_name, parameter_group):
 
     # Check if the parsed result is empty and proceed accordingly
     if parsed_result != '':
-        thresholds_dict = {'LCL': parsed_result[0], 'LWL': parsed_result[1],
-                           'UWL': parsed_result[2], 'UCL': parsed_result[3]}
+        thresholds_dict = {'LowerWarningLimit': parsed_result[0], 'LowerCautionLimit': parsed_result[1],
+                           'UpperCautionLimit': parsed_result[2], 'UpperWarningLimit': parsed_result[3]}
     else:
-        thresholds_dict = {'LCL': 'None', 'LWL': 'None',
-                           'UWL': 'None', 'UCL': 'None'}
+        thresholds_dict = {'LowerWarningLimit': 'None', 'LowerCautionLimit': 'None',
+                           'UpperCautionLimit': 'None', 'UpperWarningLimit': 'None'}
 
     return thresholds_dict
 

@@ -8,11 +8,11 @@ def get_param_values(sensor_data):
                                   'kg_name',
                                   'group',
                                   'units',
-                                  'low_critic_threshold',
                                   'low_warning_threshold',
+                                  'low_caution_threshold',
                                   'nominal',
-                                  'high_warning_threshold',
-                                  'high_critic_threshold', ]}
+                                  'high_caution_threshold',
+                                  'high_warning_threshold', ]}
 
     for item in sensor_data:
         name = item['Name']
@@ -42,11 +42,11 @@ def get_hss_param_values(sensor_data):
                                   'kg_name',
                                   'group',
                                   'units',
-                                  'low_critic_threshold',
                                   'low_warning_threshold',
+                                  'low_caution_threshold',
                                   'nominal',
-                                  'high_warning_threshold',
-                                  'high_critic_threshold', ]}
+                                  'high_caution_threshold',
+                                  'high_warning_threshold', ]}
 
     for item in sensor_data:
         name = item['Name']

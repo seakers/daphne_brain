@@ -4,44 +4,44 @@
     "kg_name": "ppN2",
     "group": "L1",
     "units": "mmHg",
-    "low_critic_threshold": 220.1,
-    "low_warning_threshold": 320,
+    "low_warning_threshold": 220.1,
+    "low_caution_threshold": 320,
     "nominal": 335,
-    "high_warning_threshold": 350,
-    "high_critic_threshold": 380
+    "high_caution_threshold": 350,
+    "high_warning_threshold": 380
   },
   "ppN2 (L2)": {
     "display_name": "ppN2 (L2)",
     "kg_name": "ppN2",
     "group": "L2",
     "units": "mmHg",
-    "low_critic_threshold": 220.1,
-    "low_warning_threshold": 320,
+    "low_warning_threshold": 220.1,
+    "low_caution_threshold": 320,
     "nominal": 335,
-    "high_warning_threshold": 350,
-    "high_critic_threshold": 380
+    "high_caution_threshold": 350,
+    "high_warning_threshold": 380
   },
   "Level Cabin Pressure (L1)": {
     "display_name": "Level Cabin Pressure (L1)",
     "kg_name": "Level Cabin Pressure",
     "group": "L1",
     "units": "psi",
-    "low_critic_threshold": 10.2,
-    "low_warning_threshold": 14.2,
+    "low_warning_threshold": 10.2,
+    "low_caution_threshold": 14.2,
     "nominal": 14.7,
-    "high_warning_threshold": 14.9,
-    "high_critic_threshold": 15.2
+    "high_caution_threshold": 14.9,
+    "high_warning_threshold": 15.2
   },
   "Level Cabin Pressure (L2)": {
     "display_name": "Level Cabin Pressure (L2)",
     "kg_name": "Level Cabin Pressure",
     "group": "L2",
     "units": "psi",
-    "low_critic_threshold": 10.2,
-    "low_warning_threshold": 14.2,
+    "low_warning_threshold": 10.2,
+    "low_caution_threshold": 14.2,
     "nominal": 14.7,
-    "high_warning_threshold": 14.9,
-    "high_critic_threshold": 15.2
+    "high_caution_threshold": 14.9,
+    "high_warning_threshold": 15.2
   }
 }
 
