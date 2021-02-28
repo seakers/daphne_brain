@@ -7,13 +7,13 @@ def compute_zone(value, info):
     """
 
     zone = 0
-    if value <= info['low_critic_threshold']:
+    if value <= info['low_warning_threshold']:
         zone = -2
-    elif value <= info['low_warning_threshold']:
+    elif value <= info['low_caution_threshold']:
         zone = -1
-    elif value <= info['high_warning_threshold']:
+    elif value <= info['high_caution_threshold']:
         zone = 0
-    elif value <= info['high_critic_threshold']:
+    elif value <= info['high_warning_threshold']:
         zone = 1
     else:
         zone = 2
@@ -31,15 +31,15 @@ def build_threshold_tag(value, info):
     tag = ''
     zone = compute_zone(value, info)
     if zone == -2:
-        tag = 'LCL'
+        tag = 'LowWarningLimit'
     elif zone == -1:
-        tag = 'LWL'
+        tag = 'LowCautionLimit'
     elif zone == 0:
-        tag = 'nominal'
+        tag = 'Nominal'
     elif zone == 1:
-        tag = 'UWL'
+        tag = 'UpperCautionLimit'
     elif zone == 2:
-        tag = 'UCL'
+        tag = 'UpperWarningLimit'
     else:
         print('Invalid zone value')
         raise
@@ -49,14 +49,14 @@ def build_threshold_tag(value, info):
 
 def build_detection_text(variable, threshold_tag):
     text = ''
-    if threshold_tag == 'LCL':
-        text = variable + ': Is below Lower Critic Limit.'
-    elif threshold_tag == 'LWL':
+    if threshold_tag == 'LowerWarningLimit':
         text = variable + ': Is below Lower Warning Limit.'
-    elif threshold_tag == 'UWL':
+    elif threshold_tag == 'LowerCautionLimit':
+        text = variable + ': Is below Lower Caution Limit.'
+    elif threshold_tag == 'UpperCautionLimit':
+        text = variable + ': Is above Upper Caution Limit.'
+    elif threshold_tag == 'UpperWarningLimit':
         text = variable + ': Is above Upper Warning Limit.'
-    elif threshold_tag == 'UCL':
-        text = variable + ': Is above Upper Critic Limit.'
     else:
         print('Invalid threshold tag')
         raise

@@ -71,10 +71,10 @@ def check_threads_status():
 
 def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
     relationship = ''
-    if threshold_tag == 'LCL' or threshold_tag == 'LWL':
-        relationship = 'Exceeds_LWL'
-    elif threshold_tag == 'UCL' or threshold_tag == 'UWL':
-        relationship = 'Exceeds_UWL'
+    if threshold_tag == 'LowerWarningLimit' or threshold_tag == 'LowerCautionLimit':
+        relationship = 'Exceeds_LowerCautionLimit'
+    elif threshold_tag == 'UpperWarningLimit' or threshold_tag == 'UpperCautionLimit':
+        relationship = 'Exceeds_UpperCautionLimit'
     else:
         print('Invalid threshold tag')
         raise
