@@ -20,10 +20,10 @@ def get_param_values(sensor_data):
         simulated_value = item['SimValue']
         units = item['Unit']
         group = item['ParameterGroup']
-        lct = item['LowerCriticalLimit']
-        lwt = item['LowerWarningLimit']
-        hwt = item['UpperWarningLimit']
-        hct = item['UpperCriticalLimit']
+        lct = item['LowerWarningLimit']
+        lwt = item['LowerCautionLimit']
+        hwt = item['UpperCautionLimit']
+        hct = item['UpperWarningLimit']
 
         display_name = name + ' (' + group + ')'
         kg_name = name
@@ -136,6 +136,7 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
             signal = ser_to_sEclss.get()
             if signal['type'] == 'sensor_data':
                 sensor_data = signal['content']
+                print(sensor_data)
                 parsed_sensor_data = get_hss_param_values(sensor_data)
 
                 if first_update:
