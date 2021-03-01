@@ -31,11 +31,11 @@ def build_threshold_tag(value, info):
     tag = ''
     zone = compute_zone(value, info)
     if zone == -2:
-        tag = 'LowWarningLimit'
+        tag = 'LowerWarningLimit'
     elif zone == -1:
-        tag = 'LowCautionLimit'
+        tag = 'LowerCautionLimit'
     elif zone == 0:
-        tag = 'Nominal'
+        tag = 'nominal'
     elif zone == 1:
         tag = 'UpperCautionLimit'
     elif zone == 2:
@@ -170,7 +170,7 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
                 if hub_to_at.empty():
                     window = signal['content']
                     # Build the new symptoms report
-                    print(window)
+
                     symptoms_report = build_symptoms_report(window)
 
                     # Decide if an alarm has to be triggered or not
