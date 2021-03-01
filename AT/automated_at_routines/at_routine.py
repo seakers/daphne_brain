@@ -170,6 +170,7 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
                 if hub_to_at.empty():
                     window = signal['content']
                     # Build the new symptoms report
+                    print(window)
                     symptoms_report = build_symptoms_report(window)
 
                     # Decide if an alarm has to be triggered or not
