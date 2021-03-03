@@ -170,7 +170,7 @@ CHANNEL_LAYERS = {
 }
 
 # ASGI_APPLICATION should be set to your outermost router
-ASGI_APPLICATION = 'daphne_brain.routing.application'
+ASGI_APPLICATION = 'daphne_brain.asgi.application'
 
 # Databases for Daphne
 ALCHEMY_DATABASE = {
