@@ -91,7 +91,7 @@ class CommandList(APIView):
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         port = user_info.eosscontext.vassar_port
-        vassar_client = VASSARClient(port)
+        vassar_client = VASSARClient(port, user_info=user_info)
         problem = user_info.eosscontext.problem
         # List of commands for a single subsystem
         command_list = []

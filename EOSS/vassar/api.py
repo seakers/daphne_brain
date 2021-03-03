@@ -30,6 +30,7 @@ from thrift.protocol import TBinaryProtocol
 from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.interface import VASSARInterface
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
+from auth_API.helpers import get_or_create_user_information
 
 from EOSS.graphql.api import GraphqlClient
 
@@ -62,17 +63,27 @@ class ObjectiveSatisfaction:
 
 class VASSARClient:
     
-    def __init__(self, port=9090, queue_name='test_queue', region_name='us-east-2'):
+    def __init__(self, port=9090, request=None, problem_id=None, user_info=None):
+        if user_info is not None:
+            self.problem_id = user_info.eosscontext.problem_id
+        elif problem_id is not None:
+            self.problem_id = str(problem_id)
+        elif request is not None:
+            user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+            self.problem_id = str(user_info.eosscontext.problem_id)
+        else:
+            self.problem_id = str(4)
+
 
         # Boto3
-        self.queue_name = queue_name
-        self.region_name = region_name
+        self.queue_name = 'test_queue'
+        self.region_name = 'us-east-2'
         self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
         self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
         self.problem_id = str(5)
 
         # Graphql Client
-        self.dbClient = GraphqlClient()
+        self.dbClient = GraphqlClient(problem_id=self.problem_id)
 
     
     
@@ -151,7 +162,7 @@ class VASSARClient:
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
     # working
-    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue'):
+    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue', fast=False, ga=False, redo=False):
         inputs = ''
         for x in input_str:
             if x:
@@ -171,6 +182,18 @@ class VASSARClient:
             },
             'input': {
                 'StringValue': str(inputs),
+                'DataType': 'String'
+            },
+            'fast': {
+                'StringValue': str(fast),
+                'DataType': 'String'
+            },
+            'ga': {
+                'StringValue': str(ga),
+                'DataType': 'String'
+            },
+            'redo': {
+                'StringValue': str(redo),
                 'DataType': 'String'
             }
         })
@@ -206,6 +229,10 @@ class VASSARClient:
                 'redo': {
                     'StringValue': 'true',
                     'DataType': 'String'
+                },
+                'fast': {
+                    'StringValue': 'true',
+                    'DataType': 'String'
                 }
             })
 
@@ -220,7 +247,7 @@ class VASSARClient:
             new_design_bool_ary = boolean_string_to_boolean_array(str(new_design))
             print('---> NEW DESIGN string: ', str(new_design))
             print('---> NEW DESIGN ary: ', new_design_bool_ary)
-            new_design_result = self.evaluate_architecture('SMAP', new_design_bool_ary, self.problem_id, eval_queue_name)
+            new_design_result = self.evaluate_architecture('SMAP', new_design_bool_ary, self.problem_id, eval_queue_name, fast=True, ga=True)
             print('---> RESULT: ', str(new_design_result))
             designs.append(new_design_result)
 
@@ -376,7 +403,13 @@ class VASSARClient:
         print("\n\n----> critique_architecture", problem, arch)
         arch_id = self.dbClient.get_arch_id(arch)
         print("---> architecture id", arch_id)
-        return self.dbClient.get_arch_critique(arch_id)
+        critique = self.dbClient.get_arch_critique(arch_id)
+        if critique == []:
+            print("---> Re-evaluating architecture ")
+            self.evaluate_architecture('SMAP', json.loads(arch.inputs), redo=True)
+            critique = self.dbClient.wait_for_critique(arch_id)
+        print("--> FINAL CRITIQUE ", critique)
+        return critique
     
 
 
