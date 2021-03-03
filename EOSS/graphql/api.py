@@ -55,7 +55,7 @@ class GraphqlClient:
 
     def __init__(self, hasura_url='http://graphql:8080/v1/graphql'):
         self.hasura_url = hasura_url
-        self.problem_id = str(4)
+        self.problem_id = str(5)
 
 
     def get_architectures(self, problem_id=5):

@@ -69,7 +69,7 @@ class VASSARClient:
         self.region_name = region_name
         self.sqs = boto3.resource('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
         self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
-        self.problem_id = str(4)
+        self.problem_id = str(5)
 
         # Graphql Client
         self.dbClient = GraphqlClient()
