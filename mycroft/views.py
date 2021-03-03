@@ -18,7 +18,7 @@ class CheckConnection(APIView):
         # user_info = get_or_create_user_information(request.session, request.user, request.data['problem'])
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         if user_info.mycroft_connection is False:
-            return Response({"connection": "false", "access_token": user_info.mycroft_session})
+            return Response({"connection": "false", "access_token": user_info.user.mycroftuser.mycroft_session})
         else:
             return Response({"connection": "true"})
 
