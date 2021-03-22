@@ -1,6 +1,4 @@
-from channels.auth import AuthMiddlewareStack
 from django.urls import path
-from channels.routing import ProtocolTypeRouter, URLRouter
 
 from daphne_brain import settings
 
@@ -21,26 +19,16 @@ from daphne_ws.consumers import MycroftConsumer
 
 ws_routes = []
 if "EOSS" in settings.ACTIVE_MODULES:
-    ws_routes.append(path('api/eoss/ws', EOSSConsumer))
+    ws_routes.append(path('api/eoss/ws', EOSSConsumer.as_asgi()))
 if "AT" in settings.ACTIVE_MODULES:
     ws_routes.extend([
-        path('api/anomaly/SARIMAX_AD', SARIMAX_AD),
-        path('api/anomaly/adaptiveKNN', adaptiveKNN),
-        path('api/anomaly/iForest', iForest),
+        path('api/anomaly/SARIMAX_AD', SARIMAX_AD.as_asgi()),
+        path('api/anomaly/adaptiveKNN', adaptiveKNN.as_asgi()),
+        path('api/anomaly/iForest', iForest.as_asgi()),
     ])
 ws_routes.extend([
-    path('api/experiment', ExperimentConsumer),
+    path('api/experiment', ExperimentConsumer.as_asgi()),
 ])
 ws_routes.extend([
     path('api/mycroft', MycroftConsumer),
 ])
-
-application = ProtocolTypeRouter({
-    # Route all WebSocket requests to our custom chat handler.
-    # We actually don't need the URLRouter here, but we've put it in for
-    # illustration. Also note the inclusion of the AuthMiddlewareStack to
-    # add users and sessions - see http://channels.readthedocs.io/en/latest/topics/authentication.html
-    'websocket': AuthMiddlewareStack(
-        URLRouter(ws_routes),
-    ),
-})
