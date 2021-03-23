@@ -6,6 +6,7 @@ Django~=3.1.7
 django-cors-headers~=3.7.0
 django-filter~=2.4.0
 djangorestframework~=3.12.2
+Flask~=1.1.2
 numpy~=1.19.2
 pandas~=1.2.3
 pika~=1.2.0
