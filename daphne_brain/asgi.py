@@ -8,14 +8,13 @@ import os
 # before importing consumers and AuthMiddlewareStack that may import ORM
 # models.
 from django.core.asgi import get_asgi_application
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "daphne_brain.settings")
 django_asgi_app = get_asgi_application()
 
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from daphne_brain.routing import ws_routes
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'daphne_brain.settings')
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
