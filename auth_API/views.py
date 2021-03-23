@@ -24,6 +24,7 @@ class Login(APIView):
         password = request.data['password']
         daphne_version = request.data['daphneVersion']
         user = authenticate(request, username=username, password=password)
+        request.session.set_expiry(1800)
 
         if user is not None:
             # Try to look for user session object. If it exists, then the session will be changed to that. If not,
