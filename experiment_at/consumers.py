@@ -23,12 +23,14 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
 
         # Get an updated session store
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
+
         if hasattr(user_info, 'atexperimentcontext'):
             experiment_context = user_info.atexperimentcontext
-
+            print(str(user_info) + str(user_info.atexperimentcontext) + str(experiment_context.is_running))
             if content.get('msg_type') == 'add_action':
                 experiment_stage = experiment_context.atexperimentstage_set.all().order_by("id")[content['stage']]
-                ATExperimentAction.objects.create(atexperimentstage=experiment_stage, action=json.dumps(content['action']),
+                ATExperimentAction.objects.create(atexperimentstage=experiment_stage,
+                                                  action=json.dumps(content['action']),
                                                   date=datetime.datetime.utcnow())
                 self.send_json({
                     'action': content['action'],
@@ -40,3 +42,11 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
                 self.send_json({
                     "state": json.loads(experiment_context.current_state)
                 })
+
+    def disconnect(self, close_code):
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
+        experiment_context = user_info.atexperimentcontext
+        print("close" + str(user_info) + str(user_info.atexperimentcontext) + str(experiment_context.is_running))
+        experiment_context.is_running = False
+        print("close" + str(user_info) + str(user_info.atexperimentcontext) + str(experiment_context.is_running))
+        experiment_context.delete()
