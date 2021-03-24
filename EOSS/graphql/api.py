@@ -57,6 +57,7 @@ class GraphqlClient:
 
     def __init__(self, hasura_url='http://graphql:8080/v1/graphql', request=None, problem_id=None, user_info=None):
         self.hasura_url = hasura_url
+
         if user_info is not None:
             self.problem_id = user_info.eosscontext.problem_id
         elif problem_id is not None:
@@ -65,10 +66,10 @@ class GraphqlClient:
             user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
             self.problem_id = str(user_info.eosscontext.problem_id)
         else:
-            self.problem_id = str(4)
+            self.problem_id = str(5)
 
 
-    def get_architectures(self, problem_id=5):
+    def get_architectures(self, problem_id=6):
         problem_id = str(problem_id)
         query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}}) { id input cost science eval_status } } '
         return self.execute_query(query)
