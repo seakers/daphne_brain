@@ -254,11 +254,11 @@ class CheckStatusHasura(APIView):
     """
     def get(self, request, format=None):
         print("Check hasura status", request.data)
-        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        print("--> GOT USER INFORMATION")
-        problem = user_info.eosscontext.problem
-        dataset_filename = user_info.eosscontext.dataset_name
-        dataset_user = user_info.eosscontext.dataset_user
+        #user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        #print("--> GOT USER INFORMATION")
+        #problem = user_info.eosscontext.problem
+        #dataset_filename = user_info.eosscontext.dataset_name
+        #dataset_user = user_info.eosscontext.dataset_user
 
         response = {
             "X-Hasura-User-Id": "1",

@@ -51,6 +51,7 @@ class ImportData(APIView):
 
             print("--> PROBLEM IDER: ", problem_id)
             query = dbClient.get_architectures(problem_id)
+            print("DEBUG QUERY", query)
 
             # Iterate over architectures
             # Create: user context Designs
