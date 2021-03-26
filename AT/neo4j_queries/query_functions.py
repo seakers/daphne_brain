@@ -201,7 +201,15 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     for i in range(0, size_limit):
         anomaly = ordered_diagnosis[i]
         score = scored_diagnosis[anomaly]
-        top_n_diagnosis.append({'name': anomaly, 'score': score})
+        text_score = ""
+        if score < 0.33:
+            text_score = "Not likely"
+        elif score < 0.66:
+            text_score = "Somewhat likely"
+        else:
+            text_score = "Very likely"
+
+        top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
 
     # Return result
     final_diagnosis = top_n_diagnosis
