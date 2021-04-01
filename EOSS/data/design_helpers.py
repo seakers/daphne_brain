@@ -3,7 +3,7 @@ import threading
 from threading import Lock
 
 from EOSS.explorer.diversifier import activate_diversifier
-from EOSS.models import EOSSContext, Design
+from EOSS.models import EOSSContext
 from auth_API.helpers import get_user_information
 from daphne_context.models import UserInformation
 

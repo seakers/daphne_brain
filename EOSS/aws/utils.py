@@ -1,16 +1,13 @@
 import boto3
 import os
 
-
-
+from django.conf import settings
 
 
 def pprint(to_print):
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(to_print)
-
-
 
 def user_input(yes_no_message):
     response = input(yes_no_message)
@@ -20,26 +17,20 @@ def user_input(yes_no_message):
     else:
         return True
 
-
 def get_secret_access_key_env():
     return os.environ['AWS_SECRET_ACCESS_KEY']
-
 
 def get_access_key_id_env():
     return os.environ['AWS_ACCESS_KEY_ID']
 
-
 def dev_access_key():
     return 'AKIAJVM34C5MCCWRJCCQ'
-
 
 def dev_secret_key():
     return 'Pgd2nnD9wAZOCLA5SchYf1REzdYdJvDBpMEEEybU'
 
-
 def instance_priv_ipv4():
     return '172.31.63.4'
-
 
 def graphql_server_address(dev=False):
     if not dev:
@@ -47,13 +38,11 @@ def graphql_server_address(dev=False):
     else:
         return 'http://graphql:8080/v1/graphql'
 
-
 def graphql_server_address_ws(dev=False):
     if not dev:
         return 'wss://dev.selva-research.com/v1/graphql'
     else:
         return 'ws://graphql:8080/v1/graphql'
-
 
 def eval_task_iam_arn():
     return 'arn:aws:iam::923405430231:role/Daphne-EvaluatorTask'
@@ -73,8 +62,8 @@ def dev_client(client_type, region_name='us-east-2'):
 def prod_client(client_type, region_name='us-east-2'):
     return boto3.client(client_type, region_name=region_name)
 
-
-
-
-
-
+def get_boto3_client(client_type,  region_name='us-east-2'):
+    if settings.DEBUG:
+        return dev_client(client_type, region_name)
+    else:
+        return prod_client(client_type, region_name)

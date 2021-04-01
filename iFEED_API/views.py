@@ -8,7 +8,6 @@ import json
 import csv
 from random import *
 
-from EOSS.models import Design
 from iFEED_API.venn_diagram.intersection import optimize_distance
 from config.loader import ConfigurationLoader
 

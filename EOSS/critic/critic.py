@@ -12,7 +12,7 @@ from EOSS.analyst.helpers import get_feature_unsatisfied, get_feature_satisfied,
     feature_expression_to_string
 from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
-from EOSS.models import Design, EOSSContext
+from EOSS.models import EOSSContext
 from EOSS.vassar.api import VASSARClient
 from EOSS.data_mining.api import DataMiningClient
 
@@ -337,7 +337,8 @@ class Critic:
             behavioral = []
             non_behavioral = []
 
-            dataset = Design.objects.filter(eosscontext_id__exact=self.context.id).all()
+            # TODO: Change to Architecture
+            # dataset = Design.objects.filter(eosscontext_id__exact=self.context.id).all()
 
             if len(dataset) < 10:
                 raise ValueError("Could not run data mining: the number of samples is less than 10")

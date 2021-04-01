@@ -69,9 +69,8 @@ class GraphqlClient:
             self.problem_id = str(5)
 
 
-    def get_architectures(self, problem_id=6):
-        problem_id = str(problem_id)
-        query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}}) { id input cost science eval_status } } '
+    def get_architectures(self, problem_id=6, dataset_id=-1):
+        query = f'query get_architectures {{ Architecture(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
         return self.execute_query(query)
 
     def get_orbit_list(self, group_id, problem_id):
@@ -293,16 +292,37 @@ class GraphqlClient:
         
 
     def get_problems(self):
-        query = 'query MyQuery { Problem { id name group_id } }'
+        query = 'query get_problems { Problem { id name group_id } }'
         return self.execute_query(query)['data']['Problem']
+
+
+    def get_default_dataset_id(self, dataset_name, problem_id):
+        query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
+        return self.execute_query(query)['data']['Dataset'][0]['id']
+
+    def clone_default_dataset(self, origin_dataset_id, user_id):
+        get_default_dataset = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {origin_dataset_id} }} }}) {{ id name problem_id }} Architecture(where: {{dataset_id: {{_eq: {origin_dataset_id} }} }}) {{ cost science problem_id eval_status input }}  }}'
+        original_dataset = self.execute_query(get_default_dataset)['data']
+        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "default", problem_id: {original_dataset["Dataset"][0]["problem_id"]}, user_id: {user_id} }}) {{ id }} }}'
+        new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
+        for arch in original_dataset["Architecture"]:
+            arch["dataset_id"] = new_dataset_id
+            arch["user_id"] = user_id
+        clone_data_query = f'mutation insert_new_archs($archs: [Architecture_insert_input!]!) {{ insert_Architecture(objects: $archs) {{ affected_rows returning {{ id }} }} }}'
+        self.execute_query(clone_data_query, {"archs": original_dataset["Architecture"]})
+        return new_dataset_id
+
 
 
     def insert_user_into_group(self, user_id, group_id=1):
         mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
         return self.execute_query(mutation)
 
-    def execute_query(self, query):
-        r = requests.post(self.hasura_url, json={'query': query })
+    def execute_query(self, query, variables=None):
+        json_body = {'query': query }
+        if variables is not None:
+            json_body['variables'] = variables
+        r = requests.post(self.hasura_url, json=json_body)
         result = json.loads(r.text)
         print('\n-------- Query Result --------')
         print('----> URL:', self.hasura_url)
