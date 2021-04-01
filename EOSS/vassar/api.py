@@ -19,21 +19,16 @@
 # under the License.
 #
 import json
-import os
 import boto3
 import random
 
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from django.conf import settings
 
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-from EOSS.vassar.interface import VASSARInterface
-from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from auth_API.helpers import get_or_create_user_information
 
 from EOSS.graphql.api import GraphqlClient
-from EOSS.aws.utils import prod_client
+from EOSS.aws.utils import get_boto3_client
 from EOSS.aws.EvalQueue import EvalQueue
 
 
@@ -65,7 +60,7 @@ class ObjectiveSatisfaction:
 
 class VASSARClient:
     
-    def __init__(self, port=9090, request=None, problem_id=None, user_info=None):
+    def __init__(self, request=None, problem_id=None, user_info=None):
         if user_info is not None:
             self.problem_id = user_info.eosscontext.problem_id
         elif problem_id is not None:
@@ -82,7 +77,7 @@ class VASSARClient:
         self.region_name = 'us-east-2'
 
         # self.sqs = prod_client('sqs')
-        self.sqs_client = prod_client('sqs')
+        self.sqs_client = get_boto3_client('sqs')
 
         self.sqs = boto3.resource('sqs', region_name=self.region_name)
         # self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
@@ -92,16 +87,6 @@ class VASSARClient:
 
         # Queue Client
         self.queue_client = EvalQueue()
-
-    
-    
-    # deprecated
-    def start_connection(self):
-        return 0
-    
-    # deprecated
-    def end_connection(self):
-        return 0
 
     # deprecated
     def initialize_vassar_containers(self, group_id=1, problem_id=5):
@@ -279,7 +264,7 @@ class VASSARClient:
         # Connect to queue
         ga_queue_url = self.queue_client.get_or_create_ga_queue()
 
-        prod_client('sqs').send_message(
+        self.sqs_client.send_message(
             QueueUrl=ga_queue_url,
             MessageBody='boto3',
             MessageAttributes={
@@ -303,7 +288,7 @@ class VASSARClient:
 
         ga_queue_url = self.queue_client.get_or_create_ga_queue()
 
-        prod_client('sqs').send_message(
+        self.sqs_client.send_message(
             QueueUrl=ga_queue_url,
             MessageBody='boto3',
             MessageAttributes={
@@ -338,15 +323,6 @@ class VASSARClient:
             }
         )
         return ga_id
-    
-    # deprecated 
-    def create_thrift_arch(self, problem, arch):
-        if problem in assignation_problems:
-            return BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
-        elif problem in partition_problems:
-            return DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs))
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
 
     # working
     def get_instruments_for_objective(self, problem, objective):

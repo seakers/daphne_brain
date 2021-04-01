@@ -1,4 +1,4 @@
-FROM python:3.7-slim-stretch
+FROM python:3.8-slim-stretch
 
 
 RUN apt-get -y update &&\
@@ -22,7 +22,7 @@ RUN touch daphne.logs
 WORKDIR /app/daphne_brain
 
 RUN pip3 install --no-cache-dir -r ./requirements.txt
-RUN spacy download en
+RUN spacy download en_core_web_sm
 
 # Commands to start daphne_brain
 #RUN python3 manage.py migrate --run-syncdb &&\

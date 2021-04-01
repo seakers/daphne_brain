@@ -6,7 +6,7 @@ import numpy as np
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from EOSS.models import EOSSContext, Design
+from EOSS.models import EOSSContext
 from daphne_context.models import DialogueHistory
 
 

@@ -3,7 +3,6 @@ import json
 
 from asgiref.sync import async_to_sync
 
-from EOSS.models import Design
 from EOSS.explorer.diversifier import activate_diversifier
 from daphne_context.models import DialogueHistory
 

@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-from EOSS.models import Design
 from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data.design_helpers import add_design
@@ -40,23 +39,26 @@ class ImportData(APIView):
 
             # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            problem_id = request.data['problem_id']
-            group_id = request.data['group_id']
-
-            # Remove all design objects
-            Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
+            problem_id = int(request.data['problem_id'])
+            group_id = int(request.data['group_id'])
+            dataset_id = int(request.data['dataset_id'])
 
             # Get problem architectures
             dbClient = GraphqlClient(problem_id=problem_id)
 
             print("--> PROBLEM IDER: ", problem_id)
-            query = dbClient.get_architectures(problem_id)
+
+            # If dataset_id is -1, copy all architectures in the default set for this problem into a user-specific dataset called 'default' and set that as the main dataset,
+            # Else, use the request dataset_id to get architectures
+            if dataset_id == -1:
+                default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
+                dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
+            query = dbClient.get_architectures(problem_id, dataset_id)
             print("DEBUG QUERY", query)
 
             # Iterate over architectures
             # Create: user context Designs
             # Create: object to send designs to front-end
-            architectures = []
             architectures_json = []
             counter = 0
             for arch in query['data']['Architecture']:
@@ -70,10 +72,6 @@ class ImportData(APIView):
                 outputs = [float(arch['science']), float(arch['cost'])]
 
                 # Append design object and front-end design object
-                architectures.append(Design(id=counter,
-                                            eosscontext=user_info.eosscontext,
-                                            inputs=json.dumps(inputs),
-                                            outputs=json.dumps(outputs)))
                 architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
 
                 # Increment counters
@@ -81,16 +79,10 @@ class ImportData(APIView):
                 counter = counter + 1
 
 
-            # Index user context Design objects
-            Design.objects.bulk_create(architectures)
-
-
             # Set user context
-            user_info.eosscontext.problem = 'SMAP'  # HARDCODE
             user_info.eosscontext.problem_id = problem_id
             user_info.eosscontext.group_id = group_id
-            user_info.eosscontext.dataset_name = str(problem_id)
-            user_info.eosscontext.dataset_user = True
+            user_info.eosscontext.dataset_id = dataset_id
             user_info.eosscontext.save()
             user_info.save()
 
@@ -98,86 +90,6 @@ class ImportData(APIView):
             return Response(architectures_json)
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")
-
-
-        #     user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-
-        #     # Set the path of the file containing data
-        #     user_path = request.user.username if request.data['load_user_files'] == 'true' != '' else 'default'
-        #     problem = request.data['problem']
-        #     filename = request.data['filename']
-        #     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", user_path,
-        #                              problem, filename)
-
-        #     input_num = int(request.data['input_num'])
-        #     input_type = request.data['input_type']
-        #     output_num = int(request.data['output_num'])
-
-        #     user_info.eosscontext.last_arch_id = 0
-
-        #     # Open the file
-        #     with open(file_path) as csvfile:
-        #         Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
-        #         architectures = []
-        #         architectures_json = []
-
-        #         inputs_unique_set = set()
-        #         # For each row, store the information
-        #         has_header = csv.Sniffer().has_header(csvfile.read(1024))
-        #         csvfile.seek(0)
-
-        #         # Read the file as a csv file
-        #         reader = csv.reader(csvfile, delimiter=',')
-
-        #         for row in reader:
-        #             if has_header:
-        #                 has_header = False
-        #                 continue
-
-        #             inputs = []
-        #             outputs = []
-
-        #             # Import inputs
-        #             for i in range(input_num):
-        #                 if input_type == 'binary':
-        #                     # Assumes that there is only one column for the inputs
-        #                     inputs = self.boolean_string_to_boolean_array(row[i])
-
-        #                 elif input_type == 'discrete':
-        #                     inputs.append(int(row[i]))
-
-        #                 else:
-        #                     raise ValueError('Unknown input type: {0}'.format(input_type))
-
-        #             for i in range(output_num):
-        #                 out = row[i + input_num]
-        #                 if out == "":
-        #                     out = 0
-        #                 else:
-        #                     out = float(out)
-        #                 outputs.append(out)
-
-        #             hashed_input = hash(tuple(inputs))
-        #             if hashed_input not in inputs_unique_set:
-        #                 architectures.append(Design(id=user_info.eosscontext.last_arch_id,
-        #                                             eosscontext=user_info.eosscontext,
-        #                                             inputs=json.dumps(inputs),
-        #                                             outputs=json.dumps(outputs)))
-        #                 architectures_json.append({'id': user_info.eosscontext.last_arch_id, 'inputs': inputs, 'outputs': outputs})
-        #                 user_info.eosscontext.last_arch_id += 1
-        #                 inputs_unique_set.add(hashed_input)
-
-        #     # Define context and see if it was already defined for this session
-        #     Design.objects.bulk_create(architectures)
-        #     user_info.eosscontext.problem = problem
-        #     user_info.eosscontext.dataset_name = filename
-        #     user_info.eosscontext.dataset_user = request.data['load_user_files'] == 'true'
-        #     user_info.eosscontext.save()
-        #     user_info.save()
-
-        #     return Response(architectures_json)
-        # except Exception:
-        #     raise ValueError("There has been an error when parsing the architectures")
 
 """ Save current dataset to a new csv file in the user folder
 """
@@ -335,7 +247,7 @@ class AddDesign(APIView):
         db_design['outputs'] = design['outputs']
 
         print("\n---> AddDesign --> add_design", db_design)
-        architecture = add_design(db_design, request.session, request.user, False)
+        #architecture = add_design(db_design, request.session, request.user, False)
         user_info.save()
 
         return Response({

@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from EOSS.data import problem_specific
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, \
     ContinuousInputArchitecture, AssigningProblemEntities
-from EOSS.models import Design
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data_mining.api import DataMiningClient
 

@@ -12,7 +12,6 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from EOSS.data.problem_specific import assignation_problems, partition_problems
-from EOSS.models import Design
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from auth_API.helpers import get_or_create_user_information
@@ -170,17 +169,12 @@ class StopGA(APIView):
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
                 # Start connection with VASSAR
-                port = user_info.eosscontext.vassar_port
-                client = VASSARClient(port, user_info=user_info)
-                client.start_connection()
+                client = VASSARClient(user_info=user_info)
 
                 # Call the GA stop function on Engineer
                 client.stop_ga(user_info.eosscontext.ga_id)
                 user_info.eosscontext.ga_id = None
                 user_info.eosscontext.save()
-
-                # End the connection before return statement
-                client.end_connection()
 
                 return Response({
                     "status": 'GA stopped correctly!'
@@ -188,7 +182,6 @@ class StopGA(APIView):
 
             except Exception as exc:
                 logger.exception('Exception in stopping the GA!')
-                client.end_connection()
                 return Response({
                     "error": "Error stopping the GA",
                     "exception": str(exc)

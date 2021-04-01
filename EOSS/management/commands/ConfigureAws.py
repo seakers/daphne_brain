@@ -92,17 +92,3 @@ class Command(BaseCommand):
 
         # 4. For each problem, creating an auto scaling service
         self.create_services(problems)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

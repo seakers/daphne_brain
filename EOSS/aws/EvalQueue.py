@@ -1,19 +1,16 @@
 import boto3
 
-from EOSS.aws.utils import dev_client, prod_client, user_input, pprint
+from EOSS.aws.utils import get_boto3_client, user_input, pprint
 
 
 class EvalQueue:
 
 
-    def __init__(self, dev=False):
+    def __init__(self):
         self.region = 'us-east-2'
         self.queue_name_prefix = 'evaluator-queue-'
         self.ga_queue_name = 'ga-queue'
-        if dev:
-            self.client = dev_client('sqs')
-        else:
-            self.client = prod_client('sqs')
+        self.client = get_boto3_client('sqs')
 
 
     def create_ga_queue(self):
@@ -45,11 +42,14 @@ class EvalQueue:
         if 'QueueUrls' not in list_response:
             return self.create_ga_queue()
         queue_urls = list_response['QueueUrls']
+        print(list_response)
         for url in queue_urls:
-            tags = self.client.list_queue_tags(QueueUrl=url)['Tags']
-            if 'TYPE' in tags:
-                if tags['TYPE'] == 'GA':
-                    return url
+            tag_response = self.client.list_queue_tags(QueueUrl=url)
+            if 'Tags' in tag_response:
+                tags = self.client.list_queue_tags(QueueUrl=url)['Tags']
+                if 'TYPE' in tags:
+                    if tags['TYPE'] == 'GA':
+                        return url
         return self.create_ga_queue()
 
 

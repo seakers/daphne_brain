@@ -3,7 +3,6 @@ import json
 from string import Template
 
 from EOSS.critic.critic import Critic
-from EOSS.models import Design
 from daphne_context.models import UserInformation, DialogueHistory
 
 
