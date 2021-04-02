@@ -197,8 +197,6 @@ class FinishExperimentFromMcc(APIView):
 
     def post(self, request, format=None):
         # Retrieve the user from the user id
-        print(userChannelNames)
-        print(userChannelLayers)
         channel_name = userChannelNames[request.data["user_name"]]
         channel_layer = userChannelLayers[request.data["user_name"]]
 

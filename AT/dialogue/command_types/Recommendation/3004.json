@@ -21,14 +21,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "The estimated completion time for procedure ${procedure_name} is ${procedure_time} [min]."
+      "template": "The estimated completion time for procedure ${procedure_name} is ${procedure_time}."
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "The estimated completion time for procedure ${procedure_name} is ${procedure_time} [min]."
+      "template": "The estimated completion time for procedure ${procedure_name} is ${procedure_time}."
     }
   ]
 }

@@ -32,6 +32,7 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     diagnosis = [node[0] for node in result]
     return diagnosis
 
+
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
     # of all the VA code.
@@ -286,13 +287,30 @@ def retrieve_all_procedures():
     return procedure_list
 
 
-def retrieve_procedures_from_anomaly(anomaly_name):
+def retrieve_procedures_fTitle_from_anomaly(anomaly_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
     query = "MATCH (a:Anomaly)-[s:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.fTitle ORDER BY s.Order"
+    result = session.run(query)
+
+    # Parse the result
+    procedure_list = []
+    for item in result:
+        procedure_list.append(item[0])
+
+    return procedure_list
+
+
+def retrieve_procedures_title_from_anomaly(anomaly_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (a:Anomaly)-[s:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.Title ORDER BY s.Order"
     result = session.run(query)
 
     # Parse the result
@@ -326,15 +344,13 @@ def retrieve_time_from_procedure(procedure):
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure) WHERE p.Title='" + procedure + "' RETURN DISTINCT p.ETR"
+    query = "MATCH (p:Procedure) WHERE p.fTitle='" + procedure + "' RETURN DISTINCT p.ETR"
     result = session.run(query)
 
     # Parse the result
     procedure_time_list = []
     for item in result:
-        time_string = item[0]
-        time_int = int(time_string.strip(' Minutes'))
-        procedure_time_list.append(time_int)
+        procedure_time_list.append(item[0])
     time = procedure_time_list[0]
 
     return time
@@ -698,3 +714,108 @@ def retrieve_all_components():
             components_list.append(item)
 
     return components_list
+
+
+def retrieve_all_procedure_numbers():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) RETURN DISTINCT p.pNumber"
+    result = session.run(query)
+
+    # Parse the result
+    procedure_numbers = []
+    for item in result:
+        procedure_numbers.append(item[0])
+
+    return procedure_numbers
+
+
+def retrieve_all_step_numbers():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = 'MATCH (n) WHERE EXISTS(n.SubStep) RETURN DISTINCT n.Title AS Title UNION ALL MATCH (m) WHERE ' \
+            'EXISTS(m.SubSubStep) RETURN DISTINCT m.Title AS Title'
+    result = session.run(query)
+
+    # Parse the result
+    step_numbers = []
+    for item in result:
+        step_numbers.append(item[0])
+
+    return step_numbers
+
+
+def retrieve_procedures_numbers_from_names(procedure_name):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) WHERE p.Title='" + procedure_name + "' RETURN p.pNumber"
+    result = session.run(query)
+
+    # Parse the result
+    procedure_number = []
+    for item in result:
+        procedure_number.append(item[0])
+
+    return procedure_number[0]
+
+
+def retrieve_procedures_from_pNumber(pNumber):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) WHERE p.pNumber='" + pNumber + "' RETURN p.Title"
+    result = session.run(query)
+
+    # Parse the result
+    procedure = []
+    for item in result:
+        procedure.append(item[0])
+
+    return procedure
+
+
+def retrieve_step_from_procedure_number(step_number, procedure_number):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.pNumber='" + procedure_number + \
+            "' AND s.Title='" + step_number + "' RETURN s.Action"
+    result = session.run(query)
+
+    # Parse the result
+    step = []
+    for item in result:
+        step.append(item[0])
+
+    return step
+
+
+def retrieve_step_from_procedure_name(step_number, procedure):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.Title='" + procedure + \
+            "' AND s.Title='" + step_number + "' RETURN s.Action"
+    result = session.run(query)
+
+    # Parse the result
+    step = []
+    for item in result:
+        step.append(item[0])
+
+    return step

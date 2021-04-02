@@ -3,11 +3,13 @@ import pandas as pd
 
 import AT.recommendation.dialogue_functions as recommendation
 from AT.models import ATContext
-from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement, retrieve_all_components
+from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement, retrieve_all_components, \
+    retrieve_procedures_title_from_anomaly, retrieve_procedures_numbers_from_names, retrieve_procedures_from_pNumber, \
+    retrieve_step_from_procedure_number, retrieve_step_from_procedure_name
 from AT.neo4j_queries.query_functions import retrieve_units_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_risks_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_symptoms_from_anomaly
-from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_procedures_fTitle_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_affected_subsystems_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_affected_components_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_time_from_procedure
@@ -109,10 +111,20 @@ def get_procedure_affected_components(procedure):
     components = retrieve_affected_components_from_procedure(procedure)
     return components
 
+def get_anomaly_procedure_without_number(anomaly):
+    # Query the neo4j graph for the anomaly procedures
+    procedures = retrieve_procedures_title_from_anomaly(anomaly)
+    procedure_info_list = []
+    for procedure in procedures:
+        pdf_link = pdf_link_from_procedure(procedure)
+        procedure_info = {'procedure_name': procedure, 'pdf_link': pdf_link}
+        procedure_info_list.append(procedure_info)
+    return procedure_info_list
+
 
 def get_anomaly_procedures(anomaly):
     # Query the neo4j graph for the anomaly procedures
-    procedures = retrieve_procedures_from_anomaly(anomaly)
+    procedures = retrieve_procedures_fTitle_from_anomaly(anomaly)
     procedure_info_list = []
     for procedure in procedures:
         pdf_link = pdf_link_from_procedure(procedure)
@@ -123,22 +135,21 @@ def get_anomaly_procedures(anomaly):
 
 def get_anomaly_etr(anomaly):
     # Query the neo4j graph for the anomaly procedures for estimated time of resolution (etr)
-    procedures = retrieve_procedures_from_anomaly(anomaly)
+    procedures = retrieve_procedures_fTitle_from_anomaly(anomaly)
     total_time = 0
     procedure_info_list = []
     for procedure in procedures:
         procedure_time = retrieve_time_from_procedure(procedure)
-        total_time += procedure_time
         procedure_info = {'procedure_name': procedure, 'procedure_time': procedure_time}
         procedure_info_list.append(procedure_info)
-    total_procedure_info = {'procedure_name': 'TOTAL TIME', 'procedure_time': total_time}
-    procedure_info_list.append(total_procedure_info)
     return procedure_info_list
 
 
 def get_procedure_etr(procedure_name):
     # Query the neo4j graph for the procedure estimated time of resolution (etr)
-    procedures_time = retrieve_time_from_procedure(procedure_name)
+    procedure_number = retrieve_procedures_numbers_from_names(procedure_name)
+    full_procedure_name = procedure_number + " " + procedure_name
+    procedures_time = retrieve_time_from_procedure(full_procedure_name)
     procedure_info = {'procedure_name': procedure_name, 'procedure_time': procedures_time}
     return procedure_info
 
@@ -172,7 +183,9 @@ def get_procedure_steps_from_procedure_name(procedure_name, context, new_dialogu
 
 def get_first_step_from_procedure_name(procedure_name, context, new_dialogue_contexts):
     atcontext = ATContext.objects.get(id=context["screen"]["id"])
-    procedure_steps = get_procedure_steps_from_procedure_name(procedure_name, context, new_dialogue_contexts)
+    procedure_number = retrieve_procedures_numbers_from_names(procedure_name)
+    full_procedure_name = procedure_number + " " + procedure_name
+    procedure_steps = get_procedure_steps_from_procedure_name(full_procedure_name, context, new_dialogue_contexts)
     first_step = procedure_steps[0]
     new_dialogue_contexts["atdialogue_context"].next_step_pointer = 1
     new_dialogue_contexts["atdialogue_context"].previous_step_pointer = 0
@@ -216,6 +229,7 @@ def get_current_step_from_context(all_steps_from_procedure, current_step_pointer
     new_dialogue_contexts["atdialogue_context"].all_steps_from_procedure = all_steps_from_procedure
     new_dialogue_contexts["atdialogue_context"].next_step_pointer = current_step_pointer + 1
     new_dialogue_contexts["atdialogue_context"].previous_step_pointer = current_step_pointer - 1
+    new_dialogue_contexts["atdialogue_context"].current_step_pointer = current_step_pointer
     atcontext.save()
     return current_step
 
@@ -230,3 +244,29 @@ def get_component_images(component):
                 break
     return component
 
+
+def get_procedure_from_number(procedure_number):
+    procedures = retrieve_procedures_from_pNumber(procedure_number)
+    procedure_info_list = []
+    for procedure in procedures:
+        pdf_link = pdf_link_from_procedure(procedure)
+        full_name = procedure_number + " " + procedure
+        procedure_info = {'procedure_name': full_name, 'pdf_link': pdf_link}
+        procedure_info_list.append(procedure_info)
+    return procedure_info_list[0]
+
+
+def get_step_from_procedure_name(step_number, procedure):
+    steps = retrieve_step_from_procedure_name(step_number, procedure)
+    step_info = []
+    if steps:
+        step_info = {'step': step_number, 'action': steps[0]}
+    return step_info
+
+
+def get_step_from_procedure_number(step_number, procedure_number):
+    steps = retrieve_step_from_procedure_number(step_number, procedure_number)
+    step_info = []
+    if steps:
+        step_info = {'step': step_number, 'action': steps[0]}
+    return step_info
