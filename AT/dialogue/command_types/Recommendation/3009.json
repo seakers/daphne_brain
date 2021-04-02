@@ -2,7 +2,7 @@
   "type": "run_function",
   "params":
   [
-    { "name": "component", "type": "component", "options": "", "from_context": false, "mandatory": false }
+    { "name": "component", "type": "component", "options": "", "from_context": false, "mandatory": true }
   ],
   "objective": "Provide the image for a certain component",
   "function":

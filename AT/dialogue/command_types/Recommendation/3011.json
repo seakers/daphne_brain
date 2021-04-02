@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "procedure_number", "type": "procedure_number", "options": "", "from_context": false, "mandatory": true },
+    { "name": "step_number", "type": "step_number", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Provide a step using procedure number.",
+  "function":
+  {
+    "run_template": "dialogue_functions.get_step_from_procedure_number(data['step_number'], data['procedure_number'])",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "step": "command_results[0]['step']",
+          "action": "command_results[0]['action']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${step} of the procedure is, ${action}."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${step} of the procedure is \n${action}"
+    }
+  ]
+}

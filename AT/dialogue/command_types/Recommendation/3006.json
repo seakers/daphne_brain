@@ -41,7 +41,7 @@
     {
       "type": "text",
       "from": "single",
-      "template": "${procedure_step_number}</b>: ${procedure_step_action}"
+      "template": "${procedure_step_number}</b>, ${procedure_step_action}"
     }
   ]
 }

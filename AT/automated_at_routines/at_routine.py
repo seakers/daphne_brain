@@ -139,7 +139,7 @@ def decide_alarm(old_report, new_report, t_nominal, cs_is_pending, cs_wait):
                 # Do nothing otherwise
                 return 'None', t_nominal, cs_is_pending
         else:
-            # We can only get here if the symptoms repots are not equal and the new one is not empty. Hence we make an
+            # We can only get here if the symptoms reports are not equal and the new one is not empty. Hence we make an
             # alarm sound.
             return 'alarmIn', t_nominal, False
 
@@ -149,7 +149,7 @@ def anomaly_treatment_routine(hub_to_at, at_to_hub):
     last_symptoms_report = []
     t_nominal = -1  # This variable is used to store the last time the telemetry switched from off nominal to nominal
     cs_is_pending = False  # cs stand for "clear sound"
-    cs_wait = 10  # cs stands for "clear sound"
+    cs_wait = 5  # cs stands for "clear sound"
 
     # Set the ping routine counters
     life_limit = 40.

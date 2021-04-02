@@ -4,7 +4,7 @@
   [
     { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the pdf for a certain procedure",
+  "objective": "Provide the pdf for a certain procedure.",
   "function":
   {
     "run_template": "dialogue_functions.get_procedure_pdf(data['procedure'])",
@@ -21,7 +21,7 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "A link to the ${procedure_name} procedure pdf has been provided."
+      "template": "A link to the ${procedure_name} procedure has been provided."
     }
   ],
   "visual_response": [
