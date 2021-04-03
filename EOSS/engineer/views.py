@@ -64,47 +64,23 @@ class GetInstrumentList(APIView):
 
 
 class EvaluateArchitecture(APIView):
-    
     def post(self, request, format=None):
-        try:
-            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port, user_info=user_info)
-            # Start connection with VASSAR
-            client.start_connection()
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        client = VASSARClient(user_information=user_info)
 
-            inputs = request.data['inputs']
-            inputs = json.loads(inputs)
+        inputs = request.data['inputs']
+        inputs = json.loads(inputs)
 
-            architecture = client.evaluate_architecture(user_info.eosscontext.problem, inputs)
+        # Check if the architecture already exists in DB before adding it again
+        is_same = client.check_for_existing_arch(inputs)
 
-            # Check if the architecture already exists in DB before adding it again
-            is_same = True
-            for old_arch in user_info.eosscontext.design_set.all():
-                is_same = True
-                old_arch_outputs = json.loads(old_arch.outputs)
-                for i in range(len(old_arch_outputs)):
-                    if old_arch_outputs[i] != architecture['outputs'][i]:
-                        is_same = False
-                if is_same:
-                    break
+        if not is_same:
+            architecture = client.evaluate_architecture(inputs, eval_queue_name=user_info.eosscontext.vassar_queue_url)
+            add_design(architecture, request.session, request.user, False)
 
-            # if not is_same:
-            #     architecture = add_design(architecture, request.session, request.user, False)
-
-            user_info.save()
-
-            # End the connection before return statement
-            # client.end_connection()
-            return Response({})
-        
-        except TApplicationException as exc:
-            logger.exception('Evaluating an architecture failed')
-            client.end_connection()
-            return Response({
-                "error": "Evaluating an architecture failed",
-                "explanation": str(exc)
-            })
+        return Response({
+            "status": "Architecture evaluated!"
+        })
 
 
 

@@ -51,8 +51,6 @@ class MissionCostInformation:
         self.cost_budget = cost_budget       # dict
 
 
-
-
 class GraphqlClient:
 
     def __init__(self, hasura_url='http://graphql:8080/v1/graphql', request=None, problem_id=None, user_info=None):
@@ -72,6 +70,25 @@ class GraphqlClient:
     def get_architectures(self, problem_id=6, dataset_id=-1):
         query = f'query get_architectures {{ Architecture(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
         return self.execute_query(query)
+
+    def check_for_existing_arch(self, problem_id, dataset_id, input):
+        query = f'''
+        query ArchitectureCount($problem_id: Int!, $dataset_id: Int!, $input: String!) {{
+            items: Architecture_aggregate(where: {{problem_id: {{_eq: $problem_id}}, dataset_id: {{_eq: $dataset_id}}, input: {{_eq: $input}} }}) 
+            {{
+                aggregate {{
+                    count
+                }}
+            }}
+        }}
+        '''
+        variables = {
+            "problem_id": problem_id,
+            "dataset_id": dataset_id,
+            "input": input
+        }
+        count = self.execute_query(query, variables)["items"]["aggregate"]["count"]
+        return count > 0
 
     def get_orbit_list(self, group_id, problem_id):
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
@@ -332,8 +349,8 @@ class GraphqlClient:
         return result
 
     # Return architecture details after vassar evaluates
-    def subscribe_to_architecture(self, input, problem_id, timeout=1000):
-        query = ' query subscribe_to_architecture { Architecture_aggregate(where: {problem_id: {_eq: ' + str(self.problem_id) + '}, input: {_eq: "' + str(input) + '"}})  {aggregate { count }} } '
+    def subscribe_to_architecture(self, input, problem_id, dataset_id, timeout=1000):
+        query = f'query subscribe_to_architecture {{ Architecture_aggregate(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ aggregate {{ count }} }} }}'
 
         # Check for an entry every second
         counter = 0
@@ -344,12 +361,5 @@ class GraphqlClient:
             if counter >= timeout:
                 return False
         
-        query = ' query get_architecture { Architecture(where: {problem_id: {_eq: ' + str(self.problem_id) + '}, input: {_eq: "' + str(input) + '"}})  { id input science cost } } '
+        query = f'query get_architecture {{ Architecture(where: {{problem_id: {{_eq: {self.problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ id input science cost }} }}'
         return self.execute_query(query)
-
-
-
-
-
-
-

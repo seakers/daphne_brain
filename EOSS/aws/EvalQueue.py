@@ -8,8 +8,7 @@ class EvalQueue:
 
     def __init__(self):
         self.region = 'us-east-2'
-        self.queue_name_prefix = 'evaluator-queue-'
-        self.ga_queue_name = 'ga-queue'
+        self.queue_name_prefix = 'user-queue-'
         self.client = get_boto3_client('sqs')
 
 
@@ -24,13 +23,12 @@ class EvalQueue:
         queue_url = response['QueueUrl']
         return queue_url
 
-    def create_eval_queue(self, problem_id):
-        queue_name = self.queue_name_prefix + str(problem_id)
+    def create_user_queue(self, user_id):
+        queue_name = self.queue_name_prefix + str(user_id)
         response = self.client.create_queue(
             QueueName=queue_name,
             tags={
-                'PROBLEM_ID': str(problem_id),
-                'TYPE': 'EVAL'
+                'USER_ID': str(user_id)
             }
         )
         print('---> CREATE QUEUE RESPONSE', response)
