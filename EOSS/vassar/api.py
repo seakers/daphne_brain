@@ -25,11 +25,13 @@ import random
 from django.conf import settings
 
 from EOSS.data.problem_specific import assignation_problems, partition_problems
+from EOSS.models import EOSSContext
 from auth_API.helpers import get_or_create_user_information
 
 from EOSS.graphql.api import GraphqlClient
 from EOSS.aws.utils import get_boto3_client
 from EOSS.aws.EvalQueue import EvalQueue
+from daphne_context.models import UserInformation
 
 
 ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
@@ -60,17 +62,9 @@ class ObjectiveSatisfaction:
 
 class VASSARClient:
     
-    def __init__(self, request=None, problem_id=None, user_info=None):
-        if user_info is not None:
-            self.problem_id = user_info.eosscontext.problem_id
-        elif problem_id is not None:
-            self.problem_id = str(problem_id)
-        elif request is not None:
-            user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
-            self.problem_id = str(user_info.eosscontext.problem_id)
-        else:
-            self.problem_id = str(4)
-
+    def __init__(self, user_information: UserInformation):
+        self.user_id = user_information.user.id
+        self.user_information = user_information
 
         # Boto3
         self.queue_name = 'test_queue'
@@ -88,27 +82,54 @@ class VASSARClient:
         # Queue Client
         self.queue_client = EvalQueue()
 
-    # deprecated
-    def initialize_vassar_containers(self, group_id=1, problem_id=5):
-        queues = self.sqs_client.list_queues()
 
-        # GET CORRECT PRIVATE QUEUES
-        queue_urls = []
-        for url in queues['QueueUrls']:
-            print(url)
-            queue_info = self.sqs_client.list_queue_tags(QueueUrl=url)
-            if 'Tags' in queue_info:
-                queue_tags = queue_info['Tags']
-                if 'problem_id' in queue_tags and 'type' in queue_tags:
-                    if queue_tags['problem_id'] == str(self.problem_id) and queue_tags['type'] == 'vassar_eval_private':
-                        queue_urls.append(url)
-        
-        print("---> QUEUE URLS TO INITIALIZE", queue_urls)
-        for url in queue_urls:
-            self.send_initialize_message(url, group_id, self.problem_id)
+    def send_connect_message(self, url):
+        # Send init message
+        response = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'connectionRequest',
+                'DataType': 'String'
+            },
+            'user_id': {
+                'StringValue': str(self.user_id),
+                'DataType': 'String'
+            }
+        })
 
-        return 0
-
+    def connect_to_services(self, url):
+        # Send init message
+        user_queue_url = ""
+        response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=3, WaitTimeSeconds=10, MessageAttributeNames=["All"])
+        for message in response["Messages"]:
+            if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable":
+                # 1. Create queue for connection
+                user_queue_url = self.queue_client.create_user_queue(self.user_id)
+                # 2. Send ACK message
+                response = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
+                    'msgType': {
+                        'StringValue': 'connectionAck',
+                        'DataType': 'String'
+                    },
+                    'UUID': {
+                        'StringValue': message["MessageAttributes"]["UUID"]["StringValue"],
+                        'DataType': 'String'
+                    },
+                    'queue_url': {
+                        'StringValue': str(user_queue_url),
+                        'DataType': 'String'
+                    }
+                })
+                # 3. Save information to database 
+                self.user_information.eoss_context.vassar_queue_url = user_queue_url
+                self.user_information.eoss_context.vassar_ready = False
+                self.user_information.eoss_context.save()
+                # 4. Delete Message from queue
+                self.sqs_client.delete_message(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"])
+            else:
+                # Return message to queue
+                self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+        return user_queue_url
+    
     # working
     def send_initialize_message(self, url, group_id, problem_id):
         # Send init message
@@ -122,10 +143,26 @@ class VASSARClient:
                 'DataType': 'String'
             },
             'problem_id': {
-                'StringValue': str(self.problem_id),
+                'StringValue': str(problem_id),
                 'DataType': 'String'
             }
         })
+
+    def receive_successful_build(self, url):
+        # Send init message
+        user_queue_url = ""
+        response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=3, WaitTimeSeconds=10, MessageAttributeNames=["All"])
+        for message in response["Messages"]:
+            if message["MessageAttributes"]["msgType"]["StringValue"] == "isReady":
+                # 1. Save information to database
+                self.user_information.eoss_context.vassar_ready = True
+                self.user_information.eoss_context.save()
+                # 2. Delete Message from queue
+                self.sqs_client.delete_message(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"])
+            else:
+                # Return message to queue
+                self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+        return user_queue_url
 
     # working
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
@@ -155,7 +192,7 @@ class VASSARClient:
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
     # working
-    def evaluate_architecture(self, problem, input_str, problem_id=5, eval_queue_name='vassar_queue', fast=False, ga=False, redo=False):
+    def evaluate_architecture(self, input_str, eval_queue_url, fast=False, ga=False, redo=False):
         inputs = ''
         for x in input_str:
             if x:
@@ -165,16 +202,19 @@ class VASSARClient:
         
         # Connect to queue
         print("----------> Evaluating architecture ", inputs)
+        eosscontext: EOSSContext = self.user_information.eosscontext
 
-        evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
-
-        evalQueue.send_message(MessageBody='boto3', MessageAttributes={
+        self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
             'msgType': {
                 'StringValue': 'evaluate',
                 'DataType': 'String'
             },
             'input': {
                 'StringValue': str(inputs),
+                'DataType': 'String'
+            },
+            'dataset_id': {
+                'StringValue': str(eosscontext.dataset_id),
                 'DataType': 'String'
             },
             'fast': {
@@ -191,7 +231,7 @@ class VASSARClient:
             }
         })
 
-        result = self.dbClient.subscribe_to_architecture(inputs, self.problem_id)
+        result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
         
         if result == False:
             raise ValueError('---> Evaluation Timeout!!!!')
@@ -202,6 +242,17 @@ class VASSARClient:
         outputs.append(result_formatted['cost'])
         arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
         return arch
+    
+    def check_for_existing_arch(self, input_str):
+        inputs = ''
+        for x in input_str:
+            if x:
+                inputs = inputs + '1'
+            else:
+                inputs = inputs + '0'
+        eosscontext: EOSSContext = self.user_information.eosscontext
+        return self.dbClient.check_for_existing_arch(eosscontext.problem_id, eosscontext.dataset_id, inputs)
+
 
     # working
     def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):

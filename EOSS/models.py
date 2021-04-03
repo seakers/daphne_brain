@@ -22,6 +22,7 @@ class EOSSContext(models.Model):
 
     # Backends information
     vassar_queue_url = models.TextField(null=True)
+    vassar_ready = models.BooleanField(default=False)
 
 
 class EOSSContextSerializer(serializers.ModelSerializer):

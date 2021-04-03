@@ -22,30 +22,13 @@ def add_design(design, session, user, active: bool):
     with design_lock:
         eosscontext = get_user_information(session, user).eosscontext
         print("--> last_arch_id:", eosscontext.last_arch_id)
-        if 'id' in design:
-            set_id = design['id']
-        else:
-            set_id = eosscontext.last_arch_id + 1
-
-
-        if active:
-            Design.objects.create(activecontext=eosscontext.activecontext,
-                                  id=set_id,
-                                  inputs=json.dumps(design['inputs']),
-                                  outputs=json.dumps(design['outputs']))
-        else:
-            Design.objects.create(eosscontext=eosscontext,
-                                  id=set_id,
-                                  inputs=json.dumps(design['inputs']),
-                                  outputs=json.dumps(design['outputs']))
-            eosscontext.added_archs_count += 1
+        eosscontext.added_archs_count += 1
 
         eosscontext.last_arch_id += 1
-        # eosscontext.last_arch_id += design['id']
 
         if eosscontext.added_archs_count >= 5:
             eosscontext.added_archs_count = 0
             activate_diversifier(eosscontext)
 
         eosscontext.save()
-    return design
+
