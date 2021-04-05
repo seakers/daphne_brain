@@ -138,6 +138,9 @@ def decide_alarm(old_report, new_report, t_nominal, cs_is_pending, cs_wait):
             else:
                 # Do nothing otherwise
                 return 'None', t_nominal, cs_is_pending
+        elif len(old_report) != 0:
+            # Do nothing, only sound alarm on first anomaly
+            return 'None', t_nominal, False
         else:
             # We can only get here if the symptoms reports are not equal and the new one is not empty. Hence we make an
             # alarm sound.
