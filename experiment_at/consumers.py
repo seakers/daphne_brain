@@ -26,7 +26,6 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
 
         if hasattr(user_info, 'atexperimentcontext'):
             experiment_context = user_info.atexperimentcontext
-            print(str(user_info) + str(user_info.atexperimentcontext) + str(experiment_context.is_running))
             if content.get('msg_type') == 'add_action':
                 experiment_stage = experiment_context.atexperimentstage_set.all().order_by("id")[content['stage']]
                 ATExperimentAction.objects.create(atexperimentstage=experiment_stage,
@@ -46,7 +45,5 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
     def disconnect(self, close_code):
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
         experiment_context = user_info.atexperimentcontext
-        print("close" + str(user_info) + str(user_info.atexperimentcontext) + str(experiment_context.is_running))
         experiment_context.is_running = False
-        print("close" + str(user_info) + str(user_info.atexperimentcontext) + str(experiment_context.is_running))
-        experiment_context.delete()
+        experiment_context.save()
