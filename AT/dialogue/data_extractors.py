@@ -63,5 +63,5 @@ extract_function["measurement"] = extract_measurements
 extract_function["anomaly"] = extract_anomalies
 extract_function["parameter_group"] = extract_measurements_parameter_groups
 extract_function["component"] = extract_components
-extract_function["procedure_number"] = extract_procedure_number
+extract_function["procedureNumber"] = extract_procedure_number
 extract_function["step_number"] = extract_step_number
