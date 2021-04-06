@@ -925,57 +925,21 @@ def retrieve_all_step_numbers():
     return step_numbers
 
 
-#
-# def retrieve_procedures_numbers_from_names(procedure_name):
-#     # Setup neo4j database connection
-#     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
-#     session = driver.session()
-#
-#     # Build and send the query
-#     query = "MATCH (p:Procedure) WHERE p.Title='" + procedure_name + "' RETURN p.pNumber"
-#     result = session.run(query)
-#
-#     # Parse the result
-#     procedure_number = []
-#     for item in result:
-#         procedure_number.append(item[0])
-#
-#     return procedure_number[0]
-#
-#
-# def retrieve_procedures_from_pNumber(pNumber):
-#     # Setup neo4j database connection
-#     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
-#     session = driver.session()
-#
-#     # Build and send the query
-#     query = "MATCH (p:Procedure) WHERE p.pNumber='" + pNumber + "' RETURN p.Title"
-#     result = session.run(query)
-#
-#     # Parse the result
-#     procedure = []
-#     for item in result:
-#         procedure.append(item[0])
-#
-#     return procedure
-#
-#
-# def retrieve_step_from_procedure(step_number, procedure_number):
-#     # Setup neo4j database connection
-#     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
-#     session = driver.session()
-#
-#     # Build and send the query
-#     query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.pNumber='" + procedure_number + \
-#             "' AND s.Title='" + step_number + "' RETURN s.Action"
-#     result = session.run(query)
-#
-#     # Parse the result
-#     step = []
-#     for item in result:
-#         step.append(item[0])
-#
-#     return step
+def retrieve_procedures_from_pNumber(pNumber):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) WHERE p.pNumber='" + pNumber + "' RETURN p.Title"
+    result = session.run(query)
+
+    procedure = ''
+    # Parse the result
+    for item in result:
+        procedure = item[0]
+
+    return procedure
 
 
 def retrieve_step_from_procedure(step_number, procedure):

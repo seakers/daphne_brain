@@ -1,10 +1,8 @@
 import json
-import pandas as pd
 
-import AT.recommendation.dialogue_functions as recommendation
 from AT.models import ATContext
 from AT.neo4j_queries.query_functions import retrieve_thresholds_from_measurement, retrieve_all_components, \
-    retrieve_procedures_title_from_anomaly, retrieve_step_from_procedure
+    retrieve_procedures_title_from_anomaly, retrieve_step_from_procedure, retrieve_procedures_from_pNumber
 from AT.neo4j_queries.query_functions import retrieve_units_from_measurement
 from AT.neo4j_queries.query_functions import retrieve_risks_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_symptoms_from_anomaly
@@ -175,7 +173,11 @@ def get_procedure_etr(procedure):
 
 
 def get_procedure_pdf(procedure):
-    # Query the neo4j graph for the anomaly risks
+    try:
+        float(procedure)
+        procedure = retrieve_procedures_from_pNumber(procedure)
+    except ValueError:
+        print("Not a number")
     pdf_link = pdf_link_from_procedure(procedure)
     procedure_info = {'procedure_name': procedure, 'pdf_link': pdf_link}
     return procedure_info
@@ -263,29 +265,9 @@ def get_component_images(component):
     return component
 
 
-#
-# def get_procedure_from_number(procedure_number):
-#     procedures = retrieve_procedures_from_pNumber(procedure_number)
-#     procedure_info_list = []
-#     for procedure in procedures:
-#         pdf_link = pdf_link_from_procedure(procedure)
-#         full_name = procedure_number + " " + procedure
-#         procedure_info = {'procedure_name': full_name, 'pdf_link': pdf_link}
-#         procedure_info_list.append(procedure_info)
-#     return procedure_info_list[0]
-
-
 def get_step_from_procedure(step_number, procedure):
     steps = retrieve_step_from_procedure(step_number, procedure)
     step_info = []
     if steps:
         step_info = {'step': step_number, 'action': steps[0]}
     return step_info
-
-#
-# def get_step_from_procedure_number(step_number, procedure_number):
-#     steps = retrieve_step_from_procedure_number(step_number, procedure_number)
-#     step_info = []
-#     if steps:
-#         step_info = {'step': step_number, 'action': steps[0]}
-#     return step_info
