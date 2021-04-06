@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('current_anomaly', models.CharField(max_length=80)),
                 ('current_step', models.IntegerField()),
+                ('seen_tutorial', models.BooleanField(default=False)),
                 ('user_information', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='daphne_context.UserInformation')),
             ],
         ),

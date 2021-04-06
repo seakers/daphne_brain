@@ -14,4 +14,6 @@ urlpatterns = [
          name='retrieveProcedureFromAnomaly'),
     path('retrieveInfoFromProcedure', views.RetrieveInfoFromProcedure.as_view(),
          name='retrieveInfoFromProcedure'),
+    path('tutorialStatus', views.TutorialStatus.as_view()),
+    path('completeTutorial', views.CompleteTutorial.as_view()),
 ]
