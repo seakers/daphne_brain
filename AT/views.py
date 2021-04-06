@@ -205,3 +205,23 @@ class RetrieveInfoFromProcedure(APIView):
         }
 
         return Response(info)
+
+
+class TutorialStatus(APIView):
+    def post(self, request):
+        user_info = get_or_create_user_information(request.session, request.user, 'AT')
+        at_context = user_info.atcontext
+        seen_tutorial = at_context.seen_tutorial
+
+        return Response({'seen_tutorial': seen_tutorial})
+
+
+class CompleteTutorial(APIView):
+    def post(self, request):
+        user_info = get_or_create_user_information(request.session, request.user, 'AT')
+        at_context = user_info.atcontext
+        seen_tutorial = at_context.seen_tutorial
+        seen_tutorial = not seen_tutorial
+        user_info.atcontext.seen_tutorial = seen_tutorial
+        user_info.atcontext.save()
+        return Response()
