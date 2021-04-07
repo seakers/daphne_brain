@@ -48,7 +48,7 @@ class StartExperiment(APIView):
         if hasattr(user_info, 'experimentcontext'):
             user_info.experimentcontext.delete()
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
-                                               current_state="")
+                                               current_state="", alarms_on=False)
         experiment_context.save()
 
         experiment_context.experiment_id = new_id
@@ -113,8 +113,8 @@ class ReloadExperiment(APIView):
         if hasattr(user_info, 'experimentcontext'):
             experiment_context = user_info.experimentcontext
             if experiment_context.is_running:
-                return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
-        return Response({ 'is_running': False })
+                return Response({'experiment_data': json.loads(experiment_context.current_state)})
+        return Response()
         
         
 class FinishExperiment(APIView):
