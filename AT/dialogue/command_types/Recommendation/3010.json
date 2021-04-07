@@ -8,7 +8,7 @@
   "objective": "Provide a step using procedure name.",
   "function":
   {
-    "run_template": "dialogue_functions.get_step_from_procedure(data['step_number'], data['procedure'])",
+    "run_template": "dialogue_functions.get_step_from_procedure(data['step_number'], data['procedure'], context, new_dialogue_contexts)",
     "results": [
       {
         "result_type": "single",
