@@ -265,9 +265,24 @@ def get_component_images(component):
     return component
 
 
-def get_step_from_procedure(step_number, procedure):
-    steps = retrieve_step_from_procedure(step_number, procedure)
+def get_step_from_procedure(step_number, procedure, context, new_dialogue_contexts):
+    atcontext = ATContext.objects.get(id=context["screen"]["id"])
+    procedure_steps = get_steps_from_procedure(procedure, context, new_dialogue_contexts)
+    this_step = retrieve_step_from_procedure(step_number, procedure)
+
+    # Get current step
     step_info = []
-    if steps:
-        step_info = {'step': step_number, 'action': steps[0]}
+    if this_step:
+        step_info = {'step': step_number, 'action': this_step}
+
+    next_step = 0
+    for step in procedure_steps:
+        next_step = next_step + 1
+        if step.get('action') == this_step:
+            break
+
+    new_dialogue_contexts["atdialogue_context"].next_step_pointer = next_step
+    new_dialogue_contexts["atdialogue_context"].previous_step_pointer = next_step - 2
+    new_dialogue_contexts["atdialogue_context"].current_step_pointer = next_step - 1
+    atcontext.save()
     return step_info

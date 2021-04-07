@@ -970,8 +970,7 @@ def retrieve_step_from_procedure(step_number, procedure):
     result = session.run(query)
 
     # Parse the result
-    step = []
     for item in result:
-        step.append(item[0])
+        step = item[0]
 
     return step
