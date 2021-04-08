@@ -44,6 +44,5 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
 
     def disconnect(self, close_code):
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
-        experiment_context = user_info.atexperimentcontext
-        experiment_context.is_running = False
-        experiment_context.save()
+        user_info.atexperimentcontext = False
+        user_info.atexperimentcontext.save()

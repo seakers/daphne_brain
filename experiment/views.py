@@ -151,3 +151,8 @@ class FinishExperiment(APIView):
         experiment_context.delete()
 
         return Response('Experiment finished correctly!')
+
+    def disconnect(self, close_code):
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
+        user_info.experimentcontext = False
+        user_info.experimentcontext.save()
