@@ -45,7 +45,7 @@ class StartExperiment(APIView):
         if hasattr(user_info, 'atexperimentcontext'):
             user_info.atexperimentcontext.delete()
         experiment_context = ATExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
-                                                 current_state="", alarms_on=False)
+                                                 current_state="")
         experiment_context.save()
 
         experiment_context.experiment_id = new_id
@@ -115,8 +115,8 @@ class ReloadExperiment(APIView):
                     experiment_data = json.loads('' or 'null')
                 else:
                     experiment_data = json.loads(experiment_state)
-                return Response({'experiment_data': experiment_data})
-        return Response()
+                    return Response({'is_running': True, 'experiment_data': experiment_data})
+            return Response({'is_running': False})
 
 
 class FinishExperiment(APIView):
@@ -219,27 +219,8 @@ class TurnOffAlarms(APIView):
             channel_name = state_query[0].channel_name
             channel_layer = get_channel_layer()
 
-            experiment_context = state_query[0].atexperimentcontext
-            alarms_on = experiment_context.alarms_on
-            alarms_on = not alarms_on
-            state_query[0].atexperimentcontext.alarms_on = alarms_on
-            state_query[0].atexperimentcontext.save()
-
             # Build command to send to frontend
-            command = {'type': 'turn_off_alarms', 'value': alarms_on}
+            command = {'type': 'turn_off_alarms'}
             async_to_sync(channel_layer.send)(channel_name, command)
 
-        return Response({'alarm_state': alarms_on})
-
-
-class AlarmStatus(APIView):
-    def post(self, request, format=None):
-        # Retrieve user from the user id
-        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
-
-        # If found
-        if len(state_query) > 0:
-            experiment_context = state_query[0].atexperimentcontext
-            alarms_on = experiment_context.alarms_on
-
-        return Response({'alarm_state': alarms_on})
+        return Response()
