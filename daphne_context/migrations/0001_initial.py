@@ -47,7 +47,6 @@ class Migration(migrations.Migration):
                 ('is_running', models.BooleanField()),
                 ('experiment_id', models.IntegerField()),
                 ('current_state', models.TextField()),
-                ('alarms_on', models.BooleanField()),
             ],
         ),
         migrations.CreateModel(

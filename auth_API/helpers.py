@@ -35,7 +35,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         active_context.save()
 
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
-                                               current_state="", alarms_on=False)
+                                               current_state="")
         experiment_context.save()
 
         edl_context = EDLContext(user_information=user_info, current_mat_file="", current_mat_file_for_print="",
