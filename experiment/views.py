@@ -48,7 +48,7 @@ class StartExperiment(APIView):
         if hasattr(user_info, 'experimentcontext'):
             user_info.experimentcontext.delete()
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
-                                               current_state="", alarms_on=False)
+                                               current_state="")
         experiment_context.save()
 
         experiment_context.experiment_id = new_id

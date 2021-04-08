@@ -10,7 +10,6 @@ class ExperimentContext(models.Model):
     is_running = models.BooleanField()
     experiment_id = models.IntegerField()
     current_state = models.TextField()
-    alarms_on = models.BooleanField(default=False)
 
 
 # A data structure defining an experimental stage

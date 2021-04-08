@@ -20,7 +20,6 @@ class Migration(migrations.Migration):
                 ('is_running', models.BooleanField()),
                 ('experiment_id', models.IntegerField()),
                 ('current_state', models.TextField()),
-                ('alarms_on', models.BooleanField(default=False)),
                 ('user_information', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='daphne_context.UserInformation')),
             ],
         ),
