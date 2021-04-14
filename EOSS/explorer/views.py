@@ -169,12 +169,10 @@ class StopGA(APIView):
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
                 # Start connection with VASSAR
-                client = VASSARClient(user_info=user_info)
+                client = VASSARClient(user_information=user_info)
 
                 # Call the GA stop function on Engineer
-                client.stop_ga(user_info.eosscontext.ga_id)
-                user_info.eosscontext.ga_id = None
-                user_info.eosscontext.save()
+                client.stop_ga()
 
                 return Response({
                     "status": 'GA stopped correctly!'

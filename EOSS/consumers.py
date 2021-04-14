@@ -47,13 +47,14 @@ class EOSSConsumer(DaphneConsumer):
                 })
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
-            channel = connection.channel()
+            # connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
+            # channel = connection.channel()
 
-            if user_info.eosscontext.ga_id is not None:
-                queue_name = user_info.eosscontext.ga_id + '_brainga'
-                channel.queue_declare(queue=queue_name)
-                channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
+            # if user_info.eosscontext.ga_id is not None:
+            #     queue_name = user_info.eosscontext.ga_id + '_brainga'
+            #     channel.queue_declare(queue=queue_name)
+            #     channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
+            pass
         # elif content.get('msg_type') == 'mycroft':
         #     self.send_json({
         #         'type': 'mycroft.message',

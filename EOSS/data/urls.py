@@ -8,5 +8,5 @@ urlpatterns = [
     path('download-data', views.DownloadData.as_view(), name='daphne_download_data'),
     path('dataset-list', views.DatasetList.as_view(), name='dataset_list'),
     path('set-problem', views.SetProblem.as_view(), name='set_problem'),
-    path('add-design', views.AddDesign.as_view(), name='add_design'),
+    #path('add-design', views.AddDesign.as_view(), name='add_design'),
 ]

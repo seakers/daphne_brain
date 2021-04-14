@@ -21,7 +21,8 @@ class EOSSContext(models.Model):
     added_archs_count = models.IntegerField()
 
     # Backends information
-    vassar_queue_url = models.TextField(null=True)
+    vassar_request_queue_url = models.TextField(null=True)
+    vassar_response_queue_url = models.TextField(null=True)
     vassar_ready = models.BooleanField(default=False)
 
 
