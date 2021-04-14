@@ -23,17 +23,26 @@ class EvalQueue:
         queue_url = response['QueueUrl']
         return queue_url
 
-    def create_user_queue(self, user_id):
-        queue_name = self.queue_name_prefix + str(user_id)
+    def create_user_queues(self, user_id):
+        request_queue_name = self.queue_name_prefix + 'request-' + str(user_id)
+        response_queue_name = self.queue_name_prefix + 'response-' + str(user_id)
         response = self.client.create_queue(
-            QueueName=queue_name,
+            QueueName=request_queue_name,
             tags={
                 'USER_ID': str(user_id)
             }
         )
         print('---> CREATE QUEUE RESPONSE', response)
-        queue_url = response['QueueUrl']
-        return queue_url
+        request_queue_url = response['QueueUrl']
+        response = self.client.create_queue(
+            QueueName=response_queue_name,
+            tags={
+                'USER_ID': str(user_id)
+            }
+        )
+        print('---> CREATE QUEUE RESPONSE', response)
+        response_queue_url = response['QueueUrl']
+        return request_queue_url, response_queue_url
 
     def get_or_create_ga_queue(self):
         list_response = self.client.list_queues()

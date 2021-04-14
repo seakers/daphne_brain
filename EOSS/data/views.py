@@ -54,7 +54,6 @@ class ImportData(APIView):
                 default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
                 dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
             query = dbClient.get_architectures(problem_id, dataset_id)
-            print("DEBUG QUERY", query)
 
             # Iterate over architectures
             # Create: user context Designs
@@ -72,7 +71,7 @@ class ImportData(APIView):
                 outputs = [float(arch['science']), float(arch['cost'])]
 
                 # Append design object and front-end design object
-                architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
+                architectures_json.append({'id': counter, 'db_id': arch['id'], 'inputs': inputs, 'outputs': outputs})
 
                 # Increment counters
                 user_info.eosscontext.last_arch_id = counter
@@ -229,27 +228,6 @@ class SetProblem(APIView):
         user_info.eosscontext.save()
         user_info.save()
         print("---> SetProblem", problem)
-        return Response({
-            "status": "Problem has been set successfully."
-        })
-
-
-class AddDesign(APIView):
-    """ Adds a design to the problem
-    """
-    def post(self, request, format=None):
-        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        design = json.loads(request.data['design'])
-
-        db_design = {}
-        db_design['id'] = design['id']
-        db_design['inputs'] = design['inputs']
-        db_design['outputs'] = design['outputs']
-
-        print("\n---> AddDesign --> add_design", db_design)
-        #architecture = add_design(db_design, request.session, request.user, False)
-        user_info.save()
-
         return Response({
             "status": "Problem has been set successfully."
         })

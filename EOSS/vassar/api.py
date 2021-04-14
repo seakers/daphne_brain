@@ -77,7 +77,7 @@ class VASSARClient:
         # self.sqs_client = boto3.client('sqs', endpoint_url='http://localstack:4576', region_name=self.region_name, aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
         # Graphql Client
-        self.dbClient = GraphqlClient(problem_id=self.problem_id)
+        self.dbClient = GraphqlClient(user_info=user_information)
 
         # Queue Client
         self.queue_client = EvalQueue()
@@ -96,44 +96,47 @@ class VASSARClient:
             }
         })
 
-    def connect_to_services(self, url):
+    def connect_to_services(self, request_url, response_url):
         # Send init message
-        user_queue_url = ""
-        response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=3, WaitTimeSeconds=10, MessageAttributeNames=["All"])
-        for message in response["Messages"]:
-            if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable":
-                # 1. Create queue for connection
-                user_queue_url = self.queue_client.create_user_queue(self.user_id)
-                # 2. Send ACK message
-                response = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
-                    'msgType': {
-                        'StringValue': 'connectionAck',
-                        'DataType': 'String'
-                    },
-                    'UUID': {
-                        'StringValue': message["MessageAttributes"]["UUID"]["StringValue"],
-                        'DataType': 'String'
-                    },
-                    'queue_url': {
-                        'StringValue': str(user_queue_url),
-                        'DataType': 'String'
-                    }
-                })
-                # 3. Save information to database 
-                self.user_information.eoss_context.vassar_queue_url = user_queue_url
-                self.user_information.eoss_context.vassar_ready = False
-                self.user_information.eoss_context.save()
-                # 4. Delete Message from queue
-                self.sqs_client.delete_message(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"])
-            else:
-                # Return message to queue
-                self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
-        return user_queue_url
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+        # Try at most 10 times
+        for i in range(10):
+            response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
+                        # 1. Get queue URLs
+                        user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
+                        user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
+                        # 2. Send ACK message
+                        response = self.sqs_client.send_message(QueueUrl=user_request_queue_url, MessageBody='boto3', MessageAttributes={
+                            'msgType': {
+                                'StringValue': 'connectionAck',
+                                'DataType': 'String'
+                            },
+                            'UUID': {
+                                'StringValue': message["MessageAttributes"]["UUID"]["StringValue"],
+                                'DataType': 'String'
+                            }
+                        })
+                        # 3. Save information to database 
+                        self.user_information.eosscontext.vassar_request_queue_url = user_request_queue_url
+                        self.user_information.eosscontext.vassar_response_queue_url = user_response_queue_url
+                        self.user_information.eosscontext.vassar_ready = False
+                        self.user_information.eosscontext.save()
+                        # 4. Delete Message from queue
+                        self.sqs_client.delete_message(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
+                    else:
+                        # Return message to queue
+                        self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+        
+        return user_request_queue_url, user_response_queue_url
     
     # working
     def send_initialize_message(self, url, group_id, problem_id):
         # Send init message
-        privateQueue = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
+        response = self.sqs_client.send_message(QueueUrl=url, MessageBody='boto3', MessageAttributes={
             'msgType': {
                 'StringValue': 'build',
                 'DataType': 'String'
@@ -147,22 +150,54 @@ class VASSARClient:
                 'DataType': 'String'
             }
         })
+        print(response)
 
     def receive_successful_build(self, url):
-        # Send init message
-        user_queue_url = ""
-        response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=3, WaitTimeSeconds=10, MessageAttributeNames=["All"])
-        for message in response["Messages"]:
-            if message["MessageAttributes"]["msgType"]["StringValue"] == "isReady":
-                # 1. Save information to database
-                self.user_information.eoss_context.vassar_ready = True
-                self.user_information.eoss_context.save()
-                # 2. Delete Message from queue
-                self.sqs_client.delete_message(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"])
-            else:
-                # Return message to queue
-                self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
-        return user_queue_url
+        # Receive initialization complete message
+        done = False
+        for i in range(10):
+            response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "isReady":
+                        # 1. Save information to database
+                        self.user_information.eosscontext.vassar_ready = True
+                        self.user_information.eosscontext.save()
+                        # 2. Delete Message from queue
+                        self.sqs_client.delete_message(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"])
+                        done=True
+                    else:
+                        # Return message to queue
+                        self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+            if done:
+                break
+
+    def check_status(self):
+        # Send status check message
+        vassar_request_url = self.user_information.eosscontext.vassar_request_queue_url
+        vassar_response_url = self.user_information.eosscontext.vassar_response_queue_url
+        response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='', MessageAttributes={
+                            'msgType': {
+                                'StringValue': 'statusCheck',
+                                'DataType': 'String'
+                            }
+                        })
+        # Try at most 10 times
+        current_status = ""
+        for i in range(10):
+            response = self.sqs_client.receive_message(QueueUrl=vassar_response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "currentStatus":
+                        # 1. Get current status
+                        current_status = message["MessageAttributes"]["current_status"]["StringValue"]
+                        # 4. Delete Message from queue
+                        self.sqs_client.delete_message(QueueUrl=vassar_response_url, ReceiptHandle=message["ReceiptHandle"])
+                    else:
+                        # Return message to queue
+                        self.sqs_client.change_message_visibility(QueueUrl=vassar_response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+        print("--------- Current status:", current_status)
+        return current_status
 
     # working
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
@@ -310,7 +345,7 @@ class VASSARClient:
         return new_design
 
     # working
-    def stop_ga(self, ga_id, ga_queue_name='algorithm_queue'):
+    def stop_ga(self, ga_queue_name='algorithm_queue'):
 
         # Connect to queue
         ga_queue_url = self.queue_client.get_or_create_ga_queue()
@@ -324,7 +359,7 @@ class VASSARClient:
                     'DataType': 'String'
                 },
                 'ga_id': {
-                    'StringValue': str(ga_id),
+                    'StringValue': str(self.user_id),
                     'DataType': 'String'
                 }
             }

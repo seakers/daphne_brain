@@ -79,6 +79,9 @@ class GraphqlClient:
                 aggregate {{
                     count
                 }}
+                nodes {{
+                    id
+                }}
             }}
         }}
         '''
@@ -87,8 +90,12 @@ class GraphqlClient:
             "dataset_id": dataset_id,
             "input": input
         }
-        count = self.execute_query(query, variables)["items"]["aggregate"]["count"]
-        return count > 0
+        query_result = self.execute_query(query, variables)
+        count = query_result["data"]["items"]["aggregate"]["count"]
+        arch_id = None
+        if count > 0:
+            arch_id = query_result["data"]["items"]["nodes"][0]["id"]
+        return count > 0, arch_id
 
     def get_orbit_list(self, group_id, problem_id):
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
@@ -341,11 +348,11 @@ class GraphqlClient:
             json_body['variables'] = variables
         r = requests.post(self.hasura_url, json=json_body)
         result = json.loads(r.text)
-        print('\n-------- Query Result --------')
-        print('----> URL:', self.hasura_url)
-        print('--> QUERY:', query)
-        pprint(result)
-        print('-------------------------\n')
+        # print('\n-------- Query Result --------')
+        # print('----> URL:', self.hasura_url)
+        # print('--> QUERY:', query)
+        # pprint(result)
+        # print('-------------------------\n')
         return result
 
     # Return architecture details after vassar evaluates

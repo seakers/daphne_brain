@@ -72,15 +72,22 @@ class EvaluateArchitecture(APIView):
         inputs = json.loads(inputs)
 
         # Check if the architecture already exists in DB before adding it again
-        is_same = client.check_for_existing_arch(inputs)
+        is_same, arch_id = client.check_for_existing_arch(inputs)
 
         if not is_same:
-            architecture = client.evaluate_architecture(inputs, eval_queue_name=user_info.eosscontext.vassar_queue_url)
+            architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url)
             add_design(architecture, request.session, request.user, False)
+            return Response({
+                "status": "Architecture evaluated!",
+                "code": "arch_evaluated"
+            })
+        else:
+            return Response({
+                "status": "Architecture already exists",
+                "code": "arch_repeated",
+                "arch_id": arch_id
+            })
 
-        return Response({
-            "status": "Architecture evaluated!"
-        })
 
 
 
