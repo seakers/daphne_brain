@@ -24,7 +24,7 @@ class Connect(APIView):
         response_queue_url = os.environ["VASSAR_RESPONSE_URL"]
 
         # Check if there is an existing VASSAR connection
-        if user_info.eosscontext.vassar_request_queue_url is not None:
+        if user_info.eosscontext.vassar_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.vassar_request_queue_url):
             current_status = vassar_client.check_status()
         else:
             current_status = "waiting_for_user"

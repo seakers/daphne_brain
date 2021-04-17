@@ -199,6 +199,23 @@ class VASSARClient:
         print("--------- Current status:", current_status)
         return current_status
 
+    def queue_exists(self, queue_url):
+        list_response = self.sqs_client.list_queues()
+        queue_urls = list_response['QueueUrls']
+        if queue_url in queue_urls:
+            return True
+        return False
+
+    def send_ping_message(self):
+        vassar_request_url = self.user_information.eosscontext.vassar_request_queue_url
+        if vassar_request_url is not None and self.queue_exists(vassar_request_url):
+            response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='', MessageAttributes={
+                                'msgType': {
+                                    'StringValue': 'ping',
+                                    'DataType': 'String'
+                                }
+                            })
+
     # working
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_orbit_list(group_id, self.problem_id)

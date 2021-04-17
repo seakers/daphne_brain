@@ -1,5 +1,6 @@
 import pika
 import os
+from EOSS.vassar.api import VASSARClient
 
 from auth_API.helpers import get_user_information
 
@@ -47,6 +48,8 @@ class EOSSConsumer(DaphneConsumer):
                 })
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
+            vassar_client = VASSARClient(user_info)
+            vassar_client.send_ping_message()
             # connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
             # channel = connection.channel()
 
