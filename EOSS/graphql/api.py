@@ -325,7 +325,7 @@ class GraphqlClient:
         return self.execute_query(query)['data']['Dataset'][0]['id']
 
     def clone_default_dataset(self, origin_dataset_id, user_id):
-        get_default_dataset = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {origin_dataset_id} }} }}) {{ id name problem_id }} Architecture(where: {{dataset_id: {{_eq: {origin_dataset_id} }} }}) {{ cost science problem_id eval_status input }}  }}'
+        get_default_dataset = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {origin_dataset_id} }} }}) {{ id name problem_id }} Architecture(where: {{dataset_id: {{_eq: {origin_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
         original_dataset = self.execute_query(get_default_dataset)['data']
         add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "default", problem_id: {original_dataset["Dataset"][0]["problem_id"]}, user_id: {user_id} }}) {{ id }} }}'
         new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
