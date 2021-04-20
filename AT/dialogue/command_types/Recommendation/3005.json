@@ -11,7 +11,7 @@
   ],
   "objective": "Read the steps of a certain procedure from procedure name",
   "function": {
-    "run_template": "dialogue_functions.get_first_step_from_procedure_name(data['procedure'], context, new_dialogue_contexts)",
+    "run_template": "dialogue_functions.get_first_step_from_procedure(data['procedure'], context, new_dialogue_contexts)",
     "results": [
       {
         "result_type": "single",

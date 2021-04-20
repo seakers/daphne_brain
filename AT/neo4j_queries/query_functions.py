@@ -32,6 +32,7 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     diagnosis = [node[0] for node in result]
     return diagnosis
 
+
 def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
     # of all the VA code.
@@ -201,7 +202,15 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     for i in range(0, size_limit):
         anomaly = ordered_diagnosis[i]
         score = scored_diagnosis[anomaly]
-        top_n_diagnosis.append({'name': anomaly, 'score': score})
+        text_score = ""
+        if score < 0.33:
+            text_score = "Least likely"
+        elif score < 0.66:
+            text_score = "Somewhat likely"
+        else:
+            text_score = "Very likely"
+
+        top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
 
     # Return result
     final_diagnosis = top_n_diagnosis
@@ -278,7 +287,7 @@ def retrieve_all_procedures():
     return procedure_list
 
 
-def retrieve_procedures_from_anomaly(anomaly_name):
+def retrieve_procedures_fTitle_from_anomaly(anomaly_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
@@ -295,13 +304,50 @@ def retrieve_procedures_from_anomaly(anomaly_name):
     return procedure_list
 
 
-def retrieve_affected_components_from_procedure(procedure):
+def retrieve_procedures_title_from_anomaly(anomaly_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (p:Procedure)-[:Comprises]-(c:Component) WHERE p.Title='" + procedure + "' RETURN DISTINCT c.Title"
+    query = "MATCH (a:Anomaly)-[s:Solution]-(p:Procedure) WHERE a.Title='" + anomaly_name + "' RETURN p.Title ORDER BY s.Order"
+    result = session.run(query)
+
+    # Parse the result
+    procedure_list = []
+    for item in result:
+        procedure_list.append(item[0])
+
+    return procedure_list
+
+
+def retrieve_affected_components_from_procedure(procedure):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure)-[:Comprises]-(c:Component) WHERE p.pNumber='" + procedure + "' RETURN DISTINCT " \
+                                                                                                 "c.Title "
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure)-[:Comprises]-(c:Component) WHERE p.fTitle='" + procedure + "' RETURN " \
+                                                                                                    "DISTINCT " \
+                                                                                                    "c.Title "
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure)-[:Comprises]-(c:Component) WHERE p.Title='" + procedure + "' RETURN " \
+                                                                                                   "DISTINCT " \
+                                                                                                   "c.Title "
     result = session.run(query)
 
     # Parse the result
@@ -317,16 +363,32 @@ def retrieve_time_from_procedure(procedure):
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH (p:Procedure) WHERE p.Title='" + procedure + "' RETURN DISTINCT p.ETR"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure) WHERE p.pNumber='" + procedure + "' RETURN DISTINCT p.ETR"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure) WHERE p.fTitle='" + procedure + "' RETURN DISTINCT p.ETR"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure) WHERE p.Title='" + procedure + "' RETURN DISTINCT p.ETR"
+
     result = session.run(query)
 
     # Parse the result
     procedure_time_list = []
     for item in result:
-        time_string = item[0]
-        time_int = int(time_string.strip(' Minutes'))
-        procedure_time_list.append(time_int)
+        procedure_time_list.append(item[0])
+
     time = procedure_time_list[0]
 
     return time
@@ -405,30 +467,34 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
     return symptoms_list
 
 
-def retrieve_thresholds_from_measurement(measurement_name, parameter_group):
+def retrieve_thresholds_from_measurement(measurement_name):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
-    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + "' AND m.ParameterGroup='" + parameter_group + \
-            "' RETURN DISTINCT m.LowerWarningLimit, m.LowerCautionLimit, m.UpperCautionLimit, m.UpperWarningLimit"
+    query = "MATCH (m:Measurement) WHERE m.Name='" + measurement_name + \
+            "' RETURN m.ParameterGroup, m.LowerWarningLimit, m.LowerCautionLimit, m.UpperCautionLimit, " \
+            "m.UpperWarningLimit "
     result = session.run(query)
 
     # Parse the result
-    parsed_result = ''
-    for item in result:
-        parsed_result = item
+    parsed_result = []
+    for items in result:
+        parsed_result.append(items)
 
+    result_info = []
     # Check if the parsed result is empty and proceed accordingly
-    if parsed_result != '':
-        thresholds_dict = {'LowerWarningLimit': parsed_result[0], 'LowerCautionLimit': parsed_result[1],
-                           'UpperCautionLimit': parsed_result[2], 'UpperWarningLimit': parsed_result[3]}
+    if parsed_result:
+        for item in parsed_result:
+            thresholds_dict = {'ParameterGroup': item[0], 'LowerWarningLimit': item[1], 'LowerCautionLimit': item[2],
+                               'UpperCautionLimit': item[3], 'UpperWarningLimit': item[4]}
+            result_info.append(thresholds_dict)
     else:
-        thresholds_dict = {'LowerWarningLimit': 'None', 'LowerCautionLimit': 'None',
-                           'UpperCautionLimit': 'None', 'UpperWarningLimit': 'None'}
+        result_info = {'ParameterGroup': 'None', 'LowerWarningLimit': 'None', 'LowerCautionLimit': 'None',
+                       'UpperCautionLimit': 'None', 'UpperWarningLimit': 'None'}
 
-    return thresholds_dict
+    return result_info
 
 
 def retrieve_units_from_measurement(measurement_name):
@@ -451,14 +517,33 @@ def retrieve_units_from_measurement(measurement_name):
     return units
 
 
-def retrieve_ordered_steps_from_procedure(procedure_name):
+def retrieve_ordered_steps_from_procedure(procedure):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH (p:Procedure)-[:Has]-(st:Step) WHERE p.Title='" + \
-            procedure_name + "' RETURN st.Action ORDER BY st.Title"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure)-[:Has]-(st:Step) WHERE p.pNumber='" + \
+                procedure + "' RETURN st.Action ORDER BY st.Title"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure)-[:Has]-(st:Step) WHERE p.fTitle='" + \
+                    procedure + "' RETURN st.Action ORDER BY st.Title"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure)-[:Has]-(st:Step) WHERE p.Title='" + \
+                    procedure + "' RETURN st.Action ORDER BY st.Title"
+
     result = session.run(query)
 
     # Parse the result
@@ -474,13 +559,39 @@ def retrieve_fancy_steps_from_procedure(procedure):
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build the queries
-    query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
-    query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.pNumber=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+        query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.pNumber=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+        query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.pNumber=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+        query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.pNumber=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+        query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.pNumber=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+        query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.pNumber=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.fTitle=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query_step_labels = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Title ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_actions = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Action ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_figures = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Link ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_fNumbers = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.fNumber ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_figures2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.Link2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
+            query_step_fNumbers2 = 'MATCH(p:Procedure)-[r:Has]->(s) WHERE p.Title=\'' + procedure + '\' RETURN s.fNumber2 ORDER BY s.Step, s.SubStep, s.SubSubStep, s.Note'
 
     # Run the queries
     result_step_labels = session.run(query_step_labels)
@@ -575,13 +686,30 @@ def retrieve_fancy_steps_from_procedure(procedure):
     return steps
 
 
-def retrieve_objective_from_procedure(procedure_name):
+def retrieve_objective_from_procedure(procedure):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH (p:Procedure) WHERE p.fTitle='" + procedure_name + "' RETURN p.Objective"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure) WHERE p.pNumber='" + procedure + "' RETURN p.Objective"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure) WHERE p.fTitle='" + procedure + "' RETURN p.Objective"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure) WHERE p.Title='" + procedure + "' RETURN p.Objective"
+
     result = session.run(query)
 
     # Parse the result
@@ -597,13 +725,30 @@ def retrieve_objective_from_procedure(procedure_name):
     return objective
 
 
-def retrieve_equipment_from_procedure(procedure_name):
+def retrieve_equipment_from_procedure(procedure):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.fTitle='" + procedure_name + "' RETURN e.Title"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.pNumber='" + procedure + "' RETURN e.Title"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.fTitle='" + procedure + "' RETURN e.Title"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure)-[Uses]->(e:Equipment) WHERE p.Title='" + procedure + "' RETURN e.Title"
+
     result = session.run(query)
 
     # Parse the result
@@ -619,13 +764,30 @@ def retrieve_equipment_from_procedure(procedure_name):
     return equipment
 
 
-def retrieve_references_from_procedure(procedure_name):
+def retrieve_references_from_procedure(procedure):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.fTitle='" + procedure_name + "' RETURN r.Title"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.pNumber='" + procedure + "' RETURN r.Title"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.fTitle='" + procedure + "' RETURN r.Title"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.Title='" + procedure + "' RETURN r.Title"
+
     result = session.run(query)
 
     # Parse the result
@@ -636,13 +798,30 @@ def retrieve_references_from_procedure(procedure_name):
     return reference_list
 
 
-def retrieve_reference_links_from_procedure(procedure_name):
+def retrieve_reference_links_from_procedure(procedure):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.fTitle='" + procedure_name + "' RETURN r.Procedure"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.pNumber='" + procedure + "' RETURN r.Procedure"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.fTitle='" + procedure + "' RETURN r.Procedure"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure)-[:Uses]->(r:Reference) WHERE p.Title='" + procedure + "' RETURN r.Procedure"
+
     result = session.run(query)
 
     # Parse the result
@@ -653,14 +832,33 @@ def retrieve_reference_links_from_procedure(procedure_name):
     return reference_list
 
 
-def retrieve_figures_from_procedure(procedure_name):
+def retrieve_figures_from_procedure(procedure):
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    # Build and send the query
-    query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.fTitle=\'" + procedure_name + \
-            "\'RETURN f.Link ORDER BY f.Number"
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.pNumber=\'" + procedure + \
+                "\'RETURN f.Link ORDER BY f.Number"
+
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.fTitle=\'" + procedure + \
+                    "\'RETURN f.Link ORDER BY f.Number"
+
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH(p:Procedure)-[r:Has]->(f:Figure) WHERE p.Title=\'" + procedure + \
+                    "\'RETURN f.Link ORDER BY f.Number"
+
     result = session.run(query)
 
     # Parse the result
@@ -690,3 +888,89 @@ def retrieve_all_components():
             components_list.append(item)
 
     return components_list
+
+
+def retrieve_all_procedure_numbers():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) RETURN DISTINCT p.pNumber"
+    result = session.run(query)
+
+    # Parse the result
+    procedure_numbers = []
+    for item in result:
+        procedure_numbers.append(item[0])
+
+    return procedure_numbers
+
+
+def retrieve_all_step_numbers():
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = 'MATCH (n) WHERE EXISTS(n.SubStep) RETURN DISTINCT n.Title AS Title UNION ALL MATCH (m) WHERE ' \
+            'EXISTS(m.SubSubStep) RETURN DISTINCT m.Title AS Title'
+    result = session.run(query)
+
+    # Parse the result
+    step_numbers = []
+    for item in result:
+        step_numbers.append(item[0])
+
+    return step_numbers
+
+
+def retrieve_procedures_from_pNumber(pNumber):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    # Build and send the query
+    query = "MATCH (p:Procedure) WHERE p.pNumber='" + pNumber + "' RETURN p.Title"
+    result = session.run(query)
+
+    procedure = ''
+    # Parse the result
+    for item in result:
+        procedure = item[0]
+
+    return procedure
+
+
+def retrieve_step_from_procedure(step_number, procedure):
+    # Setup neo4j database connection
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    try:
+        float(procedure)
+        # Build and send the query because procedure is a number
+        query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.pNumber='" + procedure + \
+                "' AND s.Title='" + step_number + "' RETURN s.Action"
+    except ValueError:
+        print("Not a number.")
+
+        # check if it is full title by checking if it starts with a number
+        try:
+            float(procedure[0])
+            # Build and send the query because procedure is a full title
+            query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.fTitle='" + procedure + \
+                    "' AND s.Title='" + step_number + "' RETURN s.Action"
+        except ValueError:
+            print("Not a full title.")
+            # Build and send the query because procedure is just a name
+            query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.Title='" + procedure + \
+                    "' AND s.Title='" + step_number + "' RETURN s.Action"
+
+    result = session.run(query)
+
+    # Parse the result
+    for item in result:
+        step = item[0]
+
+    return step

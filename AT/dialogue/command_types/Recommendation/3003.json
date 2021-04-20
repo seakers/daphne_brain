@@ -21,16 +21,16 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The ${anomaly} anomaly estimated resolution time break down is:",
-      "repeat": "${procedure_name}: ${procedure_time} [min]",
+      "begin": "The ${anomaly} anomaly resolution requires the procedures ",
+      "repeat": "${procedure_name} which takes ${procedure_time}",
       "end": "."
     }
   ],
   "visual_response": [
     {
       "type": "list",
-      "begin": "The ${anomaly} anomaly estimated resolution time break down is:",
-      "item_template": "${procedure_name}: ${procedure_time} [min]"
+      "begin": "The ${anomaly} anomaly resolution requires the procedures",
+      "item_template": "${procedure_name} which takes ${procedure_time}"
     }
   ]
 }

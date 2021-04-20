@@ -2,33 +2,37 @@
   "type": "run_function",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
-    { "name": "parameter_group", "type": "parameter_group", "options": "", "from_context": false, "mandatory": true }
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
   ],
   "objective": "retrieve current value of a certain measurement",
   "function":
   {
-    "run_template": "dialogue_functions.get_measurement_current_value(data['measurement'], data['parameter_group'], context)",
+    "run_template": "dialogue_functions.get_measurement_current_value(data['measurement'], context)",
     "results": [
       {
-        "result_type": "single",
+        "result_type": "list",
         "result_fields": {
-          "text_response": "command_results[0]"
+          "name": "item['name']",
+          "parameter_group": "item['parameter_group']",
+          "value": "item['value']",
+          "units": "item['units']"
         }
       }
     ]
   },
   "voice_response": [
     {
-      "type": "single",
-      "template": "${text_response}"
+      "type": "list",
+      "begin": "The current value of ",
+      "repeat": "${name} ${parameter_group} is ${value} ${units} ",
+      "end": "."
     }
   ],
   "visual_response": [
     {
-      "type": "text",
-      "from": "single",
-      "template": "${text_response}"
+      "type": "list",
+      "begin": "The current value of the measurement are ",
+      "item_template": "${name} (${parameter_group}) : ${value} ${units} "
     }
   ]
 }

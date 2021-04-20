@@ -11,7 +11,7 @@ from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_upd
 from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly, \
     retrieve_figures_from_procedure, retrieve_references_from_procedure, retrieve_reference_links_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
-from AT.neo4j_queries.query_functions import retrieve_procedures_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_procedures_fTitle_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
@@ -166,7 +166,7 @@ class RetrieveProcedureFromAnomaly(APIView):
         anomaly_name = json.loads(request.data['anomaly_name'])
 
         # Obtain all the procedures related to the anomaly
-        procedure_names = retrieve_procedures_from_anomaly(anomaly_name)
+        procedure_names = retrieve_procedures_fTitle_from_anomaly(anomaly_name)
 
         return Response(procedure_names)
 
@@ -205,3 +205,23 @@ class RetrieveInfoFromProcedure(APIView):
         }
 
         return Response(info)
+
+
+class TutorialStatus(APIView):
+    def post(self, request):
+        user_info = get_or_create_user_information(request.session, request.user, 'AT')
+        at_context = user_info.atcontext
+        seen_tutorial = at_context.seen_tutorial
+
+        return Response({'seen_tutorial': seen_tutorial})
+
+
+class CompleteTutorial(APIView):
+    def post(self, request):
+        user_info = get_or_create_user_information(request.session, request.user, 'AT')
+        at_context = user_info.atcontext
+        seen_tutorial = at_context.seen_tutorial
+        seen_tutorial = not seen_tutorial
+        user_info.atcontext.seen_tutorial = seen_tutorial
+        user_info.atcontext.save()
+        return Response()

@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+    { "name": "procedure_number", "type": "procedure_number", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the estimated time of resolution for a certain procedure.",
+  "objective": "Provide the estimated time of resolution for a certain procedure number.",
   "function":
   {
-    "run_template": "dialogue_functions.get_procedure_etr(data['procedure'])",
+    "run_template": "dialogue_functions.get_procedure_etr(data['procedure_number'])",
     "results": [
       {
         "result_type": "single",

@@ -7,7 +7,7 @@
   "objective": "Provide the procedures for a certain anomaly",
   "function":
   {
-    "run_template": "dialogue_functions.get_anomaly_procedures(data['anomaly'])",
+    "run_template": "dialogue_functions.get_anomaly_procedure_without_number(data['anomaly'])",
     "results": [
       {
         "result_type": "list",
