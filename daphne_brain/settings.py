@@ -198,6 +198,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = 'Daphne Admin <daphne@selva-research.com>'
 
+# AWS
+DEPLOYMENT_TYPE = os.environ['DEPLOYMENT_TYPE']
 
 # Logging
 

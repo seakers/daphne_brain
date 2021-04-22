@@ -63,7 +63,7 @@ def prod_client(client_type, region_name='us-east-2'):
     return boto3.client(client_type, region_name=region_name)
 
 def get_boto3_client(client_type,  region_name='us-east-2'):
-    if settings.DEBUG:
+    if settings.DEPLOYMENT_TYPE == "local":
         return dev_client(client_type, region_name)
     else:
         return prod_client(client_type, region_name)

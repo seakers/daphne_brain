@@ -19,6 +19,8 @@
 # under the License.
 #
 import json
+import os
+import time
 import boto3
 import random
 
@@ -96,10 +98,29 @@ class VASSARClient:
             }
         })
 
-    def connect_to_services(self, request_url, response_url):
+    def connect_to_vassar(self, request_url, response_url):
         # Send init message
         user_request_queue_url = ""
         user_response_queue_url = ""
+        
+        user_request_queue_url, user_response_queue_url = self.vassar_connection_loop(response_url)
+
+        # If it does not work, and we are on AWS, try increasing Service task limits
+        if settings.DEPLOYMENT_TYPE == "aws":
+            ecs_client = get_boto3_client('ecs')
+            cluster_arn = os.environ["CLUSTER_ARN"]
+            service_arn = os.environ["VASSAR_SERVICE_ARN"]
+            current_count = ecs_client.describe_services(cluster=cluster_arn, services=[service_arn])["services"][0]["desiredCount"]
+            if current_count < 30:
+                ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=current_count+1)
+                # Wait for a while for instance to start before trying to connect again
+                time.sleep(10)
+                user_request_queue_url, user_response_queue_url = self.vassar_connection_loop(response_url)
+
+        
+        return user_request_queue_url, user_response_queue_url
+    
+    def vassar_connection_loop(self, response_url):
         # Try at most 10 times
         for i in range(10):
             response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
@@ -123,7 +144,77 @@ class VASSARClient:
                         # 3. Save information to database 
                         self.user_information.eosscontext.vassar_request_queue_url = user_request_queue_url
                         self.user_information.eosscontext.vassar_response_queue_url = user_response_queue_url
-                        self.user_information.eosscontext.vassar_ready = False
+                        self.user_information.eosscontext.vassar_information = { "containers": [
+                            {
+                                "uuid": message["MessageAttributes"]["UUID"]["StringValue"],
+                                "ready": False
+                            }
+                        ] }
+                        self.user_information.eosscontext.save()
+                        # 4. Delete Message from queue
+                        self.sqs_client.delete_message(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
+                    else:
+                        # Return message to queue
+                        self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+        
+        return user_request_queue_url, user_response_queue_url
+
+
+    def connect_to_ga(self, request_url, response_url, vassar_request_url):
+        # Send init message
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+
+        user_request_queue_url, user_response_queue_url = self.ga_connection_loop(response_url, vassar_request_url)
+
+        # If it does not work, and we are on AWS, try increasing Service task limits
+        if settings.DEPLOYMENT_TYPE == "aws":
+            ecs_client = get_boto3_client('ecs')
+            cluster_arn = os.environ["CLUSTER_ARN"]
+            service_arn = os.environ["GA_SERVICE_ARN"]
+            current_count = ecs_client.describe_services(cluster=cluster_arn, services=[service_arn])["services"][0]["desiredCount"]
+            if current_count < 30:
+                ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=current_count+1)
+                # Wait for a while for instance to start before trying to connect again
+                time.sleep(10)
+                user_request_queue_url, user_response_queue_url = self.ga_connection_loop(response_url, vassar_request_url)
+        
+        return user_request_queue_url, user_response_queue_url
+
+    def ga_connection_loop(self, response_url, vassar_request_url):
+         # Try at most 10 times
+        for i in range(10):
+            response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
+                        # 1. Get queue URLs
+                        user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
+                        user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
+                        # 2. Send ACK message
+                        response = self.sqs_client.send_message(QueueUrl=user_request_queue_url, MessageBody='boto3', MessageAttributes={
+                            'msgType': {
+                                'StringValue': 'connectionAck',
+                                'DataType': 'String'
+                            },
+                            'UUID': {
+                                'StringValue': message["MessageAttributes"]["UUID"]["StringValue"],
+                                'DataType': 'String'
+                            },
+                            'vassar_url': {
+                                'StringValue': vassar_request_url,
+                                'DataType': 'String'
+                            }
+                        })
+                        # 3. Save information to database 
+                        self.user_information.eosscontext.ga_request_queue_url = user_request_queue_url
+                        self.user_information.eosscontext.ga_response_queue_url = user_response_queue_url
+                        self.user_information.eosscontext.ga_information = { "containers": [
+                            {
+                                "uuid": message["MessageAttributes"]["UUID"]["StringValue"],
+                                "ready": False
+                            }
+                        ] }
                         self.user_information.eosscontext.save()
                         # 4. Delete Message from queue
                         self.sqs_client.delete_message(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
@@ -172,11 +263,9 @@ class VASSARClient:
             if done:
                 break
 
-    def check_status(self):
+    def check_status(self, request_queue, response_queue):
         # Send status check message
-        vassar_request_url = self.user_information.eosscontext.vassar_request_queue_url
-        vassar_response_url = self.user_information.eosscontext.vassar_response_queue_url
-        response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='', MessageAttributes={
+        response = self.sqs_client.send_message(QueueUrl=request_queue, MessageBody='', MessageAttributes={
                             'msgType': {
                                 'StringValue': 'statusCheck',
                                 'DataType': 'String'
@@ -185,19 +274,27 @@ class VASSARClient:
         # Try at most 10 times
         current_status = ""
         for i in range(10):
-            response = self.sqs_client.receive_message(QueueUrl=vassar_response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            response = self.sqs_client.receive_message(QueueUrl=response_queue, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "currentStatus":
                         # 1. Get current status
                         current_status = message["MessageAttributes"]["current_status"]["StringValue"]
                         # 4. Delete Message from queue
-                        self.sqs_client.delete_message(QueueUrl=vassar_response_url, ReceiptHandle=message["ReceiptHandle"])
+                        self.sqs_client.delete_message(QueueUrl=response_queue, ReceiptHandle=message["ReceiptHandle"])
                     else:
                         # Return message to queue
-                        self.sqs_client.change_message_visibility(QueueUrl=vassar_response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+                        self.sqs_client.change_message_visibility(QueueUrl=response_queue, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
         print("--------- Current status:", current_status)
         return current_status
+
+    def create_queue(self, queue_name):
+        response = self.sqs_client.create_queue(
+            QueueName=queue_name
+        )
+        print('---> CREATE QUEUE RESPONSE', response)
+        queue_url = response['QueueUrl']
+        return queue_url
 
     def queue_exists(self, queue_url):
         list_response = self.sqs_client.list_queues()
