@@ -50,13 +50,6 @@ class EOSSConsumer(DaphneConsumer):
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             vassar_client = VASSARClient(user_info)
             vassar_client.send_ping_message()
-            # connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
-            # channel = connection.channel()
-
-            # if user_info.eosscontext.ga_id is not None:
-            #     queue_name = user_info.eosscontext.ga_id + '_brainga'
-            #     channel.queue_declare(queue=queue_name)
-            #     channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
             pass
         # elif content.get('msg_type') == 'mycroft':
         #     self.send_json({

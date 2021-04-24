@@ -247,7 +247,7 @@ class VASSARClient:
         # Receive initialization complete message
         done = False
         for i in range(10):
-            response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            response = self.sqs_client.receive_message(QueueUrl=url, MaxNumberOfMessages=3, WaitTimeSeconds=1, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "isReady":
@@ -259,7 +259,7 @@ class VASSARClient:
                         done=True
                     else:
                         # Return message to queue
-                        self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+                        self.sqs_client.change_message_visibility(QueueUrl=url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
             if done:
                 break
 
@@ -274,9 +274,10 @@ class VASSARClient:
         # Try at most 10 times
         current_status = ""
         for i in range(10):
-            response = self.sqs_client.receive_message(QueueUrl=response_queue, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            response = self.sqs_client.receive_message(QueueUrl=response_queue, MaxNumberOfMessages=3, WaitTimeSeconds=1, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
+                    print (message["MessageAttributes"])
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "currentStatus":
                         # 1. Get current status
                         current_status = message["MessageAttributes"]["current_status"]["StringValue"]
@@ -284,16 +285,44 @@ class VASSARClient:
                         self.sqs_client.delete_message(QueueUrl=response_queue, ReceiptHandle=message["ReceiptHandle"])
                     else:
                         # Return message to queue
-                        self.sqs_client.change_message_visibility(QueueUrl=response_queue, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+                        self.sqs_client.change_message_visibility(QueueUrl=response_queue, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+        if current_status == "":
+            current_status = "waiting_for_user"
         print("--------- Current status:", current_status)
         return current_status
 
-    def create_queue(self, queue_name):
+    def create_dead_queue(self, queue_name):
         response = self.sqs_client.create_queue(
             QueueName=queue_name
         )
         print('---> CREATE QUEUE RESPONSE', response)
         queue_url = response['QueueUrl']
+        arn_response = self.sqs_client.get_queue_attributes(
+            QueueUrl=queue_url,
+            AttributeNames=["QueueArn"]
+        )
+        queue_arn = arn_response["Attributes"]["QueueArn"]
+        return queue_url, queue_arn
+
+    def create_queue(self, queue_name, dead_letter_arn):
+        attributes = {
+            "MessageRetentionPeriod": str(60*5),
+            "RedrivePolicy": json.dumps({
+                "deadLetterTargetArn": dead_letter_arn,
+                "maxReceiveCount": "3"
+            })
+        }
+        response = self.sqs_client.create_queue(
+            QueueName=queue_name,
+            Attributes=attributes
+        )
+        print('---> CREATE QUEUE RESPONSE', response)
+        queue_url = response['QueueUrl']
+        self.sqs_client.set_queue_attributes(
+            QueueUrl=queue_url,
+            Attributes=attributes
+        )
+        
         return queue_url
 
     def queue_exists(self, queue_url):
@@ -305,13 +334,33 @@ class VASSARClient:
 
     def send_ping_message(self):
         vassar_request_url = self.user_information.eosscontext.vassar_request_queue_url
-        if vassar_request_url is not None and self.queue_exists(vassar_request_url):
-            response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='', MessageAttributes={
-                                'msgType': {
-                                    'StringValue': 'ping',
-                                    'DataType': 'String'
-                                }
-                            })
+        vassar_information = self.user_information.eosscontext.vassar_information
+        ga_request_url = self.user_information.eosscontext.ga_request_queue_url
+        ga_information = self.user_information.eosscontext.ga_information
+        if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
+            for container in vassar_information["containers"]:
+                response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='', MessageAttributes={
+                                    'msgType': {
+                                        'StringValue': 'ping',
+                                        'DataType': 'String'
+                                    },
+                                    'UUID': {
+                                        'StringValue': container['uuid'],
+                                        'DataType': 'String'
+                                    },
+                                })
+        if ga_request_url is not None and self.queue_exists(ga_request_url) and "containers" in ga_information:
+            for container in ga_information["containers"]:
+                response = self.sqs_client.send_message(QueueUrl=ga_request_url, MessageBody='', MessageAttributes={
+                                    'msgType': {
+                                        'StringValue': 'ping',
+                                        'DataType': 'String'
+                                    },
+                                    'UUID': {
+                                        'StringValue': container['uuid'],
+                                        'DataType': 'String'
+                                    },
+                                })
 
     # working
     def get_orbit_list(self, problem, group_id=1, problem_id=5):

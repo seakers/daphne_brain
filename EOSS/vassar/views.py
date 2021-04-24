@@ -28,16 +28,18 @@ class Connect(APIView):
         response_queue_url = os.environ["VASSAR_RESPONSE_URL"]
         ga_request_queue_url = os.environ["GA_REQUEST_URL"]
         ga_response_queue_url = os.environ["GA_RESPONSE_URL"]
-        vassar_client.create_queue(request_queue_url.split("/")[-1])
-        vassar_client.create_queue(response_queue_url.split("/")[-1])
-        vassar_client.create_queue(ga_request_queue_url.split("/")[-1])
-        vassar_client.create_queue(ga_response_queue_url.split("/")[-1])
+        dead_letter_url, dead_letter_arn = vassar_client.create_dead_queue("dead-letter")
+        vassar_client.create_queue(request_queue_url.split("/")[-1], dead_letter_arn)
+        vassar_client.create_queue(response_queue_url.split("/")[-1], dead_letter_arn)
+        vassar_client.create_queue(ga_request_queue_url.split("/")[-1], dead_letter_arn)
+        vassar_client.create_queue(ga_response_queue_url.split("/")[-1], dead_letter_arn)
 
         # Check if there is an existing VASSAR connection
         if user_info.eosscontext.vassar_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.vassar_request_queue_url):
             vassar_status = vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
         else:
             vassar_status = "waiting_for_user"
+        print("Initial VASSAR status", vassar_status)
 
         if vassar_status == "waiting_for_user":
             # Uninitialize VASSAR until reconnection is successful
@@ -65,12 +67,14 @@ class Connect(APIView):
             vassar_client.receive_successful_build(user_response_queue_url)
             vassar_status = "ready"
 
+        print("Final VASSAR status", vassar_status)
         
-        # Check if there is an existing VASSAR connection
+        # Check if there is an existing GA connection
         if user_info.eosscontext.ga_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.ga_request_queue_url):
             ga_status = vassar_client.check_status(user_info.eosscontext.ga_request_queue_url, user_info.eosscontext.ga_response_queue_url)
         else:
             ga_status = "waiting_for_user"
+        print("Initial GA status", ga_status)
 
         if ga_status == "waiting_for_user":
             # Uninitialize GA until reconnection is successful
@@ -90,6 +94,7 @@ class Connect(APIView):
             print(user_ga_request_queue_url, user_ga_response_queue_url)
 
             ga_status = "ready"
+        print("Initial GA status", ga_status)
 
         if vassar_status == "ready" and ga_status == "ready":
             return Response({
