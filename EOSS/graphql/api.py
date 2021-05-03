@@ -4,7 +4,7 @@ import requests
 import json
 import time
 from auth_API.helpers import get_or_create_user_information
-from EOSS.aws.utils import pprint
+from EOSS.aws.utils import graphql_server_address, pprint
 
 
 
@@ -53,8 +53,11 @@ class MissionCostInformation:
 
 class GraphqlClient:
 
-    def __init__(self, hasura_url='http://graphql:8080/v1/graphql', request=None, problem_id=None, user_info=None):
-        self.hasura_url = hasura_url
+    def __init__(self, hasura_url=None, request=None, problem_id=None, user_info=None):
+        if hasura_url is not None:
+            self.hasura_url = hasura_url
+        else:
+            self.hasura_url = graphql_server_address()
 
         if user_info is not None:
             self.problem_id = user_info.eosscontext.problem_id

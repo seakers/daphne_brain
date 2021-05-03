@@ -12,5 +12,6 @@ EOSS/analyst/data/
 db.sqlite3
 dialogue/models
 /logs/daphne.log
+static/
 venv/
 venv_linux/
