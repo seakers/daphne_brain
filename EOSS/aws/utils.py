@@ -33,16 +33,16 @@ def instance_priv_ipv4():
     return '172.31.63.4'
 
 def graphql_server_address(dev=False):
-    if not dev:
-        return 'https://dev.selva-research.com/v1/graphql'
+    if settings.DEPLOYMENT_TYPE == "local":
+        return 'http://graphql:6002/v1/graphql'
     else:
-        return 'http://graphql:8080/v1/graphql'
+        return os.environ['HASURA_HOST']
 
 def graphql_server_address_ws(dev=False):
-    if not dev:
-        return 'wss://dev.selva-research.com/v1/graphql'
+    if settings.DEPLOYMENT_TYPE == "local":
+        return 'ws://graphql:6002/v1/graphql'
     else:
-        return 'ws://graphql:8080/v1/graphql'
+        return os.environ['HASURA_HOST_WS']
 
 def eval_task_iam_arn():
     return 'arn:aws:iam::923405430231:role/Daphne-EvaluatorTask'
