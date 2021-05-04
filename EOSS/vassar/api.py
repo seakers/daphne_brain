@@ -265,7 +265,7 @@ class VASSARClient:
 
     def check_status(self, request_queue, response_queue):
         # Send status check message
-        response = self.sqs_client.send_message(QueueUrl=request_queue, MessageBody='', MessageAttributes={
+        response = self.sqs_client.send_message(QueueUrl=request_queue, MessageBody='boto3', MessageAttributes={
                             'msgType': {
                                 'StringValue': 'statusCheck',
                                 'DataType': 'String'
@@ -339,7 +339,7 @@ class VASSARClient:
         ga_information = self.user_information.eosscontext.ga_information
         if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
             for container in vassar_information["containers"]:
-                response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='', MessageAttributes={
+                response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='boto3', MessageAttributes={
                                     'msgType': {
                                         'StringValue': 'ping',
                                         'DataType': 'String'
@@ -351,7 +351,7 @@ class VASSARClient:
                                 })
         if ga_request_url is not None and self.queue_exists(ga_request_url) and "containers" in ga_information:
             for container in ga_information["containers"]:
-                response = self.sqs_client.send_message(QueueUrl=ga_request_url, MessageBody='', MessageAttributes={
+                response = self.sqs_client.send_message(QueueUrl=ga_request_url, MessageBody='boto3', MessageAttributes={
                                     'msgType': {
                                         'StringValue': 'ping',
                                         'DataType': 'String'
