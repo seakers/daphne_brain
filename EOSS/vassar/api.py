@@ -347,7 +347,9 @@ class VASSARClient:
         print("Ping GA Containers:", ga_information)
         print("Ping GA Queue:", ga_request_url)
         if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
+            print("Pinging VASSAR Containers")
             for container in vassar_information["containers"]:
+                print("     Pinging container ", container["uuid"])
                 response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='boto3', MessageAttributes={
                                     'msgType': {
                                         'StringValue': 'ping',
@@ -359,7 +361,9 @@ class VASSARClient:
                                     },
                                 })
         if ga_request_url is not None and self.queue_exists(ga_request_url) and "containers" in ga_information:
+            print("Pinging GA Containers")
             for container in ga_information["containers"]:
+                print("     Pinging container ", container["uuid"])
                 response = self.sqs_client.send_message(QueueUrl=ga_request_url, MessageBody='boto3', MessageAttributes={
                                     'msgType': {
                                         'StringValue': 'ping',
