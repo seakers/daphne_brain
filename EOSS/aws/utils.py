@@ -60,7 +60,7 @@ def dev_client(client_type, region_name='us-east-2'):
     return boto3.client(client_type, endpoint_url='http://localstack:4576', region_name='us-east-2', aws_access_key_id=dev_access_key(), aws_secret_access_key=dev_secret_key())
 
 def prod_client(client_type, region_name='us-east-2'):
-    return boto3.client(client_type, region_name=region_name)
+    return boto3.client(client_type, region_name=region_name, endpoint_url=f"https://sqs.{region_name}.amazonaws.com")
 
 def get_boto3_client(client_type,  region_name='us-east-2'):
     if settings.DEPLOYMENT_TYPE == "local":
