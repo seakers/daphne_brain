@@ -342,6 +342,10 @@ class VASSARClient:
         vassar_information = self.user_information.eosscontext.vassar_information
         ga_request_url = self.user_information.eosscontext.ga_request_queue_url
         ga_information = self.user_information.eosscontext.ga_information
+        print("Ping VASSAR Containers:", vassar_information)
+        print("Ping VASSAR Queue:", vassar_request_url)
+        print("Ping GA Containers:", ga_information)
+        print("Ping GA Queue:", ga_request_url)
         if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
             for container in vassar_information["containers"]:
                 response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='boto3', MessageAttributes={
