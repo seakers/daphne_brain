@@ -106,7 +106,7 @@ class VASSARClient:
         user_request_queue_url, user_response_queue_url = self.vassar_connection_loop(response_url)
 
         # If it does not work, and we are on AWS, try increasing Service task limits
-        if settings.DEPLOYMENT_TYPE == "aws":
+        if user_request_queue_url == "" and user_response_queue_url == "" and settings.DEPLOYMENT_TYPE == "aws":
             ecs_client = get_boto3_client('ecs')
             cluster_arn = os.environ["CLUSTER_ARN"]
             service_arn = os.environ["VASSAR_SERVICE_ARN"]
@@ -116,17 +116,19 @@ class VASSARClient:
                 # Wait for a while for instance to start before trying to connect again
                 time.sleep(10)
                 user_request_queue_url, user_response_queue_url = self.vassar_connection_loop(response_url)
-
         
         return user_request_queue_url, user_response_queue_url
     
     def vassar_connection_loop(self, response_url):
-        # Try at most 10 times
-        for i in range(10):
-            response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+        # Try at most 5 times
+        for i in range(5):
+            response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=3, WaitTimeSeconds=2, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
+                        print("Received message attributes:", message["MessageAttributes"])
                         # 1. Get queue URLs
                         user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
                         user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
@@ -155,7 +157,7 @@ class VASSARClient:
                         self.sqs_client.delete_message(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
                     else:
                         # Return message to queue
-                        self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+                        self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
         
         return user_request_queue_url, user_response_queue_url
 
@@ -168,7 +170,7 @@ class VASSARClient:
         user_request_queue_url, user_response_queue_url = self.ga_connection_loop(response_url, vassar_request_url)
 
         # If it does not work, and we are on AWS, try increasing Service task limits
-        if settings.DEPLOYMENT_TYPE == "aws":
+        if user_request_queue_url == "" and user_response_queue_url == "" and settings.DEPLOYMENT_TYPE == "aws":
             ecs_client = get_boto3_client('ecs')
             cluster_arn = os.environ["CLUSTER_ARN"]
             service_arn = os.environ["GA_SERVICE_ARN"]
@@ -182,12 +184,15 @@ class VASSARClient:
         return user_request_queue_url, user_response_queue_url
 
     def ga_connection_loop(self, response_url, vassar_request_url):
-         # Try at most 10 times
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+        # Try at most 5 times
         for i in range(10):
-            response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            response = self.sqs_client.receive_message(QueueUrl=response_url, MaxNumberOfMessages=3, WaitTimeSeconds=2, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
+                        print("Received message attributes:", message["MessageAttributes"])
                         # 1. Get queue URLs
                         user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
                         user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
@@ -220,7 +225,7 @@ class VASSARClient:
                         self.sqs_client.delete_message(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
                     else:
                         # Return message to queue
-                        self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+                        self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
         
         return user_request_queue_url, user_response_queue_url
     
