@@ -142,6 +142,8 @@ class DaphneConsumer(JsonWebsocketConsumer):
 
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'])
 
+        print(user_info, self.scope['session'], self.scope['user'])
+        print(self.channel_name)
         user_info.channel_name = self.channel_name
         user_info.save()
 
