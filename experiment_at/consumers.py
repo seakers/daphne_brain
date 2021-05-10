@@ -22,8 +22,12 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
         """
 
         # Get an updated session store
-        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
-
+        user_info = None
+        try:
+            user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
+        except:
+            pass
+        
         if hasattr(user_info, 'atexperimentcontext'):
             experiment_context = user_info.atexperimentcontext
             if content.get('msg_type') == 'add_action':
@@ -44,5 +48,5 @@ class ATExperimentConsumer(JsonWebsocketConsumer):
 
     def disconnect(self, close_code):
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
-        user_info.atexperimentcontext = False
-        user_info.atexperimentcontext.save()
+        #user_info.atexperimentcontext.is_running = False
+        #user_info.atexperimentcontext.save()
