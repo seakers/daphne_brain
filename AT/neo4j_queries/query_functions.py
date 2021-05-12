@@ -402,9 +402,12 @@ def retrieve_risks_from_anomaly(anomaly_name):
     # Build and send the query
     query = "MATCH (a:Anomaly)-[:Can_Cause]-(r:Risk) WHERE a.Title='" + anomaly_name + "' RETURN DISTINCT r.Title"
     result = session.run(query)
-
     # Parse the result
     risks_list = []
+
+    if result.peek() is None:
+        risks_list.append("None")
+
     for item in result:
         risks_list.append(item[0])
 
@@ -885,7 +888,9 @@ def retrieve_all_components():
     components_list = []
     for items in itertools.chain(result1, result2):
         for item in items:
-            components_list.append(item)
+            stripped = item.replace(".png", "")
+            spaced = stripped.replace("_", " ")
+            components_list.append(spaced)
 
     return components_list
 
@@ -920,7 +925,8 @@ def retrieve_all_step_numbers():
     # Parse the result
     step_numbers = []
     for item in result:
-        step_numbers.append(item[0])
+        step = item[0].replace("Step ", "")
+        step_numbers.append(step)
 
     return step_numbers
 
@@ -951,7 +957,7 @@ def retrieve_step_from_procedure(step_number, procedure):
         float(procedure)
         # Build and send the query because procedure is a number
         query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.pNumber='" + procedure + \
-                "' AND s.Title='" + step_number + "' RETURN s.Action"
+                "' AND s.Title='Step " + step_number + "' RETURN s.Action"
     except ValueError:
         print("Not a number.")
 
@@ -960,12 +966,12 @@ def retrieve_step_from_procedure(step_number, procedure):
             float(procedure[0])
             # Build and send the query because procedure is a full title
             query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.fTitle='" + procedure + \
-                    "' AND s.Title='" + step_number + "' RETURN s.Action"
+                    "' AND s.Title='Step " + step_number + "' RETURN s.Action"
         except ValueError:
             print("Not a full title.")
             # Build and send the query because procedure is just a name
             query = "MATCH (p:Procedure)-[:Has]->(s) WHERE p.Title='" + procedure + \
-                    "' AND s.Title='" + step_number + "' RETURN s.Action"
+                    "' AND s.Title='Step " + step_number + "' RETURN s.Action"
 
     result = session.run(query)
 

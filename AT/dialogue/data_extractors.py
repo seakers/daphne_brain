@@ -9,59 +9,63 @@ from AT.neo4j_queries.query_functions import retrieve_all_measurements, retrieve
     retrieve_all_step_numbers
 
 
-def extract_anomaly_ids(processed_question, number_of_features, context: UserInformation):
+def extract_anomaly_ids(entity_value, number_of_features, context: UserInformation):
     # Get a list of anomaly ids
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
     anomaly_ids = [str(id[0]) for id in session.query(ECLSSAnomalies.id).all()]
-    return sorted_list_of_features_by_index(processed_question, anomaly_ids, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, anomaly_ids, number_of_features)
 
 
-def extract_procedures(processed_question, number_of_features, context: UserInformation):
+def extract_procedures(entity_value, number_of_features, context: UserInformation):
     # Get a list of procedures
     procedures = retrieve_all_procedures()
-    return sorted_list_of_features_by_index(processed_question, procedures, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, procedures, number_of_features)
 
 
-def extract_measurements(processed_question, number_of_features, context: UserInformation):
+def extract_measurements(entity_value, number_of_features, context: UserInformation):
     # Get a list of measurements
     measurements = retrieve_all_measurements()
-    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, measurements, number_of_features)
 
 
-def extract_measurements_parameter_groups(processed_question, number_of_features, context: UserInformation):
+def extract_measurements_parameter_groups(entity_value, number_of_features, context: UserInformation):
     # Get a list of measurements
     measurements = retrieve_all_measurements_parameter_groups()
-    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, measurements, number_of_features)
 
 
-def extract_anomalies(processed_question, number_of_features, context: UserInformation):
+def extract_anomalies(entity_value, number_of_features, context: UserInformation):
     # Get a list of anomalies
     measurements = retrieve_all_anomalies()
-    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, measurements, number_of_features)
 
-def extract_components(processed_question, number_of_features, context: UserInformation):
+
+def extract_components(entity_value, number_of_features, context: UserInformation):
     # Get a list of components
     components = retrieve_all_components()
-    return sorted_list_of_features_by_index(processed_question, components, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, components, number_of_features)
 
-def extract_procedure_number(processed_question, number_of_features, context: UserInformation):
+
+def extract_procedure_number(entity_value, number_of_features, context: UserInformation):
     # Get a list of procedure_number
     procedure_number = retrieve_all_procedure_numbers()
-    return sorted_list_of_features_by_index(processed_question, procedure_number, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, procedure_number, number_of_features)
 
-def extract_step_number(processed_question, number_of_features, context: UserInformation):
+
+def extract_step_number(entity_value, number_of_features, context: UserInformation):
     # Get a list of procedure_number
     step_number = retrieve_all_step_numbers()
-    return sorted_list_of_features_by_index(processed_question, step_number, number_of_features)
+    return sorted_list_of_features_by_index(entity_value, step_number, number_of_features)
+
 
 extract_function = {}
 
-extract_function["anomaly_id"] = extract_anomaly_ids
-extract_function["procedure"] = extract_procedures
-extract_function["measurement"] = extract_measurements
-extract_function["anomaly"] = extract_anomalies
-extract_function["parameter_group"] = extract_measurements_parameter_groups
-extract_function["component"] = extract_components
-extract_function["procedure_number"] = extract_procedure_number
-extract_function["step_number"] = extract_step_number
+extract_function["ANOMALYID"] = extract_anomaly_ids
+extract_function["PROCEDURE"] = extract_procedures
+extract_function["MEASUREMENT"] = extract_measurements
+extract_function["ANOMALY"] = extract_anomalies
+extract_function["PARAMETERGROUP"] = extract_measurements_parameter_groups
+extract_function["COMPONENT"] = extract_components
+extract_function["PROCEDURENUMBER"] = extract_procedure_number
+extract_function["STEPNUMBER"] = extract_step_number

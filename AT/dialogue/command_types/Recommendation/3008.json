@@ -18,7 +18,7 @@
       "mandatory": true
     }
   ],
-  "objective": "Read the previous step of a certain procedure from context",
+  "objective": "read the previous step of a certain procedure",
   "function": {
     "run_template": "dialogue_functions.get_previous_step_from_context(data['all_steps_from_procedure'], data['previous_step_pointer'], context, new_dialogue_contexts)",
     "results": [

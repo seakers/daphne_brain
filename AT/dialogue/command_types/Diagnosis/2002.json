@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
+    { "name": "ANOMALY", "type": "ANOMALY", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the symptoms of a certain anomaly",
+  "objective": "provide the components affected by a certain anomaly",
   "function":
   {
-    "run_template": "dialogue_functions.get_anomaly_affected_subsystem(data['anomaly'])",
+    "run_template": "dialogue_functions.get_anomaly_affected_subsystem(data['ANOMALY'])",
     "results": [
       {
         "result_type": "list",
@@ -20,7 +20,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The components/subsystems affected by the ${anomaly} anomaly are:",
+      "begin": "The components/subsystems affected by the ${ANOMALY} anomaly are:",
       "repeat": "${subsystem}.",
       "end": "."
     }
@@ -28,7 +28,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The components/subsystems affected by the ${anomaly} anomaly are:",
+      "begin": "The components/subsystems affected by the ${ANOMALY} anomaly are:",
       "item_template": "${subsystem}."
     }
   ]

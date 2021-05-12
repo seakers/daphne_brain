@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
+    { "name": "MEASUREMENT", "type": "MEASUREMENT", "options": "", "from_context": false, "mandatory": true }
   ],
   "objective": "provide the thresholds for a certain measurement",
   "function":
   {
-    "run_template": "dialogue_functions.get_measurement_thresholds(data['measurement'])",
+    "run_template": "dialogue_functions.get_measurement_thresholds(data['MEASUREMENT'])",
     "results": [
       {
         "result_type": "list",
@@ -22,7 +22,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The thresholds for the ${measurement} measurement are:",
+      "begin": "The thresholds for the ${MEASUREMENT} measurement are:",
       "repeat": "${threshold_type}: ${threshold_value} ${threshold_units}",
       "end": "."
     }
@@ -30,7 +30,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The thresholds for the ${measurement} measurement are:",
+      "begin": "The thresholds for the ${MEASUREMENT} measurement are:",
       "item_template": "${threshold_type}: ${threshold_value} ${threshold_units}"
     }
   ]

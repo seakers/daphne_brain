@@ -18,7 +18,7 @@
       "mandatory": true
     }
   ],
-  "objective": "Repeats the last/current step of a certain procedure from context",
+  "objective": "repeat a step of a certain procedure",
   "function": {
     "run_template": "dialogue_functions.get_current_step_from_context(data['all_steps_from_procedure'], data['current_step_pointer'], context, new_dialogue_contexts)",
     "results": [

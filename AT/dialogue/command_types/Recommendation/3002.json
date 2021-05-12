@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+    { "name": "PROCEDURE", "type": "PROCEDURE", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the affected components for a certain procedure",
+  "objective": "provide the components affected by a certain procedure",
   "function":
   {
-    "run_template": "dialogue_functions.get_procedure_affected_components(data['procedure'])",
+    "run_template": "dialogue_functions.get_procedure_affected_components(data['PROCEDURE'])",
     "results": [
       {
         "result_type": "list",
@@ -20,7 +20,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The procedure ${procedure} affects the following components or subsystems:",
+      "begin": "The procedure ${PROCEDURE} affects the following components or subsystems:",
       "repeat": "${component}",
       "end": "."
     }
@@ -28,7 +28,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The procedure ${procedure} affects the following components or subsystems:",
+      "begin": "The procedure ${PROCEDURE} affects the following components or subsystems:",
       "item_template": "${component}."
     }
   ]

@@ -1,12 +1,12 @@
 from dialogue.param_processing_helpers import not_processed
 
 process_function = {}
-process_function["anomaly_id"] = not_processed
-process_function["procedure"] = not_processed
-process_function['measurement'] = not_processed
-process_function['anomaly'] = not_processed
-process_function['parameter_group'] = not_processed
-process_function['component'] = not_processed
-process_function['procedure_number'] = not_processed
-process_function['step_number'] = not_processed
+process_function["ANOMALYID"] = not_processed
+process_function["PROCEDURE"] = not_processed
+process_function['MEASUREMENT'] = not_processed
+process_function['ANOMALY'] = not_processed
+process_function['PARAMETERGROUP'] = not_processed
+process_function['COMPONENT'] = not_processed
+process_function['PROCEDURENUMBER'] = not_processed
+process_function['STEPNUMBER'] = not_processed
 process_function['context'] = not_processed

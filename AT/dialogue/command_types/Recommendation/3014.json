@@ -2,16 +2,16 @@
   "type": "run_function",
   "params": [
     {
-      "name": "procedure_number",
-      "type": "procedure_number",
+      "name": "PROCEDURENUMBER",
+      "type": "PROCEDURENUMBER",
       "options": "",
       "from_context": false,
       "mandatory": true
     }
   ],
-  "objective": "Read the steps of a certain procedure from procedure number.",
+  "objective": "read the steps of a certain procedure",
   "function": {
-    "run_template": "dialogue_functions.get_first_step_from_procedure(data['procedure_number'], context, new_dialogue_contexts)",
+    "run_template": "dialogue_functions.get_first_step_from_procedure(data['PROCEDURENUMBER'], context, new_dialogue_contexts)",
     "results": [
       {
         "result_type": "single",
@@ -25,14 +25,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "Okay. I will read each step of the procedure ${procedure_number} one at a time. You can say NEXT or PREVIOUS to go to the next or previous step of the procedure. You can also say REPEAT if you want me to repeat a step again. The steps of this procedure are. ${procedure_step_number}. ${procedure_step_action}"
+      "template": "Okay. I will read each step of procedure ${PROCEDURENUMBER} one at a time. The steps of this procedure are. ${procedure_step_number}. ${procedure_step_action}"
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "Okay. I will read each step of the procedure ${procedure_number} one at a time. You can say NEXT or PREVIOUS to go to the next or previous step of the procedure. You can also say REPEAT if you want me to repeat a step again. The steps of this procedure are:<br><br><b>${procedure_step_number}</b>: ${procedure_step_action}"
+      "template": "Okay. I will read each step of procedure ${PROCEDURENUMBER} one at a time. The steps of this procedure are:<br><br><b>${procedure_step_number}</b>: ${procedure_step_action}"
     }
   ]
 }

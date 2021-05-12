@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "procedure_number", "type": "procedure_number", "options": "", "from_context": false, "mandatory": true }
+    { "name": "PROCEDURENUMBER", "type": "PROCEDURENUMBER", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the pdf for a certain procedure.",
+  "objective": "provide the pdf of a certain procedure",
   "function":
   {
-    "run_template": "dialogue_functions.get_procedure_pdf(data['procedure_number'])",
+    "run_template": "dialogue_functions.get_procedure_pdf(data['PROCEDURENUMBER'])",
     "results": [
       {
         "result_type": "single",
@@ -21,7 +21,7 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "Procedure number ${procedure_number} is ${procedure_name}. A link to the procedure has been provided."
+      "template": "Procedure number ${PROCEDURENUMBER} is ${procedure_name}. A link to the procedure has been provided."
     }
   ],
   "visual_response": [

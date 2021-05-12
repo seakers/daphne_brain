@@ -8,7 +8,7 @@ import numpy as np
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from sqlalchemy import or_
-from neo4j.v1 import GraphDatabase, basic_auth
+from neo4j import GraphDatabase, basic_auth
 
 from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError
@@ -90,6 +90,157 @@ def get_process_functions(daphne_version):
         return process_function
 
 
+def get_entities(processed_question_str, daphne_version):
+    # Get the model
+    loaded_model = nn_models[daphne_version]['ner']
+
+    doc = loaded_model(processed_question_str.text)
+    param = {}
+    # Find named entities, phrases and concepts
+    for index, entity in enumerate(doc.ents):
+        param[entity.label_] = entity.text
+
+    return param
+
+
+def is_number(x):
+    if type(x) == str:
+        x = x.replace(',', '')
+    try:
+        float(x)
+        int(x)
+    except:
+        return False
+    return True
+
+
+def convert_string_to_number(textnum, numwords=None):
+    if numwords is None:
+        numwords = {}
+
+    units = [
+        'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+        'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+        'sixteen', 'seventeen', 'eighteen', 'nineteen',
+    ]
+    tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+    scales = ['hundred', 'thousand', 'million', 'billion', 'trillion']
+    ordinal_words = {'first': 1, 'second': 2, 'third': 3, 'fifth': 5, 'eighth': 8, 'ninth': 9, 'twelfth': 12}
+    ordinal_endings = [('ieth', 'y'), ('th', '')]
+
+    if not numwords:
+        numwords['and'] = (1, 0)
+        for idx, word in enumerate(units): numwords[word] = (1, idx)
+        for idx, word in enumerate(tens): numwords[word] = (1, idx * 10)
+        for idx, word in enumerate(scales): numwords[word] = (10 ** (idx * 3 or 2), 0)
+
+    textnum = textnum.replace('-', ' ')
+
+    current = result = 0
+    curstring = ''
+    onnumber = False
+    lastunit = False
+    lastscale = False
+
+    def is_numword(x):
+        if is_number(x):
+            return True
+        if word in numwords:
+            return True
+        return False
+
+    def from_numword(x):
+        if is_number(x):
+            scale = 0
+            increment = int(x.replace(',', ''))
+            return scale, increment
+        return numwords[x]
+
+    for word in textnum.split():
+        if word in ordinal_words:
+            scale, increment = (1, ordinal_words[word])
+            current = current * scale + increment
+            if scale > 100:
+                result += current
+                current = 0
+            onnumber = True
+            lastunit = False
+            lastscale = False
+        else:
+            for ending, replacement in ordinal_endings:
+                if word.endswith(ending):
+                    word = "%s%s" % (word[:-len(ending)], replacement)
+
+            if (not is_numword(word)) or (word == 'and' and not lastscale):
+                if onnumber:
+                    # Flush the current number we are building
+                    curstring += repr(result + current) + " "
+                curstring += word + " "
+                result = current = 0
+                onnumber = False
+                lastunit = False
+                lastscale = False
+            else:
+                scale, increment = from_numword(word)
+                onnumber = True
+
+                if lastunit and (word not in scales):
+                    # Assume this is part of a string of individual numbers to
+                    # be flushed, such as a zipcode "one two three four five"
+                    curstring += repr(result + current)
+                    result = current = 0
+
+                if scale > 1:
+                    current = max(1, current)
+
+                current = current * scale + increment
+                if scale > 100:
+                    result += current
+                    current = 0
+
+                lastscale = False
+                lastunit = False
+                if word in scales:
+                    lastscale = True
+                elif word in units:
+                    lastunit = True
+
+    if onnumber:
+        curstring += repr(result + current)
+
+    # remove all whitespaces
+    curstring = curstring.replace(" ", "")
+
+    return curstring
+
+
+def preprocess_entities(entities):
+    processed_entities = entities
+    # replace point with decimals
+    if 'point' in entities:
+        processed_entities = processed_entities.replace('point', '.')
+    if 'number' in entities:
+        processed_entities = processed_entities.replace('number ', '#')
+    if '-' in entities:
+        processed_entities = processed_entities.replace('-', '')
+    if '(' in entities:
+        processed_entities = processed_entities.replace('(', '')
+    if ')' in entities:
+        processed_entities = processed_entities.replace(')', '')
+
+    ''''implement homophones for numbers in measurements and steps'''
+    if 'to' in entities:
+        processed_entities = processed_entities.replace('to', '2')
+    if 'too' in entities:
+        processed_entities = processed_entities.replace('too', '2')
+    if 'tree' in entities:
+        processed_entities = processed_entities.replace('tree', '3')
+    if 'for' in entities:
+        processed_entities = processed_entities.replace('for', '4')
+
+    return processed_entities
+
+
 def extract_data(processed_question, params, user_information: UserInformation, context):
     """ Extract the features from the processed question, with a correcting factor """
     number_of_features = {}
@@ -108,8 +259,18 @@ def extract_data(processed_question, params, user_information: UserInformation, 
             else:
                 number_of_features[param["type"]] = 1
     # Try to extract the required number of parameters
+    entities = get_entities(processed_question, user_information.daphne_version)
+
+    # iterate over entities objects to get the entity that matches the feature
     for type, num in number_of_features.items():
-        extracted_raw_data[type] = extract_function[type](processed_question, num, user_information)
+        if entities:
+            for entity_name, entity_value in entities.items():
+                if entity_name == type:
+                    # process the entities
+                    entity_value = preprocess_entities(entity_value)
+                    if 'NUMBER' in entity_name:
+                        entity_value = convert_string_to_number(entity_value)
+                    extracted_raw_data[type] = extract_function[type](entity_value, num, user_information)
     # For each parameter check if it's needed and apply postprocessing;
     for param in params:
         extracted_param = None

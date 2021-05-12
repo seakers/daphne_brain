@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "component", "type": "component", "options": "", "from_context": false, "mandatory": true }
+    { "name": "COMPONENT", "type": "COMPONENT", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the image for a certain component",
+  "objective": "provide the image for a certain component",
   "function":
   {
-    "run_template": "dialogue_functions.get_component_images(data['component'])",
+    "run_template": "dialogue_functions.get_component_images(data['COMPONENT'])",
     "results": [
       {
         "result_type": "single",
@@ -27,7 +27,7 @@
     {
       "type": "text",
       "from": "single",
-      "template": "See the image for <a href=\"javascript:window.open(window.location.href+'src/images/${component}');\">${component}</a>."
+      "template": "See the image for <a href=\"javascript:window.open(window.location.href+'src/images/${component}');\">${COMPONENT}</a>."
     }
   ]
 }

@@ -257,12 +257,10 @@ def get_current_step_from_context(all_steps_from_procedure, current_step_pointer
 def get_component_images(component):
     component_list = retrieve_all_components()
     for item in component_list:
-        stripped = item.replace(".png", "")
-        spaced = stripped.replace("_", " ")
-        if spaced == component:
-            component = item
-            break
-    return component
+        if item == component:
+            unspaced = item.replace(" ", "_")
+            unstripped = unspaced + ".png"
+    return unstripped
 
 
 def get_step_from_procedure(step_number, procedure, context, new_dialogue_contexts):

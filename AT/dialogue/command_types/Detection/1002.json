@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
+    { "name": "MEASUREMENT", "type": "MEASUREMENT", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Check the status of a certain measurement",
+  "objective": "check the status of a certain measurement",
   "function":
   {
-    "run_template": "dialogue_functions.check_measurement_status(data['measurement'], context)",
+    "run_template": "dialogue_functions.check_measurement_status(data['MEASUREMENT'], context)",
     "results": [
       {
         "result_type": "list",

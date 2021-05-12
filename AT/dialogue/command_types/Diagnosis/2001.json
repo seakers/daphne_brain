@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
+    { "name": "ANOMALY", "type": "ANOMALY", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the symptoms of a certain anomaly",
+  "objective": "provide the symptoms of a certain anomaly",
   "function":
   {
-    "run_template": "dialogue_functions.get_anomaly_symptoms(data['anomaly'])",
+    "run_template": "dialogue_functions.get_anomaly_symptoms(data['ANOMALY'])",
     "results": [
       {
         "result_type": "list",
@@ -21,7 +21,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The effects of the ${anomaly} anomaly are:",
+      "begin": "The effects of the ${ANOMALY} anomaly are:",
       "repeat": "${measurement} exceeds the ${relationship}.",
       "end": "."
     }
@@ -29,7 +29,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The effects of the ${anomaly} anomaly are:",
+      "begin": "The effects of the ${ANOMALY} anomaly are:",
       "item_template": "${measurement} exceeds the ${relationship}."
     }
   ]

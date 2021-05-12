@@ -2,12 +2,12 @@
   "type": "run_function",
   "params":
   [
-    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
+    { "name": "ANOMALY", "type": "ANOMALY", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Provide the procedures for a certain anomaly",
+  "objective": "provide the procedures for a certain anomaly",
   "function":
   {
-    "run_template": "dialogue_functions.get_anomaly_procedure_without_number(data['anomaly'])",
+    "run_template": "dialogue_functions.get_anomaly_procedure_without_number(data['ANOMALY'])",
     "results": [
       {
         "result_type": "list",
@@ -21,7 +21,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The procedures for ${anomaly} anomaly are:",
+      "begin": "The procedures for ${ANOMALY} anomaly are:",
       "repeat": "${procedure_name}",
       "end": "."
     }
@@ -29,7 +29,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The procedures for ${anomaly} anomaly are:",
+      "begin": "The procedures for ${ANOMALY} anomaly are:",
       "item_template": "<a href=\"api/at/recommendation/procedure?${pdf_link}\" target=\"_blank\">${procedure_name}</a>"
     }
   ]

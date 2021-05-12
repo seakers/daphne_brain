@@ -34,7 +34,6 @@ ACTIVE_MODULES = ['AT']
 
 EDL_PATH = '/Users/ssantini/Desktop/'
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -90,7 +89,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'daphne_brain.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
@@ -104,7 +102,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
@@ -133,12 +130,10 @@ CORS_ORIGIN_WHITELIST = (
 
 CORS_ALLOW_CREDENTIALS = True
 
-
 CSRF_TRUSTED_ORIGINS = (
     'http://daphne.engr.tamu.edu',
     'http://localhost:8080'
 )
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
@@ -152,7 +147,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
@@ -170,7 +164,7 @@ CHANNEL_LAYERS = {
 }
 
 # ASGI_APPLICATION should be set to your outermost router
-ASGI_APPLICATION = 'daphne_brain.routing.application'
+ASGI_APPLICATION = 'daphne_brain.asgi.application'
 
 # Databases for Daphne
 ALCHEMY_DATABASE = {
@@ -200,7 +194,6 @@ ECLSS_DATABASE = {
     'database': 'eclss'
 }
 
-
 # Session configuration
 # SESSION_ENGINE = "merge_session.merge_db"
 
@@ -209,7 +202,6 @@ ECLSS_DATABASE = {
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = 'Daphne Admin <daphne@selva-research.com>'
-
 
 # Logging
 
@@ -282,3 +274,5 @@ LOGGING = {
         },
     },
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
