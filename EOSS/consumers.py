@@ -45,13 +45,36 @@ class EOSSConsumer(DaphneConsumer):
                 })
         elif content.get('msg_type') == 'connect_services':
             self.connect_services(user_info)
+        elif content.get('msg_type') == 'connect_vassar':
+            self.connect_vassar(user_info, skip_check=True)
+        elif content.get('msg_type') == 'connect_ga':
+            self.connect_ga(user_info, skip_check=True)
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             # Only ping vassar and GA if logged in
             if user_info.user is not None:
                 vassar_client = VASSARClient(user_info)
-                vassar_client.send_ping_message()
-            pass
+                container_statuses = vassar_client.send_ping_message()
+                for uuid, still_alive in container_statuses["vassar"].items():
+                    if still_alive:
+                        status = "ready"
+                    else:
+                        status = "missed_ping"
+                    self.send_json({
+                        'type': 'services.vassar_status',
+                        'uuid': uuid,
+                        'status': status
+                    })
+                for uuid, still_alive in container_statuses["ga"].items():
+                    if still_alive:
+                        status = "ready"
+                    else:
+                        status = "missed_ping"
+                    self.send_json({
+                        'type': 'services.ga_status',
+                        'uuid': uuid,
+                        'status': status
+                    })
         # elif content.get('msg_type') == 'mycroft':
         #     self.send_json({
         #         'type': 'mycroft.message',
@@ -96,7 +119,7 @@ class EOSSConsumer(DaphneConsumer):
         if vassar_success:
             self.connect_ga(user_info)
 
-    def connect_vassar(self, user_info: UserInformation):
+    def connect_vassar(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
 
         max_retries_vassar_ack = 5
@@ -106,13 +129,22 @@ class EOSSConsumer(DaphneConsumer):
         # Obtain queue urls from environment and ensure they exist
         request_queue_url = os.environ["VASSAR_REQUEST_URL"]
         response_queue_url = os.environ["VASSAR_RESPONSE_URL"]
-        dead_letter_url, dead_letter_arn = vassar_client.create_dead_queue("dead-letter")
-        vassar_client.create_queue(request_queue_url.split("/")[-1], dead_letter_arn)
-        vassar_client.create_queue(response_queue_url.split("/")[-1], dead_letter_arn)
+        if not vassar_client.queue_exists_by_name("dead-letter"):
+            dead_letter_url, dead_letter_arn = vassar_client.create_dead_queue("dead-letter")
+        else:
+            dead_letter_url = vassar_client.get_queue_url("dead-letter")
+            dead_letter_arn = vassar_client.get_queue_arn(dead_letter_url)
+        if not vassar_client.queue_exists(request_queue_url):
+            vassar_client.create_queue(request_queue_url.split("/")[-1], dead_letter_arn)
+        if not vassar_client.queue_exists(response_queue_url):
+            vassar_client.create_queue(response_queue_url.split("/")[-1], dead_letter_arn)
 
         # Check if there is an existing VASSAR connection
-        if user_info.eosscontext.vassar_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.vassar_request_queue_url):
-            vassar_status = vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
+        if not skip_check:
+            if user_info.eosscontext.vassar_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.vassar_request_queue_url):
+                vassar_status = vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
+            else:
+                vassar_status = "waiting_for_user"
         else:
             vassar_status = "waiting_for_user"
 
@@ -181,7 +213,7 @@ class EOSSConsumer(DaphneConsumer):
         print("Final VASSAR status", vassar_status)
         return vassar_connection_success
 
-    def connect_ga(self, user_info: UserInformation):
+    def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
 
         max_retries_ga_ack = 5
@@ -189,13 +221,22 @@ class EOSSConsumer(DaphneConsumer):
         # Obtain queue urls from environment and ensure they exist
         ga_request_queue_url = os.environ["GA_REQUEST_URL"]
         ga_response_queue_url = os.environ["GA_RESPONSE_URL"]
-        dead_letter_url, dead_letter_arn = vassar_client.create_dead_queue("dead-letter")
-        vassar_client.create_queue(ga_request_queue_url.split("/")[-1], dead_letter_arn)
-        vassar_client.create_queue(ga_response_queue_url.split("/")[-1], dead_letter_arn)
+        if not vassar_client.queue_exists_by_name("dead-letter"):
+            dead_letter_url, dead_letter_arn = vassar_client.create_dead_queue("dead-letter")
+        else:
+            dead_letter_url = vassar_client.get_queue_url("dead-letter")
+            dead_letter_arn = vassar_client.get_queue_arn(dead_letter_url)
+        if not vassar_client.queue_exists(ga_request_queue_url):
+            vassar_client.create_queue(ga_request_queue_url.split("/")[-1], dead_letter_arn)
+        if not vassar_client.queue_exists(ga_response_queue_url):
+            vassar_client.create_queue(ga_response_queue_url.split("/")[-1], dead_letter_arn)
 
         # Check if there is an existing GA connection
-        if user_info.eosscontext.ga_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.ga_request_queue_url):
-            ga_status = vassar_client.check_status(user_info.eosscontext.ga_request_queue_url, user_info.eosscontext.ga_response_queue_url)
+        if not skip_check:
+            if user_info.eosscontext.ga_request_queue_url is not None and vassar_client.queue_exists(user_info.eosscontext.ga_request_queue_url):
+                ga_status = vassar_client.check_status(user_info.eosscontext.ga_request_queue_url, user_info.eosscontext.ga_response_queue_url)
+            else:
+                ga_status = "waiting_for_user"
         else:
             ga_status = "waiting_for_user"
 

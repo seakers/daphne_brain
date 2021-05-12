@@ -1,22 +1,13 @@
 import logging
 import threading
-import os
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import json
-import pika
-import time
 
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from EOSS.aws.utils import get_boto3_client
 
-from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.api import VASSARClient
-from EOSS.vassar.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from auth_API.helpers import get_or_create_user_information
-from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back, \
-    generate_background_search_message
 from EOSS.data.design_helpers import add_design
 
 # Get an instance of a logger
@@ -28,119 +19,55 @@ class StartGA(APIView):
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
-                # Start connection with VASSAR
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                port = user_info.eosscontext.vassar_port
-                client = VASSARClient(port, user_info=user_info)
-                client.start_connection()
 
-                # problem = request.data['problem']
-                problem = 'SMAP'
+                # Check for read-only datasets before starting
+                client = VASSARClient(user_information=user_info)
+                if client.check_dataset_read_only():
+                    return Response({
+                        "error": "Dataset is read only"
+                    })
 
-                # Restart archs queue before starting the GA again
-                Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
-                user_info.eosscontext.last_arch_id = user_info.eosscontext.design_set.count()
-                user_info.eosscontext.save()
+                # Stop GA in container if it was runnning
+                client.stop_ga()
+                # Start GA in container
+                client.start_ga()
 
-                # Convert the architecture list and wait for threads to be available (ask for stop again just in case)
-                thrift_list = []
-                inputs_unique_set = set()
-
-                if problem in assignation_problems:
-                    for arch in user_info.eosscontext.design_set.all():
-                        thrift_list.append(
-                            BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                        hashed_input = hash(tuple(json.loads(arch.inputs)))
-                        inputs_unique_set.add(hashed_input)
-                elif problem in partition_problems:
-                    for arch in user_info.eosscontext.design_set.all():
-                        thrift_list.append(
-                            DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                        hashed_input = hash(tuple(json.loads(arch.inputs)))
-                        inputs_unique_set.add(hashed_input)
-                else:
-                    raise ValueError('Unrecognized problem type: {0}'.format(problem))
-
-                if user_info.eosscontext.ga_id is not None:
-                    client.stop_ga(user_info.eosscontext.ga_id)
-                # ga_id = client.start_ga(problem, request.user.username, thrift_list)
-                ga_id = client.start_ga()
-                user_info.eosscontext.ga_id = ga_id
-                user_info.eosscontext.save()
-
-                # End the connection before return statement
-                client.end_connection()
-
-                # Start listening for redis inputs to share through websockets
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
-                channel = connection.channel()
-
-                print("---> Queue:", str(ga_id + '_gabrain'))
-
-                channel.queue_declare(queue=ga_id + '_gabrain')
-
-                def callback(ch, method, properties, body):
+                # Start listening for AWS SQS inputs
+                def aws_consumer():
                     thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                    message = json.loads(body)
-                    if message['type'] == 'new_arch':
-                        print('Processing some new archs!')
-                        nonlocal inputs_unique_set
-                        # Archs are added one by one
-                        new_archs = [message['data']]
-                        send_back = []
-                        # Add archs to the context data before sending back to user
-                        for arch in new_archs:
-                            hashed_input = hash(tuple(arch['inputs']))
-                            if hashed_input not in inputs_unique_set:
-                                full_arch = {
-                                    'inputs': arch['inputs'],
-                                    'outputs': arch['outputs']
-                                }
-                                if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
-                                    full_arch = add_design(full_arch, request.session, request.user, False)
+                    ga_response_queue_url = thread_user_info.eosscontext.ga_response_queue_url
+                    sqs_client = get_boto3_client('sqs')
+                    is_done = False
+
+                    while not is_done:
+                        response = sqs_client.receive_message(QueueUrl=ga_response_queue_url, MaxNumberOfMessages=3, WaitTimeSeconds=5, MessageAttributeNames=["All"])
+                        if "Messages" in response:
+                            for message in response["Messages"]:
+                                if message["MessageAttributes"]["msgType"]["StringValue"] == "gaStarted":
+                                    #TODO: Add a new field to eosscontext on GA thread status
+                                    # channel_layer = get_channel_layer()
+                                    # async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                    #                                 {
+                                    #                                     'type': 'ga.started'
+                                    #                                 })
+                                    print("GA Started!")
+                                    self.sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                elif message["MessageAttributes"]["msgType"]["StringValue"] == "gaEnded":
+                                    #TODO: Add a new field to eosscontext on GA thread status
+                                    self.sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    is_done = True
+                                    print('Ending the thread!')
+                                elif message["MessageAttributes"]["msgType"]["StringValue"] == "newGaArch":
+                                    print('Processing a new arch!')
+                                    # Keeping up for proactive
+                                    add_design(request.session, request.user)
+                                    self.sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
                                 else:
-                                    full_arch = add_design(full_arch, request.session, request.user, True)
-                                send_back.append(full_arch)
-                                inputs_unique_set.add(hashed_input)
-                                thread_user_info.save()
+                                    # Return message to queue
+                                    self.sqs_client.change_message_visibility(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
 
-                        # Look for channel to send back to user
-                        channel_layer = get_channel_layer()
-
-                        background_queue_qs = Design.objects.filter(
-                            activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
-                        # if background_queue_qs.count() == 10:
-                        ws_message = generate_background_search_message(thread_user_info)
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                            {
-                                                                'type': 'active.message',
-                                                                'message': ws_message
-                                                            })
-                        if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
-                            back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
-                            send_back.extend(back_list)
-                            send_archs_back(channel_layer, thread_user_info.channel_name, send_back)
-                    if message['type'] == 'ga_started':
-                        # Look for channel to send back to user
-                        channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                          {
-                                                              'type': 'ga.started'
-                                                          })
-                    if message['type'] == 'ga_done':
-                        channel_layer = get_channel_layer()
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                          {
-                                                              'type': 'ga.finished'
-                                                          })
-                        print('Ending the thread!')
-                        channel.stop_consuming()
-
-                channel.basic_consume(queue=ga_id + '_gabrain',
-                                      on_message_callback=callback,
-                                      auto_ack=True)
-
-                thread = threading.Thread(target=channel.start_consuming)
+                thread = threading.Thread(target=aws_consumer)
                 thread.start()
 
                 return Response({
@@ -149,7 +76,6 @@ class StartGA(APIView):
 
             except Exception as exc:
                 logger.exception('Exception in starting the GA!')
-                client.end_connection()
                 return Response({
                     "error": "Error starting the GA",
                     "exception": str(exc)

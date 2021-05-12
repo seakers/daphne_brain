@@ -100,6 +100,32 @@ class GraphqlClient:
             arch_id = query_result["data"]["items"]["nodes"][0]["id"]
         return count > 0, arch_id
 
+    def check_dataset_read_only(self, dataset_id):
+        query = f'''
+        query current_dataset($dataset_id: Int!) {{
+            current_dataset: Dataset(where: {{id: {{_eq: $dataset_id}}}}) {{
+                id
+                name
+                user_id
+                Problem {{
+                    id
+                    name
+                }}
+                Group {{
+                    id
+                    name
+                }}
+            }}
+            }}
+        '''
+        variables = {
+            "dataset_id": dataset_id
+        }
+        query_result = self.execute_query(query, variables)
+        current_dataset = query_result["data"]["current_dataset"][0]
+        
+        return current_dataset["user_id"] == None and current_dataset["Group"] == None
+
     def get_orbit_list(self, group_id, problem_id):
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
         query = ' query get_orbit_list { Join__Problem_Orbit(where: {problem_id: {_eq: ' + self.problem_id + '}}){ Orbit { id name } } } '
@@ -327,10 +353,10 @@ class GraphqlClient:
         query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
         return self.execute_query(query)['data']['Dataset'][0]['id']
 
-    def clone_default_dataset(self, origin_dataset_id, user_id):
-        get_default_dataset = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {origin_dataset_id} }} }}) {{ id name problem_id }} Architecture(where: {{dataset_id: {{_eq: {origin_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
-        original_dataset = self.execute_query(get_default_dataset)['data']
-        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "default", problem_id: {original_dataset["Dataset"][0]["problem_id"]}, user_id: {user_id} }}) {{ id }} }}'
+    def clone_dataset(self, src_dataset_id, user_id, dst_dataset_name):
+        get_src_dataset_query = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {src_dataset_id} }} }}) {{ id name problem_id }} Architecture(where: {{dataset_id: {{_eq: {src_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
+        original_dataset = self.execute_query(get_src_dataset_query)['data']
+        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dst_dataset_name}", problem_id: {original_dataset["Dataset"][0]["problem_id"]}, user_id: {user_id} }}) {{ id }} }}'
         new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
         for arch in original_dataset["Architecture"]:
             arch["dataset_id"] = new_dataset_id
@@ -338,6 +364,9 @@ class GraphqlClient:
         clone_data_query = f'mutation insert_new_archs($archs: [Architecture_insert_input!]!) {{ insert_Architecture(objects: $archs) {{ affected_rows returning {{ id }} }} }}'
         self.execute_query(clone_data_query, {"archs": original_dataset["Architecture"]})
         return new_dataset_id
+
+    def clone_default_dataset(self, origin_dataset_id, user_id):
+        return self.clone_dataset(origin_dataset_id, user_id, "default")
 
 
 
