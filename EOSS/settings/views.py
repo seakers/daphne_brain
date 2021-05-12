@@ -4,7 +4,6 @@ from channels.layers import get_channel_layer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from EOSS.explorer.helpers import send_archs_from_queue_to_main_dataset, send_archs_back
 from auth_API.helpers import get_or_create_user_information
 
 
@@ -48,7 +47,6 @@ class ActiveFeedbackSettings(APIView):
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
             return Response({
-                'show_background_search_feedback': user_info.eosscontext.activecontext.show_background_search_feedback,
                 'check_for_diversity': user_info.eosscontext.activecontext.check_for_diversity,
                 'show_arch_suggestions': user_info.eosscontext.activecontext.show_arch_suggestions,
             })
@@ -59,13 +57,6 @@ class ActiveFeedbackSettings(APIView):
 
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        if 'show_background_search_feedback' in request.data:
-            show_background_search_feedback = request.data['show_background_search_feedback'] == 'true'
-            user_info.eosscontext.activecontext.show_background_search_feedback = show_background_search_feedback
-            if show_background_search_feedback:
-                back_list = send_archs_from_queue_to_main_dataset(user_info)
-                channel_layer = get_channel_layer()
-                send_archs_back(channel_layer, user_info.channel_name, back_list)
         if 'check_for_diversity' in request.data:
             check_for_diversity = request.data['check_for_diversity'] == 'true'
             user_info.eosscontext.activecontext.check_for_diversity = check_for_diversity

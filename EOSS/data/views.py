@@ -90,6 +90,50 @@ class ImportData(APIView):
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")
 
+
+class CopyData(APIView):
+    """ Copies a dataset into another dataset
+
+    Request Args:
+        src_dataset_id: Id of source dataset
+        dst_dataset_name: Name of new dataset
+
+    Returns:
+        dst_dataset_id: Id of the new dataset.
+
+    """
+    """
+        Rquest Fields
+        - problem_id
+        - group_id
+        - load_user_files
+
+    """
+    def post(self, request, format=None):
+        if request.user.is_authenticated:
+            try:
+                # Get user_info and problem_id
+                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                src_dataset_id = int(request.data['src_dataset_id'])
+                dst_dataset_name = request.data['dst_dataset_name']
+                problem_id = user_info.eosscontext.problem_id
+
+                # Clone dataset
+                dbClient = GraphqlClient(problem_id=problem_id)
+                dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
+
+                # Return architectures
+                return Response({
+                    "problem_id": problem_id,
+                    "dst_dataset_id": dst_dataset_id
+                })
+            except Exception:
+                raise ValueError("There has been an error when cloning the dataset!")
+        else:
+            return Response({
+                "error": "This is only available to registered users!"
+            })
+
 """ Save current dataset to a new csv file in the user folder
 """
 class SaveData(APIView):

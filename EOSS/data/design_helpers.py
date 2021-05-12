@@ -10,7 +10,7 @@ from daphne_context.models import UserInformation
 design_lock = Lock()
 
 
-def add_design(design, session, user, active: bool):
+def add_design(session, user):
     """
     This function adds a design to the database, updates all related counters and calls related functions if needed.
     Always use this function to add new designs

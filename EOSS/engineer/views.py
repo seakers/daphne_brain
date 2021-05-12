@@ -71,12 +71,21 @@ class EvaluateArchitecture(APIView):
         inputs = request.data['inputs']
         inputs = json.loads(inputs)
 
+        # Make sure the dataset is not read-only
+        is_read_only = client.check_dataset_read_only()
+
+        if is_read_only:
+            return Response({
+                "status": "Dataset is read only",
+                "code": "read_only_dataset"
+            })
+
         # Check if the architecture already exists in DB before adding it again
         is_same, arch_id = client.check_for_existing_arch(inputs)
 
         if not is_same:
             architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url)
-            add_design(architecture, request.session, request.user, False)
+            add_design(request.session, request.user)
             return Response({
                 "status": "Architecture evaluated!",
                 "code": "arch_evaluated"

@@ -23,6 +23,7 @@ import os
 import time
 import boto3
 import random
+import sys
 
 from django.conf import settings
 
@@ -164,6 +165,8 @@ class VASSARClient:
                     else:
                         # Return message to queue
                         self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+            if user_request_queue_url != "" and user_response_queue_url != "":
+                break
         
         return user_request_queue_url, user_response_queue_url, vassar_container_uuid
 
@@ -238,6 +241,8 @@ class VASSARClient:
                     else:
                         # Return message to queue
                         self.sqs_client.change_message_visibility(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+            if user_request_queue_url != "" and user_response_queue_url != "":
+                break
         
         return user_request_queue_url, user_response_queue_url
     
@@ -294,14 +299,18 @@ class VASSARClient:
                         })
         # Try at most 10 times
         current_status = ""
+        current_timestamp = 0
         for i in range(10):
-            response = self.sqs_client.receive_message(QueueUrl=response_queue, MaxNumberOfMessages=3, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+            response = self.sqs_client.receive_message(QueueUrl=response_queue, MaxNumberOfMessages=3, WaitTimeSeconds=1, MessageAttributeNames=["All"], AttributeNames=["SentTimestamp"])
             if "Messages" in response:
                 for message in response["Messages"]:
                     print (message["MessageAttributes"])
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "currentStatus":
                         # 1. Get current status
-                        current_status = message["MessageAttributes"]["current_status"]["StringValue"]
+                        receive_time = int(message["Attributes"]["SentTimestamp"])
+                        if receive_time > current_timestamp:
+                            current_status = message["MessageAttributes"]["current_status"]["StringValue"]
+                            current_timestamp = receive_time
                         # 4. Delete Message from queue
                         self.sqs_client.delete_message(QueueUrl=response_queue, ReceiptHandle=message["ReceiptHandle"])
                     else:
@@ -348,20 +357,40 @@ class VASSARClient:
 
     def queue_exists(self, queue_url):
         list_response = self.sqs_client.list_queues()
-        queue_urls = list_response['QueueUrls']
-        if queue_url in queue_urls:
-            return True
+        if 'QueueUrls' in list_response:
+            queue_urls = list_response['QueueUrls']
+            if queue_url in queue_urls:
+                return True
         return False
+
+    def queue_exists_by_name(self, queue_name):
+        list_response = self.sqs_client.list_queues()
+        if 'QueueUrls' in list_response:
+            queue_names = [url.split("/")[-1] for url in list_response['QueueUrls']]
+            if queue_name in queue_names:
+                return True
+        return False
+
+    def get_queue_url(self, queue_name):
+        response = self.sqs_client.get_queue_url(QueueName=queue_name)
+        return response["QueueUrl"]
+
+    def get_queue_arn(self, queue_url):
+        response = self.sqs_client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=["QueueArn"])
+        return response["Attributes"]["QueueArn"]
 
     def send_ping_message(self):
         vassar_request_url = self.user_information.eosscontext.vassar_request_queue_url
+        vassar_response_url = self.user_information.eosscontext.vassar_response_queue_url
         vassar_information = self.user_information.eosscontext.vassar_information
         ga_request_url = self.user_information.eosscontext.ga_request_queue_url
+        ga_response_url = self.user_information.eosscontext.ga_response_queue_url
         ga_information = self.user_information.eosscontext.ga_information
         print("Ping VASSAR Containers:", vassar_information)
         print("Ping VASSAR Queue:", vassar_request_url)
         print("Ping GA Containers:", ga_information)
         print("Ping GA Queue:", ga_request_url)
+
         if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
             print("Pinging VASSAR Containers")
             for container_uuid, container_info in vassar_information["containers"].items():
@@ -376,6 +405,7 @@ class VASSARClient:
                                         'DataType': 'String'
                                     },
                                 })
+        
         if ga_request_url is not None and self.queue_exists(ga_request_url) and "containers" in ga_information:
             print("Pinging GA Containers")
             for container_uuid, container_info  in ga_information["containers"].items():
@@ -390,6 +420,40 @@ class VASSARClient:
                                         'DataType': 'String'
                                     },
                                 })
+
+        print("Receiving Ping Responses")
+        container_statuses = {"vassar": {}, "ga": {}}
+        if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
+            for container_uuid, container_info in vassar_information["containers"].items():
+                container_statuses["vassar"][container_uuid] = self.receive_ping(container_uuid, vassar_response_url)
+        if ga_request_url is not None and self.queue_exists(ga_request_url) and "containers" in ga_information:
+            for container_uuid, container_info in ga_information["containers"].items():
+                container_statuses["ga"][container_uuid] = self.receive_ping(container_uuid, ga_response_url)
+        return container_statuses
+
+    def receive_ping(self, container_uuid, queue_url):
+        # Try at most 5 times
+        still_alive = False
+        for i in range(5):
+            response = self.sqs_client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=3, WaitTimeSeconds=2, MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    print(message["MessageAttributes"])
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "pingAck":
+                        # 1. Get uuid
+                        received_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
+                        if received_uuid == container_uuid:
+                            # Delete Message from queue
+                            self.sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"])
+                            still_alive = True
+                        else:
+                            self.sqs_client.change_message_visibility(QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+                    else:
+                        # Return message to queue
+                        self.sqs_client.change_message_visibility(QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+            if still_alive:
+                break
+        return still_alive
 
     # working
     def get_orbit_list(self, problem, group_id=1, problem_id=5):
@@ -480,6 +544,10 @@ class VASSARClient:
         eosscontext: EOSSContext = self.user_information.eosscontext
         return self.dbClient.check_for_existing_arch(eosscontext.problem_id, eosscontext.dataset_id, inputs)
 
+    def check_dataset_read_only(self) -> bool:
+        eosscontext: EOSSContext = self.user_information.eosscontext
+        return self.dbClient.check_dataset_read_only(eosscontext.dataset_id)
+
 
     # working
     def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):
@@ -537,70 +605,62 @@ class VASSARClient:
         return new_design
 
     # working
-    def stop_ga(self, ga_queue_name='algorithm_queue'):
-
+    def stop_ga(self):
         # Connect to queue
-        ga_queue_url = self.queue_client.get_or_create_ga_queue()
-
-        self.sqs_client.send_message(
-            QueueUrl=ga_queue_url,
-            MessageBody='boto3',
-            MessageAttributes={
-                'msgType': {
-                    'StringValue': 'stop_ga',
-                    'DataType': 'String'
-                },
-                'ga_id': {
-                    'StringValue': str(self.user_id),
-                    'DataType': 'String'
+        ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
+        if ga_queue_url is not None and self.queue_exists(ga_queue_url):
+            self.sqs_client.send_message(
+                QueueUrl=ga_queue_url,
+                MessageBody='boto3',
+                MessageAttributes={
+                    'msgType': {
+                        'StringValue': 'stop_ga',
+                        'DataType': 'String'
+                    }
                 }
-            }
-        )
+            )
         return 1
 
     # working
-    def start_ga(self, ga_queue_name='algorithm_queue'):
-
-        # Create ga_id
-        ga_id = 'ga-' + str(random.random())
-
-        ga_queue_url = self.queue_client.get_or_create_ga_queue()
-
-        self.sqs_client.send_message(
-            QueueUrl=ga_queue_url,
-            MessageBody='boto3',
-            MessageAttributes={
-                'msgType': {
-                    'StringValue': 'start_ga',
-                    'DataType': 'String'
-                },
-                'maxEvals': {
-                    'StringValue': '3000',
-                    'DataType': 'String'
-                },
-                'crossoverProbability': {
-                    'StringValue': '1',
-                    'DataType': 'String'
-                },
-                'mutationProbability': {
-                    'StringValue': '0.016666',
-                    'DataType': 'String'
-                },
-                'group_id': {
-                    'StringValue': '1',
-                    'DataType': 'String'
-                },
-                'problem_id': {
-                    'StringValue': str(self.problem_id),
-                    'DataType': 'String'
-                },
-                'ga_id': {
-                    'StringValue': ga_id,
-                    'DataType': 'String'
+    def start_ga(self):
+        # Connect to queue
+        ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
+        if ga_queue_url is not None and self.queue_exists(ga_queue_url):
+            eosscontext: EOSSContext = self.user_information.eosscontext
+            self.sqs_client.send_message(
+                QueueUrl=ga_queue_url,
+                MessageBody='boto3',
+                MessageAttributes={
+                    'msgType': {
+                        'StringValue': 'start_ga',
+                        'DataType': 'String'
+                    },
+                    'maxEvals': {
+                        'StringValue': '3000',
+                        'DataType': 'String'
+                    },
+                    'crossoverProbability': {
+                        'StringValue': '1',
+                        'DataType': 'String'
+                    },
+                    'mutationProbability': {
+                        'StringValue': '0.016666',
+                        'DataType': 'String'
+                    },
+                    'group_id': {
+                        'StringValue': str(eosscontext.group_id),
+                        'DataType': 'String'
+                    },
+                    'problem_id': {
+                        'StringValue': str(eosscontext.problem_id),
+                        'DataType': 'String'
+                    },
+                    'dataset_id': {
+                        'StringValue': str(eosscontext.dataset_id),
+                        'DataType': 'String'
+                    }
                 }
-            }
-        )
-        return ga_id
+            )
 
     # working
     def get_instruments_for_objective(self, problem, objective):
