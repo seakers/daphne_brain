@@ -25,11 +25,11 @@ if "AT" in settings.ACTIVE_MODULES:
         # path('api/at/SARIMAX_AD', SARIMAX_AD),
         # path('api/at/adaptiveKNN', adaptiveKNN),
         # path('api/at/iForest', iForest),
-        path('api/at/ws', ATConsumer),
-        path('api/at/experiment', ATExperimentConsumer)
+        path('api/at/ws', ATConsumer.as_asgi()),
+        path('api/at/experiment', ATExperimentConsumer.as_asgi())
     ])
 ws_routes.extend([
-    path('api/experiment', ExperimentConsumer),
+    path('api/experiment', ExperimentConsumer.as_asgi()),
 ])
 
 application = ProtocolTypeRouter({
