@@ -10,7 +10,7 @@ from asgiref.sync import async_to_sync
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from EOSS.data import problem_specific
+from EOSS.data import problem_helpers
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, \
     ContinuousInputArchitecture, AssigningProblemEntities
 from auth_API.helpers import get_or_create_user_information
@@ -786,7 +786,7 @@ class SetProblemParameters(APIView):
             problem = 'SMAP'
             params = json.loads(request.data['params'])
 
-            print("---> SetProblemParameters:", problem, problem_specific.assignation_problems)
+            print("---> SetProblemParameters:", problem, problem_helpers.assignation_problems)
             entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
             self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
 

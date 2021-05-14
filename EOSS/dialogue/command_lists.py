@@ -1,6 +1,8 @@
 from django.conf import settings
 from sqlalchemy.orm import sessionmaker
 
+from EOSS.vassar.api import VASSARClient
+
 if 'EOSS' in settings.ACTIVE_MODULES:
     import EOSS.historian.models as models
     import EOSS.data.problem_specific as problem_specific
@@ -84,46 +86,36 @@ def critic_commands_list(restricted_list=None):
     return commands_list(critic_commands, restricted_list)
 
 
-def orbits_info(problem):
-    return problem_specific.get_orbits_info(problem)
+def orbits_info(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_orbits_info(vassar_client, problem_id)
 
 
-def instruments_info(problem):
-    return problem_specific.get_instruments_info(problem)
+def instruments_info(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_instruments_info(vassar_client, problem_id)
 
 
-def engineer_instrument_list(problem):
-    return [instr["name"] for instr in problem_specific.get_instrument_dataset(problem)]
+def engineer_instrument_list(vassar_client: VASSARClient, problem_id: int):
+    return [instr["name"] for instr in problem_specific.get_instrument_dataset(problem_id)]
 
 
-def engineer_instrument_parameter_list(problem):
-    return problem_specific.get_instruments_sheet(problem)['Attributes-for-object-Instrument']
+def engineer_instrument_parameter_list(vassar_client: VASSARClient, group_id: int):
+    return problem_specific.get_instruments_parameters(vassar_client, group_id)
 
 
-def engineer_measurement_list(problem):
-    return problem_specific.get_param_names(problem)
+def engineer_measurement_list(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_problem_measurements(vassar_client, problem_id)
 
 
-def engineer_stakeholder_list(problem):
-    return problem_specific.get_stakeholders_list(problem)
+def engineer_stakeholder_list(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_stakeholders_list(vassar_client, problem_id)
 
 
-def engineer_objectives_list(vassar_client, problem):
-    vassar_client.start_connection()
-    objectives = vassar_client.get_objective_list(problem)
-    objectives.sort(key=lambda obj: int(obj[3:]))
-    objectives.sort(key=lambda obj: obj[0:2])
-    vassar_client.end_connection()
-    return objectives
+def engineer_objectives_list(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_objectives_list(vassar_client, problem_id)
 
 
-def engineer_subobjectives_list(vassar_client, problem):
-    vassar_client.start_connection()
-    objectives = vassar_client.get_subobjective_list(problem)
-    objectives.sort(key=lambda obj: obj[3:])
-    objectives.sort(key=lambda obj: obj[0:2])
-    vassar_client.end_connection()
-    return objectives
+def engineer_subobjectives_list(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_subobjectives_list(vassar_client, problem_id)
 
 
 def historian_measurements_list():

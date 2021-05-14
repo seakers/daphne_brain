@@ -126,15 +126,15 @@ class GraphqlClient:
         
         return current_dataset["user_id"] == None and current_dataset["Group"] == None
 
-    def get_orbit_list(self, group_id, problem_id):
+    def get_orbit_list(self, problem_id):
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
-        query = ' query get_orbit_list { Join__Problem_Orbit(where: {problem_id: {_eq: ' + self.problem_id + '}}){ Orbit { id name } } } '
+        query = f'query get_orbit_list {{ Join__Problem_Orbit(where: {{problem_id: {{_eq: {problem_id} }}}}) {{ Orbit {{ id name }} }} }}'
         return self.execute_query(query)
 
-    def get_orbits_and_attributes(self):
+    def get_orbits_and_attributes(self, problem_id):
         query = f'''
             query MyQuery {{
-                items: Join__Problem_Orbit(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                items: Join__Problem_Orbit(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                     orbit: Orbit {{
                       name
                       attributes: Join__Orbit_Attributes {{
@@ -156,15 +156,15 @@ class GraphqlClient:
         query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + self.problem_id + '}}) { Instrument { id name } } } '
         return self.execute_query(query)
 
-    def get_instruments_and_attributes(self):
+    def get_instruments_and_attributes(self, problem_id):
         query = f'''
             query MyQuery {{
-                items: Join__Problem_Instrument(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                items: Join__Problem_Instrument(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                     instrument: Instrument {{
                       name
-                      attributes: Join__Instrument_Characteristics(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                      attributes: Join__Instrument_Characteristics(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                         value
-                        Orbit_Attribute {{
+                        Instrument_Attribute {{
                           name
                         }}
                       }}
@@ -175,7 +175,78 @@ class GraphqlClient:
         instrument_info = self.execute_query(query)['data']['items']
         return instrument_info
 
+    def get_instrument_attributes(self, group_id):
+        query = '''
+        query get_instrument_attributes($group_id: Int!) {
+          attributes: Instrument_Attribute(where: {group_id: {_eq: $group_id}}) {
+            id
+            name
+          }
+        }'''
+        variables = {
+            "group_id": group_id
+        }
+        instrument_attributes = self.execute_query(query, variables)['data']['attributes']
+        return instrument_attributes
 
+    def get_problem_measurements(self, problem_id):
+        query = '''
+        query get_problem_measurements($problem_id: Int!) {
+          measurements: Requirement_Rule_Attribute(distinct_on: [measurement_id] where: {problem_id: {_eq: $problem_id}}) {
+            Measurement {
+              name
+            }
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        problem_measurements = self.execute_query(query, variables)['data']['measurements']
+        return problem_measurements
+
+    def get_stakeholders_list(self, problem_id):
+        query = '''
+        query get_stakeholders_list($problem_id: Int!) {
+          stakeholders: Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}}) {
+            id
+            name
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        stakeholders = self.execute_query(query, variables)['data']['stakeholders']
+        return stakeholders
+
+    def get_objectives_list(self, problem_id):
+        query = '''
+        query get_objectives_list($problem_id: Int!) {
+          objectives: Stakeholder_Needs_Objective(where: {problem_id: {_eq: $problem_id}}) {
+            name
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        objectives = self.execute_query(query, variables)['data']['objectives']
+        return objectives
+
+    def get_subobjectives_list(self, problem_id):
+        query = '''
+        query get_subobjectives_list($problem_id: Int!) {
+          subobjectives: Stakeholder_Needs_Subobjective(where: {problem_id: {_eq: $problem_id}}) {
+            name
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        subobjectives = self.execute_query(query, variables)['data']['subobjectives']
+        return subobjectives
 
     def get_objective_list(self, group_id, problem_id):
         group_id = str(group_id)
