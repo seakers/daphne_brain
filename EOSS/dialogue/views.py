@@ -1,7 +1,5 @@
-import json
 from collections import OrderedDict
 
-from django.core import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -90,9 +88,9 @@ class CommandList(APIView):
     """
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        port = user_info.eosscontext.vassar_port
-        vassar_client = VASSARClient(port, user_info=user_info)
-        problem = user_info.eosscontext.problem
+        vassar_client = VASSARClient(user_information=user_info)
+        problem_id = user_info.eosscontext.problem_id
+        group_id = user_info.eosscontext.group_id
         # List of commands for a single subsystem
         command_list = []
         command_list_request = request.data['command_list']
@@ -113,22 +111,22 @@ class CommandList(APIView):
             command_list = command_lists.critic_commands_list(restricted_list)
 
         elif command_list_request == 'orb_info':
-            command_list = command_lists.orbits_info(problem)
+            command_list = command_lists.orbits_info(vassar_client, problem_id)
         elif command_list_request == 'instr_info':
-            command_list = command_lists.instruments_info(problem)
+            command_list = command_lists.instruments_info(vassar_client, problem_id)
 
         elif command_list_request == 'engineer_instruments':
-            command_list = command_lists.engineer_instrument_list(problem)
+            command_list = command_lists.engineer_instrument_list(vassar_client, problem_id)
         elif command_list_request == 'engineer_instrument_parameters':
-            command_list = command_lists.engineer_instrument_parameter_list(problem)
+            command_list = command_lists.engineer_instrument_parameter_list(vassar_client, group_id)
         elif command_list_request == 'engineer_measurements':
-            command_list = command_lists.engineer_measurement_list(problem)
+            command_list = command_lists.engineer_measurement_list(vassar_client, problem_id)
         elif command_list_request == 'engineer_stakeholders':
-            command_list = command_lists.engineer_stakeholder_list(problem)
+            command_list = command_lists.engineer_stakeholder_list(vassar_client, problem_id)
         elif command_list_request == 'engineer_objectives':
-            command_list = command_lists.engineer_objectives_list(vassar_client, problem)
+            command_list = command_lists.engineer_objectives_list(vassar_client, problem_id)
         elif command_list_request == 'engineer_subobjectives':
-            command_list = command_lists.engineer_subobjectives_list(vassar_client, problem)
+            command_list = command_lists.engineer_subobjectives_list(vassar_client, problem_id)
 
         elif command_list_request == 'historian_measurements':
             command_list = command_lists.historian_measurements_list()

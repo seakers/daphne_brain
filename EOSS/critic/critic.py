@@ -10,7 +10,7 @@ import EOSS.historian.models as models
 import EOSS.data.problem_specific as problem_specific
 from EOSS.analyst.helpers import get_feature_unsatisfied, get_feature_satisfied, \
     feature_expression_to_string
-from EOSS.data.problem_specific import assignation_problems, partition_problems
+from EOSS.data.problem_helpers import assignation_problems, partition_problems
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from EOSS.models import EOSSContext
 from EOSS.vassar.api import VASSARClient
@@ -44,8 +44,8 @@ class Critic:
         self.engine = models.db_connect()
         self.session = sessionmaker(bind=self.engine)()
         self.context = context
-        self.instruments_dataset = problem_specific.get_instrument_dataset(context.problem)
-        self.orbits_dataset = problem_specific.get_orbit_dataset(context.problem)
+        self.instruments_dataset = problem_specific.get_instrument_dataset(context.problem_id)
+        self.orbits_dataset = problem_specific.get_orbit_dataset(context.problem_id)
         self.session_key = session_key
 
     def get_missions_from_genome(self, problem_type, genome):

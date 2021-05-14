@@ -1,35 +1,12 @@
-#!/usr/bin/env python
-
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements. See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership. The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License. You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
 import json
 import os
 import time
 import boto3
 import random
-import sys
 
 from django.conf import settings
 
-from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.models import EOSSContext
-from auth_API.helpers import get_or_create_user_information
 
 from EOSS.graphql.api import GraphqlClient
 from EOSS.aws.utils import get_boto3_client
@@ -456,10 +433,9 @@ class VASSARClient:
         return still_alive
 
     # working
-    def get_orbit_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_orbit_list(group_id, self.problem_id)
+    def get_orbit_list(self, problem_id):
+        query = self.dbClient.get_orbit_list(problem_id)
         orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
-        # hardcode = ['LEO-600-polar-NA', 'SSO-600-SSO-DD', 'SSO-600-SSO-AM', 'SSO-800-SSO-DD', 'SSO-800-SSO-AM']
         return orbits
 
     # working

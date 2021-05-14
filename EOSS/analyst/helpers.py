@@ -4,6 +4,7 @@ import sys
 import traceback
 
 from EOSS.data import problem_specific
+from EOSS.models import EOSSContext
 
 logger = logging.getLogger('VASSAR')
 
@@ -154,7 +155,7 @@ def get_feature_unsatisfied(expression, design, context):
         return "&&".join(out)
 
 
-def apply_preset_filter(filter_expression, design, context):
+def apply_preset_filter(filter_expression, design, context: EOSSContext):
     expression = remove_outer_parentheses(filter_expression)
 
     # Preset filter: {presetName[orbits;instruments;numbers]}
@@ -166,8 +167,8 @@ def apply_preset_filter(filter_expression, design, context):
         flip = True
         expression = expression[1:]
 
-    orbit_dataset = problem_specific.get_orbit_dataset(context.problem)
-    instrument_dataset = problem_specific.get_instrument_dataset(context.problem)
+    orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
+    instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
     num_orbits = len(orbit_dataset)
     num_instruments = len(instrument_dataset)
     feature_type = expression.split("[")[0]
