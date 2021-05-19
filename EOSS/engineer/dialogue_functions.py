@@ -1,7 +1,6 @@
-import json
 import logging
+from EOSS.models import EOSSContext
 
-from thrift.Thrift import TException, TApplicationException
 
 from EOSS.vassar.api import VASSARClient
 from EOSS.data import problem_specific
@@ -10,24 +9,24 @@ from daphne_context.models import UserInformation
 logger = logging.getLogger('EOSS.engineer')
 
 
+def find_design_by_id(design_set, design_id):
+    for design in design_set:
+        if design["id"] == design_id:
+            return design
+
+
 def get_architecture_scores(design_id, designs, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        scores = client.get_architecture_score_explanation(context["screen"]["problem"],
-                                                           designs.get(id=design_id))
+    this_design = find_design_by_id(designs, design_id)
+    scores = client.get_architecture_score_explanation(eosscontext.problem_id, this_design)
+    # If arch scores have not been precomputed
+    if scores == []:
+        client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
+        scores = client.get_architecture_score_explanation(eosscontext.problem_id, this_design)
 
-        # End the connection before return statement
-        client.end_connection()
-        return scores
-
-    except Exception:
-        logger.exception('Exception in loading architecture score information')
-        client.end_connection()
-        return None
+    return scores
 
 
 def get_satisfying_data_products(design_id, designs, subobjective, context):
@@ -272,45 +271,41 @@ def get_measurement_requirement_followup(vassar_measurement, instrument_paramete
 
 
 def get_cost_explanation(design_id, designs, context):
-    try:
-        # Start connection with VASSAR
-        port = context["screen"]["vassar_port"]
-        client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
-        client.start_connection()
+    # Start connection with VASSAR
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-        # Get the correct architecture
-        arch = designs.get(id=design_id)
-        problem = context["screen"]["problem"]
+    # Get the correct architecture
+    print(designs[0])
+    this_design = find_design_by_id(designs, design_id)
 
-        cost_explanation = client.get_arch_cost_information(problem, arch)
+    # Get the cost information
+    cost_explanation = client.get_arch_cost_information(eosscontext.problem_id, this_design)
 
-        # End the connection before return statement
-        client.end_connection()
+    # If cost information has not been precomputed
+    if cost_explanation == []:
+        client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
+        cost_explanation = client.get_arch_cost_information(eosscontext.problem_id, this_design)
 
-        def budgets_to_json(explanation):
-            json_list = []
-            for exp in explanation:
-                json_exp = {
-                    'orbit_name': exp.orbit_name,
-                    'payload': exp.payload,
-                    'launch_vehicle': exp.launch_vehicle,
-                    'total_mass': exp.total_mass,
-                    'total_power': exp.total_power,
-                    'total_cost': exp.total_cost,
-                    'mass_budget': exp.mass_budget,
-                    'power_budget': exp.power_budget,
-                    'cost_budget': exp.cost_budget
-                }
-                json_list.append(json_exp)
-            return json_list
+    def budgets_to_json(explanation):
+        json_list = []
+        for exp in explanation:
+            json_exp = {
+                'orbit_name': exp.orbit_name,
+                'payload': exp.payload,
+                'launch_vehicle': exp.launch_vehicle,
+                'total_mass': exp.total_mass,
+                'total_power': exp.total_power,
+                'total_cost': exp.total_cost,
+                'mass_budget': exp.mass_budget,
+                'power_budget': exp.power_budget,
+                'cost_budget': exp.cost_budget
+            }
+            json_list.append(json_exp)
+        return json_list
 
-        json_explanation = budgets_to_json(cost_explanation)
-        for explanation in json_explanation:
-            explanation["subcosts"] = [type + ": $" + str("%.2f" % round(number, 2)) + 'M' for type, number in explanation["cost_budget"].items()]
+    json_explanation = budgets_to_json(cost_explanation)
+    for explanation in json_explanation:
+        explanation["subcosts"] = [type + ": $" + str("%.2f" % round(number, 2)) + 'M' for type, number in explanation["cost_budget"].items()]
 
-        return json_explanation
-
-    except TApplicationException as exc:
-        logger.exception('Exception when retrieving information from the current architecture!')
-        client.end_connection()
-        raise exc
+    return json_explanation

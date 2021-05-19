@@ -14,6 +14,11 @@ from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation
 from dialogue.nn_models import nn_models
 
+from daphne_brain import settings
+if "EOSS" in settings.ACTIVE_MODULES:
+    from EOSS.vassar.api import VASSARClient
+    from EOSS.models import EOSSContext
+
 
 def classify(question, daphne_version, module_name):
     cleaned_question = data_helpers.clean_str(question)
@@ -137,8 +142,13 @@ def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
     data['session_key'] = session.session_key
     if user_information.daphne_version == "EOSS":
-        data['designs'] = user_information.eosscontext.design_set.order_by('id').all()
-        data['problem'] = user_information.eosscontext.problem
+        eoss_context: EOSSContext = user_information.eosscontext
+        vassar_client = VASSARClient(user_information=user_information)
+        data['designs'] = vassar_client.get_dataset_architectures(problem_id=eoss_context.problem_id,
+                                                                  dataset_id=eoss_context.dataset_id)
+        data['group_id'] = eoss_context.group_id
+        data['problem_id'] = eoss_context.problem_id
+        data['dataset_id'] = eoss_context.dataset_id
     if user_information.daphne_version == "EDL":
         pass
     if user_information.daphne_version == "AT":

@@ -180,14 +180,6 @@ def get_instrument_sheet(problem, instrument):
 
 cc_requirements_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Requirement Rules.xls',
                                            sheet_name='Attributes')
-smap_instruments_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/AttributeSet.xls', sheet_name='Instrument')
-def get_instruments_sheet(problem):
-    if problem == "ClimateCentric":
-        return cc_instruments_sheet
-    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
-        return smap_instruments_sheet
-
-cc_instruments_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/AttributeSet.xls', sheet_name='Instrument')
 smap_requirements_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/Requirement Rules.xls', sheet_name='Attributes')
 def get_requirements_sheet(problem):
     if problem == "ClimateCentric":

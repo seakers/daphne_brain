@@ -9,7 +9,7 @@ from EOSS.models import EOSSContext
 logger = logging.getLogger('VASSAR')
 
 
-def base_feature_expression_to_string(feature_expression, is_critique=False, context=None):
+def base_feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None):
     try:
         e = remove_outer_parentheses(feature_expression)
         e = e[1:-1]
@@ -24,8 +24,8 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         instrument_indices = arg_split[1]
         numbers = arg_split[2]
 
-        orbit_dataset = problem_specific.get_orbit_dataset(context.problem)
-        instrument_dataset = problem_specific.get_instrument_dataset(context.problem)
+        orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
+        instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
 
         orbit_names = []
         if orbit_indices:
@@ -85,7 +85,7 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         logger.error(msg)
 
 
-def feature_expression_to_string(feature_expression, is_critique=False, context=None):
+def feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None):
     out = []
     # TODO: Generalize the feature expression parsing.
     # Currently assumes that the feature only contains conjunctions but no disjunction
@@ -107,7 +107,7 @@ def feature_expression_to_string(feature_expression, is_critique=False, context=
     return out
 
 
-def get_feature_satisfied(expression, design, context):
+def get_feature_satisfied(expression, design, context: EOSSContext):
     out = []
 
     if type(expression) is list:
@@ -119,10 +119,11 @@ def get_feature_satisfied(expression, design, context):
     else:
         # TODO: Generalize the feature expression parsing.
         # Currently assumes that the feature only contains conjunctions but no disjunction
-        if '&&' in expression:
-            individual_features = expression.split("&&")
+        _expression = remove_outer_parentheses(expression)
+        if '&&' in _expression:
+            individual_features = _expression.split("&&")
         else:
-            individual_features = [expression]
+            individual_features = [_expression]
 
         for feat in individual_features:
             satisfied = apply_preset_filter(feat, design, context)
@@ -131,7 +132,7 @@ def get_feature_satisfied(expression, design, context):
         return "&&".join(out)
 
 
-def get_feature_unsatisfied(expression, design, context):
+def get_feature_unsatisfied(expression, design, context: EOSSContext):
     out = []
 
     if type(expression) is list:
@@ -143,10 +144,11 @@ def get_feature_unsatisfied(expression, design, context):
     else:
         # TODO: Generalize the feature expression parsing.
         # Currently assumes that the feature only contains conjunctions but no disjunction
-        if '&&' in expression:
-            individual_features = expression.split("&&")
+        _expression = remove_outer_parentheses(expression)
+        if '&&' in _expression:
+            individual_features = _expression.split("&&")
         else:
-            individual_features = [expression]
+            individual_features = [_expression]
 
         for feat in individual_features:
             satisfied = apply_preset_filter(feat, design, context)
@@ -175,7 +177,7 @@ def apply_preset_filter(filter_expression, design, context: EOSSContext):
     arguments = expression.split("[")[1]
     arguments = arguments[:-1]
 
-    inputs = json.loads(design.inputs)
+    inputs = design["inputs"]
 
     arg_split = arguments.split(";")
     orbit = arg_split[0]
