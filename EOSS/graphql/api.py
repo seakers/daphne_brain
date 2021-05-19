@@ -71,7 +71,7 @@ class GraphqlClient:
 
 
     def get_architectures(self, problem_id=6, dataset_id=-1):
-        query = f'query get_architectures {{ Architecture(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
+        query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
         return self.execute_query(query)
 
     def check_for_existing_arch(self, problem_id, dataset_id, input):
@@ -262,7 +262,7 @@ class GraphqlClient:
 
     def get_false_architectures(self, problem_id):
         problem_id = str(problem_id)
-        query = ' query MyQuery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
+        query = ' query MyQuery { Architecture(order_by: {{id: asc}}, where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
         return self.execute_query(query)
 
     def get_instrument_from_objective(self, objective):
@@ -273,8 +273,8 @@ class GraphqlClient:
         query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}, index_id: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
         return self.execute_query(query)
 
-    def get_architecture_score_explanation(self, arch_id):
-        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
+    def get_architecture_score_explanation(self, problem_id, arch_id):
+        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
         return self.execute_query(query)
 
     def get_panel_score_explanation(self, arch_id, panel):
@@ -425,7 +425,7 @@ class GraphqlClient:
         return self.execute_query(query)['data']['Dataset'][0]['id']
 
     def clone_dataset(self, src_dataset_id, user_id, dst_dataset_name):
-        get_src_dataset_query = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {src_dataset_id} }} }}) {{ id name problem_id }} Architecture(where: {{dataset_id: {{_eq: {src_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
+        get_src_dataset_query = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {src_dataset_id} }} }}) {{ id name problem_id }} Architecture(order_by: {{id: asc}}, where: {{dataset_id: {{_eq: {src_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
         original_dataset = self.execute_query(get_src_dataset_query)['data']
         add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dst_dataset_name}", problem_id: {original_dataset["Dataset"][0]["problem_id"]}, user_id: {user_id} }}) {{ id }} }}'
         new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
@@ -460,7 +460,7 @@ class GraphqlClient:
 
     # Return architecture details after vassar evaluates
     def subscribe_to_architecture(self, input, problem_id, dataset_id, timeout=1000):
-        query = f'query subscribe_to_architecture {{ Architecture_aggregate(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ aggregate {{ count }} }} }}'
+        query = f'query subscribe_to_architecture {{ Architecture_aggregate(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}}, eval_status: {{_eq: true }} }})  {{ aggregate {{ count }} }} }}'
 
         # Check for an entry every second
         counter = 0
@@ -471,5 +471,18 @@ class GraphqlClient:
             if counter >= timeout:
                 return False
         
-        query = f'query get_architecture {{ Architecture(where: {{problem_id: {{_eq: {self.problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ id input science cost }} }}'
+        query = f'query get_architecture {{ Architecture(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ id input science cost }} }}'
         return self.execute_query(query)
+
+    def get_architecture(self, arch_id: int):
+        query = f'query get_architecture {{ Architecture(where: {{id: {{_eq: {arch_id} }} }}) {{ id input science cost ga }} }}'
+        return self.execute_query(query)["data"]["Architecture"][0]
+
+    def unevaluate_architecture(self, arch_id: int):
+        query = f'''
+        mutation unevaluate_architecture {{
+            result: update_Architecture(where: {{id: {{_eq: {arch_id} }} }}, _set: {{eval_status: false}}) {{
+                affected_rows
+            }}
+        }}'''
+        return self.execute_query(query)["data"]["result"]["affected_rows"] > 0

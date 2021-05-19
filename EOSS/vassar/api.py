@@ -363,15 +363,10 @@ class VASSARClient:
         ga_request_url = self.user_information.eosscontext.ga_request_queue_url
         ga_response_url = self.user_information.eosscontext.ga_response_queue_url
         ga_information = self.user_information.eosscontext.ga_information
-        print("Ping VASSAR Containers:", vassar_information)
-        print("Ping VASSAR Queue:", vassar_request_url)
-        print("Ping GA Containers:", ga_information)
-        print("Ping GA Queue:", ga_request_url)
 
         if vassar_request_url is not None and self.queue_exists(vassar_request_url) and "containers" in vassar_information:
             print("Pinging VASSAR Containers")
             for container_uuid, container_info in vassar_information["containers"].items():
-                print("     Pinging container ", container_uuid)
                 response = self.sqs_client.send_message(QueueUrl=vassar_request_url, MessageBody='boto3', MessageAttributes={
                                     'msgType': {
                                         'StringValue': 'ping',
@@ -386,7 +381,6 @@ class VASSARClient:
         if ga_request_url is not None and self.queue_exists(ga_request_url) and "containers" in ga_information:
             print("Pinging GA Containers")
             for container_uuid, container_info  in ga_information["containers"].items():
-                print("     Pinging container ", container_uuid)
                 response = self.sqs_client.send_message(QueueUrl=ga_request_url, MessageBody='boto3', MessageAttributes={
                                     'msgType': {
                                         'StringValue': 'ping',
@@ -415,7 +409,6 @@ class VASSARClient:
             response = self.sqs_client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=3, WaitTimeSeconds=2, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
-                    print(message["MessageAttributes"])
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "pingAck":
                         # 1. Get uuid
                         received_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
@@ -457,6 +450,36 @@ class VASSARClient:
         query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
         print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
+
+    def get_dataset_architectures(self, problem_id, dataset_id):
+        query = self.dbClient.get_architectures(problem_id, dataset_id)
+
+        def boolean_string_to_boolean_array(boolean_string):
+            return [b == "1" for b in boolean_string]
+
+        architectures_json = []
+        counter = 0
+        for arch in query['data']['Architecture']:
+            # If the arch needs to be re-evaluated due to a problem definition change, do not add
+            if not arch['eval_status']:
+                continue
+
+            # Arch: inputs / outputs
+            inputs = boolean_string_to_boolean_array(arch['input'])
+            outputs = [float(arch['science']), float(arch['cost'])]
+
+            # Append design object and front-end design object
+            architectures_json.append({'id': counter, 'db_id': arch['id'], 'inputs': inputs, 'outputs': outputs})
+            counter = counter + 1
+        return architectures_json
+
+    def reevaluate_architecture(self, design, eval_queue_url):
+        # Unevaluate architecture
+        self.dbClient.unevaluate_architecture(design["db_id"])
+        # Find arch in database
+        arch_info = self.dbClient.get_architecture(design["db_id"])
+        self.evaluate_architecture(design["inputs"], eval_queue_url, ga=arch_info["ga"], redo=True)
+
 
     # working
     def evaluate_architecture(self, input_str, eval_queue_url, fast=False, ga=False, redo=False):
@@ -554,31 +577,27 @@ class VASSARClient:
         return 0
 
     # working: test  
-    def run_local_search(self, problem, inputs, problem_id=5, eval_queue_name='vassar_queue'):
+    def run_local_search(self, inputs, problem_id=5, eval_queue_url=''):
         designs = []
 
         for x in range(4):
-            new_design = self.random_local_change(inputs)
-            new_design_bool_ary = boolean_string_to_boolean_array(str(new_design))
-            print('---> NEW DESIGN string: ', str(new_design))
-            print('---> NEW DESIGN ary: ', new_design_bool_ary)
-            new_design_result = self.evaluate_architecture('SMAP', new_design_bool_ary, self.problem_id, eval_queue_name, fast=True, ga=True)
+            new_inputs = self.random_local_change(inputs)
+            print('---> NEW DESIGN ary: ', new_inputs)
+            new_design_result = self.evaluate_architecture(new_inputs, eval_queue_url, fast=True, ga=True)
             print('---> RESULT: ', str(new_design_result))
             designs.append(new_design_result)
 
         return designs
 
     # working
-    def random_local_change(self, design):
-        input_list = design.inputs
-        inputs = bool_list_to_string(input_list)
-
-        index = random.randint(0, len(inputs)-1)
-        new_bit = '1'
-        if(inputs[index] == '0'):
-            new_bit = '1'
-        new_design = inputs[:index] + new_bit + inputs[index + 1:]
-        return new_design
+    def random_local_change(self, input_list):
+        index = random.randint(0, len(input_list)-1)
+        new_bit = True
+        if input_list[index] == True:
+            new_bit = False
+        new_input_list = input_list[:]
+        new_input_list[index] = new_bit
+        return new_input_list
 
     # working
     def stop_ga(self):
@@ -655,12 +674,10 @@ class VASSARClient:
         return insts
     
     # working
-    def get_architecture_score_explanation(self, problem, arch):
-        # thrift_arch = self.create_thrift_arch(problem, arch)
-        # return self.client.getArchitectureScoreExplanation(problem, thrift_arch)
+    def get_architecture_score_explanation(self, problem_id, arch):
         print("--> Getting architecture score explanation for arch id:", arch)
-        arch_id = self.dbClient.get_arch_id(arch)
-        query = self.dbClient.get_architecture_score_explanation(arch_id)
+        arch_id = arch["db_id"]
+        query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
         explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['data']['ArchitectureScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
@@ -694,25 +711,28 @@ class VASSARClient:
         return self.dbClient.get_arch_science_information(arch_id)
 
     # working
-    def get_arch_cost_information(self, problem, arch):
-        print("\n\n----> get_arch_cost_information", problem, arch)
-        arch_id = self.dbClient.get_arch_id(arch)
+    def get_arch_cost_information(self, problem_id, arch):
+        print("\n\n----> get_arch_cost_information", problem_id, arch)
+        arch_id = arch["db_id"]
         return self.dbClient.get_arch_cost_information(arch_id)
 
     # working
-    def critique_architecture(self, problem, arch):
-        print("\n\n----> critique_architecture", problem, arch)
-        arch_id = self.dbClient.get_arch_id(arch)
+    def critique_architecture(self, problem_id, arch):
+        print("\n\n----> critique_architecture", problem_id, arch)
+        arch_id = arch['db_id']
         print("---> architecture id", arch_id)
         critique = self.dbClient.get_arch_critique(arch_id)
         if critique == []:
             print("---> Re-evaluating architecture ")
-            self.evaluate_architecture('SMAP', json.loads(arch.inputs), redo=True)
+            queue_url = self.user_information.eosscontext.vassar_request_queue_url
+            self.evaluate_architecture(arch["inputs"], queue_url, redo=True)
             critique = self.dbClient.wait_for_critique(arch_id)
         print("--> FINAL CRITIQUE ", critique)
         return critique
     
-
+    def get_problem_type(self, problem_id):
+        # TODO: When generic problems are added, improve this
+        return "assignation"
 
 
     # rewrite
@@ -730,10 +750,3 @@ class VASSARClient:
     def is_ga_running(self, ga_id):
         print("\n\n----> is_ga_running", ga_id)
         return self.client.isGARunning(ga_id)
-
-    # rewrite
-    def ping(self):
-        self.client.ping()
-        print('ping()')
-        
-

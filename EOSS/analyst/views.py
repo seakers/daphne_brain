@@ -783,12 +783,12 @@ class SetProblemParameters(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
 
-            problem = 'SMAP'
+            problem_id = int(request.data['problem_id'])
             params = json.loads(request.data['params'])
 
-            print("---> SetProblemParameters:", problem, problem_helpers.assignation_problems)
+            print("---> SetProblemParameters:", problem_id)
             entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
-            self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
+            self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem_id, entities)
 
             # if problem in problem_specific.assignation_problems:
             #     entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
@@ -799,12 +799,13 @@ class SetProblemParameters(APIView):
 
             # End the connection before return statement
             self.DataMiningClient.endConnection() 
-            return Response()
-        
+            response_text = "Parameters set correctly"
         except Exception as detail:
             logger.exception('Exception in SetProblemParameters: ' + str(detail))
+            response_text = "Error in setting the parameters"
+        finally:
             self.DataMiningClient.endConnection()
-            return Response('')
+            return Response(response_text)
 
 
 class SetProblemGeneralizedConcepts(APIView):

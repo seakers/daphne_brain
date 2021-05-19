@@ -8,10 +8,10 @@ logger = logging.getLogger('EOSS.critic')
 
 def general_call(design_id, designs, session_key, context):
     eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
-    critic = Critic(eosscontext, session_key)
+    critic = Critic(eosscontext.user_information, session_key)
 
     try:
-        this_design = designs.get(id=design_id)
+        this_design = find_design_by_id(designs, design_id)
 
         if this_design is None:
             raise ValueError("Design id {} not found in the database".format(design_id))
@@ -36,6 +36,12 @@ def general_call(design_id, designs, session_key, context):
     except Exception:
         logger.exception('Exception in criticizing the architecture')
         return None
+
+
+def find_design_by_id(design_set, design_id):
+    for design in design_set:
+        if design["id"] == design_id:
+            return design
 
 
 def specific_call(design_id, agent, designs, session_key, context):
