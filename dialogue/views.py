@@ -171,3 +171,20 @@ class ClearHistory(APIView):
         return Response({
             "result": "Dialogue deleted successfully"
         })
+
+
+class MixedInitiative(APIView):
+    """
+      Initiate diagnosis by daphne
+      """
+    daphne_version = "AT"
+
+    def post(self, request, format=None):
+        # Define context and see if it was already defined for this session
+        user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+
+        user_info.dialoguehistory_set.all().delete()
+
+        return Response({
+            "result": "Dialogue deleted successfully"
+        })

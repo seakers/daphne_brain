@@ -1146,6 +1146,7 @@ class ATConsumer(DaphneConsumer):
                                                                           args=(
                                                                               global_obj.hub_to_simulator_at_queues[0],
                                                                               global_obj.simulator_at_to_hub_queues[0],
+                                                                              user_info
                                                                           ))
                     global_obj.simulator_at_threads[0].start()
 
@@ -1400,6 +1401,7 @@ class ATConsumer(DaphneConsumer):
                                                                                       0],
                                                                                   global_obj.simulator_at_to_hub_queues[
                                                                                       0],
+                                                                                  user_info
                                                                               ))
                         global_obj.simulator_at_threads[0].start()
 
@@ -1538,6 +1540,7 @@ class ATConsumer(DaphneConsumer):
                                                                           args=(
                                                                               global_obj.hub_to_simulator_at_queues[1],
                                                                               global_obj.simulator_at_to_hub_queues[1],
+                                                                              user_info
                                                                           ))
                     global_obj.simulator_at_threads[1].start()
 
@@ -1792,6 +1795,7 @@ class ATConsumer(DaphneConsumer):
                                                                                       1],
                                                                                   global_obj.simulator_at_to_hub_queues[
                                                                                       1],
+                                                                                  user_info
                                                                               ))
                         global_obj.simulator_at_threads[1].start()
 
@@ -1930,6 +1934,7 @@ class ATConsumer(DaphneConsumer):
                                                                           args=(
                                                                               global_obj.hub_to_simulator_at_queues[2],
                                                                               global_obj.simulator_at_to_hub_queues[2],
+                                                                              user_info
                                                                           ))
                     global_obj.simulator_at_threads[2].start()
 
@@ -2184,6 +2189,7 @@ class ATConsumer(DaphneConsumer):
                                                                                       2],
                                                                                   global_obj.simulator_at_to_hub_queues[
                                                                                       2],
+                                                                                  user_info
                                                                               ))
                         global_obj.simulator_at_threads[2].start()
 
@@ -2322,6 +2328,7 @@ class ATConsumer(DaphneConsumer):
                                                                           args=(
                                                                               global_obj.hub_to_simulator_at_queues[3],
                                                                               global_obj.simulator_at_to_hub_queues[3],
+                                                                              user_info
                                                                           ))
                     global_obj.simulator_at_threads[3].start()
 
@@ -2576,6 +2583,7 @@ class ATConsumer(DaphneConsumer):
                                                                                       3],
                                                                                   global_obj.simulator_at_to_hub_queues[
                                                                                       3],
+                                                                                  user_info
                                                                               ))
                         global_obj.simulator_at_threads[3].start()
 
@@ -2733,7 +2741,8 @@ class ATConsumer(DaphneConsumer):
                 global_obj.sEclss_at_thread = threading.Thread(target=anomaly_treatment_routine,
                                                                name="Real AT Thread",
                                                                args=(global_obj.hub_to_sEclss_at_queue,
-                                                                     global_obj.sEclss_at_to_hub_queue,))
+                                                                     global_obj.sEclss_at_to_hub_queue,
+                                                                     user_info))
                 global_obj.sEclss_at_thread.start()
 
                 # Check that the anomaly detection thread is working then check sEclss thread
@@ -2956,7 +2965,8 @@ class ATConsumer(DaphneConsumer):
                     global_obj.sEclss_at_thread = threading.Thread(target=anomaly_treatment_routine,
                                                                    name="Real AT Thread",
                                                                    args=(global_obj.hub_to_sEclss_at_queue,
-                                                                         global_obj.sEclss_at_to_hub_queue,))
+                                                                         global_obj.sEclss_at_to_hub_queue,
+                                                                         user_info))
                     global_obj.sEclss_at_thread.start()
 
                     # Check that the anomaly detection thread is working then check sEclss thread
@@ -3077,7 +3087,8 @@ class ATConsumer(DaphneConsumer):
                 global_obj.hera_at_thread = threading.Thread(target=anomaly_treatment_routine,
                                                              name="Hera AT Thread",
                                                              args=(global_obj.hub_to_hera_at_queue,
-                                                                   global_obj.hera_at_to_hub_queue,))
+                                                                   global_obj.hera_at_to_hub_queue,
+                                                                   user_info))
                 global_obj.hera_at_thread.start()
 
                 # Check that the anomaly detection thread is working then check sEclss thread
@@ -3300,7 +3311,8 @@ class ATConsumer(DaphneConsumer):
                     global_obj.hera_at_thread = threading.Thread(target=anomaly_treatment_routine,
                                                                  name="Hera AT Thread",
                                                                  args=(global_obj.hub_to_hera_at_queue,
-                                                                       global_obj.hera_at_to_hub_queue,))
+                                                                       global_obj.hera_at_to_hub_queue,
+                                                                       user_info))
                     global_obj.hera_at_thread.start()
 
                     # Check that the anomaly detection thread is working then check sEclss thread

@@ -24,6 +24,9 @@ class ATContext(models.Model):
     # Thread deployment status bool
     are_at_threads_deployed = models.BooleanField(default=False)
 
+    # Thread deployment status bool
+    seen_tutorial = models.BooleanField(default=False)
+
 
 class ATContextSerializer(serializers.ModelSerializer):
     class Meta:
