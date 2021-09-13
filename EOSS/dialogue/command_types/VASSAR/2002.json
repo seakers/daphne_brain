@@ -30,7 +30,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The following are some of the justifications for not satisfying subobjective ${subobjective} of ${design_id}. You can get more information in the <a target=\"_blank\" href=\"details.html?archID=${design_id}&problem=${problem}\">details page</a>.",
+      "begin": "The following are some of the justifications for not satisfying subobjective ${subobjective} of ${design_id}. You can get more information in the <a target=\"_blank\" href=\"details.html?archID=${design_id}&problem_id=${problem_id}\">details page</a>.",
       "item_template": "${data_product}: ${justification}"
     }
   ]

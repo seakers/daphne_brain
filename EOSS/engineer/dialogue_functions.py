@@ -1,4 +1,5 @@
 import logging
+import functools
 from EOSS.models import EOSSContext
 
 
@@ -30,56 +31,43 @@ def get_architecture_scores(design_id, designs, context):
 
 
 def get_satisfying_data_products(design_id, designs, subobjective, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        subobjective_explanation = client.get_subscore_details(context["screen"]["problem"],
-                                                               designs.get(id=design_id),
-                                                               subobjective.upper())
-        satisfying_data_products = [subobjective_explanation.taken_by[i] for i, x in enumerate(subobjective_explanation.scores) if x == 1.0][:5]
-        # End the connection before return statement
-        client.end_connection()
-        return satisfying_data_products
-
-    except Exception:
-        logger.exception('Exception in checking satisfying data products for a subobjective')
-        client.end_connection()
-        return None
+    this_design = find_design_by_id(designs, design_id)
+    subobjective_explanations = client.get_subobjective_score_explanation(this_design, subobjective.upper())
+    if subobjective_explanations == []:
+        client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
+        subobjective_explanations = client.get_subobjective_score_explanation(this_design, subobjective.upper())
+    
+    satisfying_data_products = [explanation["taken_by"] for explanation in subobjective_explanations if explanation["score"] == 1.0][:5] # Take at most 5
+    return satisfying_data_products
 
 
 def get_unsatisfied_justifications(design_id, designs, subobjective, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        subobjective_explanation = client.get_subscore_details(context["screen"]["problem"],
-                                                               designs.get(id=design_id),
-                                                               subobjective.upper())
-        if max(subobjective_explanation.scores) < 1.:
-            unsatisfied_data_products = [subobjective_explanation.taken_by[i] for i, x in enumerate(subobjective_explanation.scores) if x < 1.0]
-            unsatisfied_justifications = [subobjective_explanation.justifications[i] for i, x in enumerate(subobjective_explanation.scores) if x < 1.0]
-            # Only show the first 4 explanations
-            explanations = [
-                {
-                    "data_product": dp,
-                    "explanations": ", ".join(unsatisfied_justifications[i])
-                } for i, dp in enumerate(unsatisfied_data_products)
-            ][:5]
-        else:
-            unsatisfied_justifications = []
-        # End the connection before return statement
-        client.end_connection()
-        return explanations
+    this_design = find_design_by_id(designs, design_id)
+    subobjective_explanations = client.get_subobjective_score_explanation(this_design, subobjective.upper())
+    if subobjective_explanations == []:
+        client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
+        subobjective_explanations = client.get_subobjective_score_explanation(this_design, subobjective.upper())
 
-    except TException:
-        logger.exception('Exception in justifying not satisfying a subobjective')
-        client.end_connection()
-        return None
+    if max([explanation["score"] for explanation in subobjective_explanations]) < 1.:
+        unsatisfied_data_products = [explanation["taken_by"] for explanation in subobjective_explanations if explanation["score"] < 1.0]
+        unsatisfied_justifications = [explanation["justifications"] for explanation in subobjective_explanations if explanation["score"] < 1.0]
+        # Only show the first 4 explanations
+        explanations = [
+            {
+                "data_product": dp,
+                "explanations": ", ".join(unsatisfied_justifications[i])
+            } for i, dp in enumerate(unsatisfied_data_products)
+        ][:5]
+    else:
+        unsatisfied_justifications = []
+
+    return explanations
 
 
 def get_panel_scores(design_id, designs, panel, context):

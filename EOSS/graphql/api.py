@@ -284,6 +284,17 @@ class GraphqlClient:
     def get_objective_score_explanation(self, arch_id, objective):
         query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
         return self.execute_query(query)
+
+    def get_subobjective_score_explanation(self, arch_id, subobjective):
+        query = '''query MyQuery($arch_id: Int!, $subobjective_name: String!) {
+            SubobjectiveScoreExplanation(where: { architecture_id: {_eq: $arch_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective_name}}}) {
+                measurement_attribute_values
+                score
+                taken_by
+                justifications
+            }
+        }'''
+        return self.execute_query(query, {"arch_id": arch_id, "subobjective_name": subobjective})
     
     def get_arch_science_information(self, arch_id):
         query = f''' query myquery {{
