@@ -698,9 +698,26 @@ class VASSARClient:
         # thrift_arch = self.create_thrift_arch(problem, arch)
         # return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
         print("--> Getting objective score explanation for arch id:", arch)
-        arch_id = self.dbClient.get_arch_id(arch)
+        arch_id = arch["db_id"]
         query = self.dbClient.get_objective_score_explanation(arch_id, objective)
         explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['data']['ObjectiveScoreExplanation'] ]
+        print("--> explanations", explanations)
+        return explanations
+
+    # working 
+    def get_subobjective_score_explanation(self, arch, subobjective):
+        # thrift_arch = self.create_thrift_arch(problem, arch)
+        # return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
+        print("--> Getting subobjective score explanation for arch id:", arch)
+        arch_id = arch["db_id"]
+        query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
+        explanations = [ {
+            "attribute_values": expla["measurement_attribute_values"],
+            "score": expla["score"],
+            "taken_by": expla["taken_by"],
+            "justifications": expla["justifications"],
+        } 
+        for expla in query['data']['SubobjectiveScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
