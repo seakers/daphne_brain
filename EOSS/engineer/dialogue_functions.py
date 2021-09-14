@@ -180,7 +180,7 @@ def get_instrument_parameter(vassar_instrument, instrument_parameter, context, n
 
     eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
     client = VASSARClient(user_information=eosscontext.user_information)
-    client.get_instr
+    client.get_instr()
     capabilities_sheet = problem_specific.get_capabilities_sheet(context["screen"]["problem"])
     capability_found = False
     capability_value = None
