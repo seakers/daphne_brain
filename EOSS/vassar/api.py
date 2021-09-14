@@ -733,6 +733,11 @@ class VASSARClient:
         arch_id = arch["db_id"]
         return self.dbClient.get_arch_cost_information(arch_id)
 
+    def get_parameter_value_for_instrument(self, parameter, instrument):
+        print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
+        return self.dbClient.get_parameter_value_for_instrument(parameter, instrument)
+
+
     # working
     def critique_architecture(self, problem_id, arch):
         print("\n\n----> critique_architecture", problem_id, arch)
