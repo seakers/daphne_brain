@@ -189,6 +189,20 @@ class GraphqlClient:
         instrument_attributes = self.execute_query(query, variables)['data']['attributes']
         return instrument_attributes
 
+    def get_instrument_attribute_value(self, group_id, instrument, attribute):
+        query = '''
+        query get_instrument_attributes($group_id: Int!) {
+          attributes: Instrument_Attribute(where: {group_id: {_eq: $group_id}}) {
+            id
+            name
+          }
+        }'''
+        variables = {
+            "group_id": group_id
+        }
+        instrument_attributes = self.execute_query(query, variables)['data']['attributes']
+        return instrument_attributes
+
     def get_problem_measurements(self, problem_id):
         query = '''
         query get_problem_measurements($problem_id: Int!) {
