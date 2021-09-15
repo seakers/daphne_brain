@@ -683,23 +683,19 @@ class VASSARClient:
         return explanations
 
     # working
-    def get_panel_score_explanation(self, problem, arch, panel):
-        # thrift_arch = self.create_thrift_arch(problem, arch)
-        # return self.client.getPanelScoreExplanation(problem, thrift_arch, panel)
-        print("--> get_panel_score_explanation:", arch.id, arch.inputs, arch.outputs, panel)
-        arch_id = self.dbClient.get_arch_id(arch)
-        query = self.dbClient.get_panel_score_explanation(arch_id, panel)
+    def get_panel_score_explanation(self, problem_id, arch, panel):
+        print("--> get_panel_score_explanation:", arch["id"], arch["inputs"], arch["outputs"], panel)
+        arch_id = arch["db_id"]
+        query = self.dbClient.get_panel_score_explanation(problem_id, arch_id, panel)
         explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['data']['PanelScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
     # working 
-    def get_objective_score_explanation(self, problem, arch, objective):
-        # thrift_arch = self.create_thrift_arch(problem, arch)
-        # return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
+    def get_objective_score_explanation(self, problem_id, arch, objective):
         print("--> Getting objective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_objective_score_explanation(arch_id, objective)
+        query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
         explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['data']['ObjectiveScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations

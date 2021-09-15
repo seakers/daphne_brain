@@ -71,58 +71,31 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
 
 
 def get_panel_scores(design_id, designs, panel, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        stakeholders_to_excel = {
-            "atmospheric": "ATM",
-            "oceanic": "OCE",
-            "terrestrial": "TER",
-            "weather": "WEA",
-            "climate": "CLI",
-            "land and ecosystems": "ECO",
-            "water": "WAT",
-            "human health": "HEA"
-        }
+    this_design = find_design_by_id(designs, design_id)
+    panel_scores = client.get_panel_score_explanation(eosscontext.problem_id, this_design, panel)
+    # If arch scores have not been precomputed
+    if panel_scores == []:
+        client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
+        panel_scores = client.get_panel_score_explanation(eosscontext.problem_id, this_design, panel)
 
-        panel_code = stakeholders_to_excel[panel.lower()]
-        panel_scores = client.get_panel_score_explanation(context["screen"]["problem"],
-                                                          designs.get(id=design_id),
-                                                          panel_code)
-
-        # End the connection before return statement
-        client.end_connection()
-        print("--> returning panel scores")
-        return panel_scores
-
-    except TException:
-        logger.exception('Exception in loading panel score information')
-        client.end_connection()
-        return None
+    return panel_scores
 
 
 def get_objective_scores(design_id, designs, objective, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        objective_scores = client.get_objective_score_explanation(context["screen"]["problem"],
-                                                                  designs.get(id=design_id),
-                                                                  objective.upper())
+    this_design = find_design_by_id(designs, design_id)
+    objective_scores = client.get_objective_score_explanation(eosscontext.problem_id, this_design, objective.upper())
+    # If arch scores have not been precomputed
+    if objective_scores == []:
+        client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
+        objective_scores = client.get_objective_score_explanation(eosscontext.problem_id, this_design, objective.upper())
 
-        # End the connection before return statement
-        client.end_connection()
-        return objective_scores
-
-    except TException:
-        logger.exception('Exception in loading objective score information')
-        client.end_connection()
-        return None
+    return objective_scores
 
 
 def get_instruments_for_objective(objective, context):
