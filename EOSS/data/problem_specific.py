@@ -1,4 +1,3 @@
-import pandas
 from string import ascii_uppercase
 
 from EOSS.graphql.api import GraphqlClient
@@ -154,35 +153,3 @@ def get_objectives_list(vassar_client: VASSARClient, problem_id: int):
 def get_subobjectives_list(vassar_client: VASSARClient, problem_id: int):
     subobjectives = vassar_client.dbClient.get_subobjectives_list(problem_id)
     return [subobjective["name"] for subobjective in subobjectives]
-
-
-
-
-
-# TODO: Remove all usage of these functions from code
-cc_capabilities_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Instrument Capability Definition.xls',
-                                       sheet_name='CHARACTERISTICS')
-smap_capabilities_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name='CHARACTERISTICS')
-def get_capabilities_sheet(problem):
-    if problem == "ClimateCentric":
-        return cc_capabilities_sheet
-    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
-        return smap_capabilities_sheet
-
-cc_instrument_sheet = lambda vassar_instrument: pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Instrument Capability Definition.xls',
-                                        sheet_name=vassar_instrument, header=None)
-smap_instrument_sheet = lambda vassar_instrument: pandas.read_excel('EOSS/data/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name=vassar_instrument, header=None)
-def get_instrument_sheet(problem, instrument):
-    if problem == "ClimateCentric":
-        return cc_instrument_sheet(instrument)
-    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
-        return smap_instrument_sheet(instrument)
-
-cc_requirements_sheet = pandas.read_excel('EOSS/data/problems/ClimateCentric/xls/Requirement Rules.xls',
-                                           sheet_name='Attributes')
-smap_requirements_sheet = pandas.read_excel('EOSS/data/problems/SMAP/xls/Requirement Rules.xls', sheet_name='Attributes')
-def get_requirements_sheet(problem):
-    if problem == "ClimateCentric":
-        return cc_requirements_sheet
-    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
-        return smap_requirements_sheet

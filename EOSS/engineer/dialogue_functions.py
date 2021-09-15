@@ -180,85 +180,68 @@ def get_instrument_parameter(vassar_instrument, instrument_parameter, context, n
 
     eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
     client = VASSARClient(user_information=eosscontext.user_information)
-    client.get_instr()
-    capabilities_sheet = problem_specific.get_capabilities_sheet(context["screen"]["problem"])
-    capability_found = False
-    capability_value = None
-    for row in capabilities_sheet.itertuples(name='Instrument'):
-        if row[1].split()[1] == vassar_instrument:
-            for i in range(2, len(row)):
-                if row[i].split()[0] == instrument_parameter:
-                    capability_found = True
-                    capability_value = row[i].split()[1]
+    attribute_value = client.get_parameter_value_for_instrument(eosscontext.problem_id, instrument_parameter, vassar_instrument)
+    capability_found = len(attribute_value) > 0
 
     if capability_found:
-        return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + capability_value
+        return 'The ' + instrument_parameter + ' for ' + vassar_instrument + ' is ' + attribute_value[0]["value"]
     else:
-        instrument_sheet = problem_specific.get_instrument_sheet(context["screen"]["problem"], vassar_instrument)
-
-        for i in range(2, len(instrument_sheet.columns)):
-            if instrument_sheet[i][0].split()[0] == instrument_parameter:
-                capability_found = True
+        measurement_attribute_value = client.get_capability_value_for_instrument(eosscontext.group_id, instrument_parameter, vassar_instrument)
+        capability_found = len(measurement_attribute_value) > 0
+        
         if capability_found:
             return 'I have found different values for this parameter depending on the measurement. ' \
                    'Please tell me for which measurement you want this parameter: ' \
-                   + ', '.join([measurement[11:-1] for measurement in instrument_sheet[1]])
+                   + ', '.join([capability["Measurement"]["name"] for capability in measurement_attribute_value])
         else:
             return 'I have not found any information for this measurement.'
 
 
 def get_instrument_parameter_followup(vassar_instrument, instrument_parameter, instrument_measurement, context):
-    instrument_sheet = problem_specific.get_instrument_sheet(context["screen"]["problem"], vassar_instrument)
-
-    capability_value = None
-    for row in instrument_sheet.itertuples(index=True, name='Measurement'):
-        if row[2][11:-1] == instrument_measurement:
-            for i in range(3, len(row)):
-                if row[i].split()[0] == instrument_parameter:
-                    capability_value = row[i].split()[1]
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
+    measurement_attribute_value = client.get_capability_value_for_instrument(eosscontext.group_id, instrument_parameter, vassar_instrument, instrument_measurement)
 
     return 'The ' + instrument_parameter + ' for instrument ' + vassar_instrument + ' and measurement ' + \
-           instrument_measurement + ' is ' + capability_value
+           instrument_measurement + ' is ' + measurement_attribute_value[0]["value"]
 
 
 def get_measurement_requirement(vassar_measurement, instrument_parameter, context, new_dialogue_contexts):
     new_dialogue_contexts["engineer_context"].vassar_measurement = vassar_measurement
     new_dialogue_contexts["engineer_context"].instrument_parameter = instrument_parameter
 
-    requirements_sheet = problem_specific.get_requirements_sheet(context["screen"]["problem"])
-    requirement_found = False
-    requirements = []
-    for row in requirements_sheet.itertuples(name='Requirement'):
-        if row[2][1:-1] == vassar_measurement and row[3] == instrument_parameter:
-            requirement_found = True
-            requirements.append({"subobjective": row[1], "type": row[4], "thresholds": row[5]})
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
+    requirements = client.get_measurement_requirements(eosscontext.problem_id, vassar_measurement, instrument_parameter)
+
+    requirement_found = len(requirements) > 0
 
     if requirement_found:
         if len(requirements) > 1:
-            return 'I have found different values for this requirement depending on the stakeholder. ' \
-                   'Please tell me for which stakeholder you want this requirement: ' \
-                   + ', '.join([requirement["subobjective"] for requirement in requirements])
+            return 'I have found different values for this requirement depending on the subobjective. ' \
+                   'Please tell me for which subobjective you want this requirement: ' \
+                   + ', '.join([requirement["Stakeholder_Needs_Subobjective"]["name"] for requirement in requirements])
         else:
-            threshold = requirements[0]["thresholds"][1:-1].split(',')[-1]
-            target_value = requirements[0]["thresholds"][1:-1].split(',')[0]
+            threshold = requirements[0]["thresholds"][-1]
+            target_value = requirements[0]["thresholds"][0]
+            subobjective = requirements[0]["Stakeholder_Needs_Subobjective"]["name"]
             return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' (subobjective ' + \
-                   requirements[0]["subobjective"] + ') is ' + threshold + ' and its target value is ' + \
+                   subobjective + ') is ' + threshold + ' and its target value is ' + \
                    target_value + '.'
     else:
         return 'I have not found any information for this requirement.'
 
 
 def get_measurement_requirement_followup(vassar_measurement, instrument_parameter, subobjective, context):
-    requirements_sheet = problem_specific.get_requirements_sheet(context["screen"]["problem"])
-    requirement = None
-    for row in requirements_sheet.itertuples(name='Requirement'):
-        if row[1] == subobjective.upper() and row[2][1:-1] == vassar_measurement and row[3] == instrument_parameter:
-            requirement = {"subobjective": row[1], "type": row[4], "thresholds": row[5]}
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
+    requirements = client.get_measurement_requirements(eosscontext.problem_id, vassar_measurement, instrument_parameter, subobjective.upper())
 
-    threshold = requirement["thresholds"][1:-1].split(',')[-1]
-    target_value = requirement["thresholds"][1:-1].split(',')[0]
+    threshold = requirements[0]["thresholds"][-1]
+    target_value = requirements[0]["thresholds"][0]
+    subobjective = requirements[0]["Stakeholder_Needs_Subobjective"]["name"]
     return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' for subobjective ' \
-           + requirement["subobjective"] + ' is ' + threshold + ' and its target value is ' + target_value + '.'
+           + subobjective + ' is ' + threshold + ' and its target value is ' + target_value + '.'
 
 
 def get_cost_explanation(design_id, designs, context):

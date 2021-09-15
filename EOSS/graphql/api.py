@@ -189,19 +189,126 @@ class GraphqlClient:
         instrument_attributes = self.execute_query(query, variables)['data']['attributes']
         return instrument_attributes
 
-    def get_instrument_attribute_value(self, group_id, instrument, attribute):
+    def get_instrument_attribute_value(self, problem_id, instrument, attribute):
         query = '''
-        query get_instrument_attributes($group_id: Int!) {
-          attributes: Instrument_Attribute(where: {group_id: {_eq: $group_id}}) {
-            id
-            name
-          }
+        query get_instrument_attribute_value($instrument_name: String = "", $attribute_name: String = "", $problem_id: Int = 10) {
+            attribute_value: Join__Instrument_Characteristic(where: { Instrument_Attribute: {name: {_eq: $attribute_name}}, Instrument: {name: {_eq: $instrument_name}}, problem_id: {_eq: $problem_id}}) {
+                value
+                Instrument {
+                    name
+                }
+                problem_id
+                Instrument_Attribute {
+                    name
+                }
+            }
         }'''
         variables = {
-            "group_id": group_id
+            "problem_id": problem_id,
+            "instrument_name": instrument,
+            "attribute_name": attribute
         }
-        instrument_attributes = self.execute_query(query, variables)['data']['attributes']
-        return instrument_attributes
+        attribute_value = self.execute_query(query, variables)['data']['attribute_value']
+        return attribute_value
+
+    def get_instrument_capability_values(self, group_id, instrument, attribute, measurement=None):
+        query_wo_measurement = '''
+        query get_instrument_capability_value($instrument_name: String = "", $attribute_name: String = "", $group_id: Int = 10) {
+            capability_value: Join__Instrument_Capability(where: {Measurement_Attribute: {name: {_eq: $attribute_name}}, Instrument: {name: {_eq: $instrument_name}}, group_id: {_eq: $group_id}}) {
+                value
+                Instrument {
+                    name
+                }
+                group_id
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+            }
+        }'''
+
+        query_measurement = '''
+        query get_instrument_capability_value($instrument_name: String = "", $attribute_name: String = "", $group_id: Int = 10, $measurement_name: String = "") {
+            capability_value: Join__Instrument_Capability(where: {Measurement_Attribute: {name: {_eq: $attribute_name}}, Instrument: {name: {_eq: $instrument_name}}, group_id: {_eq: $group_id}, Measurement: {name: {_eq: $measurement_name}}}) {
+                value
+                Instrument {
+                    name
+                }
+                group_id
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+            }
+        }'''
+
+        variables = {
+            "group_id": group_id,
+            "instrument_name": instrument,
+            "attribute_name": attribute
+        }
+
+        if measurement is None:
+            capability_value = self.execute_query(query_wo_measurement, variables)['data']['capability_value']
+        else:
+            variables["measurement_name"] = measurement
+            capability_value = self.execute_query(query_measurement, variables)['data']['capability_value']
+        
+        return capability_value
+
+    def get_measurement_requirements(self, problem_id, measurement_name, measurement_attribute, subobjective=None):
+        query_no_stakeholder = '''
+        query MyQuery($measurement_name: String = "", $measurement_attribute: String = "", $problem_id: Int = 10) {
+            requirements: Requirement_Rule_Attribute(where: {Measurement: {name: {_eq: $measurement_name}}, Measurement_Attribute: {name: {_eq: $measurement_attribute}}, problem_id: {_eq: $problem_id}}) {
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+                scores
+                thresholds
+                Stakeholder_Needs_Subobjective {
+                    name
+                }
+            }
+        }'''
+
+        query_stakeholder = '''
+        query MyQuery($measurement_name: String = "", $measurement_attribute: String = "", $problem_id: Int = 10, $subobjective: String = "") {
+            requirements: Requirement_Rule_Attribute(where: {Measurement: {name: {_eq: $measurement_name}}, Measurement_Attribute: {name: {_eq: $measurement_attribute}}, problem_id: {_eq: $problem_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective}}}) {
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+                scores
+                thresholds
+                Stakeholder_Needs_Subobjective {
+                    name
+                }
+            }
+        }
+        '''
+
+        variables = {
+            "problem_id": problem_id,
+            "measurement_name": measurement_name,
+            "measurement_attribute": measurement_attribute
+        }
+
+        if subobjective is None:
+            capability_value = self.execute_query(query_no_stakeholder, variables)['data']['requirements']
+        else:
+            variables["subobjective"] = subobjective
+            capability_value = self.execute_query(query_stakeholder, variables)['data']['requirements']
+        
+        return capability_value
 
     def get_problem_measurements(self, problem_id):
         query = '''

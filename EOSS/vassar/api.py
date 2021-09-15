@@ -733,9 +733,20 @@ class VASSARClient:
         arch_id = arch["db_id"]
         return self.dbClient.get_arch_cost_information(arch_id)
 
-    def get_parameter_value_for_instrument(self, parameter, instrument):
+    # working
+    def get_parameter_value_for_instrument(self, problem_id, parameter, instrument):
         print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
-        return self.dbClient.get_parameter_value_for_instrument(parameter, instrument)
+        return self.dbClient.get_instrument_attribute_value(problem_id, instrument, parameter)
+
+    # working
+    def get_capability_value_for_instrument(self, group_id, parameter, instrument, measurement=None):
+        print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
+        return self.dbClient.get_instrument_capability_values(group_id, instrument, parameter, measurement)
+
+    # working
+    def get_measurement_requirements(self, problem_id, measurement_name, measurement_attribute, subobjective=None):
+        print("\n\n----> get_measurement_requirements", measurement_name, measurement_attribute, subobjective)
+        return self.dbClient.get_measurement_requirements(problem_id, measurement_name, measurement_attribute, subobjective)
 
 
     # working
