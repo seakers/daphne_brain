@@ -3,22 +3,22 @@
     "ppN2 (L1)": {
       "pace_in": 10,
       "pace_out": -10,
-      "max_increment": 70
+      "max_increment": 50
     },
     "ppN2 (L2)": {
       "pace_in": 10,
       "pace_out": -10,
-      "max_increment": 70
+      "max_increment": 50
     },
-    "Level Cabin Pressure (L1)": {
-      "pace_in": 1,
-      "pace_out": -1,
-      "max_increment": 3
+    "Pressure (L1)": {
+      "pace_in": 0.1,
+      "pace_out": -0.1,
+      "max_increment": 0.8
     },
-    "Level Cabin Pressure (L2)": {
-      "pace_in": 1,
-      "pace_out": -1,
-      "max_increment": 3
+    "Pressure (L2)": {
+      "pace_in": 0.1,
+      "pace_out": -0.1,
+      "max_increment": 0.8
     }
   }
 }
