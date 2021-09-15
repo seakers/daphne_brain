@@ -658,18 +658,18 @@ class VASSARClient:
             )
 
     # working
-    def get_instruments_for_objective(self, problem, objective):
+    def get_instruments_for_objective(self, problem_id, objective):
         # return self.client.getInstrumentsForObjective(problem, objective)
         print("--> Getting instrument for objective:", objective)
-        query = self.dbClient.get_instrument_from_objective(objective)
+        query = self.dbClient.get_instrument_from_objective(problem_id, objective)
         insts = [inst['name'] for inst in query['data']['Instrument']]
         return insts
 
     # working
-    def get_instruments_for_panel(self, problem, panel):
+    def get_instruments_for_panel(self, problem_id, panel):
         # return self.client.getInstrumentsForPanel(problem, panel)
         print("--> Getting instrument for panel:", panel)
-        query = self.dbClient.get_instrument_from_panel(panel)
+        query = self.dbClient.get_instrument_from_panel(problem_id, panel)
         insts = [inst['name'] for inst in query['data']['Instrument']]
         return insts
     
@@ -702,8 +702,6 @@ class VASSARClient:
 
     # working 
     def get_subobjective_score_explanation(self, arch, subobjective):
-        # thrift_arch = self.create_thrift_arch(problem, arch)
-        # return self.client.getObjectiveScoreExplanation(problem, thrift_arch, objective)
         print("--> Getting subobjective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
         query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
@@ -718,16 +716,16 @@ class VASSARClient:
         return explanations
 
     # working
-    def get_arch_science_information(self, problem, arch):
-        print("\n\n----> get_arch_science_information", problem, arch)
-        arch_id = self.dbClient.get_arch_id(arch)
-        return self.dbClient.get_arch_science_information(arch_id)
+    def get_arch_science_information(self, problem_id, arch):
+        print("\n\n----> get_arch_science_information", problem_id, arch)
+        arch_id = arch["db_id"]
+        return self.dbClient.get_arch_science_information(problem_id, arch_id)
 
     # working
     def get_arch_cost_information(self, problem_id, arch):
         print("\n\n----> get_arch_cost_information", problem_id, arch)
         arch_id = arch["db_id"]
-        return self.dbClient.get_arch_cost_information(arch_id)
+        return self.dbClient.get_arch_cost_information(problem_id, arch_id)
 
     # working
     def get_parameter_value_for_instrument(self, problem_id, parameter, instrument):
@@ -743,6 +741,9 @@ class VASSARClient:
     def get_measurement_requirements(self, problem_id, measurement_name, measurement_attribute, subobjective=None):
         print("\n\n----> get_measurement_requirements", measurement_name, measurement_attribute, subobjective)
         return self.dbClient.get_measurement_requirements(problem_id, measurement_name, measurement_attribute, subobjective)
+
+    def get_measurement_for_subobjective(self, problem_id, subobjective):
+        return self.dbClient.get_measurement_for_subobjective(problem_id, subobjective)
 
 
     # working
@@ -762,18 +763,6 @@ class VASSARClient:
     def get_problem_type(self, problem_id):
         # TODO: When generic problems are added, improve this
         return "assignation"
-
-
-    # rewrite
-    def get_subscore_details(self, problem, arch, subobjective):
-        print("\n\n----> get_subscore_details", problem, arch, subobjective)
-        thrift_arch = self.create_thrift_arch(problem, arch)
-        if problem in assignation_problems:
-            return self.client.getSubscoreDetailsBinaryInput(problem, thrift_arch, subobjective)
-        elif problem in partition_problems:
-            return self.client.getSubscoreDetailsDiscreteInput(problem, thrift_arch, subobjective)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
 
     # rewrite
     def is_ga_running(self, ga_id):
