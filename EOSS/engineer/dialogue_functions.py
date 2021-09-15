@@ -99,52 +99,19 @@ def get_objective_scores(design_id, designs, objective, context):
 
 
 def get_instruments_for_objective(objective, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
-
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        instruments = client.get_instruments_for_objective(context["screen"]["problem"], objective.upper())
-
-        # End the connection before return statement
-        client.end_connection()
-        return instruments
-
-    except TException:
-        logger.exception('Exception in loading related instruments to an objective')
-        client.end_connection()
-        return None
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
+    
+    instruments = client.get_instruments_for_objective(eosscontext.problem_id, objective.upper())
+    return instruments
 
 
 def get_instruments_for_stakeholder(stakeholder, context):
-    port = context["screen"]["vassar_port"]
-    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
+    eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
+    client = VASSARClient(user_information=eosscontext.user_information)
 
-    try:
-        # Start connection with VASSAR
-        client.start_connection()
-        stakeholders_to_excel = {
-            "atmospheric": "ATM",
-            "oceanic": "OCE",
-            "terrestrial": "TER",
-            "weather": "WEA",
-            "climate": "CLI",
-            "land and ecosystems": "ECO",
-            "water": "WAT",
-            "human health": "HEA"
-        }
-        panel_code = stakeholders_to_excel[stakeholder.lower()]
-        stakeholder_instruments = client.get_instruments_for_panel(context["screen"]["problem"], panel_code)
-
-        # End the connection before return statement
-        client.end_connection()
-        return stakeholder_instruments
-
-    except TException:
-        logger.exception('Exception in loading related instruments to a panel')
-        client.end_connection()
-        return None
+    stakeholder_instruments = client.get_instruments_for_panel(eosscontext.problem_id, stakeholder)
+    return stakeholder_instruments
 
 
 def get_instrument_parameter(vassar_instrument, instrument_parameter, context, new_dialogue_contexts):

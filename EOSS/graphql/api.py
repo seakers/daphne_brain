@@ -326,6 +326,23 @@ class GraphqlClient:
         problem_measurements = self.execute_query(query, variables)['data']['measurements']
         return problem_measurements
 
+    def get_measurement_for_subobjective(self, problem_id, subobjective):
+        query = '''
+        query MyQuery($subobjective: String = "", $problem_id: Int = 1) {
+            measurements: Requirement_Rule_Attribute(distinct_on: [measurement_id], where: {Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective}}, problem_id: {_eq: $problem_id}}) {
+                Measurement {
+                    name
+                }
+            }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id,
+            "subobjective": subobjective
+        }
+        problem_measurements = self.execute_query(query, variables)['data']['measurements'][0]['Measurement']['name']
+        return problem_measurements
+
     def get_stakeholders_list(self, problem_id):
         query = '''
         query get_stakeholders_list($problem_id: Int!) {
@@ -386,12 +403,12 @@ class GraphqlClient:
         query = ' query MyQuery { Architecture(order_by: {{id: asc}}, where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
         return self.execute_query(query)
 
-    def get_instrument_from_objective(self, objective):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
+    def get_instrument_from_objective(self, problem_id, objective):
+        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
         return self.execute_query(query)
 
-    def get_instrument_from_panel(self, panel):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}, index_id: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
+    def get_instrument_from_panel(self, problem_id, panel):
+        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
         return self.execute_query(query)
 
     def get_architecture_score_explanation(self, problem_id, arch_id):
@@ -421,15 +438,16 @@ class GraphqlClient:
         }'''
         return self.execute_query(query, {"arch_id": arch_id, "subobjective_name": subobjective})
     
-    def get_arch_science_information(self, arch_id):
-        query = f''' query myquery {{
-            panels: Stakeholder_Needs_Panel(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+    def get_arch_science_information(self, problem_id, arch_id):
+        query = f'''
+        query myquery {{
+            panels: Stakeholder_Needs_Panel(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                 code: index_id
                 description
                 name
                 weight
                 satisfaction: ArchitectureScoreExplanations(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
-                value: satisfaction
+                    value: satisfaction
                 }}
                 objectives: Stakeholder_Needs_Objectives {{
                     code: name
@@ -448,7 +466,6 @@ class GraphqlClient:
                     }}
                 }}
             }}
-
         }}
         '''
         panels = self.execute_query(query)['data']['panels']
@@ -464,7 +481,7 @@ class GraphqlClient:
         print("\n---> all stakeholder info", information)
         return information
 
-    def get_arch_cost_information(self, arch_id):
+    def get_arch_cost_information(self, problem_id, arch_id):
         query = f''' query myquery {{
             cost_info: ArchitectureCostInformation(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
                 mission_name
@@ -491,7 +508,6 @@ class GraphqlClient:
         cost_info = self.execute_query(query)['data']['cost_info']
         information = []
         for info in cost_info:
-
             # payload
             payloads = []
             for inst in info['payloads']:
