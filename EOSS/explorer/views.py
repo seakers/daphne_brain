@@ -1,5 +1,7 @@
 import logging
 import threading
+from asgiref.sync import sync_to_async
+from channels.layers import get_channel_layer
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -37,35 +39,41 @@ class StartGA(APIView):
                 def aws_consumer():
                     thread_user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
                     ga_response_queue_url = thread_user_info.eosscontext.ga_response_queue_url
+                    print("--> GA Thread: Queue URL is", ga_response_queue_url)
                     sqs_client = get_boto3_client('sqs')
                     is_done = False
+                    channel_layer = get_channel_layer()
+        
 
                     while not is_done:
                         response = sqs_client.receive_message(QueueUrl=ga_response_queue_url, MaxNumberOfMessages=3, WaitTimeSeconds=5, MessageAttributeNames=["All"])
                         if "Messages" in response:
+                            # Send message back to frontend that GA is working fine
+                            sync_to_async(channel_layer.send)(thread_user_info.channel_name,
+                                                                {
+                                                                    'type': 'services.ga_status',
+                                                                    'status': 'ready'
+                                                                })
                             for message in response["Messages"]:
                                 if message["MessageAttributes"]["msgType"]["StringValue"] == "gaStarted":
                                     #TODO: Add a new field to eosscontext on GA thread status
-                                    # channel_layer = get_channel_layer()
-                                    # async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                    #                                 {
-                                    #                                     'type': 'ga.started'
-                                    #                                 })
-                                    print("GA Started!")
-                                    self.sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    print("--> GA Thread: GA Started!")
+                                    sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "gaEnded":
                                     #TODO: Add a new field to eosscontext on GA thread status
-                                    self.sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
                                     is_done = True
-                                    print('Ending the thread!')
+                                    print('--> GA Thread: Ending the thread!')
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "newGaArch":
-                                    print('Processing a new arch!')
+                                    print('--> GA Thread: Processing a new arch!')
                                     # Keeping up for proactive
                                     add_design(request.session, request.user)
-                                    self.sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    sqs_client.delete_message(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"])
                                 else:
                                     # Return message to queue
-                                    self.sqs_client.change_message_visibility(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+                                    sqs_client.change_message_visibility(QueueUrl=ga_response_queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+
+                    print('--> GA Thread: Thread done!')
 
                 thread = threading.Thread(target=aws_consumer)
                 thread.start()
