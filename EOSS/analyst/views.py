@@ -10,6 +10,7 @@ from asgiref.sync import async_to_sync
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from EOSS.graphql.api import GraphqlClient
 from EOSS.data import problem_helpers
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, \
     ContinuousInputArchitecture, AssigningProblemEntities
@@ -20,7 +21,6 @@ from EOSS.data_mining.api import DataMiningClient
 logger = logging.getLogger('EOSS.analyst')
 
 
-# Create your views here.
 class GetDrivingFeatures(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -93,7 +93,7 @@ class GetDrivingFeatures(APIView):
             self.DataMiningClient.endConnection()
             return Response('')
 
-
+# AWS Adapted: in progress
 class GetDrivingFeaturesEpsilonMOEA(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -101,13 +101,18 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
     def post(self, request, format=None):
         try:
+            problem_id = int(request.data['problem_id'])
+            dataset_id = request.data['dataset_id']
+            db_client = GraphqlClient(problem_id=int(problem_id))
+
+
             # Start data mining client
             self.DataMiningClient.startConnection()
 
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             session_key = request.session.session_key
             
-            # Get selected arch id's
+            # Get selected arch db_id's
             selected = request.data['selected']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
@@ -117,7 +122,7 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             for s in selected_arch_ids:
                 behavioral.append(int(s))
 
-            # Get non-selected arch id's
+            # Get non-selected arch db_id's
             non_selected = request.data['non_selected']
             non_selected = non_selected[1:-1]
             non_selected_arch_ids = non_selected.split(',')
@@ -127,20 +132,24 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
                 non_behavioral.append(int(s))
 
             # Load architecture data from the session info
-            dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
-            print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset))
+            # old: dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+            dataset = db_client.get_architectures(problem_id, dataset_id)
+            print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset['data']['Architecture']))
 
             problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
-            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset['data']['Architecture'])))
         
             _archs = []
             if input_type == "binary":
-                for arch in dataset:
-                    _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, behavioral, non_behavioral, _archs)
+                for arch in dataset['data']['Architecture']:
+                    arch_id = arch['id']
+                    arch_inputs = boolean_string_2_boolean_array(arch['input'])
+                    arch_outputs = [float(arch['science']), float(arch['cost'])]
+                    _archs.append(BinaryInputArchitecture(arch_id, arch_inputs, arch_outputs))
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem_id, "assignation", behavioral, non_behavioral, _archs)
 
             elif input_type == "discrete":
                 for arch in dataset:
@@ -899,6 +908,10 @@ def boolean_array_2_boolean_string(boolean_array):
         else:
             bool_string += '0'
     return bool_string
+
+
+def boolean_string_2_boolean_array(boolean_string):
+    return [b == "1" for b in boolean_string]
 
 
 class ImportTargetSelection(APIView):
