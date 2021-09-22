@@ -51,6 +51,7 @@ def classify(question, daphne_version, module_name):
 
 
 def load_type_info(question_type, daphne_version, module_name):
+    print('--> LOAD TYPE INFO:', daphne_version, module_name, question_type)
     type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
                                   str(question_type) + '.json')
     with open(type_info_file, 'r') as file:
@@ -149,6 +150,11 @@ def augment_data(data, user_information: UserInformation, session):
         data['group_id'] = eoss_context.group_id
         data['problem_id'] = eoss_context.problem_id
         data['dataset_id'] = eoss_context.dataset_id
+
+        if 'behavioral' in session['context']:
+            data['behavioral'] = session['context']['behavioral']
+        if 'non_behavioral' in session['context']:
+            data['non_behavioral'] = session['context']['non_behavioral']
     if user_information.daphne_version == "EDL":
         pass
     if user_information.daphne_version == "AT":

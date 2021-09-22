@@ -153,7 +153,8 @@ class SetTargetRegion(APIView):
             logger.debug('iFEED set target region')
             
             # Get selected arch id's
-            selected = request.POST['selected']
+            # selected = request.data['selected']
+            selected = request.data['selected_db']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
             
@@ -165,7 +166,8 @@ class SetTargetRegion(APIView):
                         behavioral.append(int(s))
 
             # Get non-selected arch id's
-            non_selected = request.POST['non_selected']
+            # non_selected = request.data['non_selected']
+            non_selected = request.data['non_selected_db']
             non_selected = non_selected[1:-1]
             non_selected_arch_ids = non_selected.split(',')
 
@@ -183,6 +185,7 @@ class SetTargetRegion(APIView):
             # Update context information
             request.session['context']['behavioral'] = behavioral
             request.session['context']['non_behavioral'] = non_behavioral
+            request.session.save()
                         
             return Response('')
         
