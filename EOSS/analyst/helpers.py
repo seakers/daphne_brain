@@ -5,11 +5,12 @@ import traceback
 
 from EOSS.data import problem_specific
 from EOSS.models import EOSSContext
+from daphne_context.models import UserInformation
 
 logger = logging.getLogger('VASSAR')
 
 
-def base_feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None):
+def base_feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None, user_info: UserInformation=None):
     try:
         e = remove_outer_parentheses(feature_expression)
         e = e[1:-1]
@@ -22,10 +23,19 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
 
         orbit_indices = arg_split[0]
         instrument_indices = arg_split[1]
-        numbers = arg_split[2]
 
-        orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
-        instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
+        numbers = None
+        if len(arg_split) == 3:
+            numbers = arg_split[2]
+
+
+        if context:
+            if 'problem_id' in context:
+                orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
+                instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
+            elif user_info:
+                orbit_dataset = problem_specific.get_orbit_dataset(user_info.eosscontext.problem_id)
+                instrument_dataset = problem_specific.get_instrument_dataset(user_info.eosscontext.problem_id)
 
         orbit_names = []
         if orbit_indices:
@@ -33,14 +43,20 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         instrument_names = []
         if instrument_indices:
             instrument_names = [instrument_dataset[int(i)]['name'] for i in instrument_indices.split(",")]
-        if numbers:
-            numbers = [int(n) for n in numbers.split(",")]
+
+
+
 
         if feature_type == "present":
             if is_critique:
                 out = "add {}".format(instrument_names[0])
             else:
                 out = "{} is used".format(instrument_names[0])
+        elif feature_type == "numOrbits":
+            if is_critique:
+                out = "try architectures with {} orbits".format(numbers)
+            else:
+                out = "{} orbits are used".format(numbers)
         elif feature_type == "absent":
             if is_critique:
                 out = "remove {}".format(instrument_names[0])
@@ -85,7 +101,7 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         logger.error(msg)
 
 
-def feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None):
+def feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None, user_info: UserInformation=None):
     out = []
     # TODO: Generalize the feature expression parsing.
     # Currently assumes that the feature only contains conjunctions but no disjunction
@@ -94,12 +110,12 @@ def feature_expression_to_string(feature_expression, is_critique=False, context:
         for feat in individual_features:
             if feat == "":
                 continue
-            out.append(base_feature_expression_to_string(feat, is_critique, context))
+            out.append(base_feature_expression_to_string(feat, is_critique, context, user_info))
     elif "||" in feature_expression:
         pass
     else:
         if not feature_expression == "":
-            out.append(base_feature_expression_to_string(feature_expression, is_critique, context))
+            out.append(base_feature_expression_to_string(feature_expression, is_critique, context, user_info))
 
     out = " AND ".join(out)
     out = out[0].upper() + out[1:]
