@@ -20,7 +20,8 @@ def add_design(session, user):
     """
 
     with design_lock:
-        eosscontext = get_user_information(session, user).eosscontext
+        user_info = get_user_information(session, user)
+        eosscontext = user_info.eosscontext
         print("--> last_arch_id:", eosscontext.last_arch_id)
         eosscontext.added_archs_count += 1
 
@@ -28,7 +29,7 @@ def add_design(session, user):
 
         if eosscontext.added_archs_count >= 5:
             eosscontext.added_archs_count = 0
-            activate_diversifier(eosscontext)
+            activate_diversifier(user_info)
 
         eosscontext.save()
 

@@ -6,23 +6,41 @@ import numpy as np
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+from EOSS.vassar.api import VASSARClient
+from EOSS.graphql.api import GraphqlClient
+
 from EOSS.models import EOSSContext
+from daphne_context.models import UserInformation
 from daphne_context.models import DialogueHistory
 
 
-def activate_diversifier(eosscontext: EOSSContext):
+def activate_diversifier(user_info: UserInformation):
+    eosscontext = user_info.eosscontext
     if not eosscontext.activecontext.check_for_diversity:
         return
 
+    # vassar_client = VASSARClient(user_information=user_info)
+    problem_id = eosscontext.problem_id
+    dataset_id = eosscontext.dataset_id
+    dbClient = GraphqlClient(problem_id=problem_id)
+
     # 1. Compute the pareto front
-    dataset = Design.objects.filter(eosscontext_id__exact=eosscontext.id).all()
+    query = dbClient.get_architectures(problem_id, dataset_id)
     json_dataset = []
-    for design in dataset:
+    for design in query['data']['Architecture']:
         json_dataset.append({
-            "id": design.id,
-            "inputs": json.loads(design.inputs),
-            "outputs": json.loads(design.outputs)
+            "id": design['id'],
+            "inputs": design['input'],
+            "outputs": [float(design['science']), float(design['cost'])]
         })
+    # dataset = Design.objects.filter(eosscontext_id__exact=eosscontext.id).all()
+    # json_dataset = []
+    # for design in dataset:
+    #     json_dataset.append({
+    #         "id": design.id,
+    #         "inputs": json.loads(design.inputs),
+    #         "outputs": json.loads(design.outputs)
+    #     })
     pareto_front = compute_pareto_front(json_dataset, [1, -1])
     sorted_pareto_front = sorted(pareto_front, key=lambda design: design["outputs"][0])
 
