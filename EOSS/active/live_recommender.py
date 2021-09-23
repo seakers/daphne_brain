@@ -5,11 +5,26 @@ from string import Template
 from EOSS.critic.critic import Critic
 from daphne_context.models import UserInformation, DialogueHistory
 
+from EOSS.graphql.api import GraphqlClient
+from EOSS.vassar.api import VASSARClient
+
 
 def active_engineer_response(user_info: UserInformation, inputs, session_key):
-    modified_design = Design(inputs=json.dumps(inputs), outputs="[]")
-    critic = Critic(user_info.eosscontext, session_key)
-    suggestion_list = critic.expert_critic(modified_design)
+    vassar_client = VASSARClient(user_information=user_info)
+
+    # Check Vassar Status
+    vassar_status = vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
+    if vassar_status != 'ready':
+        print('--> INVALID VASSAR STATUS:', vassar_status)
+        return []
+
+    # Evaluate Mutated Architecture
+    arch = vassar_client.evaluate_architecture(inputs, user_info.eosscontext.vassar_request_queue_url)
+    arch['db_id'] = arch['id']
+
+    # Pass evaluated arch to critic
+    critic = Critic(user_info, session_key)
+    suggestion_list = critic.expert_critic(arch)
     return suggestion_list
 
 
@@ -57,9 +72,10 @@ def generate_engineer_message(user_info, genome, session_key):
 
 
 def active_historian_response(user_info: UserInformation, inputs, session_key):
-    modified_design = Design(inputs=json.dumps(inputs), outputs="[]")
-    critic = Critic(user_info.eosscontext, session_key)
-    suggestion_list = critic.historian_critic(modified_design)
+    input_str = boolean_array_2_boolean_string(inputs)
+    design = {'inputs': input_str}
+    critic = Critic(user_info, session_key)
+    suggestion_list = critic.historian_critic(design)
     return suggestion_list
 
 
@@ -113,3 +129,13 @@ def parse_suggestions_list(raw_list):
     for element in raw_list:
         parsed_list.append(element_template.substitute(element))
     return parsed_list
+
+def boolean_array_2_boolean_string(boolean_array):
+    leng = len(boolean_array)
+    bool_string = ''
+    for i in range(leng):
+        if boolean_array[i]:
+            bool_string += '1'
+        else:
+            bool_string += '0'
+    return bool_string
