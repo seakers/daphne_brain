@@ -233,7 +233,7 @@ def get_dialogue_functions(daphne_version):
         return dialogue_functions
 
 
-def run_function(function_info, data, daphne_version, context, new_dialogue_contexts):
+def run_function(function_info, data, daphne_version, context, new_dialogue_contexts, user_information, session):
     # Load the functions that must be run
     dialogue_functions = get_dialogue_functions(daphne_version)
     # Run the function and save the results
