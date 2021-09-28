@@ -83,8 +83,7 @@ class EvaluateArchitecture(APIView):
         is_same, arch_id = client.check_for_existing_arch(inputs)
 
         if not is_same:
-            architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url)
-            add_design(request.session, request.user)
+            architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url, block=False, user=request.user, session=request.session)
             return Response({
                 "status": "Architecture evaluated!",
                 "code": "arch_evaluated"
