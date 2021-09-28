@@ -3,6 +3,8 @@ import os
 import time
 import boto3
 import random
+import threading
+import EOSS
 
 from django.conf import settings
 
@@ -482,7 +484,7 @@ class VASSARClient:
 
 
     # working
-    def evaluate_architecture(self, input_str, eval_queue_url, fast=False, ga=False, redo=False):
+    def evaluate_architecture(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True, user=None, session=None):
         inputs = ''
         for x in input_str:
             if x:
@@ -521,18 +523,31 @@ class VASSARClient:
             }
         })
 
-        result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
-        
-        if result == False:
-            raise ValueError('---> Evaluation Timeout!!!!')
+        arch = {}
+        if block:
+            # --> OLD CODE, FOR THE BLOCKING BLOCKHEAD
+            result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
+            if not result:
+                raise ValueError('---> Evaluation Timeout!!!!')
+            result_formatted = result['data']['Architecture'][0]
+            outputs = [result_formatted['science'], result_formatted['cost']]
+            arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
+        else:
+            # --> NEW CODE, FOR THE CASUAL THREADING ENJOYER
+            if not user and not session:
+                raise ValueError('---> User and Session objs must be passed to place subscription in thread')
+            t1 = threading.Thread(target=self.subscribe_and_add, args=(inputs, eosscontext.problem_id, eosscontext.dataset_id, user, session))
+            t1.start()
 
-        result_formatted = result['data']['Architecture'][0]
-        outputs = []
-        outputs.append(result_formatted['science'])
-        outputs.append(result_formatted['cost'])
-        arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
         return arch
-    
+
+    def subscribe_and_add(self, inputs, problem_id, dataset_id, user, session):
+        result = self.dbClient.subscribe_to_architecture(inputs, problem_id, dataset_id)
+        if result:
+            EOSS.data.design_helpers.add_design(session, user)
+        return
+
+
     def check_for_existing_arch(self, input_str):
         inputs = ''
         for x in input_str:
