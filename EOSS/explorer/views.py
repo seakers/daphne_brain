@@ -1,6 +1,6 @@
 import logging
 import threading
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from rest_framework.views import APIView
@@ -49,7 +49,7 @@ class StartGA(APIView):
                         response = sqs_client.receive_message(QueueUrl=ga_response_queue_url, MaxNumberOfMessages=3, WaitTimeSeconds=5, MessageAttributeNames=["All"])
                         if "Messages" in response:
                             # Send message back to frontend that GA is working fine
-                            sync_to_async(channel_layer.send)(thread_user_info.channel_name,
+                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                                 {
                                                                     'type': 'services.ga_status',
                                                                     'status': 'ready'
