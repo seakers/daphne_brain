@@ -191,6 +191,6 @@ class GenerateSession(APIView):
     Simply generate a session for the user (solves a ton of bugs)
     """
     def post(self, request, format=None):
-        request.session.set_expiry(7200)
+        request.session.set_expiry(0)
         request.session.save()
         return Response("Session generated")
