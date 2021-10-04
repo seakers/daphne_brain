@@ -26,7 +26,7 @@ class Login(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            user_info = get_user_information(None, self.scope['user'])
+            user_info = get_user_information(None, user)
             if user_info.atexperimentcontext is None or (not user_info.atexperimentcontext.is_running):
                 # Try to look for user session object. If it exists, then the session will be changed to that. If not,
                 # the current session information will be transferred to the user
