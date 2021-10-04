@@ -211,6 +211,57 @@ class FinishExperimentFromMcc(APIView):
         return Response()
 
 
+class ForceFinishExperimentFromMcc(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user from the user id
+        user_information = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(user_information) > 0:
+            # Finish stage
+            experiment_context = user_information.atexperimentcontext
+            experiment_stage = experiment_context.atexperimentstage_set.all().order_by("id")[0]
+            experiment_stage.end_date = datetime.datetime.utcnow()
+            experiment_stage.end_state = experiment_context.current_state
+            experiment_stage.save()
+
+            # Finish experiment
+            # Save experiment results to file
+            with open('./experiment_at/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
+                json_experiment = {
+                    "experiment_id": experiment_context.experiment_id,
+                    "current_state": json.loads(experiment_context.current_state),
+                    "stages": []
+                }
+                for stage in experiment_context.atexperimentstage_set.all():
+                    print(stage.type, stage.end_state)
+                    end_state = stage.end_state
+                    if end_state == '':
+                        json_end_state = json.loads('' or 'null')
+                    else:
+                        json_end_state = json.loads(end_state)
+                    json_stage = {
+                        "type": stage.type,
+                        "start_date": stage.start_date.isoformat(),
+                        "end_date": stage.end_date.isoformat(),
+                        "end_state": json_end_state,
+                        "actions": []
+                    }
+                    for action in stage.atexperimentaction_set.all():
+                        json_action = {
+                            "action": json.loads(action.action),
+                            "date": action.date.isoformat()
+                        }
+                        json_stage["actions"].append(json_action)
+                    json_experiment["stages"].append(json_stage)
+                json.dump(json_experiment, f)
+
+            experiment_context.delete()
+                
+        return Response('Experiment finished correctly!')
+
+
 class TurnOffAlarms(APIView):
     def post(self, request, format=None):
         # Retrieve user from the user id
