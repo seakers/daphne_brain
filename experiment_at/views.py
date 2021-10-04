@@ -215,11 +215,12 @@ class ForceFinishExperimentFromMcc(APIView):
 
     def post(self, request, format=None):
         # Retrieve the user from the user id
-        user_information = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+        user_information_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
 
         # If found
-        if len(user_information) > 0:
+        if len(user_information_query) > 0:
             # Finish stage
+            user_information = user_information_query[0]
             experiment_context = user_information.atexperimentcontext
             experiment_stage = experiment_context.atexperimentstage_set.all().order_by("id")[0]
             experiment_stage.end_date = datetime.datetime.utcnow()
