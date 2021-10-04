@@ -27,7 +27,7 @@ class Login(APIView):
 
         if user is not None:
             user_info = get_user_information(None, user)
-            if not hasattr(user_info.atexperimentcontext) or (not user_info.atexperimentcontext.is_running):
+            if not hasattr(user_info, "atexperimentcontext") or (not user_info.atexperimentcontext.is_running):
                 # Try to look for user session object. If it exists, then the session will be changed to that. If not,
                 # the current session information will be transferred to the user
                 userinfo_qs = UserInformation.objects.filter(user__exact=user)
