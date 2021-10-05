@@ -292,7 +292,7 @@ def extract_data(processed_question, params, user_information: UserInformation, 
                 if param["mandatory"]:
                     raise ParameterMissingError(param["type"])
         else:
-            if len(extracted_raw_data[param["type"]]) > 0:
+            if param["type"] in extracted_raw_data and len(extracted_raw_data[param["type"]]) > 0:
                 extracted_param = extracted_raw_data[param["type"]].pop(0)
             elif param["mandatory"]:
                 # If param is needed but not detected return error with type of parameter
