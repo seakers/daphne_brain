@@ -700,6 +700,7 @@ class VASSARClient:
     async def start_ga(self):
         # Connect to queue
         ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
+        print(ga_queue_url)
         if ga_queue_url is not None and await self.queue_exists(ga_queue_url):
             eosscontext: EOSSContext = self.user_information.eosscontext
             await sync_to_async_mt(self.sqs_client.send_message)(
