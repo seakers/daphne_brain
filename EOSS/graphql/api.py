@@ -74,6 +74,10 @@ class GraphqlClient:
         query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
         return self.execute_query(query)
 
+    def get_architectures_ai4se(self, problem_id=6, dataset_id=-1):
+        query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status programmatic_risk fairness data_continuity ArchitectureScoreExplanations {{ panel_id satisfaction }} }} }} '
+        return self.execute_query(query)
+
     def check_for_existing_arch(self, problem_id, dataset_id, input):
         query = f'''
         query ArchitectureCount($problem_id: Int!, $dataset_id: Int!, $input: String!) {{

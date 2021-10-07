@@ -266,7 +266,7 @@ class VASSARClient:
         self.user_information.eosscontext.save()
     
     # working
-    async def send_initialize_message(self, url, group_id, problem_id):
+    async def send_initialize_message(self, url, group_id, problem_id, container_uuid=None):
         # Send init message
         response = await sync_to_async_mt(self.sqs_client.send_message)(
             QueueUrl=url,
@@ -283,7 +283,11 @@ class VASSARClient:
                 'problem_id': {
                     'StringValue': str(problem_id),
                     'DataType': 'String'
-                }
+                },
+                'UUID': {
+                    'StringValue': container_uuid,
+                    'DataType': 'String'
+                },
             })
         print(response)
 

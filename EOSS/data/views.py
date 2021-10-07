@@ -52,7 +52,8 @@ class ImportData(APIView):
             if dataset_id == -1:
                 default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
                 dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
-            query = dbClient.get_architectures(problem_id, dataset_id)
+            # query = dbClient.get_architectures(problem_id, dataset_id)
+            query = dbClient.get_architectures_ai4se(problem_id, dataset_id)
 
             # Iterate over architectures
             # Create: user context Designs
@@ -67,7 +68,17 @@ class ImportData(APIView):
 
                 # Arch: inputs / outputs
                 inputs = self.boolean_string_to_boolean_array(arch['input'])
-                outputs = [float(arch['science']), float(arch['cost'])]
+
+                # --> HERE: add the following objectives
+                # 1. cost
+                # 2. data_continuity
+                # 3. fairness
+                # 4. programmatic_risk
+                # 5. 6. 7. Stakeholder Panel Satisfaction
+                # outputs = [float(arch['science']), float(arch['cost'])]
+                outputs = [float(arch['cost']), float(arch['data_continuity']), float(arch['fairness']), float(arch['programmatic_risk'])]
+                for x in arch['ArchitectureScoreExplanations']:
+                    outputs.append(float(x['satisfaction'])) # There will be three stakeholder panel satisfactions
 
                 # Append design object and front-end design object
                 architectures_json.append({'id': counter, 'db_id': arch['id'], 'inputs': inputs, 'outputs': outputs})

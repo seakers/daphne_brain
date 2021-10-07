@@ -181,7 +181,7 @@ class EOSSConsumer(DaphneConsumer):
                     'type': 'services.vassar_status',
                     'status': vassar_status
                 })
-
+        vassar_container_uuid = None
         if vassar_status == "waiting_for_ack":
             # 2. Wait for an answer to the connectionRequest and connect to responsive containers
             print("----> Connecting to services")
@@ -204,7 +204,7 @@ class EOSSConsumer(DaphneConsumer):
         if vassar_status == "uninitialized":
             # 3. Build the current problem on the container
             print("----> Initializing services")
-            await vassar_client.send_initialize_message(user_request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
+            await vassar_client.send_initialize_message(user_request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id, vassar_container_uuid)
             vassar_build_success = await vassar_client.receive_successful_build(user_response_queue_url, vassar_container_uuid, max_retries_vassar_build)
             vassar_connection_success = True
             if not vassar_build_success:
@@ -229,7 +229,7 @@ class EOSSConsumer(DaphneConsumer):
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
 
-        max_retries_ga_ack = 5
+        max_retries_ga_ack = 1
         
         # Obtain queue urls from environment and ensure they exist
         ga_request_queue_url = os.environ["GA_REQUEST_URL"]
