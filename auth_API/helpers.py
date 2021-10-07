@@ -48,14 +48,14 @@ def get_user_information(session, user):
 
     if user.is_authenticated:
         # First try lookup by username
-        userinfo_qs = UserInformation.objects.filter(user__exact=user)
+        userinfo_qs = UserInformation.objects.filter(user__exact=user).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
     else:
         # Try to look by session key
         # If no session exists, create one here
         if session.session_key is None:
             session.create()
         session = Session.objects.get(session_key=session.session_key)
-        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key)
+        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
 
     if len(userinfo_qs) >= 1:
         return userinfo_qs[0]
