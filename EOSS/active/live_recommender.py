@@ -2,6 +2,8 @@ import datetime
 import json
 from string import Template
 
+from asgiref.sync import async_to_sync
+
 from EOSS.critic.critic import Critic
 from daphne_context.models import UserInformation, DialogueHistory
 
@@ -13,7 +15,7 @@ def active_engineer_response(user_info: UserInformation, inputs, session_key):
     vassar_client = VASSARClient(user_information=user_info)
 
     # Check Vassar Status
-    vassar_status = vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
+    vassar_status = async_to_sync(vassar_client.check_status)(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
     if vassar_status != 'ready':
         print('--> INVALID VASSAR STATUS:', vassar_status)
         return []

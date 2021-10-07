@@ -31,9 +31,9 @@ class StartGA(APIView):
                     })
 
                 # Stop GA in container if it was runnning
-                client.stop_ga()
+                async_to_sync(client.stop_ga())
                 # Start GA in container
-                client.start_ga()
+                async_to_sync(client.start_ga())
 
                 # Start listening for AWS SQS inputs
                 def aws_consumer():
@@ -106,7 +106,7 @@ class StopGA(APIView):
                 client = VASSARClient(user_information=user_info)
 
                 # Call the GA stop function on Engineer
-                client.stop_ga()
+                async_to_sync(client.stop_ga())
 
                 return Response({
                     "status": 'GA stopped correctly!'
