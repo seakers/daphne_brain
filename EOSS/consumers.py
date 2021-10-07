@@ -105,6 +105,10 @@ class EOSSConsumer(DaphneConsumer):
         print(event)
         await self.send_json(event)
 
+    async def services_ga_status(self, event):
+        print(event)
+        await self.send_json(event)
+
     async def active_message(self, event):
         print(event)
         await self.send_json(event)
