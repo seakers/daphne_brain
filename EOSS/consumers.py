@@ -208,7 +208,7 @@ class EOSSConsumer(DaphneConsumer):
             if user_request_queue_url is None or user_response_queue_url is None or vassar_container_uuid is None:
                 user_request_queue_url = user_info.eosscontext.vassar_request_queue_url
                 user_response_queue_url = user_info.eosscontext.vassar_response_queue_url
-                vassar_container_uuid = user_info.eosscontext.vassar_information["containers"].keys()[0]
+                vassar_container_uuid = list(user_info.eosscontext.vassar_information["containers"].keys())[0]
             await vassar_client.send_initialize_message(user_request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
             vassar_build_success = await vassar_client.receive_successful_build(user_response_queue_url, vassar_container_uuid, max_retries_vassar_build)
             vassar_connection_success = True
