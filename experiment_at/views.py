@@ -230,6 +230,7 @@ class ForceFinishExperimentFromMcc(APIView):
             # Finish experiment
             # Save experiment results to file
             with open('./experiment_at/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
+                print(experiment_context.current_state)
                 json_experiment = {
                     "experiment_id": experiment_context.experiment_id,
                     "current_state": json.loads(experiment_context.current_state) if experiment_context.current_state
