@@ -207,7 +207,7 @@ class FinishExperimentFromMcc(APIView):
             command = {'type': 'finish_experiment_from_mcc',
                        'content': ''}
             async_to_sync(channel_layer.send)(channel_name, command)
-            
+
         return Response()
 
 
@@ -232,7 +232,8 @@ class ForceFinishExperimentFromMcc(APIView):
             with open('./experiment_at/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
                 json_experiment = {
                     "experiment_id": experiment_context.experiment_id,
-                    "current_state": json.loads(experiment_context.current_state),
+                    "current_state": json.loads(experiment_context.current_state) if experiment_context.current_state
+                                                                                     is not None else "",
                     "stages": []
                 }
                 for stage in experiment_context.atexperimentstage_set.all():
@@ -259,7 +260,7 @@ class ForceFinishExperimentFromMcc(APIView):
                 json.dump(json_experiment, f)
 
             experiment_context.delete()
-                
+
         return Response('Experiment finished correctly!')
 
 
