@@ -233,8 +233,7 @@ class ForceFinishExperimentFromMcc(APIView):
                 print(experiment_context.current_state)
                 json_experiment = {
                     "experiment_id": experiment_context.experiment_id,
-                    "current_state": json.loads(experiment_context.current_state) if experiment_context.current_state
-                                                                                     is not None else "",
+                    "current_state": experiment_context.current_state if not '' else '',
                     "stages": []
                 }
                 for stage in experiment_context.atexperimentstage_set.all():
