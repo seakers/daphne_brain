@@ -105,6 +105,10 @@ class EOSSConsumer(DaphneConsumer):
         print(event)
         await self.send_json(event)
 
+    async def services_ga_status(self, event):
+        print(event)
+        await self.send_json(event)
+
     async def active_message(self, event):
         print(event)
         await self.send_json(event)
@@ -126,17 +130,6 @@ class EOSSConsumer(DaphneConsumer):
         vassar_success = await self.connect_vassar(user_info)
         if vassar_success:
             await self.connect_ga(user_info)
-
-
-
-
-
-
-
-
-
-
-
 
     async def connect_vassar(self, user_info: UserInformation, skip_check: bool=False):
         vassar_client = VASSARClient(user_info)
@@ -164,43 +157,46 @@ class EOSSConsumer(DaphneConsumer):
         if response_create_task is not None:
             await response_create_task
 
-        # Check if there is an existing VASSAR connection
+        # New initialization paradigm starts here
+        # - only one connectionRequest message is sent
+
+        # 1. Check to see if there is an existing vassar connection
         if not skip_check:
-            if user_info.eosscontext.vassar_request_queue_url is not None and await vassar_client.queue_exists(user_info.eosscontext.vassar_request_queue_url):
-                vassar_status = await vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
+            if user_info.eosscontext.vassar_request_queue_url is not None and await vassar_client.queue_exists(
+                    user_info.eosscontext.vassar_request_queue_url):
+                vassar_status = await vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url,
+                                                                 user_info.eosscontext.vassar_response_queue_url)
             else:
                 vassar_status = "waiting_for_user"
         else:
             vassar_status = "waiting_for_user"
 
         await self.send_json({
-                    'type': 'services.vassar_status',
-                    'status': vassar_status
-                })
+            'type': 'services.vassar_status',
+            'status': vassar_status
+        })
         print("Initial VASSAR status", vassar_status)
 
+        # 2. If the design-evaluator instance is not initialized, send initialization request
+        user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = None, None, None, False
         if vassar_status == "waiting_for_user":
             # Uninitialize VASSAR until reconnection is successful
             await sync_to_async(vassar_client._uninitialize_vassar)()
 
-            # 1. Send connectionRequest to eval queue
+            # 2.1. Send connectionRequest to eval queue and update front-end
             print("----> Sending connection message")
-            await vassar_client.send_connect_message(request_queue_url)
+            await vassar_client.send_connect_message(request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
 
             vassar_status = "waiting_for_ack"
             await self.send_json({
                     'type': 'services.vassar_status',
                     'status': vassar_status
                 })
-        vassar_container_uuid = None
-        if vassar_status == "waiting_for_ack":
-            # 2. Wait for an answer to the connectionRequest and connect to responsive containers
-            print("----> Connecting to services")
-            user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_ack_success = await vassar_client.connect_to_vassar(request_queue_url, response_queue_url, max_retries_vassar_ack)
-            print(user_request_queue_url, user_response_queue_url)
 
-            if vassar_ack_success:
-                vassar_status = "uninitialized"
+            # 2.2. Wait for initialized design-evaluator to return parameters
+            user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = await vassar_client.connect_to_vassar(request_queue_url, response_queue_url, max_retries_vassar_ack)
+            if vassar_connection_success:
+                vassar_status = "ready"
                 await self.send_json({
                         'type': 'services.vassar_status',
                         'status': vassar_status
@@ -212,29 +208,6 @@ class EOSSConsumer(DaphneConsumer):
                         'status': vassar_status
                     })
 
-        if vassar_status == "uninitialized":
-            # 3. Build the current problem on the container
-            print("----> Initializing services")
-            await vassar_client.send_initialize_message(user_request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id, vassar_container_uuid)
-            vassar_build_success = await vassar_client.receive_successful_build(user_response_queue_url, vassar_container_uuid, max_retries_vassar_build)
-            vassar_connection_success = True
-            if not vassar_build_success:
-                vassar_status = "build_error"
-                await self.send_json({
-                        'type': 'services.vassar_status',
-                        'status': vassar_status
-                    })
-            else:
-                vassar_status = "ready"
-        
-        if vassar_status == "ready":
-            vassar_connection_success = True # For when it's already done
-            await self.send_json({
-                    'type': 'services.vassar_status',
-                    'status': vassar_status
-                })
-
-        print("Final VASSAR status", vassar_status)
         return vassar_connection_success
 
     async def connect_ga(self, user_info: UserInformation, skip_check=False):

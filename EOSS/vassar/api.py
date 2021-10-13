@@ -68,7 +68,7 @@ class VASSARClient:
         self.queue_client = EvalQueue()
 
 
-    async def send_connect_message(self, url):
+    async def send_connect_message(self, url, group_id, problem_id):
         # Send init message
         response = await sync_to_async_mt(self.sqs_client.send_message)(
             QueueUrl=url,
@@ -81,6 +81,14 @@ class VASSARClient:
                 },
                 'user_id': {
                     'StringValue': str(self.user_id),
+                    'DataType': 'String'
+                },
+                'group_id': {
+                    'StringValue': str(group_id),
+                    'DataType': 'String'
+                },
+                'problem_id': {
+                    'StringValue': str(problem_id),
                     'DataType': 'String'
                 }
             })
@@ -170,7 +178,7 @@ class VASSARClient:
     def _initialize_vassar(self, vassar_request_queue_url, vassar_response_queue_url, vassar_container_uuid):
         self.user_information.eosscontext.vassar_request_queue_url = vassar_request_queue_url
         self.user_information.eosscontext.vassar_response_queue_url = vassar_response_queue_url
-        self.user_information.eosscontext.vassar_information = { "containers": { vassar_container_uuid: { "ready": False } } }
+        self.user_information.eosscontext.vassar_information = { "containers": { vassar_container_uuid: { "ready": True } } }
         self.user_information.eosscontext.save()
 
     def _mark_vassar_as_ready(self, vassar_container_uuid):
@@ -711,6 +719,7 @@ class VASSARClient:
     async def start_ga(self):
         # Connect to queue
         ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
+        print(ga_queue_url)
         if ga_queue_url is not None and await self.queue_exists(ga_queue_url):
             eosscontext: EOSSContext = self.user_information.eosscontext
             await sync_to_async_mt(self.sqs_client.send_message)(
