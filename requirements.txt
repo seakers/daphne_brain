@@ -21,3 +21,5 @@ SQLAlchemy~=1.4.25
 tensorflow~=2.6.0
 thrift~=0.15.0
 xlrd~=1.2.0
+docker
+SALib

@@ -9,5 +9,6 @@ urlpatterns = [
     path('data/', include('EOSS.data.urls')),
     path('settings/', include('EOSS.settings.urls')),
     path('dialogue/', include('EOSS.dialogue.urls')),
-    path('vassar/', include('EOSS.vassar.urls'))
+    path('vassar/', include('EOSS.vassar.urls')),
+    path('formulation/', include('EOSS.formulation.urls'))
 ]

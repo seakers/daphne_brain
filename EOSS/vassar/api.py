@@ -86,6 +86,7 @@ class VASSARClient:
             })
 
     async def connect_to_vassar(self, request_url, response_url, max_retries):
+        print('--> connect_to_vassar')
         # Send init message
         user_request_queue_url = ""
         user_response_queue_url = ""
@@ -95,6 +96,7 @@ class VASSARClient:
         has_called_aws = False
 
         while not success and retries < max_retries:
+            print('retry')
             retries += 1
             user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop(response_url)
 
@@ -123,7 +125,7 @@ class VASSARClient:
         for i in range(5):
             response = await sync_to_async_mt(self.sqs_client.receive_message)(
                 QueueUrl=response_url,
-                MaxNumberOfMessages=3,
+                MaxNumberOfMessages=1,
                 WaitTimeSeconds=2,
                 MessageAttributeNames=["All"])
             if "Messages" in response:
@@ -213,7 +215,7 @@ class VASSARClient:
         for i in range(5):
             response = await sync_to_async_mt(self.sqs_client.receive_message)(
                 QueueUrl=response_url,
-                MaxNumberOfMessages=3,
+                MaxNumberOfMessages=1,
                 WaitTimeSeconds=2,
                 MessageAttributeNames=["All"])
             if "Messages" in response:
@@ -300,7 +302,7 @@ class VASSARClient:
             for i in range(5):
                 response = await sync_to_async_mt(self.sqs_client.receive_message)(
                     QueueUrl=url,
-                    MaxNumberOfMessages=3,
+                    MaxNumberOfMessages=1,
                     WaitTimeSeconds=2,
                     MessageAttributeNames=["All"])
                 if "Messages" in response:
@@ -335,7 +337,7 @@ class VASSARClient:
         for i in range(10):
             response = await sync_to_async_mt(self.sqs_client.receive_message)(
                 QueueUrl=response_queue,
-                MaxNumberOfMessages=3,
+                MaxNumberOfMessages=1,
                 WaitTimeSeconds=1,
                 MessageAttributeNames=["All"],
                 AttributeNames=["SentTimestamp"])
@@ -477,7 +479,7 @@ class VASSARClient:
         # Try at most 5 times
         still_alive = False
         for i in range(5):
-            response = await sync_to_async_mt(self.sqs_client.receive_message)(QueueUrl=queue_url, MaxNumberOfMessages=3, WaitTimeSeconds=2, MessageAttributeNames=["All"])
+            response = await sync_to_async_mt(self.sqs_client.receive_message)(QueueUrl=queue_url, MaxNumberOfMessages=1, WaitTimeSeconds=2, MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
                     if message["MessageAttributes"]["msgType"]["StringValue"] == "pingAck":
@@ -501,6 +503,11 @@ class VASSARClient:
         query = self.dbClient.get_orbit_list(problem_id)
         orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
         return orbits
+
+    def get_instrument_list_ai4se(self, problem_id, group_id=1):
+        query = self.dbClient.get_instrument_list_ai4se(group_id, problem_id)
+        instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
+        return instruments
 
     # working
     def get_instrument_list(self, problem, group_id=1, problem_id=5):

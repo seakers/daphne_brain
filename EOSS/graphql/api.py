@@ -61,6 +61,7 @@ class GraphqlClient:
 
         if user_info is not None:
             self.problem_id = user_info.eosscontext.problem_id
+            self.dataset_id = user_info.eosscontext.dataset_id
         elif problem_id is not None:
             self.problem_id = str(problem_id)
         elif request is not None:
@@ -69,6 +70,8 @@ class GraphqlClient:
         else:
             self.problem_id = str(5)
 
+    def boolean_string_to_boolean_array(self, boolean_string):
+        return [b == "1" for b in boolean_string]
 
     def get_architectures(self, problem_id=6, dataset_id=-1):
         query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
@@ -77,6 +80,29 @@ class GraphqlClient:
     def get_architectures_ai4se(self, problem_id=6, dataset_id=-1):
         query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status programmatic_risk fairness data_continuity ArchitectureScoreExplanations {{ panel_id satisfaction }} }} }} '
         return self.execute_query(query)
+
+    def get_architectures_ai4se_form(self, problem_id=6, dataset_id=-1):
+        query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {self.problem_id} }}, dataset_id: {{_eq: {self.dataset_id} }} }}) {{ id input cost science eval_status programmatic_risk fairness data_continuity ArchitectureScoreExplanations {{ panel_id satisfaction }} }} }} '
+        results = self.execute_query(query)
+        archs = []
+        for arch in results['data']['Architecture']:
+            if not arch['eval_status']:
+                continue
+            outputs = [float(arch['cost']), float(arch['data_continuity']), float(arch['fairness']),
+                       float(arch['programmatic_risk'])]
+            for x in arch['ArchitectureScoreExplanations']:
+                outputs.append(float(x['satisfaction']))  # There will be three stakeholder panel satisfactions
+            curr_arch = {
+                'inputs': self.boolean_string_to_boolean_array(arch['input']),
+                'outputs': outputs
+            }
+            archs.append(curr_arch)
+        return archs
+
+
+
+
+
 
     def check_for_existing_arch(self, problem_id, dataset_id, input):
         query = f'''
@@ -158,6 +184,12 @@ class GraphqlClient:
         group_id = str(group_id)
         problem_id = str(problem_id)
         query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + self.problem_id + '}}) { Instrument { id name } } } '
+        return self.execute_query(query)
+
+    def get_instrument_list_ai4se(self, group_id, problem_id):
+        group_id = str(group_id)
+        problem_id = str(problem_id)
+        query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + problem_id + '}}) { Instrument { id name } } } '
         return self.execute_query(query)
 
     def get_instruments_and_attributes(self, problem_id):
@@ -594,6 +626,10 @@ class GraphqlClient:
 
     def clone_default_dataset(self, origin_dataset_id, user_id):
         return self.clone_dataset(origin_dataset_id, user_id, "default")
+
+    def new_dataset(self, user_id, problem_id, dataset_name, group_id=1):
+        mutation = f'mutation {{insert_Dataset_one(object: {{group_id: {group_id}, problem_id: {problem_id}, user_id: {user_id}, name: "{dataset_name}" }}) {{id}} }}'
+        return self.execute_query(mutation)
 
 
 

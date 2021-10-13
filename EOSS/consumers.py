@@ -127,6 +127,17 @@ class EOSSConsumer(DaphneConsumer):
         if vassar_success:
             await self.connect_ga(user_info)
 
+
+
+
+
+
+
+
+
+
+
+
     async def connect_vassar(self, user_info: UserInformation, skip_check: bool=False):
         vassar_client = VASSARClient(user_info)
 
