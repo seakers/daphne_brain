@@ -178,7 +178,8 @@ class EOSSConsumer(DaphneConsumer):
         print("Initial VASSAR status", vassar_status)
 
         # 2. If the design-evaluator instance is not initialized, send initialization request
-        user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = None, None, None, False
+        user_request_queue_url, user_response_queue_url, vassar_container_uuid = None, None, None
+        vassar_connection_success = vassar_status == "ready"
         if vassar_status == "waiting_for_user":
             # Uninitialize VASSAR until reconnection is successful
             await sync_to_async(vassar_client._uninitialize_vassar)()

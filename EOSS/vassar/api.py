@@ -68,30 +68,32 @@ class VASSARClient:
         self.queue_client = EvalQueue()
 
 
-    async def send_connect_message(self, url, group_id, problem_id):
+    async def send_connect_message(self, url, group_id=None, problem_id=None):
+        msg_attributes = {
+            'msgType': {
+                'StringValue': 'connectionRequest',
+                'DataType': 'String'
+            },
+            'user_id': {
+                'StringValue': str(self.user_id),
+                'DataType': 'String'
+            },
+        }
+        if group_id is not None:
+            msg_attributes['group_id'] = {
+                    'StringValue': str(group_id),
+                    'DataType': 'String'
+                }
+        if problem_id is not None:
+            msg_attributes['problem_id'] = {
+                    'StringValue': str(problem_id),
+                    'DataType': 'String'
+                }
         # Send init message
         response = await sync_to_async_mt(self.sqs_client.send_message)(
             QueueUrl=url,
             MessageBody='boto3',
-            MessageAttributes=
-            {
-                'msgType': {
-                    'StringValue': 'connectionRequest',
-                    'DataType': 'String'
-                },
-                'user_id': {
-                    'StringValue': str(self.user_id),
-                    'DataType': 'String'
-                },
-                'group_id': {
-                    'StringValue': str(group_id),
-                    'DataType': 'String'
-                },
-                'problem_id': {
-                    'StringValue': str(problem_id),
-                    'DataType': 'String'
-                }
-            })
+            MessageAttributes=msg_attributes)
 
     async def connect_to_vassar(self, request_url, response_url, max_retries):
         # Send init message
