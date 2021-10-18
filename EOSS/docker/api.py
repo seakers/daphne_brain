@@ -1,9 +1,9 @@
 import docker
 import threading
 import random
+import copy
 
 config = {
-    'image': 'vassar:experiment',
     'network': 'daphne_default',
     'detach': True,
     'environment': {
@@ -15,39 +15,77 @@ config = {
         'VASSAR_RESPONSE_URL': 'http://localhost:9324/000000000000/vassar_response',
         'DEPLOYMENT_TYPE': 'local',
         'JAVA_OPTS': '-"Dcom.sun.management.jmxremote.rmi.port=10000 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Djava.rmi.server.hostname=localhost"',
-        'AWS_STACK_ENDPOINT': 'http://172.18.0.2:9324',
-        'APOLLO_URL': 'http://172.18.0.13:8080/v1/graphql',
-        'APOLLO_URL_WS': 'ws://172.18.0.13:8080/v1/graphql'
+        'AWS_STACK_ENDPOINT': 'http://172.18.0.6:9324',
+        'APOLLO_URL': 'http://172.18.0.14:8080/v1/graphql',
+        'APOLLO_URL_WS': 'ws://172.18.0.14:8080/v1/graphql',
+        'REQUEST_KEY': 'NONE'
     },
-    'entrypoint': 'gradle run'
+    # 'entrypoint': 'gradle run'
 }
 
 
 class DockerClient:
 
-    def __del__(self):
-        self.stop_containers()
-
-    def __init__(self):
+    def __init__(self, user_info, fast=True):
+        self.fast = fast
+        self.user_info = user_info
         self.client = docker.from_env()
-        self.identifier = str(random.randint(10000, 99999))
-        self.containers = {}
+        self.containers = []
+        self.labels = {
+            'USER_ID': str(self.user_info.user.id)
+        }
+        self.label_key = 'USER_ID=' + str(self.user_info.user.id)
+
+        # --> Gather Containers
+        self.gather_containers()
+
+    def gather_containers(self):
+        container_query = self.client.containers.list(
+            filters={
+                'label': [self.label_key]
+            }
+        )
+        for container in container_query:
+            if container not in self.containers:
+                self.containers.append(container)
+        print('--> GATHERED CONTAINERS:', len(self.containers))
+
 
     def start_containers(self, num):
         print('--> STARTING', num, 'CONTAINERS')
+
+        # Place request key in evironment
+        env = copy.deepcopy(config['environment'])
+
+        img = "vassar:experiment"
+        if self.fast:
+            img = "vassar:experiment_fast"
+
+
+        # Start containers
         for x in range(0, num):
-            name = 'sensitivity-' + str(x) + '-' + self.identifier
+            name = 'user-' + str(self.user_info.user.id) + '-container-' + str(len(self.containers))
             container = self.client.containers.run(
-                image=config['image'],
+                image=img,
                 detach=config['detach'],
                 network=config['network'],
-                environment=config['environment'],
-                name=name
+                environment=env,
+                name=name,
+                labels=self.labels
             )
-            self.containers[name] = container
+            self.containers.append(container)
 
     def stop_containers(self):
         print('--> STOPPING CONTAINERS')
-        for name in self.containers:
-            th = threading.Thread(target=self.containers[name].stop)
+        threads = []
+        for container in self.containers:
+            th = threading.Thread(target=container.stop)
             th.start()
+            threads.append(th)
+
+        for th in threads:
+            th.join()
+
+        th = threading.Thread(target=self.client.containers.prune)
+        th.start()
+

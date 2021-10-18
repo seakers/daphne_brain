@@ -256,7 +256,7 @@ class EOSSConsumer(DaphneConsumer):
 
             # 1. Send connectionRequest to eval queue
             print("----> Sending connection message")
-            await vassar_client.send_connect_message(ga_request_queue_url)
+            await vassar_client.send_connect_message(ga_request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
 
             ga_status = "waiting_for_ack"
             await self.send_json({

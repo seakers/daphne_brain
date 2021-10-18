@@ -13,15 +13,13 @@ from asgiref.sync import async_to_sync
 # Keep the user-id but create a new dataset for evaluation
 
 
-def acknowledge_vassar(user_info, request_queue_url, response_queue_url):
+def connection_thread(user_info, request_queue_url, response_queue_url):
     print('--> VASSAR HANDSHAKE STARTED')
     temp_client = VASSARClient(user_info)
-    async_to_sync(temp_client.send_connect_message)(request_queue_url)
-    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_ack_success = async_to_sync(temp_client.connect_to_vassar)(request_queue_url, response_queue_url, 3)
-    async_to_sync(temp_client.send_initialize_message)(user_request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id, vassar_container_uuid)
-    build_success = async_to_sync(temp_client.receive_successful_build)(user_response_queue_url, vassar_container_uuid, 3)
-    print('--> VASSAR BUILD ATTEMPT:', build_success)
-    return 0
+    async_to_sync(temp_client.send_connect_message)(request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
+    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar)(request_queue_url, response_queue_url, 3)
+    print('--> VASSAR BUILD SUCCESS:', vassar_connection_success)
+
 
 
 
@@ -36,9 +34,12 @@ class EvaluationScaling:
         self.response_queue_url = os.environ["VASSAR_RESPONSE_URL"]
 
         # --> CLIENTS
-        self.docker_client = DockerClient()
+        self.docker_client = DockerClient(self.user_info)
         self.vassar_client = VASSARClient(user_info)
         self.graphql_client = GraphqlClient(user_info)
+
+    def shutdown(self):
+        self.docker_client.stop_containers()
 
     def init_queues(self):
         if not self.vassar_client.queue_exists_by_name("dead-letter"):
@@ -51,18 +52,8 @@ class EvaluationScaling:
         if not self.vassar_client.queue_exists(self.request_queue_url):
             self.vassar_client.create_queue(self.request_queue_url.split("/")[-1], dead_letter_arn)
 
-    # def acknowledge_vassar(self):
-    #     temp_client = VASSARClient(self.user_info)
-    #     user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_ack_success = async_to_sync(temp_client.connect_to_vassar(self.request_queue_url, self.response_queue_url, 3))
-    #     async_to_sync(temp_client.send_initialize_message(user_request_queue_url, self.user_info.eosscontext.group_id, self.user_info.eosscontext.problem_id, vassar_container_uuid))
-    #     build_success = async_to_sync(temp_client.receive_successful_build(user_response_queue_url, vassar_container_uuid, 3))
-    #     print('--> VASSAR BUILD ATTEMPT:', build_success)
-    #     return 0
-
     def initialize(self, block=True):
         print('--> INITIALIZING SCALING')
-        time.sleep(3)
-
 
         # 1. Ensure appropriate queues exist
         self.init_queues()
@@ -70,14 +61,10 @@ class EvaluationScaling:
         # 2. Start docker containers
         self.docker_client.start_containers(self.num_instances)
 
-        # 3. Send a connection request for each of the containers
-        for x in range(0, self.num_instances):
-            async_to_sync(self.vassar_client.send_connect_message(self.request_queue_url))
-
-        # 4. For each of the requested instances, initialize
+        # 3. Initialize each of the containers
         build_threads = []
         for x in range(0, self.num_instances):
-            th = threading.Thread(target=acknowledge_vassar, args=(self.user_info, self.request_queue_url, self.response_queue_url))
+            th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url, self.response_queue_url))
             th.start()
             build_threads.append(th)
 
@@ -85,6 +72,30 @@ class EvaluationScaling:
         if block:
             for th in build_threads:
                 th.join()
+
+        print('--> SCALING INITIALIZATION COMPLETE')
+
+    def bit_list_2_bool_list(self, bit_list):
+        bool_list = []
+        for bit in bit_list:
+            if bit == 0:
+                bool_list.append(False)
+            else:
+                bool_list.append(True)
+        return bool_list
+
+    # Takes 2D array of bits
+    def evaluate_batch(self, batch):
+        print('--> EVALUATING BATCH')
+        all_inputs = []
+        for idx, arch in enumerate(batch):
+            if idx > 500:
+                break
+            inputs = self.bit_list_2_bool_list(arch)
+            all_inputs.append(inputs)
+            self.vassar_client.evaluate_architecture_ai4se(inputs, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False)
+
+        return all_inputs
 
 
 

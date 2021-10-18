@@ -16,7 +16,7 @@ class FormulationAgent:
         self.channel_layer = channel_layer
         self.problem_id = user_info.eosscontext.problem_id
         self.queue = Queue()
-        self.sensitivity_client = SensitivityClient(user_info)
+        self.sensitivity_client = None
         self.alive_time = 0
         self.thread = None
 
@@ -89,10 +89,16 @@ class FormulationAgent:
 
     def agent(self):
         self.print_start()
+        self.sensitivity_client = SensitivityClient(self.user_info)
+
         continue_running = True
 
+        # 1. Calculate sensitivities for initial problem formulation
+        self.sensitivity_client.calculate_sensitivities()
+
+
         while continue_running:
-            self.record_loop()
+            self.record_loop(sleep_sec=2)
 
             # --> 1. Process queue messages
             msg = self.process_queue_msg()
@@ -102,7 +108,7 @@ class FormulationAgent:
 
 
 
-
+        self.sensitivity_client.shutdown()
         return 0
 
 

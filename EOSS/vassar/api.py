@@ -134,7 +134,7 @@ class VASSARClient:
             response = await sync_to_async_mt(self.sqs_client.receive_message)(
                 QueueUrl=response_url,
                 MaxNumberOfMessages=1,
-                WaitTimeSeconds=2,
+                WaitTimeSeconds=5,
                 MessageAttributeNames=["All"])
             if "Messages" in response:
                 for message in response["Messages"]:
@@ -165,7 +165,7 @@ class VASSARClient:
                         await sync_to_async_mt(self.sqs_client.delete_message)(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
                     else:
                         # Return message to queue
-                        sync_to_async_mt(self.sqs_client.change_message_visibility)(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+                        sync_to_async_mt(self.sqs_client.change_message_visibility)(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
             if user_request_queue_url != "" and user_response_queue_url != "":
                 break
         
@@ -566,6 +566,58 @@ class VASSARClient:
         arch_info = self.dbClient.get_architecture(design["db_id"])
         self.evaluate_architecture(design["inputs"], eval_queue_url, ga=arch_info["ga"], redo=True)
 
+    # working
+    def evaluate_architecture_ai4se(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True,
+                              user=None, session=None):
+        inputs = ''
+        for x in input_str:
+            if x:
+                inputs = inputs + '1'
+            else:
+                inputs = inputs + '0'
+
+        # Connect to queue
+        eosscontext: EOSSContext = self.user_information.eosscontext
+
+        self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'ndsm_evaluate',
+                'DataType': 'String'
+            },
+            'input': {
+                'StringValue': str(inputs),
+                'DataType': 'String'
+            },
+            'dataset_id': {
+                'StringValue': str(eosscontext.dataset_id),
+                'DataType': 'String'
+            },
+            'fast': {
+                'StringValue': str(fast),
+                'DataType': 'String'
+            },
+            'ga': {
+                'StringValue': str(ga),
+                'DataType': 'String'
+            },
+            'redo': {
+                'StringValue': str(redo),
+                'DataType': 'String'
+            }
+        })
+
+        arch = {}
+        if block:
+            # --> OLD CODE, FOR THE BLOCKING BLOCKHEAD
+            result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
+            if not result:
+                raise ValueError('---> Evaluation Timeout!!!!')
+            result_formatted = result['data']['Architecture'][0]
+            outputs = [result_formatted['science'], result_formatted['cost']]
+            arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']],
+                    'outputs': outputs}
+
+        return arch
 
     # working
     def evaluate_architecture(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True, user=None, session=None):
@@ -582,7 +634,7 @@ class VASSARClient:
 
         self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
             'msgType': {
-                'StringValue': 'evaluate',
+                'StringValue': 'ndsm_evaluate',
                 'DataType': 'String'
             },
             'input': {
