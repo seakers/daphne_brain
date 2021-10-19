@@ -25,16 +25,19 @@ def connection_thread(user_info, request_queue_url, response_queue_url):
 
 class EvaluationScaling:
 
-    def __init__(self, user_info, num_instances):
+    def __init__(self, user_info, num_instances, user_req=False, fast=True):
+        self.user_req = user_req
         self.user_info = user_info
         self.num_instances = num_instances
 
         # --> URLs
         self.request_queue_url = os.environ["VASSAR_REQUEST_URL"]
         self.response_queue_url = os.environ["VASSAR_RESPONSE_URL"]
+        self.request_queue_url_2 = os.environ["VASSAR_REQUEST_URL_2"]
+        self.response_queue_url_2 = os.environ["VASSAR_RESPONSE_URL_2"]
 
         # --> CLIENTS
-        self.docker_client = DockerClient(self.user_info)
+        self.docker_client = DockerClient(self.user_info, fast=fast)
         self.vassar_client = VASSARClient(user_info)
         self.graphql_client = GraphqlClient(user_info)
 
@@ -51,20 +54,33 @@ class EvaluationScaling:
             self.vassar_client.create_queue(self.response_queue_url.split("/")[-1], dead_letter_arn)
         if not self.vassar_client.queue_exists(self.request_queue_url):
             self.vassar_client.create_queue(self.request_queue_url.split("/")[-1], dead_letter_arn)
+        if not self.vassar_client.queue_exists(self.request_queue_url_2):
+            self.vassar_client.create_queue(self.request_queue_url_2.split("/")[-1], dead_letter_arn)
+        if not self.vassar_client.queue_exists(self.response_queue_url_2):
+            self.vassar_client.create_queue(self.response_queue_url_2.split("/")[-1], dead_letter_arn)
 
     def initialize(self, block=True):
         print('--> INITIALIZING SCALING')
+        containers_to_start = self.num_instances - len(self.docker_client.containers)
+        if containers_to_start < 0:
+            containers_to_start = 0
 
         # 1. Ensure appropriate queues exist
         self.init_queues()
 
         # 2. Start docker containers
-        self.docker_client.start_containers(self.num_instances)
+        if self.user_req:
+            self.docker_client.start_containers(self.num_instances, self.request_queue_url, self.response_queue_url)
+        else:
+            self.docker_client.start_containers(self.num_instances, self.request_queue_url_2, self.response_queue_url_2)
 
         # 3. Initialize each of the containers
         build_threads = []
-        for x in range(0, self.num_instances):
-            th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url, self.response_queue_url))
+        for x in range(0, containers_to_start):
+            if self.user_req:
+                th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url, self.response_queue_url))
+            else:
+                th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2))
             th.start()
             build_threads.append(th)
 
@@ -84,18 +100,25 @@ class EvaluationScaling:
                 bool_list.append(True)
         return bool_list
 
+    def bit_list_2_bit_str(self, bit_list):
+        input_str = ''
+        for bit in bit_list:
+            if bit == 1:
+                input_str += '1'
+            else:
+                input_str += '0'
+        return input_str
+
     # Takes 2D array of bits
     def evaluate_batch(self, batch):
         print('--> EVALUATING BATCH')
-        all_inputs = []
+        requested_evals = []
         for idx, arch in enumerate(batch):
-            if idx > 500:
-                break
             inputs = self.bit_list_2_bool_list(arch)
-            all_inputs.append(inputs)
+            requested_evals.append(self.bit_list_2_bit_str(arch))
             self.vassar_client.evaluate_architecture_ai4se(inputs, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False)
 
-        return all_inputs
+        return requested_evals
 
 
 

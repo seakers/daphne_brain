@@ -180,6 +180,26 @@ class GraphqlClient:
         orbit_info = self.execute_query(query)['data']['items']
         return orbit_info
 
+    def get_architectures_like(self, dataset_id, arch_input_list):
+        query = f'''
+            query MyQuery {{
+              Architecture(where: {{dataset_id: {{_eq: {dataset_id}}}, input: {{_in: {json.dumps(arch_input_list)}}}}}) {{
+                cost
+                programmatic_risk
+                fairness
+                data_continuity
+                ArchitectureScoreExplanations {{
+                  satisfaction
+                  Stakeholder_Needs_Panel {{
+                    name
+                  }}
+                }}
+              }}
+            }}
+        '''
+        return self.execute_query(query)
+
+
     def get_instrument_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
@@ -434,9 +454,9 @@ class GraphqlClient:
         query = ' query get_subobjective_list { Stakeholder_Needs_Subobjective(where: {Problem: {id: {_eq: ' + self.problem_id + '}}})  { id name description problem_id weight} } '
         return self.execute_query(query)
 
-    def get_false_architectures(self, problem_id):
-        problem_id = str(problem_id)
-        query = ' query MyQuery { Architecture(order_by: {{id: asc}}, where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
+    def get_false_architectures(self, dataset_id):
+        dataset_id = str(dataset_id)
+        query = ' query MyQuery { Architecture(order_by: {{id: asc}}, where: {dataset_id: {_eq: ' + dataset_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
         return self.execute_query(query)
 
     def get_instrument_from_objective(self, problem_id, objective):

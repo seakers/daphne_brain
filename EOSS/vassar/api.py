@@ -68,30 +68,32 @@ class VASSARClient:
         self.queue_client = EvalQueue()
 
 
-    async def send_connect_message(self, url, group_id, problem_id):
+    async def send_connect_message(self, url, group_id=None, problem_id=None):
+        msg_attributes = {
+            'msgType': {
+                'StringValue': 'connectionRequest',
+                'DataType': 'String'
+            },
+            'user_id': {
+                'StringValue': str(self.user_id),
+                'DataType': 'String'
+            },
+        }
+        if group_id is not None:
+            msg_attributes['group_id'] = {
+                    'StringValue': str(group_id),
+                    'DataType': 'String'
+                }
+        if problem_id is not None:
+            msg_attributes['problem_id'] = {
+                    'StringValue': str(problem_id),
+                    'DataType': 'String'
+                }
         # Send init message
         response = await sync_to_async_mt(self.sqs_client.send_message)(
             QueueUrl=url,
             MessageBody='boto3',
-            MessageAttributes=
-            {
-                'msgType': {
-                    'StringValue': 'connectionRequest',
-                    'DataType': 'String'
-                },
-                'user_id': {
-                    'StringValue': str(self.user_id),
-                    'DataType': 'String'
-                },
-                'group_id': {
-                    'StringValue': str(group_id),
-                    'DataType': 'String'
-                },
-                'problem_id': {
-                    'StringValue': str(problem_id),
-                    'DataType': 'String'
-                }
-            })
+            MessageAttributes=msg_attributes)
 
     async def connect_to_vassar(self, request_url, response_url, max_retries):
         print('--> connect_to_vassar')
@@ -431,6 +433,10 @@ class VASSARClient:
         response = await sync_to_async_mt(self.sqs_client.get_queue_attributes)(QueueUrl=queue_url, AttributeNames=["QueueArn"])
         return response["Attributes"]["QueueArn"]
 
+    def purge_queue(self, queue_url):
+        self.sqs_client.purge_queue(QueueUrl=queue_url)
+        return 0
+
     async def send_ping_message(self):
         vassar_request_url = self.user_information.eosscontext.vassar_request_queue_url
         vassar_response_url = self.user_information.eosscontext.vassar_response_queue_url
@@ -700,30 +706,43 @@ class VASSARClient:
 
 
     # working
-    def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):
-        query_info = self.dbClient.get_false_architectures(self.problem_id)
-        all_archs = query_info['data']['Architecture']
-        evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
+    def evaluate_false_architectures(self, eval_queue_url, all_archs):
+        dataset_id = self.user_information.eosscontext.dataset_id
         for arch in all_archs:
-            print("--> re-evaluate:", arch['input'])
-            evalQueue.send_message(MessageBody='boto3', MessageAttributes={
+            inputs = arch['input']
+            ga = arch['ga']
+            improve_hv = arch['improve_hv']
+            self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
                 'msgType': {
-                    'StringValue': 'evaluate',
+                    'StringValue': 'ndsm_evaluate',
                     'DataType': 'String'
                 },
                 'input': {
-                    'StringValue': str(arch['input']),
+                    'StringValue': str(inputs),
                     'DataType': 'String'
                 },
-                'redo': {
-                    'StringValue': 'true',
+                'dataset_id': {
+                    'StringValue': str(dataset_id),
                     'DataType': 'String'
                 },
                 'fast': {
-                    'StringValue': 'true',
+                    'StringValue': 'false',
+                    'DataType': 'String'
+                },
+                'ga': {
+                    'StringValue': str(ga),
+                    'DataType': 'String'
+                },
+                'improve_hv': {
+                    'StringValue': str(improve_hv),
+                    'DataType': 'String'
+                },
+                'redo': {
+                    'StringValue': "false",
                     'DataType': 'String'
                 }
             })
+
 
         return 0
 

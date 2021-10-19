@@ -131,6 +131,8 @@ class CopyData(APIView):
                 # Clone dataset
                 dbClient = GraphqlClient(problem_id=problem_id)
                 dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
+                user_info.eosscontext.dataset_id = dst_dataset_id
+                user_info.eosscontext.save()
 
                 # Return architectures
                 return Response({

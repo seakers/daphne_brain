@@ -7,5 +7,6 @@ urlpatterns = [
     # --> Start Agent
     path('toggle-agent', views.ToggleAgent.as_view()),
     path('formulation-change', views.FormulationChange.as_view()),
+    path('clear-eval-requests', views.FormulationChange.as_view()),
 
 ]

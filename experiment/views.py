@@ -17,10 +17,10 @@ def stage_type(id, stage_num):
         if stage_num == 0:
             return 'daphne_assistant'
         else:
-            return 'daphne_peer'
+            return 'no_daphne'
     else:
         if stage_num == 0:
-            return 'daphne_peer'
+            return 'no_daphne'
         else:
             return 'daphne_assistant'
 

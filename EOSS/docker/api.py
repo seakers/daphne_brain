@@ -15,7 +15,7 @@ config = {
         'VASSAR_RESPONSE_URL': 'http://localhost:9324/000000000000/vassar_response',
         'DEPLOYMENT_TYPE': 'local',
         'JAVA_OPTS': '-"Dcom.sun.management.jmxremote.rmi.port=10000 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=10000 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false -Djava.rmi.server.hostname=localhost"',
-        'AWS_STACK_ENDPOINT': 'http://172.18.0.6:9324',
+        'AWS_STACK_ENDPOINT': 'http://172.18.0.2:9324',
         'APOLLO_URL': 'http://172.18.0.14:8080/v1/graphql',
         'APOLLO_URL_WS': 'ws://172.18.0.14:8080/v1/graphql',
         'REQUEST_KEY': 'NONE'
@@ -51,11 +51,16 @@ class DockerClient:
         print('--> GATHERED CONTAINERS:', len(self.containers))
 
 
-    def start_containers(self, num):
-        print('--> STARTING', num, 'CONTAINERS')
+    def start_containers(self, num, vassar_request_url, vassar_response_url):
+        print('--> REQUESTED', num, 'CONTAINERS')
+        print('--> CURRENT CONTAINERS', len(self.containers))
+
 
         # Place request key in evironment
         env = copy.deepcopy(config['environment'])
+        env['VASSAR_REQUEST_URL'] = vassar_request_url
+        env['VASSAR_RESPONSE_URL'] = vassar_response_url
+
 
         img = "vassar:experiment"
         if self.fast:
@@ -63,7 +68,7 @@ class DockerClient:
 
 
         # Start containers
-        for x in range(0, num):
+        for x in range(len(self.containers), num):
             name = 'user-' + str(self.user_info.user.id) + '-container-' + str(len(self.containers))
             container = self.client.containers.run(
                 image=img,

@@ -6,8 +6,6 @@ import time
 from EOSS.sensitivity.api import SensitivityClient
 
 
-
-
 class FormulationAgent:
 
     # --> Experiment / User information will be set in the constructor
@@ -19,9 +17,6 @@ class FormulationAgent:
         self.sensitivity_client = None
         self.alive_time = 0
         self.thread = None
-
-
-
 
     """
       _______ _                        _   _____       _             __               
@@ -44,9 +39,6 @@ class FormulationAgent:
 
     def formulation_change(self, instChange, orbChange, stakeChange, objChange):
         return 0
-
-
-
 
     """
       _______ _                        _   ______                _   _                 
@@ -90,15 +82,13 @@ class FormulationAgent:
     def agent(self):
         self.print_start()
         self.sensitivity_client = SensitivityClient(self.user_info)
-
         continue_running = True
 
-        # 1. Calculate sensitivities for initial problem formulation
-        self.sensitivity_client.calculate_sensitivities()
-
+        # 1. Start sensitivity evals for the new formulation
+        self.sensitivity_client.start_formulation_calcs()
 
         while continue_running:
-            self.record_loop(sleep_sec=2)
+            self.record_loop(sleep_sec=7)
 
             # --> 1. Process queue messages
             msg = self.process_queue_msg()
@@ -106,13 +96,11 @@ class FormulationAgent:
                 continue_running = False
                 break
 
-
+            orb_result = self.sensitivity_client.get_orbit_sensitivities()
+            inst_result = self.sensitivity_client.get_instrument_sensitivities()
+            if orb_result is True and inst_result is True:
+                print('--> WRITING SENSITIVITY FILE')
+                self.sensitivity_client.write_file()
 
         self.sensitivity_client.shutdown()
         return 0
-
-
-
-
-
-
