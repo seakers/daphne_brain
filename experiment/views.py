@@ -113,10 +113,12 @@ class ReloadExperiment(APIView):
         if hasattr(user_info, 'experimentcontext'):
             experiment_context = user_info.experimentcontext
             if experiment_context.is_running:
+                print('--> LOADING PREVIOUS EXPERIMENT')
                 return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
-        return Response({ 'is_running': False })
-        
-        
+        print('--> NO PREVIOUS EXPERIMENT')
+        return Response({'is_running': False})
+
+
 class FinishExperiment(APIView):
 
     def get(self, request, format=None):

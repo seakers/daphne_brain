@@ -105,9 +105,9 @@ class DockerClient:
         env['VASSAR_RESPONSE_URL'] = vassar_response_url
 
 
-        img = "vassar:experiment"
-        if self.fast:
-            img = "vassar:experiment_fast"
+        img = "apazagab/vassar:experiment"
+        # if self.fast:
+        #     img = "apazagab/vassar:experiment_fast"
 
 
         # Start containers

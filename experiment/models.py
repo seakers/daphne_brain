@@ -20,6 +20,7 @@ class ExperimentStage(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     end_state = models.TextField()
+    problem_id = models.IntegerField(null=True)
 
 
 class ExperimentAction(models.Model):
