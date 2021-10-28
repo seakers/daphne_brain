@@ -78,11 +78,12 @@ class Register(APIView):
     Register a user
     """
     def post(self, request, format=None):
-        print("--> REGISTERING USER")
+
         username = request.data["username"]
         email = request.data["email"]
         password1 = request.data["password1"]
         password2 = request.data["password2"]
+        print("--> REGISTERING USER:", username)
 
         # Validate all fields against our rules
         if not password1 or not password2 or password1 != password2:
@@ -177,6 +178,12 @@ class CheckStatus(APIView):
         problem_id = user_info.eosscontext.problem_id
         group_id = user_info.eosscontext.group_id
         dataset_id = user_info.eosscontext.dataset_id
+        print('--> LOADING PROBLEM')
+        print('--> GROUP ID:', group_id)
+        print('--> PROBLEM ID:', problem_id)
+        print('--> DATASET ID:', dataset_id)
+
+
 
         # problem: is now the problem_id (from the database)
         response = {
@@ -191,7 +198,8 @@ class CheckStatus(APIView):
             response['is_logged_in'] = True
             response['pk'] = get_user_pk(request.user.username)
         else:
-            response['is_guest'] = request.session['is_guest']
+            if 'is_guest' in request.session:
+                response['is_guest'] = request.session['is_guest']
             response['is_logged_in'] = False
         return Response(response)
 

@@ -30,7 +30,7 @@ class StartGA(APIView):
                         "error": "Dataset is read only"
                     })
 
-                # Stop GA in container if it was runnning
+                # Stop GA in container if it was running
                 async_to_sync(client.stop_ga)()
                 # Start GA in container
                 async_to_sync(client.start_ga)()

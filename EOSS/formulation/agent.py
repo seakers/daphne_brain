@@ -82,10 +82,10 @@ class FormulationAgent:
     def agent(self):
         self.print_start()
         self.sensitivity_client = SensitivityClient(self.user_info)
-        continue_running = True
+        continue_running = False
 
-        # 1. Start sensitivity evals for the new formulation
-        self.sensitivity_client.start_formulation_calcs()
+        # 1. Calculate sensitivities
+        self.sensitivity_client.calculate_problem_sensitivities()
 
         while continue_running:
             self.record_loop(sleep_sec=7)
@@ -95,12 +95,6 @@ class FormulationAgent:
             if msg == 'stop':
                 continue_running = False
                 break
-
-            orb_result = self.sensitivity_client.get_orbit_sensitivities()
-            inst_result = self.sensitivity_client.get_instrument_sensitivities()
-            if orb_result is True and inst_result is True:
-                print('--> WRITING SENSITIVITY FILE')
-                self.sensitivity_client.write_file()
 
         self.sensitivity_client.shutdown()
         return 0

@@ -127,7 +127,7 @@ class EOSSConsumer(DaphneConsumer):
         # print(event)
         await self.send_json(event)
 
-
+    # Called every time the experiment stage changes
     async def connect_services(self, user_info: UserInformation):
         vassar_success = await self.connect_vassar(user_info)
         if vassar_success:
@@ -138,14 +138,11 @@ class EOSSConsumer(DaphneConsumer):
         vassar_instances = 1
 
 
-        # scaling = EvaluationScaling(user_info, vassar_instances, user_req=True, fast=False)
-        # scaling.initialize()
-
         scaling = await sync_to_async(EvaluationScaling)(user_info, vassar_instances, user_req=True, fast=False)
         await sync_to_async(scaling.initialize)()
 
 
-        # 1. Check to see if there is an existing vassar connection
+        # 1. Check to see if vassar connection was successful
         vassar_client = VASSARClient(user_info)
         if not skip_check:
             if user_info.eosscontext.vassar_request_queue_url is not None and await vassar_client.queue_exists(
@@ -189,6 +186,8 @@ class EOSSConsumer(DaphneConsumer):
             await request_create_task
         if response_create_task is not None:
             await response_create_task
+
+
 
         # Check if there is an existing GA connection
         if not skip_check:

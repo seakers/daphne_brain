@@ -1,10 +1,12 @@
 from EOSS.graphql.api import GraphqlClient
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.scaling import EvaluationScaling
+from EOSS.sensitivity.sampling.AssigningSampling import AssigningSampling
 from asgiref.sync import async_to_sync
 import itertools
 import threading
 import json
+import time
 
 from SALib.sample import saltelli
 from SALib.analyze import sobol
@@ -24,7 +26,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=5):
+    def __init__(self, request_user_info, num_instances=3):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -42,17 +44,8 @@ class SensitivityClient:
         self.architectures = None
         self.set_problem_parameters()
 
-        # --> Evaluations
-        self.orb_problem = None
-        self.inst_problem = None
-        self.requested_orb_evals = None
-        self.requested_inst_evals = None
-
-        self.climate_problem_1 = '/app/daphne/daphne_brain/EOSS/sensitivity/ClimateCentricSensitivity_1.json'
-        self.climate_problem_2 = '/app/daphne/daphne_brain/EOSS/sensitivity/ClimateCentricSensitivity_2.json'
-
-        self.orb_written = False
-        self.inst_written = False
+        # --> Dir for writing files
+        self.data_dir = '/app/daphne/daphne_brain/EOSS/sensitivity/data/'
 
     def shutdown(self):
         self.scale_client.shutdown()
@@ -110,82 +103,54 @@ class SensitivityClient:
         self.instruments = self.vassar_client.get_instrument_list_ai4se(self.user_info.eosscontext.problem_id)
         self.architectures = self.db_client.get_architectures_ai4se_form()
 
-    def get_num_inputs(self):
-        return len(self.orbits) * len(self.instruments)
+    def purge_eval_queues(self):
+        if async_to_sync(self.vassar_client.queue_exists)(self.user_info.eosscontext.vassar_request_queue_url):
+            self.vassar_client.purge_queue(self.user_info.eosscontext.vassar_request_queue_url)
+        if async_to_sync(self.vassar_client.queue_exists)(self.user_info.eosscontext.vassar_response_queue_url):
+            self.vassar_client.purge_queue(self.user_info.eosscontext.vassar_response_queue_url)
 
-    # analysis_type: orbit / instrument
-    def get_samples(self, analysis_type):
-        d_value = (2 * self.get_num_inputs() + 2)
-        print('--> D VALUE', d_value)
+    def subscribe_to_samples(self, samples):
+        print('--> SUBSCRIBING TO SAMPLES:', len(samples))
+        dataset_id = self.user_info.eosscontext.dataset_id
+        designs = []
 
-        problem = None
-        if analysis_type == 'orbit':
-            problem = self.get_orbit_analysis_problem()
-        else:
-            problem = self.get_instrument_analysis_problem()
+        while len(designs) < len(samples):
+            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples))
+            time.sleep(5)
+            query = self.db_client.get_architectures_like(dataset_id, samples)
+            designs = query['data']['Architecture']
 
-        samples = saltelli.sample(problem, d_value, calc_second_order=False)
-        rounded = np.round(samples, 0).tolist()
-        print('--> saltelli samples', analysis_type, len(rounded))
-        return rounded, problem
+        print('--> FINISHED EVALUATION')
+        return self.parse_architectures(designs)
 
-    def get_instrument_analysis_problem(self):
-        # 1. Update problem parameters
-        self.set_problem_parameters()
-
-        # 2. Get number of instruments and orbits
-        num_inputs = self.get_num_inputs()
-        num_insts = len(self.instruments)
-        num_orbs = len(self.orbits)
-
-        # 3. Define instrument groups
-        var_names = []
-        var_bounds = []
-        var_group = []
-        counter = 1
-        for x in range(0, num_orbs):
-            for y in range(0, num_insts):
-                group_name = self.instruments[y]
-                var_group.append(group_name)
-                var_names.append('x' + str(counter))
-                var_bounds.append([0, 1])
-                counter += 1
-        problem = {
-            'groups': var_group,
-            'num_vars': num_inputs,
-            'names': var_names,
-            'bounds': var_bounds
+    def process_results(self, results_dict, problem, items, file_name):
+        all_results = {
+            'S1': {},
+            'ST': {}
         }
-        print('--> CREATED PROBLEM: ', problem)
-        return problem
+        for objective, results in results_dict.items():
+            analysis = sobol.analyze(problem, results, calc_second_order=False)
+            first_order = analysis['S1']
+            total_order = analysis['ST']
 
-    def get_orbit_analysis_problem(self):
-        # 1. Update problem parameters
-        self.set_problem_parameters()
+            # Iterate over first order sensitivities
+            first_order_dict = {}
+            for idx, sensitivity in enumerate(first_order):
+                first_order_dict[items[idx]] = sensitivity
+            total_order_dict = {}
+            for idx, sensitivity in enumerate(total_order):
+                total_order_dict[items[idx]] = sensitivity
 
-        # 2. Get number of instruments and orbits
-        num_inputs = self.get_num_inputs()
-        num_insts = len(self.instruments)
-        num_orbs = len(self.orbits)
+            all_results['S1'][objective] = first_order_dict
+            all_results['ST'][objective] = total_order_dict
 
-        # 3. Define instrument groups
-        var_names = []
-        var_bounds = []
-        var_group = []
-        counter = 1
-        for x in range(0, num_orbs):
-            group_name = self.orbits[x]
-            for y in range(0, num_insts):
-                var_group.append(group_name)
-                var_names.append('x' + str(counter))
-                var_bounds.append([0, 1])
-                counter += 1
-        return {
-            'groups': var_group,
-            'num_vars': num_inputs,
-            'names': var_names,
-            'bounds': var_bounds
-        }
+        # Write results object to file
+        full_path = self.data_dir + file_name
+        with open(full_path, 'w') as f:
+            f.write(json.dumps(all_results))
+            f.close()
+
+        return True
 
     def parse_architectures(self, results):
         cost_list = []
@@ -216,115 +181,58 @@ class SensitivityClient:
             'Terrestrial': np.array(terrestrial_list)
         }
 
-    def process_sobol_results(self, results, key, req_type='instruments'):
-        objs = None
-        if req_type == 'instruments':
-            objs = self.instruments
-        else:
-            objs = self.orbits
-        first_order = results['S1']
-        total_order = results['ST']
-
-        if key not in self.result_obj:
-            self.result_obj[key] = {}
-        if req_type not in self.result_obj[key]:
-            self.result_obj[key][req_type] = {}
-
-        for idx, sen in enumerate(first_order):
-            first_order_sen = sen
-            total_order_sen = total_order[idx]
-            obj = objs[idx]
-            obj_dict = {
-                'S1': first_order_sen,
-                'ST': total_order_sen
-            }
-            self.result_obj[key][req_type][obj] = obj_dict
-        return results
-
-
-
-
-    def apply_sobol(self, problem, obj_dict, req_type='instruments'):
-        results = {
-            'cost': self.process_sobol_results(sobol.analyze(problem, obj_dict['cost'], calc_second_order=False), 'cost', req_type=req_type),
-            'programmatic_risk': self.process_sobol_results(sobol.analyze(problem, obj_dict['programmatic_risk'], calc_second_order=False), 'programmatic_risk', req_type=req_type),
-            'fairness': self.process_sobol_results(sobol.analyze(problem, obj_dict['fairness'], calc_second_order=False), 'fairness', req_type=req_type),
-            'data_continuity': self.process_sobol_results(sobol.analyze(problem, obj_dict['data_continuity'], calc_second_order=False), 'data_continuity', req_type=req_type),
-            'Oceanic': self.process_sobol_results(sobol.analyze(problem, obj_dict['Oceanic'], calc_second_order=False), 'Oceanic', req_type=req_type),
-            'Atmosphere': self.process_sobol_results(sobol.analyze(problem, obj_dict['Atmosphere'], calc_second_order=False), 'Atmosphere', req_type=req_type),
-            'Terrestrial': self.process_sobol_results(sobol.analyze(problem, obj_dict['Terrestrial'], calc_second_order=False), 'Terrestrial', req_type=req_type),
-        }
-        return results
-
-
-    def write_file(self):
-        with open(self.climate_problem_1, 'w') as f:
-            f.write(json.dumps(self.result_obj))
-            f.close()
-        self.result_obj = {}
 
 
 
 
 
-
-    def get_orbit_sensitivities(self):
-        if self.orb_written:
-            return self.orb_written
-
-        query_results = self.db_client.get_architectures_like(self.user_info.eosscontext.dataset_id, self.requested_orb_evals)
-        results = query_results['data']['Architecture']
-        print('--> NUM SENSITIVITY ORBS EVALUATED SO FAR', len(results))
-        if len(results) < len(self.requested_orb_evals):
-            return False
-        obj_dict = self.parse_architectures(results)
-        sensitivities = self.apply_sobol(self.orb_problem, obj_dict, req_type='orbits')
-        self.orb_written = True
-        print('--> ORBIT SENSITIVITIES', sensitivities)
-        return True
-
-    def get_instrument_sensitivities(self):
-        if self.inst_written:
-            return self.inst_written
-
-        query_results = self.db_client.get_architectures_like(self.user_info.eosscontext.dataset_id, self.requested_inst_evals)
-        results = query_results['data']['Architecture']
-        print('--> NUM SENSITIVITY INSTS EVALUATED SO FAR', len(results))
-        if len(results) < len(self.requested_inst_evals):
-            return False
-        obj_dict = self.parse_architectures(results)
-        sensitivities = self.apply_sobol(self.inst_problem, obj_dict, req_type='instruments')
-        self.inst_written = True
-        print('--> INSTRUMENT SENSITIVITIES', sensitivities)
-        return True
+    def calculate_problem_sensitivities(self, problem_name='ClimateCentric_1'):
 
 
-    def start_formulation_calcs(self, new_dataset=False):
-        print('--> CALCULATING SENSITIVITIES')
-
-        # 1. Reload problem parameters in case of problem formulation change, clear eval queues
-        if async_to_sync(self.vassar_client.queue_exists)(self.user_info.eosscontext.vassar_request_queue_url):
-            self.vassar_client.purge_queue(self.user_info.eosscontext.vassar_request_queue_url)
-        if async_to_sync(self.vassar_client.queue_exists)(self.user_info.eosscontext.vassar_response_queue_url):
-            self.vassar_client.purge_queue(self.user_info.eosscontext.vassar_response_queue_url)
+        # 1. Set problem parameters
         self.set_problem_parameters()
-        print('--> SET PROBLEM PARAMETERS')
 
-        # 2. Create new dataset to store evaluations
-        if new_dataset:
-            self.new_dataset()
-        print('--> CREATED NEW DATASET')
+        # 2. Create sampler for sensitivity evaluation
+        sampling = AssigningSampling(self.instruments, self.orbits)
 
-        # 2. Generate design samples for sensitivity calculations (2d np-array)
-        orb_batch, self.orb_problem = self.get_samples(analysis_type='orbit')
-        inst_batch, self.inst_problem = self.get_samples(analysis_type='instrument')
-        print('--> NEW SAMPLES GENERATED')
+        # 3. Calculate orbit sensitivities
+        self.calculate_orbit_sensitivities(sampling, problem_name)
 
-        # 3. Create evaluation requests and send to the eval queue
-        self.requested_orb_evals = self.scale_client.evaluate_batch(orb_batch)
-        self.requested_inst_evals  = self.scale_client.evaluate_batch(inst_batch)
+        # 4. Calculate instrument sensitivities
+        self.calculate_instrument_sensitivities(sampling, problem_name)
 
-        return True
+    def calculate_orbit_sensitivities(self, sampling, problem_name):
+        self.purge_eval_queues()
+
+        # 1. Get samples
+        samples = sampling.get_orbit_samples()
+
+        # 2. Place all samples in evaluation queue
+        samples_requested = self.scale_client.evaluate_batch(samples)
+
+        # 3. Subscribe to architectures
+        results_dict = self.subscribe_to_samples(samples_requested)
+
+        # 4. Process results
+        file_name = problem_name + '_OrbitSensitivities.json'
+        self.process_results(results_dict, sampling.orbit_problem, self.orbits, file_name)
+
+    def calculate_instrument_sensitivities(self, sampling, problem_name):
+        self.purge_eval_queues()
+
+        # 1. Get samples
+        samples = sampling.get_instrument_samples()
+
+        # 2. Place all samples in evaluation queue
+        samples_requested = self.scale_client.evaluate_batch(samples)
+
+        # 3. Subscribe to architectures
+        results_dict = self.subscribe_to_samples(samples_requested)
+
+        # 4. Process results
+        file_name = problem_name + '_InstrumentSensitivities.json'
+        self.process_results(results_dict, sampling.orbit_problem, self.instruments, file_name)
+
 
 
 

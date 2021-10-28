@@ -95,6 +95,10 @@ class ImportData(APIView):
             user_info.eosscontext.save()
             user_info.save()
 
+            print('\n------ SAVING USER CONTEXT ON PROBLEM LOAD ------')
+            print('--> PROBLEM ID:', user_info.eosscontext.problem_id)
+            print('--> DATASET ID:', user_info.eosscontext.dataset_id)
+
             # Return architectures
             return Response(architectures_json)
         except Exception:
