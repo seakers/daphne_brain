@@ -117,13 +117,16 @@ class SensitivityClient:
         prev_eval_num = 0
 
         while len(designs) < len(samples):
-            eval_rate = (len(designs) - prev_eval_num) / float(sleep_sec)
-            estimated_time = ((len(samples) - len(designs)) / eval_rate) / 60.0
-            prev_eval_num = len(designs)
-            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', eval_rate, '(eval/sec)', '| TIME REMAINING:', estimated_time, '(min)')
             time.sleep(sleep_sec)
             query = self.db_client.get_architectures_like(dataset_id, samples)
             designs = query['data']['Architecture']
+
+            eval_rate = (len(designs) - prev_eval_num) / float(sleep_sec)
+            if eval_rate == 0:
+                eval_rate = 1
+            estimated_time = ((len(samples) - len(designs)) / eval_rate) / 60.0
+            prev_eval_num = len(designs)
+            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', eval_rate, '(eval/sec)', '| TIME REMAINING:', estimated_time, '(min)')
 
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)
