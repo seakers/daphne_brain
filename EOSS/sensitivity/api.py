@@ -112,11 +112,16 @@ class SensitivityClient:
     def subscribe_to_samples(self, samples):
         print('--> SUBSCRIBING TO SAMPLES:', len(samples))
         dataset_id = self.user_info.eosscontext.dataset_id
+        sleep_sec = 5
         designs = []
+        prev_eval_num = 0
 
         while len(designs) < len(samples):
-            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples))
-            time.sleep(5)
+            eval_rate = (len(designs) - prev_eval_num) / float(sleep_sec)
+            estimated_time = ((len(samples) - len(designs)) / eval_rate) / 60.0
+            prev_eval_num = len(designs)
+            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', eval_rate, '(eval/sec)', '| TIME REMAINING:', estimated_time, '(min)')
+            time.sleep(sleep_sec)
             query = self.db_client.get_architectures_like(dataset_id, samples)
             designs = query['data']['Architecture']
 
