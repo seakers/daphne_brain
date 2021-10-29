@@ -151,7 +151,7 @@ class SensitivityClient:
 
         # Write results object to file
         full_path = self.data_dir + file_name
-        with open(full_path, 'w') as f:
+        with open(full_path, 'w+') as f:
             f.write(json.dumps(all_results))
             f.close()
 
