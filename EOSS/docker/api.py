@@ -42,6 +42,9 @@ config = {
         'APOLLO_URL_WS': 'ws://172.12.0.13:8080/v1/graphql',
         'REQUEST_KEY': 'NONE'
     },
+    'mem_limit': '2g',
+    'cpu_period': 100000,
+    'cpu_quota': 100000,
     # 'entrypoint': 'gradle run'
 }
 
@@ -143,7 +146,10 @@ class DockerClient:
                     network=config['network'],
                     environment=env,
                     name=name,
-                    labels=self.labels
+                    labels=self.labels,
+                    mem_limit=config['mem_limit'],
+                    cpu_period=config['cpu_period'],
+                    cpu_quota=config['cpu_quota']
                 )
                 self.containers.append(container)
 
