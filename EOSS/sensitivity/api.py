@@ -130,7 +130,7 @@ class SensitivityClient:
             mean_rate = mean(rate_list)
             estimated_time = ((len(samples) - len(designs)) / mean_rate) / 60.0
             prev_eval_num = len(designs)
-            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', mean_rate, '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
+            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', round(mean_rate, 3), '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
 
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)

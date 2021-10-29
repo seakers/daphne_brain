@@ -120,17 +120,32 @@ class DockerClient:
 
         img = "apazagab/vassar:experiment"
 
+        use_threading = False
+
 
         # Start containers
         start_threads = []
         for x in range(len(self.containers), num):
             name = 'user-' + str(self.user_info.user.id) + '-container-' + str(x)
-            th = threading.Thread(
-                target=start_container,
-                args=(self.containers, self.client, img, config['detach'], config['network'], env, name, self.labels)
-            )
-            th.start()
-            start_threads.append(th)
+
+            if use_threading:
+                th = threading.Thread(
+                    target=start_container,
+                    args=(self.containers, self.client, img, config['detach'], config['network'], env, name, self.labels)
+                )
+                th.start()
+                start_threads.append(th)
+            else:
+                name = 'user-' + str(self.user_info.user.id) + '-container-' + str(len(self.containers))
+                container = self.client.containers.run(
+                    image=img,
+                    detach=config['detach'],
+                    network=config['network'],
+                    environment=env,
+                    name=name,
+                    labels=self.labels
+                )
+                self.containers.append(container)
 
         for thread in start_threads:
             thread.join()
