@@ -2,6 +2,7 @@ from EOSS.graphql.api import GraphqlClient
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.scaling import EvaluationScaling
 from EOSS.sensitivity.sampling.AssigningSampling import AssigningSampling
+from statistics import mean
 from asgiref.sync import async_to_sync
 import itertools
 import threading
@@ -115,6 +116,7 @@ class SensitivityClient:
         sleep_sec = 5
         designs = []
         prev_eval_num = 0
+        rate_list = []
 
         while len(designs) < len(samples):
             time.sleep(sleep_sec)
@@ -124,9 +126,11 @@ class SensitivityClient:
             eval_rate = (len(designs) - prev_eval_num) / float(sleep_sec)
             if eval_rate == 0:
                 eval_rate = 1
+            rate_list.append(eval_rate)
+            mean_rate = mean(rate_list)
             estimated_time = ((len(samples) - len(designs)) / eval_rate) / 60.0
             prev_eval_num = len(designs)
-            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', eval_rate, '(eval/sec)', '| TIME REMAINING:', estimated_time, '(min)')
+            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', mean_rate, '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
 
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)
