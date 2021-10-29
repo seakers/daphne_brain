@@ -110,7 +110,7 @@ class DockerClient:
         )
         return True
 
-    def start_containers(self, num, vassar_request_url, vassar_response_url):
+    def start_containers(self, num, vassar_request_url, vassar_response_url, msg_batch_size=1):
         print('--> REQUESTED', num, 'CONTAINERS')
         print('--> CURRENT CONTAINERS', len(self.containers))
 
@@ -119,6 +119,7 @@ class DockerClient:
         env = copy.deepcopy(config['environment'])
         env['VASSAR_REQUEST_URL'] = vassar_request_url
         env['VASSAR_RESPONSE_URL'] = vassar_response_url
+        env['MAXEVAL'] = msg_batch_size
 
 
         img = "apazagab/vassar:experiment"

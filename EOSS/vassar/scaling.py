@@ -72,7 +72,7 @@ class EvaluationScaling:
         if self.user_req:
             self.docker_client.start_containers(self.num_instances, self.request_queue_url, self.response_queue_url)
         else:
-            self.docker_client.start_containers(self.num_instances, self.request_queue_url_2, self.response_queue_url_2)
+            self.docker_client.start_containers(self.num_instances, self.request_queue_url_2, self.response_queue_url_2, msg_batch_size=10)
 
         # 3. Initialize each of the containers
         build_threads = []
