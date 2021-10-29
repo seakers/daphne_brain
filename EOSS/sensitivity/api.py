@@ -128,7 +128,7 @@ class SensitivityClient:
                 eval_rate = 1
             rate_list.append(eval_rate)
             mean_rate = mean(rate_list)
-            estimated_time = ((len(samples) - len(designs)) / eval_rate) / 60.0
+            estimated_time = ((len(samples) - len(designs)) / mean_rate) / 60.0
             prev_eval_num = len(designs)
             print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', mean_rate, '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
 
