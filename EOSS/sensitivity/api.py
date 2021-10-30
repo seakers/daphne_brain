@@ -115,22 +115,27 @@ class SensitivityClient:
         dataset_id = self.user_info.eosscontext.dataset_id
         sleep_sec = 5
         designs = []
+        num_evaluated = 0
         prev_eval_num = 0
         rate_list = []
 
-        while len(designs) < len(samples):
+        while num_evaluated < len(samples):
             time.sleep(sleep_sec)
-            query = self.db_client.get_architectures_like(dataset_id, samples)
-            designs = query['data']['Architecture']
+            aggregate_query = self.db_client.get_architectures_like_aggregate(dataset_id, samples)
+            num_evaluated = int(aggregate_query['data']['Architecture_aggregate']['aggregate']['count'])
 
-            eval_rate = (len(designs) - prev_eval_num) / float(sleep_sec)
+            eval_rate = (num_evaluated - prev_eval_num) / float(sleep_sec)
             if eval_rate == 0:
                 eval_rate = 1
             rate_list.append(eval_rate)
             mean_rate = mean(rate_list)
-            estimated_time = ((len(samples) - len(designs)) / mean_rate) / 60.0
-            prev_eval_num = len(designs)
-            print('--> CHECKING FOR COMPLETION:', len(designs), '/', len(samples), '| RATE:', round(mean_rate, 3), '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
+            estimated_time = ((len(samples) - num_evaluated) / mean_rate) / 60.0
+            prev_eval_num = num_evaluated
+            print('--> CHECKING FOR COMPLETION:', num_evaluated, '/', len(samples), '| RATE:', round(mean_rate, 3), '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
+
+        query = self.db_client.get_architectures_like(dataset_id, samples)
+        designs = query['data']['Architecture']
+
 
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)
