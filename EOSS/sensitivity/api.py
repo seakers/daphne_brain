@@ -235,8 +235,7 @@ class SensitivityClient:
         results_dict = self.subscribe_to_samples(samples_requested)
 
         # 4. Process results
-        ddate = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        file_name = problem_name + '_OrbitSensitivities_'+str(ddate)+'.json'
+        file_name = problem_name + '_OrbitSensitivities.json'
         self.process_results(results_dict, sampling.orbit_problem, self.orbits, file_name)
 
     def calculate_instrument_sensitivities(self, sampling, problem_name):
@@ -252,8 +251,7 @@ class SensitivityClient:
         results_dict = self.subscribe_to_samples(samples_requested)
 
         # 4. Process results
-        ddate = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        file_name = problem_name + '_InstrumentSensitivities_'+ddate+'.json'
+        file_name = problem_name + '_InstrumentSensitivities.json'
         self.process_results(results_dict, sampling.instrument_problem, self.instruments, file_name)
 
 
