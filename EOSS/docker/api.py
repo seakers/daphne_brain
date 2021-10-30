@@ -49,7 +49,7 @@ config = {
 }
 
 
-def start_container(container_list, docker_api, image, detach, network, environment, name, labels):
+def start_container(container_list, docker_api, image, detach, network, environment, name, labels, mem_limit, cpu_period, cpu_quota):
     container_list.append(
         docker_api.containers.run(
             image=image,
@@ -57,7 +57,10 @@ def start_container(container_list, docker_api, image, detach, network, environm
             network=network,
             environment=environment,
             name=name,
-            labels=labels
+            labels=labels,
+            mem_limit=mem_limit,
+            cpu_period=cpu_period,
+            cpu_quota=cpu_quota
         )
     )
 
@@ -124,7 +127,7 @@ class DockerClient:
 
         img = "apazagab/vassar:experiment"
 
-        use_threading = False
+        use_threading = True
 
 
         # Start containers
@@ -135,7 +138,7 @@ class DockerClient:
             if use_threading:
                 th = threading.Thread(
                     target=start_container,
-                    args=(self.containers, self.client, img, config['detach'], config['network'], env, name, self.labels)
+                    args=(self.containers, self.client, img, config['detach'], config['network'], env, name, self.labels, config['mem_limit'], config['cpu_period'], config['cpu_quota'])
                 )
                 th.start()
                 start_threads.append(th)
