@@ -243,7 +243,7 @@ class SensitivityClient:
 
         # 4. Process results
         file_name = problem_name + '_InstrumentSensitivities.json'
-        self.process_results(results_dict, sampling.orbit_problem, self.instruments, file_name)
+        self.process_results(results_dict, sampling.instrument_problem, self.instruments, file_name)
 
 
 
