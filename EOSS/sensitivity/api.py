@@ -136,6 +136,9 @@ class SensitivityClient:
         query = self.db_client.get_architectures_like(dataset_id, samples)
         designs = query['data']['Architecture']
 
+        # Make sure the appropriate number of samples are included
+        while len(designs) > len(samples):
+            designs.pop()
 
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)
