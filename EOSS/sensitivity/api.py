@@ -208,7 +208,7 @@ class SensitivityClient:
         sampling = AssigningSampling(self.instruments, self.orbits)
 
         # 3. Calculate orbit sensitivities
-        self.calculate_orbit_sensitivities(sampling, problem_name)
+        # self.calculate_orbit_sensitivities(sampling, problem_name)
 
         # 4. Calculate instrument sensitivities
         self.calculate_instrument_sensitivities(sampling, problem_name)
