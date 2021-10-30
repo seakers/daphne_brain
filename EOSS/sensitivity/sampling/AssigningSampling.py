@@ -8,7 +8,7 @@ class AssigningSampling:
         self.instruments = instruments
         self.orbits = orbits
         self.num_inputs = len(self.instruments) * len(self.orbits)
-        self.d_value = (2 * self.num_inputs + 2)
+        self.d_value = 1024
 
         # --> Problems
         self.orbit_problem = self.build_orbit_problem()
