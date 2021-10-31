@@ -188,6 +188,7 @@ class GraphqlClient:
                 programmatic_risk
                 fairness
                 data_continuity
+                eval_idx
                 ArchitectureScoreExplanations {{
                   satisfaction
                   Stakeholder_Needs_Panel {{

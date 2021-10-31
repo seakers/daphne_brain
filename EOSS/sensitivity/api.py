@@ -213,7 +213,9 @@ class SensitivityClient:
         oceanic_list = []
         atmosphere_list = []
         terrestrial_list = []
+        print('\n\n--- PARSING ARCHITECTURES ---')
         for arch in results:
+
             exp_results = {}
             for exp in arch['ArchitectureScoreExplanations']:
                 exp_results[exp['Stakeholder_Needs_Panel']['name']] = float(exp['satisfaction'])
@@ -221,6 +223,7 @@ class SensitivityClient:
             atmosphere_list.append(exp_results.get("Atmosphere"))
             terrestrial_list.append(exp_results.get("Terrestrial"))
             cost_list.append(arch['cost'])
+            print('--> EVAL NUMBER:', arch['eval_idx'])
             programmatic_risk_list.append(arch['programmatic_risk'])
             fairness_list.append(arch['fairness'])
             data_continuity_list.append(arch['data_continuity'])
@@ -252,10 +255,10 @@ class SensitivityClient:
         # self.calculate_orbit_sensitivities(sampling, problem_name)
 
         # 4. Calculate instrument sensitivities
-        # self.calculate_instrument_sensitivities(sampling, problem_name)
+        self.calculate_instrument_sensitivities(sampling, problem_name)
 
         # 5. Calculate complete sensitivities
-        self.calculate_complete_sensitivities(sampling, problem_name)
+        # self.calculate_complete_sensitivities(sampling, problem_name)
 
     def calculate_complete_sensitivities(self, sampling, problem_name):
         self.purge_eval_queues()
