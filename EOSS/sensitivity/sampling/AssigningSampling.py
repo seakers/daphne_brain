@@ -13,7 +13,22 @@ class AssigningSampling:
         # --> Problems
         self.orbit_problem = self.build_orbit_problem()
         self.instrument_problem = self.build_instrument_problem()
+        self.complete_problem = self.build_complete_problem()
 
+    def build_complete_problem(self):
+        var_names = []
+        var_bounds = []
+        counter = 1
+        for x in range(0, len(self.orbits)):
+            for y in range(0, len(self.instruments)):
+                var_names.append('x' + str(counter))
+                var_bounds.append([0, 1])
+                counter += 1
+        return {
+            'num_vars': self.num_inputs,
+            'names': var_names,
+            'bounds': var_bounds
+        }
 
     def build_orbit_problem(self):
         var_names = []
@@ -63,5 +78,7 @@ class AssigningSampling:
         print('--> NUMBER OF INSTRUMENT SAMPLES:', len(samples))
         return np.round(samples, 0).tolist()
 
-
-
+    def get_complete_samples(self):
+        samples = saltelli.sample(self.complete_problem, self.d_value, calc_second_order=False)
+        print('--> NUMBER OF COMPLETE SAMPLES:', len(samples))
+        return np.round(samples, 0).tolist()

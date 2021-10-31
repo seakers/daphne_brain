@@ -138,11 +138,43 @@ class SensitivityClient:
         designs = query['data']['Architecture']
 
         # Make sure the appropriate number of samples are included
-        while len(designs) > len(samples):
-            designs.pop()
+        if len(designs) != len(samples):
+            print('--> WRONG NUMBER OF SENSITIVITY DESIGNS:', len(designs), len(samples))
+            time.sleep(5)
 
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)
+
+    def process_complete_results(self, results_dict, problem, orbits, instruments, file_name):
+        all_results = {
+            'S1': {},
+            'ST': {}
+        }
+        for objective, results in results_dict.items():
+            analysis = sobol.analyze(problem, results, calc_second_order=False)
+            first_order = analysis['S1']
+            total_order = analysis['ST']
+
+            counter = 0
+            first_order_dict = {}
+            total_order_dict = {}
+            for orbit in orbits:
+                for instrument in instruments:
+                    name = instrument + '@' + orbit
+                    first_order_dict[name] = first_order[counter]
+                    total_order_dict[name] = total_order[counter]
+                    counter += 1
+            all_results['S1'][objective] = first_order_dict
+            all_results['ST'][objective] = total_order_dict
+
+        # Write results object to file
+        full_path = self.data_dir + file_name
+        with open(full_path, 'w+') as f:
+            f.write(json.dumps(all_results))
+            f.close()
+
+        return True
+
 
     def process_results(self, results_dict, problem, items, file_name):
         all_results = {
@@ -220,7 +252,30 @@ class SensitivityClient:
         # self.calculate_orbit_sensitivities(sampling, problem_name)
 
         # 4. Calculate instrument sensitivities
-        self.calculate_instrument_sensitivities(sampling, problem_name)
+        # self.calculate_instrument_sensitivities(sampling, problem_name)
+
+        # 5. Calculate complete sensitivities
+        self.calculate_complete_sensitivities(sampling, problem_name)
+
+    def calculate_complete_sensitivities(self, sampling, problem_name):
+        self.purge_eval_queues()
+
+        # 1. Get samples
+        samples = sampling.get_complete_samples()
+
+        # 2. Place all samples in evaluation queue
+        samples_requested = self.scale_client.evaluate_batch(samples)
+
+        # 3. Subscribe to architectures
+        results_dict = self.subscribe_to_samples(samples_requested)
+
+        # 4. Process results
+        ddate = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        file_name = problem_name + '_CompleteSensitivities_' + str(ddate) + '.json'
+        self.process_complete_results(results_dict, sampling.complete_problem, self.orbits, self.instruments, file_name)
+
+        return 0
+
 
     def calculate_orbit_sensitivities(self, sampling, problem_name):
         self.purge_eval_queues()

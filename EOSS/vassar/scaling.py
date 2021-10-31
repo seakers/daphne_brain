@@ -116,7 +116,7 @@ class EvaluationScaling:
         for idx, arch in enumerate(batch):
             inputs = self.bit_list_2_bool_list(arch)
             requested_evals.append(self.bit_list_2_bit_str(arch))
-            self.vassar_client.evaluate_architecture_ai4se(inputs, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False)
+            self.vassar_client.evaluate_architecture_ai4se(inputs, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False, eval_idx=idx)
 
         return requested_evals
 

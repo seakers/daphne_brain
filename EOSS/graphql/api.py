@@ -183,7 +183,7 @@ class GraphqlClient:
     def get_architectures_like(self, dataset_id, arch_input_list):
         query = f'''
             query MyQuery {{
-              Architecture(where: {{dataset_id: {{_eq: {dataset_id}}}, input: {{_in: {json.dumps(arch_input_list)}}}}}) {{
+              Architecture(where: {{dataset_id: {{_eq: {dataset_id}}}, input: {{_in: {json.dumps(arch_input_list)}}}}}, order_by: {{eval_idx: asc}}) {{
                 cost
                 programmatic_risk
                 fairness

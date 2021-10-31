@@ -574,7 +574,7 @@ class VASSARClient:
 
     # working
     def evaluate_architecture_ai4se(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True,
-                              user=None, session=None):
+                              user=None, session=None, eval_idx=1):
         inputs = ''
         for x in input_str:
             if x:
@@ -608,6 +608,10 @@ class VASSARClient:
             },
             'redo': {
                 'StringValue': str(redo),
+                'DataType': 'String'
+            },
+            'eval_idx': {
+                'StringValue': str(eval_idx),
                 'DataType': 'String'
             }
         })
