@@ -216,7 +216,7 @@ class VASSARClient:
         has_called_aws = False
 
         while not success and retries < max_retries:
-            print('retry')
+            print('retry prod')
             retries += 1
             user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop_prod(response_url)
 
