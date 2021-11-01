@@ -60,7 +60,8 @@ def dev_client(client_type, region_name='us-east-2'):
     return boto3.client(client_type, endpoint_url='http://mock-sqs:9324', region_name='elasticmq', aws_access_key_id=dev_access_key(), aws_secret_access_key=dev_secret_key(), use_ssl=False)
 
 def prod_client(client_type, region_name='us-east-2'):
-    return boto3.client(client_type, region_name=region_name, endpoint_url=f"https://sqs.{region_name}.amazonaws.com")
+    # return boto3.client(client_type, region_name=region_name, endpoint_url=f"https://sqs.{region_name}.amazonaws.com")
+    return boto3.client(client_type, region_name=region_name)
 
 def get_boto3_client(client_type,  region_name='us-east-2'):
     if settings.DEPLOYMENT_TYPE == "local":
