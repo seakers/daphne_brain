@@ -747,7 +747,7 @@ class VASSARClient:
         # Connect to queue
         eosscontext: EOSSContext = self.user_information.eosscontext
 
-        self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
+        self.get_sqs_prod().send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
             'msgType': {
                 'StringValue': 'ndsm_evaluate',
                 'DataType': 'String'
