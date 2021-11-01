@@ -131,7 +131,7 @@ class EvaluationScaling:
         for idx, arch in enumerate(batch):
             idx_temp = idx
             count = idx + 1
-            arch_str = "".join(arch)
+            arch_str = self.bit_list_2_bit_str(arch)
             requested_evals.append(arch_str)
             arch_batch.append(arch_str)
             idx_batch.append(idx)
