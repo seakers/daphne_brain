@@ -72,7 +72,7 @@ class EvaluationScaling:
         if self.user_req:
             self.docker_client.start_containers(self.num_instances, self.request_queue_url, self.response_queue_url)
         else:
-            self.docker_client.start_containers(self.num_instances, self.request_queue_url_2, self.response_queue_url_2, msg_batch_size=10)
+            self.docker_client.start_containers(self.num_instances, self.request_queue_url_2, self.response_queue_url_2, msg_batch_size=3)
 
         # 3. Initialize each of the containers
         build_threads = []
@@ -111,10 +111,11 @@ class EvaluationScaling:
 
     # Takes 2D array of bits
     def evaluate_batch(self, batch):
-        print('--> EVALUATING BATCH')
+        print('--> EVALUATING BATCH:', len(batch))
         requested_evals = []
         for idx, arch in enumerate(batch):
             inputs = self.bit_list_2_bool_list(arch)
+            print('--> EVAL MESSAGE:', idx)
             requested_evals.append(self.bit_list_2_bit_str(arch))
             self.vassar_client.evaluate_architecture_ai4se(inputs, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False, eval_idx=idx)
 

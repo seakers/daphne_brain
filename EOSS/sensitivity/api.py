@@ -28,7 +28,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=3):
+    def __init__(self, request_user_info, num_instances=60):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -255,10 +255,10 @@ class SensitivityClient:
         # self.calculate_orbit_sensitivities(sampling, problem_name)
 
         # 4. Calculate instrument sensitivities
-        self.calculate_instrument_sensitivities(sampling, problem_name)
+        # self.calculate_instrument_sensitivities(sampling, problem_name)
 
         # 5. Calculate complete sensitivities
-        # self.calculate_complete_sensitivities(sampling, problem_name)
+        self.calculate_complete_sensitivities(sampling, problem_name)
 
     def calculate_complete_sensitivities(self, sampling, problem_name):
         self.purge_eval_queues()
