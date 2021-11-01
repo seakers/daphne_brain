@@ -125,12 +125,8 @@ class EvaluationScaling:
     def place_batch(self, batch):
         arch_batch = []
         idx_batch = []
-        for idx, arch in enumerate(batch):
-            if idx > 500:
-                break
-            idx_temp = idx
+        for idx, arch_str in enumerate(batch):
             count = idx + 1
-            arch_str = self.bit_list_2_bit_str(arch)
             arch_batch.append(arch_str)
             idx_batch.append(idx)
             if (count % 10) == 0:
@@ -153,7 +149,7 @@ class EvaluationScaling:
             arch_str = self.bit_list_2_bit_str(arch)
             requested_evals.append(arch_str)
 
-        th = threading.Thread(target=self.place_batch, args=(batch))
+        th = threading.Thread(target=self.place_batch, args=(requested_evals,))
         th.start()
 
         return requested_evals
