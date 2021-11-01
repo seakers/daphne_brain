@@ -9,6 +9,8 @@ from EOSS.graphql.api import GraphqlClient
 
 from asgiref.sync import async_to_sync
 
+from EOSS.aws.utils import prod_client
+
 
 # Keep the user-id but create a new dataset for evaluation
 
@@ -20,12 +22,19 @@ def connection_thread(user_info, request_queue_url, response_queue_url):
     user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar)(request_queue_url, response_queue_url, 3)
     print('--> VASSAR BUILD SUCCESS:', vassar_connection_success)
 
+def connection_thread_prod(user_info, request_queue_url, response_queue_url):
+    print('--> VASSAR HANDSHAKE STARTED')
+    temp_client = VASSARClient(user_info)
+    async_to_sync(temp_client.send_connect_message_prod)(request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
+    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar_prod)(request_queue_url, response_queue_url, 3)
+    print('--> VASSAR BUILD SUCCESS:', vassar_connection_success)
 
 
 
 class EvaluationScaling:
 
-    def __init__(self, user_info, num_instances, user_req=False, fast=True):
+    def __init__(self, user_info, num_instances, user_req=False, fast=True, prod=False):
+        self.prod = prod
         self.user_req = user_req
         self.user_info = user_info
         self.num_instances = num_instances
@@ -44,6 +53,15 @@ class EvaluationScaling:
     def shutdown(self):
         self.docker_client.stop_containers()
 
+        if self.prod:
+            self.update_service_count(0)
+
+    def update_service_count(self, count):
+        ecs_client = prod_client('ecs', 'us-east-2')
+        cluster_arn = 'arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster'
+        service_arn = 'arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster/sensitivity-service'
+        ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=count)
+
     def init_queues(self):
         if not self.vassar_client.queue_exists_by_name("dead-letter"):
             dead_letter_url, dead_letter_arn = self.vassar_client.create_dead_queue("dead-letter")
@@ -60,21 +78,43 @@ class EvaluationScaling:
             self.vassar_client.create_queue(self.response_queue_url_2.split("/")[-1], dead_letter_arn)
 
     def initialize(self, block=True):
+        self.init_queues()
+
+        if self.prod:
+            self.initialize_prod()
+        else:
+            self.initialize_dev(block)
+
+    def initialize_prod(self):
+
+        # 1. Update service to have appropriate number of
+        self.update_service_count(self.num_instances)
+
+        # 2. Initialize containers
+        build_threads = []
+        for x in range(0, self.num_instances):
+            th = threading.Thread(target=connection_thread_prod, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2))
+            th.start()
+            build_threads.append(th)
+        for th in build_threads:
+            th.join()
+
+        print('--> SCALING INITIALIZATION COMPLETE')
+        return 0
+
+    def initialize_dev(self, block=True):
         print('--> INITIALIZING SCALING')
         containers_to_start = self.num_instances - len(self.docker_client.containers)
         if containers_to_start < 0:
             containers_to_start = 0
 
-        # 1. Ensure appropriate queues exist
-        self.init_queues()
-
-        # 2. Start docker containers
+        # 1. Start docker containers
         if self.user_req:
             self.docker_client.start_containers(self.num_instances, self.request_queue_url, self.response_queue_url)
         else:
             self.docker_client.start_containers(self.num_instances, self.request_queue_url_2, self.response_queue_url_2, msg_batch_size=3)
 
-        # 3. Initialize each of the containers
+        # 2. Initialize each of the containers
         build_threads = []
         for x in range(0, containers_to_start):
             if self.user_req:
@@ -84,12 +124,14 @@ class EvaluationScaling:
             th.start()
             build_threads.append(th)
 
-        # 5. Wait for threads to finish if blocking
+        # 3. Wait for threads to finish if blocking
         if block:
             for th in build_threads:
                 th.join()
 
         print('--> SCALING INITIALIZATION COMPLETE')
+
+
 
     def bit_list_2_bool_list(self, bit_list):
         bool_list = []
@@ -122,6 +164,21 @@ class EvaluationScaling:
         return requested_evals
 
 
+    def evaluate_batch_fast(self, batch):
+        print('--> EVALUATING BATCH:', len(batch))
+        requested_evals = []
+
+        ## Create batch to return
+        for idx, arch in enumerate(batch):
+            arch_str = self.bit_list_2_bit_str(arch)
+            requested_evals.append(arch_str)
+
+        th = threading.Thread(target=self.place_batch, args=(requested_evals,))
+        th.start()
+
+        return requested_evals
+
+
     def place_batch(self, batch):
         arch_batch = []
         idx_batch = []
@@ -139,20 +196,3 @@ class EvaluationScaling:
             self.vassar_client.evaluate_architecture_batch_ai4se(arch_batch,
                                                                  eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url,
                                                                  block=False, idx_batch=idx_batch)
-
-    def evaluate_batch_fast(self, batch):
-        print('--> EVALUATING BATCH:', len(batch))
-        requested_evals = []
-
-        ## Create batch to return
-        for idx, arch in enumerate(batch):
-            arch_str = self.bit_list_2_bit_str(arch)
-            requested_evals.append(arch_str)
-
-        th = threading.Thread(target=self.place_batch, args=(requested_evals,))
-        th.start()
-
-        return requested_evals
-
-
-

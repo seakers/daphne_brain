@@ -13,7 +13,7 @@ from django.conf import settings
 from EOSS.models import EOSSContext
 
 from EOSS.graphql.api import GraphqlClient
-from EOSS.aws.utils import get_boto3_client
+from EOSS.aws.utils import get_boto3_client, prod_client
 from EOSS.aws.EvalQueue import EvalQueue
 from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import sync_to_async_mt
@@ -67,6 +67,9 @@ class VASSARClient:
         # Queue Client
         self.queue_client = EvalQueue()
 
+    def get_sqs_prod(self):
+        return prod_client('sqs', 'us-east-2')
+
 
     async def send_connect_message(self, url, group_id=None, problem_id=None):
         msg_attributes = {
@@ -91,6 +94,35 @@ class VASSARClient:
                 }
         # Send init message
         response = await sync_to_async_mt(self.sqs_client.send_message)(
+            QueueUrl=url,
+            MessageBody='boto3',
+            MessageAttributes=msg_attributes)
+
+    async def send_connect_message_prod(self, url, group_id=None, problem_id=None):
+        sqs_prod_client = self.get_sqs_prod()
+
+        msg_attributes = {
+            'msgType': {
+                'StringValue': 'connectionRequest',
+                'DataType': 'String'
+            },
+            'user_id': {
+                'StringValue': str(self.user_id),
+                'DataType': 'String'
+            },
+        }
+        if group_id is not None:
+            msg_attributes['group_id'] = {
+                    'StringValue': str(group_id),
+                    'DataType': 'String'
+                }
+        if problem_id is not None:
+            msg_attributes['problem_id'] = {
+                    'StringValue': str(problem_id),
+                    'DataType': 'String'
+                }
+        # Send init message
+        response = await sync_to_async_mt(sqs_prod_client.send_message)(
             QueueUrl=url,
             MessageBody='boto3',
             MessageAttributes=msg_attributes)
@@ -172,6 +204,78 @@ class VASSARClient:
                 break
         
         return user_request_queue_url, user_response_queue_url, vassar_container_uuid
+
+    async def connect_to_vassar_prod(self, request_url, response_url, max_retries):
+        print('--> connect_to_vassar')
+        # Send init message
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+
+        success = False
+        retries = 0
+        has_called_aws = False
+
+        while not success and retries < max_retries:
+            print('retry')
+            retries += 1
+            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop_prod(response_url)
+
+            if user_request_queue_url != "" or user_response_queue_url != "":
+                success = True
+
+        return user_request_queue_url, user_response_queue_url, container_uuid, success
+
+    async def vassar_connection_loop_prod(self, response_url):
+        sqs_prod_client = self.get_sqs_prod()
+
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+        vassar_container_uuid = ""
+        # Try at most 5 times
+        for i in range(5):
+            response = await sync_to_async_mt(sqs_prod_client.receive_message)(
+                QueueUrl=response_url,
+                MaxNumberOfMessages=1,
+                WaitTimeSeconds=5,
+                MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and \
+                            message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
+                        print("Received message attributes:", message["MessageAttributes"])
+                        # 1. Get queue URLs
+                        user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
+                        user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
+                        vassar_container_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
+                        # 3. Save information to database
+                        await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url,
+                                                                     vassar_container_uuid)
+                        # 4. Delete Message from queue
+                        await sync_to_async_mt(sqs_prod_client.delete_message)(QueueUrl=response_url,
+                                                                               ReceiptHandle=message["ReceiptHandle"])
+                    else:
+                        # Return message to queue
+                        sync_to_async_mt(sqs_prod_client.change_message_visibility)(QueueUrl=response_url,
+                                                                                    ReceiptHandle=message[
+                                                                                        "ReceiptHandle"],
+                                                                                    VisibilityTimeout=0)
+            if user_request_queue_url != "" and user_response_queue_url != "":
+                break
+
+        return user_request_queue_url, user_response_queue_url, vassar_container_uuid
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def _uninitialize_vassar(self):
         self.user_information.eosscontext.vassar_information = {}
@@ -618,7 +722,7 @@ class VASSARClient:
                     'Id': str(idx)
                 }
             )
-        self.sqs_client.send_message_batch(
+        self.get_sqs_prod().send_message_batch(
             QueueUrl=eval_queue_url,
             Entries=eval_messages
         )

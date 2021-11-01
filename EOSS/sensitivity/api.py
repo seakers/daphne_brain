@@ -28,7 +28,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=50):
+    def __init__(self, request_user_info, num_instances=3):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -36,7 +36,7 @@ class SensitivityClient:
         # --> Clients
         self.db_client = GraphqlClient(user_info=self.user_info)
         self.vassar_client = VASSARClient(user_information=self.user_info)
-        self.scale_client = EvaluationScaling(self.user_info, num_instances)
+        self.scale_client = EvaluationScaling(self.user_info, num_instances, prod=True)
         self.scale_client.initialize()
 
         # --> Sensitivity Variables
@@ -260,10 +260,10 @@ class SensitivityClient:
         # self.calculate_orbit_sensitivities(sampling, problem_name)
 
         # 4. Calculate instrument sensitivities
-        # self.calculate_instrument_sensitivities(sampling, problem_name)
+        self.calculate_instrument_sensitivities(sampling, problem_name)
 
         # 5. Calculate complete sensitivities
-        self.calculate_complete_sensitivities(sampling, problem_name)
+        # self.calculate_complete_sensitivities(sampling, problem_name)
 
     def calculate_complete_sensitivities(self, sampling, problem_name):
         self.purge_eval_queues()
