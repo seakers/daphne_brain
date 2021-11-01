@@ -572,7 +572,63 @@ class VASSARClient:
         arch_info = self.dbClient.get_architecture(design["db_id"])
         self.evaluate_architecture(design["inputs"], eval_queue_url, ga=arch_info["ga"], redo=True)
 
-    # working
+    # working: will contain at most 10 architectures
+    def evaluate_architecture_batch_ai4se(self, arch_list, eval_queue_url, fast=False, ga=False, redo=False, block=True,
+                              user=None, session=None, idx_batch=[]):
+
+        # Connect to queue
+        eosscontext: EOSSContext = self.user_information.eosscontext
+
+        eval_messages = []
+        for idx, inputs in enumerate(arch_list):
+            eval_idx = idx_batch[idx]
+            eval_messages.append(
+                {
+                    'MessageAttributes': {
+                        'msgType': {
+                            'StringValue': 'ndsm_evaluate',
+                            'DataType': 'String'
+                        },
+                        'input': {
+                            'StringValue': str(inputs),
+                            'DataType': 'String'
+                        },
+                        'dataset_id': {
+                            'StringValue': str(eosscontext.dataset_id),
+                            'DataType': 'String'
+                        },
+                        'fast': {
+                            'StringValue': str(fast),
+                            'DataType': 'String'
+                        },
+                        'ga': {
+                            'StringValue': str(ga),
+                            'DataType': 'String'
+                        },
+                        'redo': {
+                            'StringValue': str(redo),
+                            'DataType': 'String'
+                        },
+                        'eval_idx': {
+                            'StringValue': str(eval_idx),
+                            'DataType': 'String'
+                        }
+                    },
+                    'MessageBody': 'boto3'
+                }
+            )
+        self.sqs_client.send_message_batch(
+            QueueUrl=eval_queue_url,
+            Entries=eval_messages
+        )
+        return {}
+
+
+
+
+
+
+
     def evaluate_architecture_ai4se(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True,
                               user=None, session=None, eval_idx=1):
         inputs = ''

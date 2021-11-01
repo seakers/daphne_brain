@@ -267,7 +267,7 @@ class SensitivityClient:
         samples = sampling.get_complete_samples()
 
         # 2. Place all samples in evaluation queue
-        samples_requested = self.scale_client.evaluate_batch(samples)
+        samples_requested = self.scale_client.evaluate_batch_fast(samples)
 
         # 3. Subscribe to architectures
         results_dict = self.subscribe_to_samples(samples_requested)

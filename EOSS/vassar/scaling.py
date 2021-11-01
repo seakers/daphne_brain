@@ -121,5 +121,31 @@ class EvaluationScaling:
 
         return requested_evals
 
+    def evaluate_batch_fast(self, batch):
+        print('--> EVALUATING BATCH:', len(batch))
+        requested_evals = []
+        arch_batch = []
+        idx_batch = []
+
+        idx_temp = 0
+        for idx, arch in enumerate(batch):
+            idx_temp = idx
+            count = idx + 1
+            arch_str = "".join(arch)
+            requested_evals.append(arch_str)
+            arch_batch.append(arch_str)
+            idx_batch.append(idx)
+            if (count % 10) == 0:
+                print('--> EVAL BATCH MESSAGE:', count)
+                self.vassar_client.evaluate_architecture_batch_ai4se(arch_batch, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False, idx_batch=idx_batch)
+                arch_batch = []
+                idx_batch = []
+
+        if len(arch_batch) != 0:
+            self.vassar_client.evaluate_architecture_batch_ai4se(arch_batch,
+                                                                 eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url,
+                                                                 block=False, idx_batch=idx_batch)
+        return requested_evals
+
 
 
