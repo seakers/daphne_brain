@@ -36,6 +36,7 @@ class SensitivityClient:
         # --> Clients
         self.db_client = GraphqlClient(user_info=self.user_info)
         self.vassar_client = VASSARClient(user_information=self.user_info)
+        self.vassar_client.uninitizlize_vassar()
         self.scale_client = EvaluationScaling(self.user_info, num_instances, prod=True)
         self.scale_client.initialize()
 

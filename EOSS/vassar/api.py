@@ -273,7 +273,8 @@ class VASSARClient:
 
 
 
-
+    def uninitizlize_vassar(self):
+        self._uninitialize_vassar()
 
 
 
