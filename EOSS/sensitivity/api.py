@@ -28,7 +28,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=20):
+    def __init__(self, request_user_info, num_instances=50):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -124,6 +124,8 @@ class SensitivityClient:
             time.sleep(sleep_sec)
             aggregate_query = self.db_client.get_architectures_like_aggregate(dataset_id, samples)
             print('--> AGGREIGATE QUERY RESULTS:', aggregate_query)
+            if 'data' not in aggregate_query:
+                continue
             num_evaluated = int(aggregate_query['data']['Architecture_aggregate']['aggregate']['count'])
 
             eval_rate = (num_evaluated - prev_eval_num) / float(sleep_sec)

@@ -390,7 +390,7 @@ class VASSARClient:
 
     async def create_queue(self, queue_name, dead_letter_arn):
         attributes = {
-            "MessageRetentionPeriod": str(60*5),
+            "MessageRetentionPeriod": str(),
             "RedrivePolicy": json.dumps({
                 "deadLetterTargetArn": dead_letter_arn,
                 "maxReceiveCount": "3"
