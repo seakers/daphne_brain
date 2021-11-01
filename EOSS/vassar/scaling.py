@@ -59,7 +59,7 @@ class EvaluationScaling:
     def update_service_count(self, count):
         ecs_client = prod_client('ecs')
         cluster_arn = 'arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster'
-        service_arn = 'arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/sensitiviy-service'
+        service_arn = 'arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/sensitivity-service'
         ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=int(count))
 
     def init_queues(self):
