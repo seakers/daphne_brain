@@ -614,7 +614,8 @@ class VASSARClient:
                             'DataType': 'String'
                         }
                     },
-                    'MessageBody': 'boto3'
+                    'MessageBody': 'boto3',
+                    'Id': str(idx)
                 }
             )
         self.sqs_client.send_message_batch(
