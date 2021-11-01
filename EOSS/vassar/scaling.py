@@ -57,10 +57,10 @@ class EvaluationScaling:
             self.update_service_count(0)
 
     def update_service_count(self, count):
-        ecs_client = prod_client('ecs', 'us-east-2')
+        ecs_client = prod_client('ecs')
         cluster_arn = 'arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster'
-        service_arn = 'arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/sensitivity-service'
-        ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=count)
+        service_arn = 'sensitivity-service'
+        ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=int(count))
 
     def init_queues(self):
         if not self.vassar_client.queue_exists_by_name("dead-letter"):
