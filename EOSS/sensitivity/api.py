@@ -160,7 +160,7 @@ class SensitivityClient:
             total_order_dict = {}
             for orbit in orbits:
                 for instrument in instruments:
-                    name = instrument + '@' + orbit
+                    name = orbit + '@' + instrument
                     first_order_dict[name] = first_order[counter]
                     total_order_dict[name] = total_order[counter]
                     counter += 1
