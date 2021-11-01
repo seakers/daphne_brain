@@ -129,6 +129,8 @@ class EvaluationScaling:
 
         idx_temp = 0
         for idx, arch in enumerate(batch):
+            if idx > 500:
+                break
             idx_temp = idx
             count = idx + 1
             arch_str = self.bit_list_2_bit_str(arch)
