@@ -122,7 +122,8 @@ class SensitivityClient:
 
         while num_evaluated < len(samples):
             time.sleep(sleep_sec)
-            aggregate_query = self.db_client.get_architectures_like_aggregate(dataset_id, samples)
+            # aggregate_query = self.db_client.get_architectures_like_aggregate(dataset_id, samples)
+            aggregate_query = self.db_client.get_architectures_aggregate(dataset_id)
             print('--> AGGREIGATE QUERY RESULTS:', aggregate_query)
             if 'data' not in aggregate_query:
                 continue
@@ -137,7 +138,8 @@ class SensitivityClient:
             prev_eval_num = num_evaluated
             print('--> CHECKING FOR COMPLETION:', num_evaluated, '/', len(samples), '| RATE:', round(mean_rate, 3), '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
 
-        query = self.db_client.get_architectures_like(dataset_id, samples)
+        # query = self.db_client.get_architectures_like(dataset_id)
+        query = self.db_client.get_architectures_all(dataset_id)
         designs = query['data']['Architecture']
 
         # Make sure the appropriate number of samples are included

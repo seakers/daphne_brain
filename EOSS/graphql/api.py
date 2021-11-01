@@ -200,10 +200,42 @@ class GraphqlClient:
         '''
         return self.execute_query(query)
 
+    def get_architectures_all(self, dataset_id):
+        query = f'''
+            query MyQuery {{
+              Architecture(where: {{dataset_id: {{_eq: {dataset_id}}}}}, order_by: {{eval_idx: asc}}) {{
+                cost
+                programmatic_risk
+                fairness
+                data_continuity
+                eval_idx
+                ArchitectureScoreExplanations {{
+                  satisfaction
+                  Stakeholder_Needs_Panel {{
+                    name
+                  }}
+                }}
+              }}
+            }}
+        '''
+        return self.execute_query(query)
+
     def get_architectures_like_aggregate(self, dataset_id, arch_input_list):
         query = f'''
                     query MyQuery {{
                       Architecture_aggregate(where: {{dataset_id: {{_eq: {dataset_id}}}, input: {{_in: {json.dumps(arch_input_list)}}}}}) {{
+                        aggregate {{
+                            count
+                        }}
+                      }}
+                    }}
+                '''
+        return self.execute_query(query)
+
+    def get_architectures_aggregate(self, dataset_id):
+        query = f'''
+                    query MyQuery {{
+                      Architecture_aggregate(where: {{dataset_id: {{_eq: {dataset_id}}}}}) {{
                         aggregate {{
                             count
                         }}
