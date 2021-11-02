@@ -205,7 +205,7 @@ class VASSARClient:
         
         return user_request_queue_url, user_response_queue_url, vassar_container_uuid
 
-    async def connect_to_vassar_prod(self, request_url, response_url, max_retries):
+    async def connect_to_vassar_prod(self, request_url, response_url, max_retries, init):
         print('--> connect_to_vassar')
         # Send init message
         user_request_queue_url = ""
@@ -218,14 +218,14 @@ class VASSARClient:
         while not success and retries < max_retries:
             print('retry prod')
             retries += 1
-            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop_prod(response_url)
+            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop_prod(response_url, init)
 
             if user_request_queue_url != "" or user_response_queue_url != "":
                 success = True
 
         return user_request_queue_url, user_response_queue_url, container_uuid, success
 
-    async def vassar_connection_loop_prod(self, response_url):
+    async def vassar_connection_loop_prod(self, response_url, init):
         sqs_prod_client = self.get_sqs_prod()
 
         user_request_queue_url = ""
@@ -248,8 +248,9 @@ class VASSARClient:
                         user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
                         vassar_container_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
                         # 3. Save information to database
-                        await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url,
-                                                                     vassar_container_uuid)
+                        if init:
+                            await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url,
+                                                                         vassar_container_uuid)
                         # 4. Delete Message from queue
                         await sync_to_async_mt(sqs_prod_client.delete_message)(QueueUrl=response_url,
                                                                                ReceiptHandle=message["ReceiptHandle"])

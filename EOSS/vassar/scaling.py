@@ -22,11 +22,11 @@ def connection_thread(user_info, request_queue_url, response_queue_url):
     user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar)(request_queue_url, response_queue_url, 3)
     print('--> VASSAR BUILD SUCCESS:', vassar_connection_success)
 
-def connection_thread_prod(user_info, request_queue_url, response_queue_url):
+def connection_thread_prod(user_info, request_queue_url, response_queue_url, init):
     print('--> VASSAR HANDSHAKE STARTED')
     temp_client = VASSARClient(user_info)
     async_to_sync(temp_client.send_connect_message_prod)(request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
-    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar_prod)(request_queue_url, response_queue_url, 7)
+    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar_prod)(request_queue_url, response_queue_url, 7, init)
     print('--> VASSAR BUILD SUCCESS:', vassar_connection_success)
 
 
@@ -92,10 +92,12 @@ class EvaluationScaling:
 
         # 2. Initialize containers
         build_threads = []
+        init = True
         for x in range(0, self.num_instances):
-            th = threading.Thread(target=connection_thread_prod, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2))
+            th = threading.Thread(target=connection_thread_prod, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2, init))
             th.start()
             build_threads.append(th)
+            init = False
         for th in build_threads:
             th.join()
 
