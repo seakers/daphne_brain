@@ -90,16 +90,15 @@ class EvaluationScaling:
         # 1. Update service to have appropriate number of
         self.update_service_count(self.num_instances)
 
-        # 2. Initialize containers
-        build_threads = []
-        init = True
-        for x in range(0, self.num_instances):
-            th = threading.Thread(target=connection_thread_prod, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2, init))
-            th.start()
-            build_threads.append(th)
-            init = False
-        for th in build_threads:
-            th.join()
+        # 2. Initialize one container with vassar _initialization
+        async_to_sync(self.vassar_client.send_connect_message_prod)(self.request_queue_url_2, self.user_info.eosscontext.group_id, self.user_info.eosscontext.problem_id)
+        async_to_sync(self.vassar_client.connect_to_vassar_prod)(self.request_queue_url_2, self.response_queue_url_2, 7, True)
+
+        # 3. Send the rest of the init messages
+        for x in range(1, self.num_instances):
+            async_to_sync(self.vassar_client.send_connect_message_prod)(self.request_queue_url_2,
+                                                                        self.user_info.eosscontext.group_id,
+                                                                        self.user_info.eosscontext.problem_id)
 
         print('--> SCALING INITIALIZATION COMPLETE')
         return 0
@@ -165,7 +164,6 @@ class EvaluationScaling:
 
         return requested_evals
 
-
     def evaluate_batch_fast(self, batch):
         print('--> EVALUATING BATCH:', len(batch))
         requested_evals = []
@@ -179,7 +177,6 @@ class EvaluationScaling:
         th.start()
 
         return requested_evals
-
 
     def place_batch(self, batch):
         arch_batch = []
