@@ -186,8 +186,9 @@ class EvaluationScaling:
             count = idx + 1
             arch_batch.append(arch_str)
             idx_batch.append(idx)
+            if (count % 1000) == 0:
+                print('--> 1000 NEW BATCH EVALS:', count)
             if (count % 10) == 0:
-                print('--> EVAL BATCH MESSAGE:', len(arch_batch), count)
                 self.vassar_client.evaluate_architecture_batch_ai4se(arch_batch, eval_queue_url=self.user_info.eosscontext.vassar_request_queue_url, block=False, idx_batch=idx_batch)
                 arch_batch = []
                 idx_batch = []

@@ -28,7 +28,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=3):
+    def __init__(self, request_user_info, num_instances=100):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -293,7 +293,7 @@ class SensitivityClient:
         samples = sampling.get_orbit_samples()
 
         # 2. Place all samples in evaluation queue
-        samples_requested = self.scale_client.evaluate_batch(samples)
+        samples_requested = self.scale_client.evaluate_batch_fast(samples)
 
         # 3. Subscribe to architectures
         results_dict = self.subscribe_to_samples(samples_requested)
@@ -310,7 +310,7 @@ class SensitivityClient:
         samples = sampling.get_instrument_samples()
 
         # 2. Place all samples in evaluation queue
-        samples_requested = self.scale_client.evaluate_batch(samples)
+        samples_requested = self.scale_client.evaluate_batch_fast(samples)
 
         # 3. Subscribe to architectures
         results_dict = self.subscribe_to_samples(samples_requested)
