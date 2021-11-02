@@ -132,7 +132,7 @@ class SensitivityClient:
             elapsed_time = time.time() - start_time
             if num_evaluated == 0:
                 num_evaluated = 1
-            eval_rate = elapsed_time / num_evaluated
+            eval_rate = num_evaluated / elapsed_time
             estimated_time = ((len(samples) - num_evaluated) / eval_rate) / 60.0
             print('--> CHECKING FOR COMPLETION:', num_evaluated, '/', len(samples), '| RATE:', round(eval_rate, 3), '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
 
