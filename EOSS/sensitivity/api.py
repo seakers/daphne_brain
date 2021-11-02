@@ -140,6 +140,10 @@ class SensitivityClient:
         query = self.db_client.get_architectures_all(dataset_id)
         designs = query['data']['Architecture']
 
+        # Fix any duplicate designs
+        designs = self.fix_dup_designs(designs, len(samples))
+
+
         # Make sure the appropriate number of samples are included
         if len(designs) != len(samples):
             print('--> WRONG NUMBER OF SENSITIVITY DESIGNS:', len(designs), len(samples))
@@ -178,6 +182,22 @@ class SensitivityClient:
 
         return True
 
+    def fix_dup_designs(self, designs, req_size):
+        new_designs = []
+        eval_indicies = []
+
+        for design in designs:
+            eval_idx = design['eval_idx']
+            if eval_idx in eval_indicies:
+                continue
+            eval_indicies.append(eval_idx)
+            new_designs.append(design)
+
+        if len(new_designs) != req_size:
+            print('--> WRONG NUMBER OF DESIGNS:', len(new_designs), req_size)
+            time.sleep(5)
+
+        return new_designs
 
     def process_results(self, results_dict, problem, items, file_name):
         all_results = {
