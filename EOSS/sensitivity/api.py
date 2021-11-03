@@ -274,10 +274,16 @@ class SensitivityClient:
         # 3. Calculate orbit sensitivities
         self.calculate_orbit_sensitivities(sampling, problem_name)
 
-        # 4. Calculate instrument sensitivities
-        # self.calculate_instrument_sensitivities(sampling, problem_name)
+        # 4. Create new dataset
+        self.new_dataset()
 
-        # 5. Calculate complete sensitivities
+        # 5. Calculate instrument sensitivities
+        self.calculate_instrument_sensitivities(sampling, problem_name)
+
+        # 6. Create new dataset
+        self.new_dataset()
+
+        # 7. Calculate complete sensitivities
         # self.calculate_complete_sensitivities(sampling, problem_name)
 
     def calculate_complete_sensitivities(self, sampling, problem_name):
