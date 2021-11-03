@@ -1016,7 +1016,7 @@ class VASSARClient:
                     'Id': str(idx)
                 }
             )
-        self.get_sqs_prod().send_message_batch(
+        self.sqs_client.send_message_batch(
             QueueUrl=eval_queue_url,
             Entries=eval_messages
         )
