@@ -28,7 +28,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=300):
+    def __init__(self, request_user_info, num_instances=50):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -117,24 +117,23 @@ class SensitivityClient:
         dataset_id = self.user_info.eosscontext.dataset_id
         sleep_sec = 5
         num_evaluated = 0
+        num_prev_evaluated = 0
 
-        start_time = time.time()
+        last_time = time.time()
         while num_evaluated < len(samples):
             time.sleep(sleep_sec)
-            # aggregate_query = self.db_client.get_architectures_like_aggregate(dataset_id, samples)
             aggregate_query = self.db_client.get_architectures_aggregate(dataset_id)
-            print('--> AGGREIGATE QUERY RESULTS:', aggregate_query)
             if 'data' not in aggregate_query:
                 continue
             num_evaluated = int(aggregate_query['data']['Architecture_aggregate']['aggregate']['count'])
 
             # Performance Metrics
-            elapsed_time = time.time() - start_time
-            if num_evaluated == 0:
-                continue
-            eval_rate = num_evaluated / elapsed_time
-            estimated_time = ((len(samples) - num_evaluated) / eval_rate) / 60.0
-            print('--> CHECKING FOR COMPLETION:', num_evaluated, '/', len(samples), '| RATE:', round(eval_rate, 3), '(eval/sec)', '| TIME REMAINING:', round(estimated_time, 3), '(min)')
+            curr_time = time.time()
+            rate = (num_evaluated - num_prev_evaluated) / (curr_time - last_time)
+            print('---> PROGRESS:', num_evaluated, '/', len(samples), ' -- RATE:', rate)
+            num_prev_evaluated = num_evaluated
+            last_time = curr_time
+
 
         # query = self.db_client.get_architectures_like(dataset_id)
         query = self.db_client.get_architectures_all(dataset_id)
@@ -263,7 +262,7 @@ class SensitivityClient:
 
 
 
-    def calculate_problem_sensitivities(self, problem_name='ClimateCentric_1'):
+    def calculate_problem_sensitivities(self, problem_name='ClimateCentric_2'):
 
 
         # 1. Set problem parameters
@@ -273,10 +272,10 @@ class SensitivityClient:
         sampling = AssigningSampling(self.instruments, self.orbits)
 
         # 3. Calculate orbit sensitivities
-        # self.calculate_orbit_sensitivities(sampling, problem_name)
+        self.calculate_orbit_sensitivities(sampling, problem_name)
 
         # 4. Calculate instrument sensitivities
-        self.calculate_instrument_sensitivities(sampling, problem_name)
+        # self.calculate_instrument_sensitivities(sampling, problem_name)
 
         # 5. Calculate complete sensitivities
         # self.calculate_complete_sensitivities(sampling, problem_name)
