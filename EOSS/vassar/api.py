@@ -13,7 +13,7 @@ from django.conf import settings
 from EOSS.models import EOSSContext
 
 from EOSS.graphql.api import GraphqlClient
-from EOSS.aws.utils import get_boto3_client, prod_client
+from EOSS.aws.utils import get_boto3_client, dev_client
 from EOSS.aws.EvalQueue import EvalQueue
 from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import sync_to_async_mt
@@ -1033,7 +1033,7 @@ class VASSARClient:
  # |_|   |_|  \___/ \__,_|
 
     def get_sqs_prod(self):
-        return prod_client('sqs', 'us-east-2')
+        return dev_client('sqs', 'us-east-2')
 
     async def connect_to_vassar_prod(self, request_url, response_url, max_retries, init):
         print('--> connect_to_vassar')
