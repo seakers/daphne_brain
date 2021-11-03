@@ -67,8 +67,6 @@ class VASSARClient:
         # Queue Client
         self.queue_client = EvalQueue()
 
-    def get_sqs_prod(self):
-        return prod_client('sqs', 'us-east-2')
 
 
     async def send_connect_message(self, url, group_id=None, problem_id=None):
@@ -98,36 +96,7 @@ class VASSARClient:
             MessageBody='boto3',
             MessageAttributes=msg_attributes)
 
-    async def send_connect_message_prod(self, url, group_id=None, problem_id=None):
-        sqs_prod_client = self.get_sqs_prod()
-
-        msg_attributes = {
-            'msgType': {
-                'StringValue': 'connectionRequest',
-                'DataType': 'String'
-            },
-            'user_id': {
-                'StringValue': str(self.user_id),
-                'DataType': 'String'
-            },
-        }
-        if group_id is not None:
-            msg_attributes['group_id'] = {
-                    'StringValue': str(group_id),
-                    'DataType': 'String'
-                }
-        if problem_id is not None:
-            msg_attributes['problem_id'] = {
-                    'StringValue': str(problem_id),
-                    'DataType': 'String'
-                }
-        # Send init message
-        response = await sync_to_async_mt(sqs_prod_client.send_message)(
-            QueueUrl=url,
-            MessageBody='boto3',
-            MessageAttributes=msg_attributes)
-
-    async def connect_to_vassar(self, request_url, response_url, max_retries):
+    async def connect_to_vassar(self, request_url, response_url, max_retries, init=True):
         print('--> connect_to_vassar')
         # Send init message
         user_request_queue_url = ""
@@ -140,7 +109,7 @@ class VASSARClient:
         while not success and retries < max_retries:
             print('retry')
             retries += 1
-            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop(response_url)
+            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop(response_url, init=init)
 
             if user_request_queue_url == "" and user_response_queue_url == "":
                 # If it does not work, and we are on AWS, try increasing Service task limits
@@ -159,7 +128,7 @@ class VASSARClient:
             
         return user_request_queue_url, user_response_queue_url, container_uuid, success
     
-    async def vassar_connection_loop(self, response_url):
+    async def vassar_connection_loop(self, response_url, init=True):
         user_request_queue_url = ""
         user_response_queue_url = ""
         vassar_container_uuid = ""
@@ -193,8 +162,9 @@ class VASSARClient:
                                     'DataType': 'String'
                                 }
                             })
-                        # 3. Save information to database 
-                        await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url, vassar_container_uuid)
+                        # 3. Save information to database
+                        if init:
+                            await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url, vassar_container_uuid)
                         # 4. Delete Message from queue
                         await sync_to_async_mt(self.sqs_client.delete_message)(QueueUrl=response_url, ReceiptHandle=message["ReceiptHandle"])
                     else:
@@ -205,68 +175,6 @@ class VASSARClient:
         
         return user_request_queue_url, user_response_queue_url, vassar_container_uuid
 
-    async def connect_to_vassar_prod(self, request_url, response_url, max_retries, init):
-        print('--> connect_to_vassar')
-        # Send init message
-        user_request_queue_url = ""
-        user_response_queue_url = ""
-
-        success = False
-        retries = 0
-        has_called_aws = False
-
-        while not success and retries < max_retries:
-            print('retry prod')
-            retries += 1
-            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop_prod(response_url, init)
-
-            if user_request_queue_url != "" or user_response_queue_url != "":
-                success = True
-
-        return user_request_queue_url, user_response_queue_url, container_uuid, success
-
-    async def vassar_connection_loop_prod(self, response_url, init):
-        sqs_prod_client = self.get_sqs_prod()
-
-        user_request_queue_url = ""
-        user_response_queue_url = ""
-        vassar_container_uuid = ""
-        # Try at most 5 times
-        for i in range(5):
-            response = await sync_to_async_mt(sqs_prod_client.receive_message)(
-                QueueUrl=response_url,
-                MaxNumberOfMessages=1,
-                WaitTimeSeconds=5,
-                MessageAttributeNames=["All"])
-            if "Messages" in response:
-                for message in response["Messages"]:
-                    if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and \
-                            message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
-                        print("Received message attributes:", message["MessageAttributes"])
-                        # 1. Get queue URLs
-                        user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
-                        user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
-                        vassar_container_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
-                        # 3. Save information to database
-                        if init:
-                            await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url,
-                                                                         vassar_container_uuid)
-                        # 4. Delete Message from queue
-                        await sync_to_async_mt(sqs_prod_client.delete_message)(QueueUrl=response_url,
-                                                                               ReceiptHandle=message["ReceiptHandle"])
-                    else:
-                        # Return message to queue
-                        sync_to_async_mt(sqs_prod_client.change_message_visibility)(QueueUrl=response_url,
-                                                                                    ReceiptHandle=message[
-                                                                                        "ReceiptHandle"],
-                                                                                    VisibilityTimeout=0)
-            if user_request_queue_url != "" and user_response_queue_url != "":
-                break
-
-        return user_request_queue_url, user_response_queue_url, vassar_container_uuid
-
-
-
 
 
 
@@ -276,8 +184,6 @@ class VASSARClient:
 
     def uninitizlize_vassar(self):
         self._uninitialize_vassar()
-
-
 
     def _uninitialize_vassar(self):
         self.user_information.eosscontext.vassar_information = {}
@@ -624,11 +530,6 @@ class VASSARClient:
         orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
         return orbits
 
-    def get_instrument_list_ai4se(self, problem_id, group_id=1):
-        query = self.dbClient.get_instrument_list_ai4se(group_id, problem_id)
-        instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
-        return instruments
-
     # working
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
         query = self.dbClient.get_instrument_list(group_id, self.problem_id)
@@ -678,119 +579,12 @@ class VASSARClient:
         arch_info = self.dbClient.get_architecture(design["db_id"])
         self.evaluate_architecture(design["inputs"], eval_queue_url, ga=arch_info["ga"], redo=True)
 
-    # working: will contain at most 10 architectures
-    def evaluate_architecture_batch_ai4se(self, arch_list, eval_queue_url, fast=False, ga=False, redo=False, block=True,
-                              user=None, session=None, idx_batch=[]):
-
-        # Connect to queue
-        eosscontext: EOSSContext = self.user_information.eosscontext
-
-        eval_messages = []
-        for idx, inputs in enumerate(arch_list):
-            eval_idx = idx_batch[idx]
-            eval_messages.append(
-                {
-                    'MessageAttributes': {
-                        'msgType': {
-                            'StringValue': 'ndsm_evaluate',
-                            'DataType': 'String'
-                        },
-                        'input': {
-                            'StringValue': str(inputs),
-                            'DataType': 'String'
-                        },
-                        'dataset_id': {
-                            'StringValue': str(eosscontext.dataset_id),
-                            'DataType': 'String'
-                        },
-                        'fast': {
-                            'StringValue': str(fast),
-                            'DataType': 'String'
-                        },
-                        'ga': {
-                            'StringValue': str(ga),
-                            'DataType': 'String'
-                        },
-                        'redo': {
-                            'StringValue': str(redo),
-                            'DataType': 'String'
-                        },
-                        'eval_idx': {
-                            'StringValue': str(eval_idx),
-                            'DataType': 'String'
-                        }
-                    },
-                    'MessageBody': 'boto3',
-                    'Id': str(idx)
-                }
-            )
-        self.get_sqs_prod().send_message_batch(
-            QueueUrl=eval_queue_url,
-            Entries=eval_messages
-        )
-        return {}
 
 
 
 
 
 
-
-    def evaluate_architecture_ai4se(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True,
-                              user=None, session=None, eval_idx=1):
-        inputs = ''
-        for x in input_str:
-            if x:
-                inputs = inputs + '1'
-            else:
-                inputs = inputs + '0'
-
-        # Connect to queue
-        eosscontext: EOSSContext = self.user_information.eosscontext
-
-        self.get_sqs_prod().send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
-            'msgType': {
-                'StringValue': 'ndsm_evaluate',
-                'DataType': 'String'
-            },
-            'input': {
-                'StringValue': str(inputs),
-                'DataType': 'String'
-            },
-            'dataset_id': {
-                'StringValue': str(eosscontext.dataset_id),
-                'DataType': 'String'
-            },
-            'fast': {
-                'StringValue': str(fast),
-                'DataType': 'String'
-            },
-            'ga': {
-                'StringValue': str(ga),
-                'DataType': 'String'
-            },
-            'redo': {
-                'StringValue': str(redo),
-                'DataType': 'String'
-            },
-            'eval_idx': {
-                'StringValue': str(eval_idx),
-                'DataType': 'String'
-            }
-        })
-
-        arch = {}
-        if block:
-            # --> OLD CODE, FOR THE BLOCKING BLOCKHEAD
-            result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
-            if not result:
-                raise ValueError('---> Evaluation Timeout!!!!')
-            result_formatted = result['data']['Architecture'][0]
-            outputs = [result_formatted['science'], result_formatted['cost']]
-            arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']],
-                    'outputs': outputs}
-
-        return arch
 
     # working
     def evaluate_architecture(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True, user=None, session=None):
@@ -1106,3 +900,229 @@ class VASSARClient:
     def is_ga_running(self, ga_id):
         print("\n\n----> is_ga_running", ga_id)
         return self.client.isGARunning(ga_id)
+
+
+ #           _____ _  _   _____ ______
+ #     /\   |_   _| || | / ____|  ____|
+ #    /  \    | | | || || (___ | |__
+ #   / /\ \   | | |__   _\___ \|  __|
+ #  / ____ \ _| |_   | | ____) | |____
+ # /_/    \_\_____|  |_||_____/|______|
+
+    def get_instrument_list_ai4se(self, problem_id, group_id=1):
+        query = self.dbClient.get_instrument_list_ai4se(group_id, problem_id)
+        instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
+        return instruments
+
+    def evaluate_architecture_ai4se(self, input_str, eval_queue_url, fast=False, ga=False, redo=False, block=True,
+                              user=None, session=None, eval_idx=1):
+        inputs = ''
+        for x in input_str:
+            if x:
+                inputs = inputs + '1'
+            else:
+                inputs = inputs + '0'
+
+        # Connect to queue
+        eosscontext: EOSSContext = self.user_information.eosscontext
+
+        self.get_sqs_prod().send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
+            'msgType': {
+                'StringValue': 'ndsm_evaluate',
+                'DataType': 'String'
+            },
+            'input': {
+                'StringValue': str(inputs),
+                'DataType': 'String'
+            },
+            'dataset_id': {
+                'StringValue': str(eosscontext.dataset_id),
+                'DataType': 'String'
+            },
+            'fast': {
+                'StringValue': str(fast),
+                'DataType': 'String'
+            },
+            'ga': {
+                'StringValue': str(ga),
+                'DataType': 'String'
+            },
+            'redo': {
+                'StringValue': str(redo),
+                'DataType': 'String'
+            },
+            'eval_idx': {
+                'StringValue': str(eval_idx),
+                'DataType': 'String'
+            }
+        })
+
+        arch = {}
+        if block:
+            # --> OLD CODE, FOR THE BLOCKING BLOCKHEAD
+            result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
+            if not result:
+                raise ValueError('---> Evaluation Timeout!!!!')
+            result_formatted = result['data']['Architecture'][0]
+            outputs = [result_formatted['science'], result_formatted['cost']]
+            arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']],
+                    'outputs': outputs}
+
+        return arch
+
+    # working: will contain at most 10 architectures
+    def evaluate_architecture_batch_ai4se(self, arch_list, eval_queue_url, fast=False, ga=False, redo=False, block=True,
+         user=None, session=None, idx_batch=[]):
+
+        # Connect to queue
+        eosscontext: EOSSContext = self.user_information.eosscontext
+
+        eval_messages = []
+        for idx, inputs in enumerate(arch_list):
+            eval_idx = idx_batch[idx]
+            eval_messages.append(
+                {
+                    'MessageAttributes': {
+                        'msgType': {
+                            'StringValue': 'ndsm_evaluate',
+                            'DataType': 'String'
+                        },
+                        'input': {
+                            'StringValue': str(inputs),
+                            'DataType': 'String'
+                        },
+                        'dataset_id': {
+                            'StringValue': str(eosscontext.dataset_id),
+                            'DataType': 'String'
+                        },
+                        'fast': {
+                            'StringValue': str(fast),
+                            'DataType': 'String'
+                        },
+                        'ga': {
+                            'StringValue': str(ga),
+                            'DataType': 'String'
+                        },
+                        'redo': {
+                            'StringValue': str(redo),
+                            'DataType': 'String'
+                        },
+                        'eval_idx': {
+                            'StringValue': str(eval_idx),
+                            'DataType': 'String'
+                        }
+                    },
+                    'MessageBody': 'boto3',
+                    'Id': str(idx)
+                }
+            )
+        self.get_sqs_prod().send_message_batch(
+            QueueUrl=eval_queue_url,
+            Entries=eval_messages
+        )
+        return {}
+
+
+
+
+ #  _____               _
+ # |  __ \             | |
+ # | |__) | __ ___   __| |
+ # |  ___/ '__/ _ \ / _` |
+ # | |   | | | (_) | (_| |
+ # |_|   |_|  \___/ \__,_|
+
+    def get_sqs_prod(self):
+        return prod_client('sqs', 'us-east-2')
+
+    async def connect_to_vassar_prod(self, request_url, response_url, max_retries, init):
+        print('--> connect_to_vassar')
+        # Send init message
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+
+        success = False
+        retries = 0
+        has_called_aws = False
+
+        while not success and retries < max_retries:
+            print('retry prod')
+            retries += 1
+            user_request_queue_url, user_response_queue_url, container_uuid = await self.vassar_connection_loop_prod(
+                response_url, init)
+
+            if user_request_queue_url != "" or user_response_queue_url != "":
+                success = True
+
+        return user_request_queue_url, user_response_queue_url, container_uuid, success
+
+    async def vassar_connection_loop_prod(self, response_url, init):
+        sqs_prod_client = self.get_sqs_prod()
+
+        user_request_queue_url = ""
+        user_response_queue_url = ""
+        vassar_container_uuid = ""
+        # Try at most 5 times
+        for i in range(5):
+            response = await sync_to_async_mt(sqs_prod_client.receive_message)(
+                QueueUrl=response_url,
+                MaxNumberOfMessages=1,
+                WaitTimeSeconds=5,
+                MessageAttributeNames=["All"])
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "isAvailable" and \
+                            message["MessageAttributes"]["user_id"]["StringValue"] == str(self.user_id):
+                        print("Received message attributes:", message["MessageAttributes"])
+                        # 1. Get queue URLs
+                        user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
+                        user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
+                        vassar_container_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
+                        # 3. Save information to database
+                        if init:
+                            await sync_to_async(self._initialize_vassar)(user_request_queue_url, user_response_queue_url,
+                                                                         vassar_container_uuid)
+                        # 4. Delete Message from queue
+                        await sync_to_async_mt(sqs_prod_client.delete_message)(QueueUrl=response_url,
+                                                                               ReceiptHandle=message["ReceiptHandle"])
+                    else:
+                        # Return message to queue
+                        sync_to_async_mt(sqs_prod_client.change_message_visibility)(QueueUrl=response_url,
+                                                                                    ReceiptHandle=message[
+                                                                                        "ReceiptHandle"],
+                                                                                    VisibilityTimeout=0)
+            if user_request_queue_url != "" and user_response_queue_url != "":
+                break
+
+        return user_request_queue_url, user_response_queue_url, vassar_container_uuid
+
+    async def send_connect_message_prod(self, url, group_id=None, problem_id=None):
+        sqs_prod_client = self.get_sqs_prod()
+
+        msg_attributes = {
+            'msgType': {
+                'StringValue': 'connectionRequest',
+                'DataType': 'String'
+            },
+            'user_id': {
+                'StringValue': str(self.user_id),
+                'DataType': 'String'
+            },
+        }
+        if group_id is not None:
+            msg_attributes['group_id'] = {
+                    'StringValue': str(group_id),
+                    'DataType': 'String'
+                }
+        if problem_id is not None:
+            msg_attributes['problem_id'] = {
+                    'StringValue': str(problem_id),
+                    'DataType': 'String'
+                }
+        # Send init message
+        response = await sync_to_async_mt(sqs_prod_client.send_message)(
+            QueueUrl=url,
+            MessageBody='boto3',
+            MessageAttributes=msg_attributes)
+
+

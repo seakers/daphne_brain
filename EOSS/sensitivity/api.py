@@ -37,7 +37,7 @@ class SensitivityClient:
         self.db_client = GraphqlClient(user_info=self.user_info)
         self.vassar_client = VASSARClient(user_information=self.user_info)
         self.vassar_client.uninitizlize_vassar()
-        self.scale_client = EvaluationScaling(self.user_info, num_instances, prod=True)
+        self.scale_client = EvaluationScaling(self.user_info, num_instances, prod=False)
         self.scale_client.initialize()
 
         # --> Sensitivity Variables
@@ -263,8 +263,6 @@ class SensitivityClient:
 
 
 
-
-
     def calculate_problem_sensitivities(self, problem_name='ClimateCentric_1'):
 
 
@@ -301,7 +299,6 @@ class SensitivityClient:
         self.process_complete_results(results_dict, sampling.complete_problem, self.orbits, self.instruments, file_name)
 
         return 0
-
 
     def calculate_orbit_sensitivities(self, sampling, problem_name):
         self.purge_eval_queues()

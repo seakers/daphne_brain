@@ -15,11 +15,11 @@ from EOSS.aws.utils import prod_client
 # Keep the user-id but create a new dataset for evaluation
 
 
-def connection_thread(user_info, request_queue_url, response_queue_url):
+def connection_thread(user_info, request_queue_url, response_queue_url, init):
     print('--> VASSAR HANDSHAKE STARTED')
     temp_client = VASSARClient(user_info)
     async_to_sync(temp_client.send_connect_message)(request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
-    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar)(request_queue_url, response_queue_url, 3)
+    user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = async_to_sync(temp_client.connect_to_vassar)(request_queue_url, response_queue_url, 3, init)
     print('--> VASSAR BUILD SUCCESS:', vassar_connection_success)
 
 def connection_thread_prod(user_info, request_queue_url, response_queue_url, init):
@@ -117,13 +117,15 @@ class EvaluationScaling:
 
         # 2. Initialize each of the containers
         build_threads = []
+        init = True
         for x in range(0, containers_to_start):
             if self.user_req:
-                th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url, self.response_queue_url))
+                th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url, self.response_queue_url, init))
             else:
-                th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2))
+                th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2, init))
             th.start()
             build_threads.append(th)
+            init = False
 
         # 3. Wait for threads to finish if blocking
         if block:
