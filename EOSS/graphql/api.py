@@ -205,6 +205,7 @@ class GraphqlClient:
             query MyQuery {{
               Architecture(where: {{dataset_id: {{_eq: {dataset_id}}}}}, order_by: {{eval_idx: asc}}) {{
                 cost
+                input
                 programmatic_risk
                 fairness
                 data_continuity

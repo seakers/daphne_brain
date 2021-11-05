@@ -28,7 +28,7 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=50):
+    def __init__(self, request_user_info, num_instances=5):
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -259,9 +259,6 @@ class SensitivityClient:
             'Terrestrial': np.array(terrestrial_list)
         }
 
-
-
-
     def calculate_problem_sensitivities(self, problem_name='ClimateCentric_2'):
 
 
@@ -338,6 +335,17 @@ class SensitivityClient:
         ddate = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         file_name = problem_name + '_InstrumentSensitivities_'+ddate+'.json'
         self.process_results(results_dict, sampling.instrument_problem, self.instruments, file_name)
+
+    # --> Called when user creates a new formulation
+    def new_formulation(self):
+
+        # 1. Get new problem parameters
+        self.set_problem_parameters()
+
+        # 2. Purge all Evaluation Queues
+        self.purge_eval_queues()
+
+        # 3.
 
 
 

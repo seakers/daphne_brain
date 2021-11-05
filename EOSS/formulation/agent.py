@@ -80,11 +80,15 @@ class FormulationAgent:
     """
 
     def agent(self):
-        self.print_start()
-        self.sensitivity_client = SensitivityClient(self.user_info)
         continue_running = False
+        self.print_start()
 
-        # 1. Calculate sensitivities
+        # ----- SENSITIVITY HANDLING -----
+        self.sensitivity_client = SensitivityClient(self.user_info)
+
+
+
+
         self.sensitivity_client.calculate_problem_sensitivities()
 
         while continue_running:

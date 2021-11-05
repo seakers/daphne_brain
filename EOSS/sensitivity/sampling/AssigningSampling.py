@@ -4,7 +4,7 @@ import numpy as np
 
 # This is for problems assigning instruments to orbits
 class AssigningSampling:
-    def __init__(self, instruments, orbits, group=True):
+    def __init__(self, instruments, orbits):
         self.instruments = instruments
         self.orbits = orbits
         self.num_inputs = len(self.instruments) * len(self.orbits)
