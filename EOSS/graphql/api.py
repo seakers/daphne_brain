@@ -245,7 +245,6 @@ class GraphqlClient:
                 '''
         return self.execute_query(query)
 
-
     def get_instrument_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)

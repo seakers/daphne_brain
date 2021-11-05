@@ -28,7 +28,10 @@ import numpy as np
 
 
 class SensitivityClient:
-    def __init__(self, request_user_info, num_instances=5):
+    def __init__(self, request_user_info, num_instances=50):
+        # --> Problem
+        self.problem_name = 'ClimateCentric_1'
+
         # --> Create sensitivity user
         self.user_id = None
         self.user_info = self.create_sensitivity_user(request_user_info)
@@ -37,8 +40,8 @@ class SensitivityClient:
         self.db_client = GraphqlClient(user_info=self.user_info)
         self.vassar_client = VASSARClient(user_information=self.user_info)
         self.vassar_client.uninitizlize_vassar()
-        self.scale_client = EvaluationScaling(self.user_info, num_instances, prod=False)
-        self.scale_client.initialize()
+        self.num_instances = num_instances
+        self.scale_client = None
 
         # --> Sensitivity Variables
         self.result_obj = {}
@@ -52,6 +55,14 @@ class SensitivityClient:
 
     def shutdown(self):
         self.scale_client.shutdown()
+
+    def get_problem_id(self, user_info):
+        problems = GraphqlClient(user_info=user_info).get_problems()
+        for problem in problems:
+            if problem['name'] == self.problem_name:
+                return int(problem['id'])
+        return 0
+
 
     def create_sensitivity_user(self, user_info_copy):
         temp_db_client = GraphqlClient(user_info=user_info_copy)
@@ -88,7 +99,7 @@ class SensitivityClient:
 
         # --> Copy user information parameters
         user_info.eosscontext.group_id = user_info_copy.eosscontext.group_id
-        user_info.eosscontext.problem_id = user_info_copy.eosscontext.problem_id
+        user_info.eosscontext.problem_id = self.get_problem_id(user_info_copy)
         user_info.eosscontext.dataset_id = dataset_id
         user_info.eosscontext.save()
         user_info.save()
@@ -259,8 +270,11 @@ class SensitivityClient:
             'Terrestrial': np.array(terrestrial_list)
         }
 
-    def calculate_problem_sensitivities(self, problem_name='ClimateCentric_2'):
 
+
+
+
+    def calculate_problem_sensitivities(self):
 
         # 1. Set problem parameters
         self.set_problem_parameters()
@@ -269,16 +283,22 @@ class SensitivityClient:
         sampling = AssigningSampling(self.instruments, self.orbits)
 
         # 3. Calculate orbit sensitivities
-        # self.calculate_orbit_sensitivities(sampling, problem_name)
+        self.scale_client = EvaluationScaling(self.user_info, self.num_instances, prod=False)
+        self.scale_client.initialize()
+        self.calculate_orbit_sensitivities(sampling, self.problem_name)
+        self.purge_eval_queues()
+        self.scale_client.shutdown()
 
         # 4. Create new dataset
-        # self.new_dataset()
+        self.new_dataset()
+        self.purge_eval_queues()
 
         # 5. Calculate instrument sensitivities
-        self.calculate_instrument_sensitivities(sampling, problem_name)
-
-        # 6. Create new dataset
-        self.new_dataset()
+        self.scale_client = EvaluationScaling(self.user_info, self.num_instances, prod=False)
+        self.scale_client.initialize()
+        self.calculate_instrument_sensitivities(sampling, self.problem_name)
+        self.purge_eval_queues()
+        self.scale_client.shutdown()
 
         # 7. Calculate complete sensitivities
         # self.calculate_complete_sensitivities(sampling, problem_name)

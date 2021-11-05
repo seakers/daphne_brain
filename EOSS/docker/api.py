@@ -171,6 +171,5 @@ class DockerClient:
         for th in threads:
             th.join()
 
-        th = threading.Thread(target=self.client.containers.prune)
-        th.start()
+        self.client.containers.prune()
 
