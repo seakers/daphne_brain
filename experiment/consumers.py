@@ -4,6 +4,7 @@ import json
 from channels.generic.websocket import JsonWebsocketConsumer
 
 from auth_API.helpers import get_or_create_user_information
+from experiment.views import save_experiment_to_file
 from experiment.models import ExperimentAction
 
 
@@ -38,6 +39,7 @@ class ExperimentConsumer(JsonWebsocketConsumer):
             elif content.get('msg_type') == 'update_state':
                 experiment_context.current_state = json.dumps(content['state'])
                 experiment_context.save()
+                save_experiment_to_file(experiment_context)
                 self.send_json({
                     "state": json.loads(experiment_context.current_state)
                 })
