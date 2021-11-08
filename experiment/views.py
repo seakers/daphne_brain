@@ -4,7 +4,7 @@ import json
 import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from auth_API.helpers import get_or_create_user_information
+from auth_API.helpers import get_or_create_user_information, get_user_information
 
 # Get an instance of a logger
 from experiment.models import ExperimentContext
@@ -15,14 +15,14 @@ logger = logging.getLogger('experiment')
 def stage_type(id, stage_num):
     if id % 2 == 0:
         if stage_num == 0:
-            return 'daphne_assistant'
+            return 'daphne_classic'
         else:
-            return 'daphne_peer'
+            return 'daphne_hypothesis'
     else:
         if stage_num == 0:
-            return 'daphne_peer'
+            return 'daphne_hypothesis'
         else:
-            return 'daphne_assistant'
+            return 'daphne_classic'
 
 
 # Create your views here.
@@ -42,7 +42,14 @@ class StartExperiment(APIView):
         open(os.path.join(results_dir, str(new_id) + '.json'), 'w')
 
         # Save experiment start info
-        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        
+        # User info needs to already exist and have user marked as experiment user
+        user_info = get_user_information(request.session, request.user, 'EOSS')
+
+        if not user_info.is_experiment_user:
+            return Response({
+                "error": "User is not set up as experiment user"
+            })
 
         # Ensure experiment is started again
         if hasattr(user_info, 'experimentcontext'):
@@ -124,30 +131,34 @@ class FinishExperiment(APIView):
         experiment_context = user_info.experimentcontext
 
         # Save experiment results to file
-        with open('./experiment/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
-            json_experiment = {
-                "experiment_id": experiment_context.experiment_id,
-                "current_state": json.loads(experiment_context.current_state),
-                "stages": []
-            }
-            for stage in experiment_context.experimentstage_set.all():
-                print(stage.type, stage.end_state)
-                json_stage = {
-                    "type": stage.type,
-                    "start_date": stage.start_date.isoformat(),
-                    "end_date": stage.end_date.isoformat(),
-                    "end_state": json.loads(stage.end_state),
-                    "actions": []
-                }
-                for action in stage.experimentaction_set.all():
-                    json_action = {
-                        "action": json.loads(action.action),
-                        "date": action.date.isoformat()
-                    }
-                    json_stage["actions"].append(json_action)
-                json_experiment["stages"].append(json_stage)
-            json.dump(json_experiment, f)
+        save_experiment_to_file(experiment_context)
 
         experiment_context.delete()
 
         return Response('Experiment finished correctly!')
+
+
+def save_experiment_to_file(experiment_context: ExperimentContext):
+    # Save experiment results to file
+    with open('./experiment/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
+        json_experiment = {
+            "experiment_id": experiment_context.experiment_id,
+            "current_state": json.loads(experiment_context.current_state),
+            "stages": []
+        }
+        for stage in experiment_context.experimentstage_set.all():
+            json_stage = {
+                "type": stage.type,
+                "start_date": stage.start_date.isoformat(),
+                "end_date": stage.end_date.isoformat(),
+                "end_state": json.loads(stage.end_state),
+                "actions": []
+            }
+            for action in stage.experimentaction_set.all():
+                json_action = {
+                    "action": json.loads(action.action),
+                    "date": action.date.isoformat()
+                }
+                json_stage["actions"].append(json_action)
+            json_experiment["stages"].append(json_stage)
+        json.dump(json_experiment, f)

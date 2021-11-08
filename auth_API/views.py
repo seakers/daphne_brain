@@ -50,6 +50,7 @@ class Login(APIView):
                 'status': 'logged_in',
                 'username': username,
                 'pk': user_pk,
+                'is_experiment_user': userinfo.is_experiment_user,
                 'permissions': []
             })
         else:
@@ -184,7 +185,8 @@ class CheckStatus(APIView):
             'permissions': [],
             'problem_id': problem_id,
             'group_id': group_id,
-            'dataset_id': dataset_id
+            'dataset_id': dataset_id,
+            'is_experiment_user': user_info.is_experiment_user
         }
 
         if request.user.is_authenticated:
