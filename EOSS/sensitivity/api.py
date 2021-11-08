@@ -30,7 +30,7 @@ import numpy as np
 class SensitivityClient:
     def __init__(self, request_user_info, num_instances=50):
         # --> Problem
-        self.problem_name = 'ClimateCentric_1'
+        self.problem_name = 'ClimateCentric_2'
 
         # --> Create sensitivity user
         self.user_id = None
