@@ -38,6 +38,8 @@ class Login(APIView):
                 userinfo.user = user
                 userinfo.session = None
                 userinfo.save()
+            else:
+                userinfo = userinfo_qs.first()
 
             # Log the user in
             login(request, user)
