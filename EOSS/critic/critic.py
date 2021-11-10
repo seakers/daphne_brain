@@ -319,7 +319,6 @@ class Critic:
             behavioral = []
             non_behavioral = []
 
-            # TODO: Change to Architecture
             dataset = vassar_client.get_dataset_architectures(problem_id, self.context.dataset_id)
 
             if len(dataset) < 10:
