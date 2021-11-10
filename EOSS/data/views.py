@@ -76,7 +76,7 @@ class ImportData(APIView):
                 # 4. programmatic_risk
                 # 5. 6. 7. Stakeholder Panel Satisfaction
                 # outputs = [float(arch['science']), float(arch['cost'])]
-                outputs = [float(arch['cost']), float(arch['data_continuity']), float(arch['fairness']), float(arch['programmatic_risk'])]
+                outputs = [float(arch['cost']), float(arch['programmatic_risk'])]
                 for x in arch['ArchitectureScoreExplanations']:
                     outputs.append(float(x['satisfaction'])) # There will be three stakeholder panel satisfactions
 
