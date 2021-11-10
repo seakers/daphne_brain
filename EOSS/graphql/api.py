@@ -398,9 +398,10 @@ class GraphqlClient:
         query = ' query get_subobjective_list { Stakeholder_Needs_Subobjective(where: {Problem: {id: {_eq: ' + self.problem_id + '}}})  { id name description problem_id weight} } '
         return self.execute_query(query)
 
-    def get_false_architectures(self, problem_id):
+    def get_false_architectures(self, problem_id, dataset_id):
         problem_id = str(problem_id)
-        query = ' query MyQuery { Architecture(order_by: {{id: asc}}, where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
+        dataset_id = str(dataset_id)
+        query = ' query MyQuery { Architecture(order_by: {id: asc}, where: {problem_id: {_eq: ' + problem_id + '}, dataset_id: {_eq: '+ dataset_id + '}}) { id ga eval_status input problem_id user_id } } '
         return self.execute_query(query)
 
     def get_instrument_from_objective(self, problem_id, objective):

@@ -185,6 +185,41 @@ class VASSARClient:
         self.user_information.eosscontext.vassar_information["containers"][vassar_container_uuid]["ready"] = True
         self.user_information.eosscontext.save()
 
+    def _update_problem_id(self, problem_id):
+        self.user_information.eosscontext.problem_id = problem_id
+        self.user_information.save()
+
+    def _update_group_id(self, group_id):
+        self.user_information.eosscontext.group_id = group_id
+        self.user_information.save()
+
+    async def rebuild_vassar(self, group_id, problem_id):
+        await sync_to_async(self._update_problem_id)(problem_id)
+        await sync_to_async(self._update_group_id)(group_id)
+        msg_attributes = {
+            'msgType': {
+                'StringValue': 'build',
+                'DataType': 'String'
+            },
+            'user_id': {
+                'StringValue': str(self.user_id),
+                'DataType': 'String'
+            },
+            'group_id': {
+                'StringValue': str(group_id),
+                'DataType': 'String'
+            },
+            'problem_id': {
+                'StringValue': str(problem_id),
+                'DataType': 'String'
+            }
+        }
+        # Send rebuild message
+        await sync_to_async_mt(self.sqs_client.send_message)(
+            QueueUrl=self.user_information.eosscontext.vassar_request_queue_url,
+            MessageBody='boto3',
+            MessageAttributes=msg_attributes)
+
     async def connect_to_ga(self, request_url, response_url, vassar_request_url, max_retries):
         # Send init message
         user_request_queue_url = ""
@@ -639,15 +674,18 @@ class VASSARClient:
 
 
     # working
-    def evaluate_false_architectures(self, problem_id, eval_queue_name='vassar_queue'):
-        query_info = self.dbClient.get_false_architectures(self.problem_id)
+    def evaluate_false_architectures(self, problem_id, dataset_id, eval_queue_url):
+        query_info = self.dbClient.get_false_architectures(problem_id, dataset_id)
         all_archs = query_info['data']['Architecture']
-        evalQueue = self.sqs.get_queue_by_name(QueueName=eval_queue_name)
         for arch in all_archs:
             print("--> re-evaluate:", arch['input'])
-            evalQueue.send_message(MessageBody='boto3', MessageAttributes={
+            self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
                 'msgType': {
                     'StringValue': 'evaluate',
+                    'DataType': 'String'
+                },
+                'dataset_id': {
+                    'StringValue': str(dataset_id),
                     'DataType': 'String'
                 },
                 'input': {
@@ -663,8 +701,6 @@ class VASSARClient:
                     'DataType': 'String'
                 }
             })
-
-        return 0
 
     # working: test  
     def run_local_search(self, inputs, problem_id=5, eval_queue_url=''):

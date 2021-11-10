@@ -57,6 +57,8 @@ class EOSSConsumer(DaphneConsumer):
             await self.connect_vassar(user_info, skip_check=True)
         elif content.get('msg_type') == 'connect_ga':
             await self.connect_ga(user_info, skip_check=True)
+        elif content.get('msg_type') == 'rebuild_vassar':
+            await self.rebuild_vassar(user_info, content.get('group_id'), content.get('problem_id'))
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             # Only ping vassar and GA if logged in
@@ -210,6 +212,10 @@ class EOSSConsumer(DaphneConsumer):
                         'status': vassar_status
                     })
         return vassar_connection_success
+
+    async def rebuild_vassar(user_info: UserInformation, group_id: int, problem_id: int):
+        vassar_client = VASSARClient(user_info)
+        vassar_client.rebuild_vassar(group_id, problem_id)
 
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)

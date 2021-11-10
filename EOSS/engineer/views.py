@@ -96,54 +96,17 @@ class EvaluateArchitecture(APIView):
             })
 
 
-
-
 class EvaluateFalseArchitecture(APIView):
     def post(self, request, format=None):
-        try:
-            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port, user_info=user_info)
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        client = VASSARClient(user_information=user_info)
 
-            problem_id = request.data['problem_id']
+        problem_id = request.data['problem_id']
+        dataset_id = request.data['dataset_id']
+    
+        client.evaluate_false_architectures(problem_id, dataset_id, user_info.eosscontext.vassar_request_queue_url)
 
-            # Delete all design objects
-            Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
-        
-            architecture = client.evaluate_false_architectures(problem_id)
-
-
-
-            # # Check if the architecture already exists in DB before adding it again
-            # is_same = True
-            # for old_arch in user_info.eosscontext.design_set.all():
-            #     is_same = True
-            #     old_arch_outputs = json.loads(old_arch.outputs)
-            #     for i in range(len(old_arch_outputs)):
-            #         if old_arch_outputs[i] != architecture['outputs'][i]:
-            #             is_same = False
-            #     if is_same:
-            #         break
-
-            # if not is_same:
-            #     architecture = add_design(architecture, request.session, request.user, False)
-
-            # user_info.save()
-
-            # # End the connection before return statement
-            # client.end_connection()
-            return Response({})
-        
-        except TApplicationException as exc:
-            logger.exception('Evaluating false architectures failed')
-            client.end_connection()
-            return Response({
-                "error": "Evaluating false architectures failed",
-                "explanation": str(exc)
-            })
-
-
-
+        return Response({"status": "Architectures have been reevaluated!"})
 
 
 class RunLocalSearch(APIView):
