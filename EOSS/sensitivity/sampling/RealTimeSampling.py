@@ -9,7 +9,7 @@ class RealTimeSampling:
     # -- Assume
 
 
-    def __init__(self, instruments, orbits, size=10000):
+    def __init__(self, instruments, orbits, size=500):
         self.instruments = instruments
         self.orbits = orbits
         self.num_inputs = len(self.instruments) * len(self.orbits)
