@@ -326,11 +326,17 @@ class Critic:
             else:
                 utopiaPoint = [1, 0]
                 temp = []
+                maxObjectives = [0, 0]
+                # Find the maximum values of all objectives for normalization
+                for design in dataset:
+                    outputs = design["outputs"]
+                    for index, output in enumerate(outputs):
+                        maxObjectives[index] = max(maxObjectives[index], output)
                 # Select the top N% archs based on the distance to the utopia point
                 for design in dataset:
                     outputs = design["outputs"]
                     id = design["id"]
-                    dist = math.sqrt((outputs[0] - utopiaPoint[0]) ** 2 + (outputs[1] - utopiaPoint[1]) ** 2)
+                    dist = math.sqrt(((outputs[0] - utopiaPoint[0])/(maxObjectives[0] - utopiaPoint[0])) ** 2 + ((outputs[1] - utopiaPoint[1])/(maxObjectives[1] - utopiaPoint[1])) ** 2)
                     temp.append((id, dist))
 
                 # Sort the list based on the distance to the utopia point

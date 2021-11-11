@@ -30,7 +30,7 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
 
 
         if context:
-            if 'problem_id' in context:
+            if hasattr(context, 'problem_id'):
                 orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
                 instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
             elif user_info:
@@ -90,6 +90,11 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
                 out = "no spacecraft should fly in orbit {}".format(orbit_names[0])
             else:
                 out = "no spacecraft flies in orbit {}".format(orbit_names[0])
+        elif feature_type == "numOfInstruments":
+            if is_critique:
+                out = "try architectures with {} instruments".format(numbers)
+            else:
+                out = "{} instruments are used".format(numbers)
         else:
             raise ValueError('Unrecognized feature name: {}'.format(feature_type))
         return out
