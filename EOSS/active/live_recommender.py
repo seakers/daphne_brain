@@ -225,7 +225,9 @@ def active_analyst_response(user_info: UserInformation, session_key):
 
 def generate_analyst_message(user_info, session_key):
     message = {}
-    features_list = random.shuffle(active_analyst_response(user_info, session_key)[:10])[:3]
+    features_list = active_analyst_response(user_info, session_key)[:10]
+    random.shuffle(features_list)
+    features_list = features_list[:3]
     if len(features_list) == 0:
         return {}
     features_list = [feature["advice"] for feature in features_list]
