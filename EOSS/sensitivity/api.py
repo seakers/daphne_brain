@@ -163,6 +163,58 @@ class SensitivityClient:
         print('--> FINISHED EVALUATION')
         return self.parse_architectures(designs)
 
+    def subscribe_to_samples_2(self, samples):
+        print('--> SUBSCRIBING TO SAMPLES:', len(samples))
+        dataset_id = self.user_info.eosscontext.dataset_id
+        sleep_sec = 5
+        num_evaluated = 0
+        num_prev_evaluated = 0
+
+        last_time = time.time()
+        while num_evaluated < len(samples):
+            time.sleep(sleep_sec)
+            aggregate_query = self.db_client.get_architectures_aggregate(dataset_id)
+            if 'data' not in aggregate_query:
+                continue
+            num_evaluated = int(aggregate_query['data']['Architecture_aggregate']['aggregate']['count'])
+
+            # Performance Metrics
+            curr_time = time.time()
+            rate = (num_evaluated - num_prev_evaluated) / (curr_time - last_time)
+            print('---> PROGRESS:', num_evaluated, '/', len(samples), ' -- RATE:', rate)
+            num_prev_evaluated = num_evaluated
+            last_time = curr_time
+
+
+        # query = self.db_client.get_architectures_like(dataset_id)
+        query = self.db_client.get_architectures_all(dataset_id)
+        designs = query['data']['Architecture']
+
+        # Fix any duplicate designs
+        designs = self.fix_dup_designs(designs, len(samples))
+
+
+        # Make sure the appropriate number of samples are included
+        if len(designs) != len(samples):
+            print('--> WRONG NUMBER OF SENSITIVITY DESIGNS:', len(designs), len(samples))
+            time.sleep(5)
+
+        fixed_designs = []
+        for design in designs:
+            fixed_designs.append(
+                {
+                    'input': design['input'],
+                    'cost': design['cost'],
+                    'programmatic_risk': design['programmatic_risk'],
+                    'fairness': design['fairness'],
+                    'data_continuity': design['data_continuity'],
+                    design['ArchitectureScoreExplanations'][0]['Stakeholder_Needs_Panel']['name']: design['ArchitectureScoreExplanations'][0]['satisfaction'],
+                    design['ArchitectureScoreExplanations'][1]['Stakeholder_Needs_Panel']['name']: design['ArchitectureScoreExplanations'][1]['satisfaction'],
+                    design['ArchitectureScoreExplanations'][2]['Stakeholder_Needs_Panel']['name']: design['ArchitectureScoreExplanations'][2]['satisfaction'],
+                }
+            )
+        return fixed_designs
+
     def process_complete_results(self, results_dict, problem, orbits, instruments, file_name):
         all_results = {
             'S1': {},
@@ -297,10 +349,10 @@ class SensitivityClient:
         samples_requested = self.scale_client.evaluate_batch_fast(samples)
 
         # 4. Subscribe to designs
-        results_dict = self.dict_to_list(self.subscribe_to_samples(samples_requested))
+        results_list = self.subscribe_to_samples_2(samples_requested)
 
         # 5. Find main effects
-        main_effects = sampling.calc_main_effects(results_dict)
+        main_effects = sampling.calc_main_effects(results_list)
 
         # 6. Save results
         ddate = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
