@@ -89,7 +89,7 @@ class FormulationAgent:
 
 
 
-        self.sensitivity_client.calculate_problem_sensitivities()
+        self.sensitivity_client.calculate_main_effects()
 
         while continue_running:
             self.record_loop(sleep_sec=7)

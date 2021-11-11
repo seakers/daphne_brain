@@ -9,12 +9,12 @@ class RealTimeSampling:
     # -- Assume
 
 
-    def __init__(self, instruments, orbits, size=5000):
+    def __init__(self, instruments, orbits, size=10000):
         self.instruments = instruments
         self.orbits = orbits
         self.num_inputs = len(self.instruments) * len(self.orbits)
         self.designs = self.generate_design_set(size)
-        self.objectives = ['cost', 'data_continuity', 'programmatic_risk', 'fairness', 'oceanic', 'terrestrial', 'atmosphere']
+        self.objectives = ['cost', 'data_continuity', 'programmatic_risk', 'fairness', 'Oceanic', 'Atmosphere', 'Terrestrial']
 
         # --> RESULTS
         self.results = []
@@ -26,13 +26,24 @@ class RealTimeSampling:
         return designs
 
     def generate_design(self):
-        return [random.randint(0, 1) for x in range(self.num_inputs)]
+        return [random.randint(0, 1) for x in range(0, self.num_inputs)]
 
     def update_results(self, results):
         self.results = results
 
     def get_samples(self):
         return self.designs
+
+
+    def calc_main_effects(self, results):
+        self.update_results(results)
+        return {
+            'instruments': self.instrument_effects(),
+            'orbits': self.orbit_effects()
+        }
+
+
+
 
     def orbit_effects(self, results=None):
         if results:

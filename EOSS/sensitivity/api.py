@@ -2,6 +2,7 @@ from EOSS.graphql.api import GraphqlClient
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.scaling import EvaluationScaling
 from EOSS.sensitivity.sampling.AssigningSampling import AssigningSampling
+from EOSS.sensitivity.sampling.RealTimeSampling import RealTimeSampling
 from statistics import mean
 from asgiref.sync import async_to_sync
 import itertools
@@ -270,7 +271,41 @@ class SensitivityClient:
             'Terrestrial': np.array(terrestrial_list)
         }
 
+    def dict_to_list(self, dict_item):
+        temp = {}
+        for key in dict_item:
+            temp[key] = dict_item[key].tolist()
+        return temp
 
+
+
+
+
+    def calculate_main_effects(self):
+
+        # 1. Set problem parameters
+        self.set_problem_parameters()
+
+        # 2. Create sampling scheme
+        sampling = RealTimeSampling(self.instruments, self.orbits)
+
+        # 3. Evaluate sample population
+        samples = sampling.get_samples()
+        samples_requested = self.scale_client.evaluate_batch_fast(samples)
+
+        # 4. Subscribe to designs
+        results_dict = self.dict_to_list(self.subscribe_to_samples(samples_requested))
+
+        # 5. Find main effects
+        main_effects = sampling.calc_main_effects(results_dict)
+
+        # 6. Save results
+        ddate = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        file_name = self.problem_name + '_MainEffects_' + ddate + '.json'
+        full_path = self.data_dir + file_name
+        with open(full_path, 'w+') as f:
+            f.write(json.dumps(main_effects))
+            f.close()
 
 
 
