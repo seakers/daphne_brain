@@ -37,9 +37,11 @@ class RealTimeSampling:
 
     def calc_main_effects(self, results):
         self.update_results(results)
+        inst_effects, all_effects = self.instrument_effects()
         return {
-            'instruments': self.instrument_effects(),
-            'orbits': self.orbit_effects()
+            'instruments': inst_effects,
+            'orbits': self.orbit_effects(),
+            'all': all_effects
         }
 
 
@@ -63,15 +65,19 @@ class RealTimeSampling:
         if results:
             self.update_results(results)
         effects = {}
+        single_effects = {}
         num_insts = len(self.instruments)
         num_orbs = len(self.orbits)
         for inst_idx, instrument in enumerate(self.instruments):
             inst_effects = []
             for orb_idx, orbit in enumerate(self.orbits):
+                single_name = instrument + '__' + orbit
                 bit_idx = (orb_idx * num_insts) + inst_idx
-                inst_effects.append(self.split_results(bit_idx))
+                results = self.split_results(bit_idx)
+                single_effects[single_name] = results
+                inst_effects.append(results)
             effects[instrument] = self.merge_effects(inst_effects)
-        return effects
+        return effects, single_effects
 
     def merge_effects(self, inst_effects):
         merged = {}
