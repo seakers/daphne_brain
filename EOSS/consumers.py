@@ -51,6 +51,15 @@ class EOSSConsumer(DaphneConsumer):
                     'type': 'active.message',
                     'message': message
                 })
+        elif content.get('msg_type') == 'active_analyst':
+            message = await sync_to_async(live_recommender.generate_analyst_message)(
+                user_info,
+                self.scope['session'].session_key)
+            if message:
+                await self.send_json({
+                    'type': 'active.message',
+                    'message': message
+                })
         elif content.get('msg_type') == 'connect_services':
             await self.connect_services(user_info)
         elif content.get('msg_type') == 'connect_vassar':
@@ -213,7 +222,7 @@ class EOSSConsumer(DaphneConsumer):
                     })
         return vassar_connection_success
 
-    async def rebuild_vassar(user_info: UserInformation, group_id: int, problem_id: int):
+    async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int):
         vassar_client = VASSARClient(user_info)
         vassar_client.rebuild_vassar(group_id, problem_id)
 
