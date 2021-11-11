@@ -285,6 +285,9 @@ class SensitivityClient:
 
         # 1. Set problem parameters
         self.set_problem_parameters()
+        self.purge_eval_queues()
+        self.scale_client = EvaluationScaling(self.user_info, self.num_instances, prod=False)
+        self.scale_client.initialize()
 
         # 2. Create sampling scheme
         sampling = RealTimeSampling(self.instruments, self.orbits)
