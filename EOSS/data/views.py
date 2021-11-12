@@ -226,6 +226,44 @@ class DownloadData(APIView):
                 "error": "This is only available to registered users!"
             })
 
+
+class UploadData(APIView):
+    """ Uploads data from a csv file.
+
+    Request Args:
+        path: Relative path to a csv file residing inside Daphne project folder
+
+    Returns:
+        architectures: a list of python dict containing the basic architecture information.
+
+    """
+    def post(self, request, format=None):
+        try:
+
+            # Get user_info and problem_id
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            problem_id = user_info.eosscontext.problem_id
+            user_id = user_info.user.id
+
+            # Get problem architectures
+            dbClient = GraphqlClient(problem_id=problem_id)
+
+            dataset_path = "./EOSS/data/" + request.data["filename"] + ".csv"
+            dataset_id = dbClient.add_new_dataset(problem_id, user_id, request.data["filename"])
+
+            with open(dataset_path, newline='') as csvfile:
+                arch_reader = csv.reader(csvfile, delimiter=',')
+                for row in arch_reader:
+                    inputs = "".join(["1" if inp == "True" else "0" for inp in row[0:25]])
+                    science = row[25]
+                    cost = row[26]
+                    result = dbClient.insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost)
+            return Response({"YAY!"})
+
+        except Exception:
+            raise ValueError("There has been an error when parsing the architectures")
+
+
 ### DEPRECATED (temporarily)
 class DatasetList(APIView):
     """ Returns a list of problem files.

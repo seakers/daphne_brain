@@ -224,7 +224,7 @@ class EOSSConsumer(DaphneConsumer):
 
     async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int):
         vassar_client = VASSARClient(user_info)
-        vassar_client.rebuild_vassar(group_id, problem_id)
+        await vassar_client.rebuild_vassar(group_id, problem_id)
 
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)

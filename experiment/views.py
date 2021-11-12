@@ -44,7 +44,7 @@ class StartExperiment(APIView):
         # Save experiment start info
         
         # User info needs to already exist and have user marked as experiment user
-        user_info = get_user_information(request.session, request.user, 'EOSS')
+        user_info = get_user_information(request.session, request.user)
 
         if not user_info.is_experiment_user:
             return Response({
@@ -143,7 +143,7 @@ def save_experiment_to_file(experiment_context: ExperimentContext):
     with open('./experiment/results/' + str(experiment_context.experiment_id) + '.json', 'w') as f:
         json_experiment = {
             "experiment_id": experiment_context.experiment_id,
-            "current_state": json.loads(experiment_context.current_state),
+            "current_state": json.loads(experiment_context.current_state) if experiment_context.current_state != "" else "",
             "stages": []
         }
         for stage in experiment_context.experimentstage_set.all():
@@ -151,12 +151,12 @@ def save_experiment_to_file(experiment_context: ExperimentContext):
                 "type": stage.type,
                 "start_date": stage.start_date.isoformat(),
                 "end_date": stage.end_date.isoformat(),
-                "end_state": json.loads(stage.end_state),
+                "end_state": json.loads(stage.end_state) if stage.end_state != "" else "",
                 "actions": []
             }
             for action in stage.experimentaction_set.all():
                 json_action = {
-                    "action": json.loads(action.action),
+                    "action": json.loads(action.action) if action.action != "" else "",
                     "date": action.date.isoformat()
                 }
                 json_stage["actions"].append(json_action)
