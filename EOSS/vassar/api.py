@@ -219,6 +219,26 @@ class VASSARClient:
             QueueUrl=self.user_information.eosscontext.vassar_request_queue_url,
             MessageBody='boto3',
             MessageAttributes=msg_attributes)
+        # Wait for rebuild message response
+        # Try at most 5 times
+        for i in range(5):
+            response = await sync_to_async_mt(self.sqs_client.receive_message)(
+                QueueUrl=self.user_information.eosscontext.vassar_response_queue_url,
+                MaxNumberOfMessages=3,
+                WaitTimeSeconds=2,
+                MessageAttributeNames=["All"])
+            response_received = False
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == "buildDone":
+                        print("Received message attributes:", message["MessageAttributes"])
+                        response_received = True
+                    else:
+                        # Return message to queue
+                        await sync_to_async_mt(self.sqs_client.change_message_visibility)(QueueUrl=self.user_information.eosscontext.vassar_response_queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=1)
+            if response_received:
+                break
+        return response_received
 
     async def connect_to_ga(self, request_url, response_url, vassar_request_url, max_retries):
         # Send init message
