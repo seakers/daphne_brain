@@ -3,7 +3,7 @@ import os
 
 from asgiref.sync import sync_to_async
 from daphne_context.models import UserInformation
-from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info
+from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info, sync_to_async_mt
 from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
@@ -224,8 +224,18 @@ class EOSSConsumer(DaphneConsumer):
 
     async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int):
         vassar_client = VASSARClient(user_info)
-        await vassar_client.rebuild_vassar(group_id, problem_id)
-
+        response_received = await vassar_client.rebuild_vassar(group_id, problem_id)
+        if response_received:
+            await self.send_json({
+                        'type': 'services.vassar_rebuild',
+                        'status': "success"
+                    })
+        else:
+            await self.send_json({
+                        'type': 'services.vassar_rebuild',
+                        'status': "failure"
+                    })
+       
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
 

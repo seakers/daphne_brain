@@ -71,7 +71,7 @@ class GraphqlClient:
 
 
     def get_architectures(self, problem_id=6, dataset_id=-1):
-        query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }} }}) {{ id input cost science eval_status }} }} '
+        query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, _or:[{{ga: {{_eq: false}}}}, {{ga: {{_eq: true}}, improve_hv: {{_eq: true}}}}] }}) {{ id input cost science eval_status }} }} '
         return self.execute_query(query)
 
     def check_for_existing_arch(self, problem_id, dataset_id, input):

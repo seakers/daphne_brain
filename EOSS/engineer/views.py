@@ -155,6 +155,7 @@ class GetArchDetails(APIView):
         dataset_id = int(request.data['dataset_id'])
 
         designs = client.get_dataset_architectures(problem_id=problem_id, dataset_id=dataset_id)
+        print([(d["id"],d["db_id"]) for d in designs])
         arch = None
         for design in designs:
             if design["id"] == arch_id:
