@@ -187,11 +187,11 @@ class VASSARClient:
 
     def _update_problem_id(self, problem_id):
         self.user_information.eosscontext.problem_id = problem_id
-        self.user_information.save()
+        self.user_information.eosscontext.save()
 
     def _update_group_id(self, group_id):
         self.user_information.eosscontext.group_id = group_id
-        self.user_information.save()
+        self.user_information.eosscontext.save()
 
     async def rebuild_vassar(self, group_id, problem_id):
         await sync_to_async(self._update_problem_id)(problem_id)
