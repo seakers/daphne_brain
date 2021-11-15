@@ -13,14 +13,25 @@ logger = logging.getLogger('experiment')
 
 
 def stage_type(id, stage_num):
-    if id % 2 == 0:
+    stage_config = id % 4 
+    if stage_config == 0:
         if stage_num == 0:
             return 'daphne_classic'
         else:
             return 'daphne_hypothesis'
-    else:
+    elif stage_config == 1:
         if stage_num == 0:
             return 'daphne_hypothesis'
+        else:
+            return 'daphne_classic'
+    elif stage_config == 2:
+        if stage_num == 0:
+            return 'daphne_dm'
+        else:
+            return 'daphne_classic'
+    elif stage_config == 3:
+        if stage_num == 0:
+            return 'daphne_dm'
         else:
             return 'daphne_classic'
 
