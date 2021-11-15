@@ -476,9 +476,12 @@ class GraphqlClient:
             for obj in panel['objectives']:
                 subobjective_info = []
                 for subobj in obj['subobjectives']:
-                    subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
-                objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
-            information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
+                    if len(subobj['satisfaction']) > 0:
+                        subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
+                if len(obj['satisfaction']) > 0:
+                    objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
+            if len(panel['satisfaction']) > 0:
+                information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
         print("\n---> all stakeholder info", information)
         return information
 
