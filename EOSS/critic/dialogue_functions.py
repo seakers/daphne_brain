@@ -25,7 +25,8 @@ def general_call(design_id, designs, session_key, context):
         critic_results.extend(critic.explorer_critic(this_design))
 
         # Criticize architecture (based on database)
-        critic_results.extend(critic.historian_critic(this_design))
+        # TODO: Fix issues with new Database system matching the inputs to historian (NLP work)
+        #critic_results.extend(critic.historian_critic(this_design))
 
         # Criticize architecture (based on data mining)
         critic_results.extend(critic.analyst_critic(this_design))
