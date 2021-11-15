@@ -69,6 +69,21 @@ class GraphqlClient:
         else:
             self.problem_id = str(5)
 
+    def get_architecture_from_id(self, arch_id):
+        query = '''
+        query get_architecture_from_id {
+            architecture: Architecture_by_pk(id: $arch_id) {
+                id
+                input
+                science
+                cost
+            }
+        }'''
+        variables = {
+            "arch_id": arch_id
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["architecture"]
 
     def get_architectures(self, problem_id=6, dataset_id=-1):
         query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, _or:[{{ga: {{_eq: false}}}}, {{ga: {{_eq: true}}, improve_hv: {{_eq: true}}}}] }}) {{ id input cost science eval_status }} }} '

@@ -605,6 +605,13 @@ class VASSARClient:
             counter = counter + 1
         return architectures_json
 
+    def get_architecture_from_id(self, arch_id):
+        result_arch = self.dbClient.get_architecture_from_id(arch_id)
+        outputs = [result_arch['science'], result_arch['cost']]
+        arch = {'id': result_arch['id'], 'inputs': [b == "1" for b in result_arch['input']], 'outputs': outputs}
+
+        return arch
+
     def reevaluate_architecture(self, design, eval_queue_url):
         # Unevaluate architecture
         self.dbClient.unevaluate_architecture(design["db_id"])
@@ -729,7 +736,12 @@ class VASSARClient:
         for x in range(4):
             new_inputs = self.random_local_change(inputs)
             print('---> NEW DESIGN ary: ', new_inputs)
-            new_design_result = self.evaluate_architecture(new_inputs, eval_queue_url, fast=True, ga=True)
+            # Check if the architecture already exists in DB before adding it again
+            is_same, arch_id = self.check_for_existing_arch(new_inputs)
+            if not is_same:
+                new_design_result = self.evaluate_architecture(new_inputs, eval_queue_url, fast=True, ga=False)
+            else:
+                new_design_result = self.get_architecture_from_id(arch_id)
             print('---> RESULT: ', str(new_design_result))
             designs.append(new_design_result)
 
