@@ -775,7 +775,7 @@ class VASSARClient:
         return 1
 
     # working
-    async def start_ga(self, tested_feature=None):
+    async def start_ga(self, algorithm_url, tested_feature=None):
         # Connect to queue
         ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
         print(ga_queue_url)
@@ -796,6 +796,10 @@ class VASSARClient:
                     },
                     'mutationProbability': {
                         'StringValue': '0.016666',
+                        'DataType': 'String'
+                    },
+                    'algorithmUrl': {
+                        'StringValue': algorithm_url,
                         'DataType': 'String'
                     },
                     'group_id': {

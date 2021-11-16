@@ -27,6 +27,7 @@ class EOSSContext(models.Model):
     ga_request_queue_url = models.TextField(null=True)
     ga_response_queue_url = models.TextField(null=True)
     ga_information = models.JSONField(default=dict)
+    ga_thread_id = models.IntegerField(default=-1)
 
 
 class EOSSContextSerializer(serializers.ModelSerializer):
