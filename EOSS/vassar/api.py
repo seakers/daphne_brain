@@ -185,17 +185,15 @@ class VASSARClient:
         self.user_information.eosscontext.vassar_information["containers"][vassar_container_uuid]["ready"] = True
         self.user_information.eosscontext.save()
 
-    def _update_problem_id(self, problem_id):
+    def _update_problem_info(self, problem_id, group_id, dataset_id):
         self.user_information.eosscontext.problem_id = problem_id
-        self.user_information.eosscontext.save()
-
-    def _update_group_id(self, group_id):
         self.user_information.eosscontext.group_id = group_id
+        self.user_information.eosscontext.group_id = dataset_id
         self.user_information.eosscontext.save()
 
-    async def rebuild_vassar(self, group_id, problem_id):
-        await sync_to_async(self._update_problem_id)(problem_id)
-        await sync_to_async(self._update_group_id)(group_id)
+
+    async def rebuild_vassar(self, group_id, problem_id, dataset_id):
+        await sync_to_async(self._update_problem_info)(problem_id, group_id, dataset_id)
         msg_attributes = {
             'msgType': {
                 'StringValue': 'build',
