@@ -188,7 +188,7 @@ class VASSARClient:
     def _update_problem_info(self, problem_id, group_id, dataset_id):
         self.user_information.eosscontext.problem_id = problem_id
         self.user_information.eosscontext.group_id = group_id
-        self.user_information.eosscontext.group_id = dataset_id
+        self.user_information.eosscontext.dataset_id = dataset_id
         self.user_information.eosscontext.save()
 
 
