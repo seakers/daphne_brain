@@ -71,7 +71,7 @@ class GraphqlClient:
 
     def get_architecture_from_id(self, arch_id):
         query = '''
-        query get_architecture_from_id {
+        query get_architecture_from_id($arch_id: Int!) {
             architecture: Architecture_by_pk(id: $arch_id) {
                 id
                 input
