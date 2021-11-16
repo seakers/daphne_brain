@@ -1,7 +1,10 @@
 import asyncio
 import os
+import threading
 
 from asgiref.sync import sync_to_async
+from EOSS.aws.utils import get_boto3_client
+from EOSS.data.design_helpers import add_design
 from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info, sync_to_async_mt
 from daphne_ws.consumers import DaphneConsumer
@@ -66,6 +69,12 @@ class EOSSConsumer(DaphneConsumer):
             await self.connect_vassar(user_info, skip_check=True)
         elif content.get('msg_type') == 'connect_ga':
             await self.connect_ga(user_info, skip_check=True)
+        elif content.get('msg_type') == 'start_ga':
+            # Also check for hypothesis being tested
+            tested_feature = content.get("featureExpression")
+            await self.start_ga(user_info, tested_feature)
+        elif content.get('msg_type') == 'stop_ga':
+            await self.stop_ga(user_info)
         elif content.get('msg_type') == 'rebuild_vassar':
             await self.rebuild_vassar(user_info, content.get('group_id'), content.get('problem_id'))
         elif content.get('msg_type') == 'ping':
@@ -312,3 +321,112 @@ class EOSSConsumer(DaphneConsumer):
                     'status': ga_status
                 })
         print("Initial GA status", ga_status)
+
+    async def start_ga(self, user_info: UserInformation, tested_feature):
+        vassar_client = VASSARClient(user_info)
+
+        if self.scope["user"].is_authenticated:
+            try:
+                if vassar_client.check_dataset_read_only():
+                    await self.send_json({
+                        'type': 'services.ga_running_status',
+                        'status': 'error',
+                        'message': "Dataset is read only"
+                    })
+                # Define new queue for listening to GA algorithm status
+                if not await vassar_client.queue_exists_by_name("dead-letter"):
+                    dead_letter_url, dead_letter_arn = await vassar_client.create_dead_queue("dead-letter")
+                else:
+                    dead_letter_url = await vassar_client.get_queue_url("dead-letter")
+                    dead_letter_arn = await vassar_client.get_queue_arn(dead_letter_url)
+
+                ga_algorithm_queue_name = "user-queue-ga-algorithm-" + str(self.scope["user"].id)
+                if not await vassar_client.queue_exists_by_name(ga_algorithm_queue_name):
+                    ga_algorithm_queue_url = await vassar_client.create_queue(ga_algorithm_queue_name, dead_letter_arn)
+                else:
+                    ga_algorithm_queue_url = await vassar_client.get_queue_url(ga_algorithm_queue_name)
+                
+                # Start GA in container
+                await vassar_client.start_ga(ga_algorithm_queue_url, tested_feature)
+
+                # Start listening for AWS SQS inputs
+                def aws_consumer():
+                    print("--> GA Thread: Algorithm Queue URL is", ga_algorithm_queue_url)
+                    sqs_client = get_boto3_client('sqs')
+                    is_done = False
+
+                    while not is_done:
+                        response = sqs_client.receive_message(QueueUrl=ga_algorithm_queue_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+                        if "Messages" in response:
+                            # Send message back to frontend that GA is working fine
+                            for message in response["Messages"]:
+                                if message["MessageAttributes"]["msgType"]["StringValue"] == "gaStarted":
+                                    #TODO: Add a new field to eosscontext on GA thread status
+                                    print("--> GA Thread: GA Started!")
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                elif message["MessageAttributes"]["msgType"]["StringValue"] == "gaEnded":
+                                    #TODO: Add a new field to eosscontext on GA thread status
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    is_done = True
+                                    print('--> GA Thread: Ending the thread!')
+                                elif message["MessageAttributes"]["msgType"]["StringValue"] == "newGaArch":
+                                    print('--> GA Thread: Processing a new arch!')
+                                    # Keeping up for proactive
+                                    add_design(self.scope["session"], self.scope["user"])
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                else:
+                                    # Return message to queue
+                                    sqs_client.change_message_visibility(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+
+                    print('--> GA Thread: Thread done!')
+
+                thread = threading.Thread(target=aws_consumer)
+                thread.start()
+
+                await self.send_json({
+                        'type': 'services.ga_running_status',
+                        'status': 'success',
+                        'message': "GA started correctly!"
+                    })
+
+            except Exception as exc:
+                await self.send_json({
+                        'type': 'services.ga_running_status',
+                        'status': 'error',
+                        'message': "Error starting the GA: " + str(exc)
+                    })
+
+        else:
+            await self.send_json({
+                'type': 'services.ga_running_status',
+                'status': 'error',
+                'message': "This is only available to registered users!"
+            })
+
+    async def stop_ga(self, user_info: UserInformation):
+        vassar_client = VASSARClient(user_info)
+
+        if self.scope["user"].is_authenticated:
+            try:
+                # Call the GA stop function on Engineer
+                await vassar_client.stop_ga()
+
+                await self.send_json({
+                    'type': 'services.ga_running_status',
+                    'status': 'success',
+                    'message': "GA stopped correctly!"
+                })
+
+            except Exception as exc:
+                await self.send_json({
+                    'type': 'services.ga_running_status',
+                    'status': 'error',
+                    'message': "Error stopping the GA: " + str(exc)
+                })
+
+        else:
+            await self.send_json({
+                'type': 'services.ga_running_status',
+                'status': 'error',
+                'message': "This is only available to registered users!"
+            })
