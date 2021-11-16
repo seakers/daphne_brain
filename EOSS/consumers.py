@@ -76,7 +76,7 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'stop_ga':
             await self.stop_ga(user_info)
         elif content.get('msg_type') == 'rebuild_vassar':
-            await self.rebuild_vassar(user_info, content.get('group_id'), content.get('problem_id'))
+            await self.rebuild_vassar(user_info, content.get('group_id'), content.get('problem_id'), content.get('dataset_id'))
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             # Only ping vassar and GA if logged in
@@ -231,9 +231,9 @@ class EOSSConsumer(DaphneConsumer):
                     })
         return vassar_connection_success
 
-    async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int):
+    async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
         vassar_client = VASSARClient(user_info)
-        response_received = await vassar_client.rebuild_vassar(group_id, problem_id)
+        response_received = await vassar_client.rebuild_vassar(group_id, problem_id, dataset_id)
         if response_received:
             await self.send_json({
                         'type': 'services.vassar_rebuild',
