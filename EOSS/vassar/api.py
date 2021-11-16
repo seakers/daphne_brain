@@ -218,12 +218,12 @@ class VASSARClient:
             MessageBody='boto3',
             MessageAttributes=msg_attributes)
         # Wait for rebuild message response
-        # Try at most 5 times
-        for i in range(5):
+        # Try at most 20 times
+        for i in range(20):
             response = await sync_to_async_mt(self.sqs_client.receive_message)(
                 QueueUrl=self.user_information.eosscontext.vassar_response_queue_url,
-                MaxNumberOfMessages=3,
-                WaitTimeSeconds=2,
+                MaxNumberOfMessages=1,
+                WaitTimeSeconds=1,
                 MessageAttributeNames=["All"])
             response_received = False
             if "Messages" in response:
