@@ -30,14 +30,12 @@ class StartGA(APIView):
                         "error": "Dataset is read only"
                     })
 
-                # Stop GA in container if it was runnning
-                async_to_sync(client.stop_ga)()
-                # Start GA in container
                 # Also check for hypothesis being tested
                 if "featureExpression" in request.data:
                     tested_feature = request.data["featureExpression"]
                 else:
                     tested_feature = None
+                # Start GA in container
                 async_to_sync(client.start_ga)(tested_feature)
 
                 # Start listening for AWS SQS inputs
