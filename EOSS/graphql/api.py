@@ -86,8 +86,21 @@ class GraphqlClient:
         return query_result["data"]["architecture"]
 
     def get_architectures(self, problem_id=6, dataset_id=-1):
-        query = f'query get_architectures {{ Architecture(order_by: {{id: asc}}, where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, _or:[{{ga: {{_eq: false}}}}, {{ga: {{_eq: true}}, improve_hv: {{_eq: true}}}}] }}) {{ id input cost science eval_status }} }} '
-        return self.execute_query(query)
+        query = '''
+        query get_architectures($problem_id: Int!, $dataset_id: Int!) {
+            Architecture(order_by: { id: asc }, where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, _or: [{ga: {_eq: false}}, {ga: {_eq: true}, improve_hv: {_eq: true}}]}) {
+                id
+                input
+                cost
+                science
+                eval_status
+            } 
+        }'''
+        variables = {
+            "problem_id": problem_id,
+            "dataset_id": dataset_id
+        }
+        return self.execute_query(query, variables)
 
     def check_for_existing_arch(self, problem_id, dataset_id, input):
         query = f'''
