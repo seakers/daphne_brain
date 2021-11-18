@@ -103,6 +103,30 @@ class EvaluationScaling:
         print('--> SCALING INITIALIZATION COMPLETE')
         return 0
 
+    def rebuild_experiment_containers(self):
+        self.docker_client.rebuild_experiment_containers()
+
+    def initialize_experiment(self):
+        print('--> INITIALIZING SCALING')
+
+        # --> 1. Start experiment containers
+        self.docker_client.start_containers_experiment(self.num_instances, self.request_queue_url_2, self.response_queue_url_2)
+
+        # --> 2. Initialize experiment containers
+        build_threads = []
+        init = True
+        for x in range(self.num_instances):
+            th = threading.Thread(target=connection_thread, args=(self.user_info, self.request_queue_url_2, self.response_queue_url_2, init))
+            th.start()
+            build_threads.append(th)
+            init = False
+
+        # --> 3. Wait for threads to join
+        for th in build_threads:
+            th.join()
+
+
+
     def initialize_dev(self, block=True):
         print('--> INITIALIZING SCALING')
         containers_to_start = self.num_instances - len(self.docker_client.containers)

@@ -210,6 +210,7 @@ class GraphqlClient:
                 fairness
                 data_continuity
                 eval_idx
+                id
                 ArchitectureScoreExplanations {{
                   satisfaction
                   Stakeholder_Needs_Panel {{
