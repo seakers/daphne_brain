@@ -1,6 +1,9 @@
 import random
 from statistics import mean
 
+import numpy as np
+import scipy.stats as st
+
 
 class RealTimeSampling:
 
@@ -83,9 +86,17 @@ class RealTimeSampling:
         merged = {}
         for objective in self.objectives:
             obj_effects = []
+            obj_c_low = []
+            obj_c_high = []
             for effect in inst_effects:
-                obj_effects.append(effect[objective])
-            merged[objective] = mean(obj_effects)
+                if effect[objective][0]:
+                    obj_effects.append(effect[objective][0])
+                if effect[objective][1]:
+                    obj_c_low.append(effect[objective][1])
+                if effect[objective][2]:
+                    obj_c_high.append(effect[objective][2])
+
+            merged[objective] = [mean(obj_effects), mean(obj_c_low), mean(obj_c_high)]
         return merged
 
     def init_bit_split(self):
@@ -106,8 +117,54 @@ class RealTimeSampling:
                     bit_true[objective].append(result[objective])
         result_dict = {}
         for objective in self.objectives:
-            result_dict[objective] = mean(bit_true[objective]) - mean(bit_false[objective])
+            result_dict[objective] = self.find_local_results(bit_true[objective], bit_false[objective])
+
         return result_dict
+
+    def find_local_results(self, bit_true_samples, bit_false_samples):
+        bit_true_mean, bit_true_interval_low, bit_true_interval_high = self.find_confidence_interval(bit_true_samples)
+        bit_false_mean, bit_false_interval_low, bit_false_interval_high = self.find_confidence_interval(bit_false_samples)
+
+        if bit_true_interval_low is None and bit_false_interval_low is None:
+            return [None, None, None]
+        if bit_true_interval_low is None:
+            return [None, None, None]
+        if bit_false_interval_low is None:
+            return [None, None, None]
+
+        t_low_err = abs(bit_true_mean - bit_true_interval_low)
+        t_high_err = abs(bit_true_mean - bit_true_interval_high)
+        f_low_err = abs(bit_false_mean - bit_false_interval_low)
+        f_high_err = abs(bit_false_mean - bit_false_interval_high)
+
+        diff_mean = bit_true_mean - bit_false_mean
+        diff_c_low = diff_mean - (t_low_err + f_high_err)
+        diff_c_high = diff_mean + (t_high_err + f_low_err)
+
+        return [diff_mean, diff_c_low, diff_c_high]
+
+
+
+    def find_confidence_interval(self, samples):
+        num_samples = len(samples)
+
+        sample_mean = None
+        c_interval_low = None
+        c_interval_high = None
+
+        if num_samples == 0:
+            return sample_mean, c_interval_low, c_interval_high
+        elif num_samples < 30:
+            results = st.t.interval(alpha=0.95, df=num_samples-1, loc=np.mean(samples), scale=st.sem(samples))
+            c_interval_low = results[0]
+            c_interval_high = results[1]
+        else:
+            results = st.norm.interval(alpha=0.95, loc=np.mean(samples), scale=st.sem(samples))
+            c_interval_low = results[0]
+            c_interval_high = results[1]
+
+        sample_mean = np.mean(samples)
+        return sample_mean, c_interval_low, c_interval_high
 
 
 
