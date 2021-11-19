@@ -1,4 +1,5 @@
 import logging
+import concurrent.futures
 
 from EOSS.critic.critic import Critic
 from EOSS.models import EOSSContext
@@ -19,18 +20,21 @@ def general_call(design_id, designs, session_key, context):
 
         critic_results = []
 
-        # Criticize architecture (based on rules)
-        critic_results.extend(critic.expert_critic(this_design))
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Criticize architecture (based on rules)
+            expert_results = executor.submit(critic.expert_critic, this_design)
+            # Criticize architecture (based on explorer)
+            explorer_results = executor.submit(critic.explorer_critic, this_design)
+            # Criticize architecture (based on database)
+            # TODO: Fix issues with new Database system matching the inputs to historian (NLP work)
+            # historian_results = executor.submit(critic.historian_critic, this_design)
+            # Criticize architecture (based on data mining)
+            analyst_results = executor.submit(critic.analyst_critic, this_design)
 
-        # Criticize architecture (based on explorer)
-        critic_results.extend(critic.explorer_critic(this_design))
-
-        # Criticize architecture (based on database)
-        # TODO: Fix issues with new Database system matching the inputs to historian (NLP work)
-        #critic_results.extend(critic.historian_critic(this_design))
-
-        # Criticize architecture (based on data mining)
-        critic_results.extend(critic.analyst_critic(this_design))
+            critic_results.extend(expert_results.result())
+            critic_results.extend(explorer_results.result())
+            #critic_results.extend(historian_results.result())
+            critic_results.extend(analyst_results.result())
 
         # Send response
         return critic_results
