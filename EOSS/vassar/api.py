@@ -1,7 +1,7 @@
 import asyncio
+import concurrent.futures
 import json
 import os
-import time
 from asgiref.sync import sync_to_async
 import boto3
 import random
@@ -731,17 +731,22 @@ class VASSARClient:
     def run_local_search(self, inputs, problem_id=5, eval_queue_url=''):
         designs = []
 
-        for x in range(4):
-            new_inputs = self.random_local_change(inputs)
-            print('---> NEW DESIGN ary: ', new_inputs)
-            # Check if the architecture already exists in DB before adding it again
-            is_same, arch_id = self.check_for_existing_arch(new_inputs)
-            if not is_same:
-                new_design_result = self.evaluate_architecture(new_inputs, eval_queue_url, fast=True, ga=False)
-            else:
-                new_design_result = self.get_architecture_from_id(arch_id)
-            print('---> RESULT: ', str(new_design_result))
-            designs.append(new_design_result)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            design_futures = []
+            designs = []
+            for _ in range(4):
+                new_inputs = self.random_local_change(inputs)
+                print('---> NEW DESIGN ary: ', new_inputs)
+                # Check if the architecture already exists in DB before adding it again
+                is_same, arch_id = self.check_for_existing_arch(new_inputs)
+                if not is_same:
+                    design_futures.append(executor.submit(self.evaluate_architecture, new_inputs, eval_queue_url, fast=True, ga=False))
+                else:
+                    design_futures.append(executor.submit(self.get_architecture_from_id, arch_id))
+            for design_future in design_futures:
+                new_design = design_future.result()
+                print('---> RESULT: ', str(new_design))
+                designs.append(new_design)
 
         return designs
 

@@ -2,9 +2,11 @@ import asyncio
 import os
 import threading
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
+from channels.layers import get_channel_layer
 from EOSS.aws.utils import get_boto3_client
 from EOSS.data.design_helpers import add_design
+from auth_API.helpers import get_user_information
 from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info, sync_to_async_mt
 from daphne_ws.consumers import DaphneConsumer
@@ -143,6 +145,9 @@ class EOSSConsumer(DaphneConsumer):
 
     async def data_mining_search_finished(self, event):
         # print(event)
+        await self.send_json(event)
+
+    async def services_ga_running_status(self, event):
         await self.send_json(event)
 
 
@@ -330,7 +335,7 @@ class EOSSConsumer(DaphneConsumer):
                 if vassar_client.check_dataset_read_only():
                     await self.send_json({
                         'type': 'services.ga_running_status',
-                        'status': 'error',
+                        'status': 'dataset_error',
                         'message': "Dataset is read only"
                     })
                 # Define new queue for listening to GA algorithm status
@@ -354,21 +359,40 @@ class EOSSConsumer(DaphneConsumer):
                     print("--> GA Thread: Algorithm Queue URL is", ga_algorithm_queue_url)
                     sqs_client = get_boto3_client('sqs')
                     is_done = False
+                    is_ga_running = False
 
                     while not is_done:
-                        response = sqs_client.receive_message(QueueUrl=ga_algorithm_queue_url, MaxNumberOfMessages=1, WaitTimeSeconds=1, MessageAttributeNames=["All"])
+                        user_info.refresh_from_db()
+                        channel_name = user_info.channel_name
+                        response = sqs_client.receive_message(QueueUrl=ga_algorithm_queue_url, MaxNumberOfMessages=5, WaitTimeSeconds=1, AttributeNames=["All"], MessageAttributeNames=["All"])
                         if "Messages" in response:
+                            sorted_messages = sorted(response["Messages"], key=lambda msg: int(msg["Attributes"]["SentTimestamp"]))
                             # Send message back to frontend that GA is working fine
-                            for message in response["Messages"]:
+                            for message in sorted_messages:
                                 if message["MessageAttributes"]["msgType"]["StringValue"] == "gaStarted":
+                                    channel_layer = get_channel_layer()
+                                    async_to_sync(channel_layer.send)(channel_name, {
+                                        'type': 'services.ga_running_status',
+                                        'status': 'started',
+                                        'message': "GA started correctly!"
+                                    })
+                                    is_ga_running = True
+                                    is_done = False
                                     #TODO: Add a new field to eosscontext on GA thread status
                                     print("--> GA Thread: GA Started!")
                                     sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "gaEnded":
+                                    if is_ga_running:
+                                        channel_layer = get_channel_layer()
+                                        async_to_sync(channel_layer.send)(channel_name, {
+                                            'type': 'services.ga_running_status',
+                                            'status': 'stopped',
+                                            'message': "GA stopped correctly!"
+                                        })
+                                        is_done = True
+                                        print('--> GA Thread: Ending the thread!')
                                     #TODO: Add a new field to eosscontext on GA thread status
                                     sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
-                                    is_done = True
-                                    print('--> GA Thread: Ending the thread!')
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "newGaArch":
                                     print('--> GA Thread: Processing a new arch!')
                                     # Keeping up for proactive
@@ -385,21 +409,21 @@ class EOSSConsumer(DaphneConsumer):
 
                 await self.send_json({
                         'type': 'services.ga_running_status',
-                        'status': 'success',
-                        'message': "GA started correctly!"
+                        'status': 'start_requested',
+                        'message': "GA start has been requested"
                     })
 
             except Exception as exc:
                 await self.send_json({
                         'type': 'services.ga_running_status',
-                        'status': 'error',
+                        'status': 'start_error',
                         'message': "Error starting the GA: " + str(exc)
                     })
 
         else:
             await self.send_json({
                 'type': 'services.ga_running_status',
-                'status': 'error',
+                'status': 'auth_error',
                 'message': "This is only available to registered users!"
             })
 
@@ -413,20 +437,20 @@ class EOSSConsumer(DaphneConsumer):
 
                 await self.send_json({
                     'type': 'services.ga_running_status',
-                    'status': 'success',
-                    'message': "GA stopped correctly!"
+                    'status': 'stop_requested',
+                    'message': "GA stop has been requested"
                 })
 
             except Exception as exc:
                 await self.send_json({
                     'type': 'services.ga_running_status',
-                    'status': 'error',
+                    'status': 'stop_error',
                     'message': "Error stopping the GA: " + str(exc)
                 })
 
         else:
             await self.send_json({
                 'type': 'services.ga_running_status',
-                'status': 'error',
+                'status': 'auth_error',
                 'message': "This is only available to registered users!"
             })
