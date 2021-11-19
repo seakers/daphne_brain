@@ -391,6 +391,7 @@ class VASSARClient:
         # Try at most 10 times
         current_status = ""
         current_timestamp = 0
+        current_uuid = None
         for i in range(10):
             response = await sync_to_async_mt(self.sqs_client.receive_message)(
                 QueueUrl=response_queue,
@@ -406,6 +407,7 @@ class VASSARClient:
                         receive_time = int(message["Attributes"]["SentTimestamp"])
                         if receive_time > current_timestamp:
                             current_status = message["MessageAttributes"]["current_status"]["StringValue"]
+                            current_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
                             current_timestamp = receive_time
                         # 4. Delete Message from queue
                         await sync_to_async_mt(self.sqs_client.delete_message)(
@@ -420,7 +422,7 @@ class VASSARClient:
         if current_status == "":
             current_status = "waiting_for_user"
         print("--------- Current status:", current_status)
-        return current_status
+        return current_status, current_uuid
 
     async def create_dead_queue(self, queue_name):
         response = await sync_to_async_mt(self.sqs_client.create_queue)(
