@@ -10,8 +10,8 @@ ga_config = {
     'network': 'daphne_service',
     'detach': True,
     'environment': {
-        'AWS_ACCESS_KEY_ID': 'AKIAJVM34C5MCCWRJCCQ',
-        'AWS_SECRET_ACCESS_KEY': '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',
+        'AWS_ACCESS_KEY_ID': '',
+        'AWS_SECRET_ACCESS_KEY': '',
         'REGION': 'elasticmq',
         'REQUEST_MODE': 'CRISP-ATTRIBUTES',
         'GA_REQUEST_URL': 'http://localhost:9324/000000000000/ga_request',
@@ -31,8 +31,8 @@ config = {
     'network': 'daphne_service',
     'detach': True,
     'environment': {
-        'AWS_ACCESS_KEY_ID': 'AKIAJVM34C5MCCWRJCCQ',
-        'AWS_SECRET_ACCESS_KEY': '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',
+        'AWS_ACCESS_KEY_ID': '',
+        'AWS_SECRET_ACCESS_KEY': '',
         'REGION': 'elasticmq',
         'REQUEST_MODE': 'CRISP-ATTRIBUTES',
         'VASSAR_REQUEST_URL': 'http://localhost:9324/000000000000/vassar_request',
@@ -219,8 +219,8 @@ class DockerClient:
                 'name': str('user-' + str(self.user_info.user.id) + '-container-' + str(x)),
                 'image': 'apazagab/vassar:experiment2',
                 'environment': {
-                    'AWS_ACCESS_KEY_ID': 'AKIAJVM34C5MCCWRJCCQ',
-                    'AWS_SECRET_ACCESS_KEY': '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',
+                    'AWS_ACCESS_KEY_ID': '',
+                    'AWS_SECRET_ACCESS_KEY': '',
                     'REGION': 'elasticmq',
                     'REQUEST_MODE': 'CRISP-ATTRIBUTES',
                     'VASSAR_REQUEST_URL': vassar_request_url,
