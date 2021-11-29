@@ -246,6 +246,7 @@ class VASSARClient:
                         print("Received message attributes:", message["MessageAttributes"])
                         # 1. Get queue URLs
                         user_request_queue_url = message["MessageAttributes"]["request_queue_url"]["StringValue"]
+                        print('--> USER REQUEST QUEUE:', user_request_queue_url)
                         user_response_queue_url = message["MessageAttributes"]["response_queue_url"]["StringValue"]
                         container_uuid = message["MessageAttributes"]["UUID"]["StringValue"]
                         # 2. Send ACK message
@@ -748,7 +749,7 @@ class VASSARClient:
         return 1
 
     # working
-    async def start_ga(self):
+    async def start_ga(self, objectives):
         # Connect to queue
         ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
         print(ga_queue_url)
@@ -784,6 +785,10 @@ class VASSARClient:
                     },
                     'dataset_id': {
                         'StringValue': str(eosscontext.dataset_id),
+                        'DataType': 'String'
+                    },
+                    'objectives': {
+                        'StringValue': str(objectives),
                         'DataType': 'String'
                     }
                 }

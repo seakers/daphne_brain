@@ -137,7 +137,7 @@ class EOSSConsumer(DaphneConsumer):
         # 1. Initialize instances
         vassar_instances = 1
 
-
+        # 2. Create scaling client
         scaling = await sync_to_async(EvaluationScaling)(user_info, vassar_instances, user_req=True, fast=False)
         await sync_to_async(scaling.initialize)()
 

@@ -56,55 +56,11 @@ class EvaluationScaling:
         if self.prod:
             self.update_service_count(0)
 
-    def update_service_count(self, count):
-        ecs_client = prod_client('ecs')
-        cluster_arn = 'arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster'
-        service_arn = 'arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/sensitivity-service'
-        ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=int(count))
-
-    def init_queues(self):
-        if not self.vassar_client.queue_exists_by_name("dead-letter"):
-            dead_letter_url, dead_letter_arn = self.vassar_client.create_dead_queue("dead-letter")
-        else:
-            dead_letter_url = self.vassar_client.get_queue_url("dead-letter")
-            dead_letter_arn = self.vassar_client.get_queue_arn(dead_letter_url)
-        if not self.vassar_client.queue_exists(self.response_queue_url):
-            self.vassar_client.create_queue(self.response_queue_url.split("/")[-1], dead_letter_arn)
-        if not self.vassar_client.queue_exists(self.request_queue_url):
-            self.vassar_client.create_queue(self.request_queue_url.split("/")[-1], dead_letter_arn)
-        if not self.vassar_client.queue_exists(self.request_queue_url_2):
-            self.vassar_client.create_queue(self.request_queue_url_2.split("/")[-1], dead_letter_arn)
-        if not self.vassar_client.queue_exists(self.response_queue_url_2):
-            self.vassar_client.create_queue(self.response_queue_url_2.split("/")[-1], dead_letter_arn)
-
     def initialize(self, block=True):
         self.init_queues()
 
-        if self.prod:
-            self.initialize_prod()
-        else:
-            self.initialize_dev(block)
+        self.initialize_dev(block)
 
-    def initialize_prod(self):
-
-        # 1. Update service to have appropriate number of
-        self.update_service_count(self.num_instances)
-
-        # 2. Initialize one container with vassar _initialization
-        async_to_sync(self.vassar_client.send_connect_message_prod)(self.request_queue_url_2, self.user_info.eosscontext.group_id, self.user_info.eosscontext.problem_id)
-        async_to_sync(self.vassar_client.connect_to_vassar_prod)(self.request_queue_url_2, self.response_queue_url_2, 7, True)
-
-        # 3. Send the rest of the init messages
-        for x in range(1, self.num_instances):
-            async_to_sync(self.vassar_client.send_connect_message_prod)(self.request_queue_url_2,
-                                                                        self.user_info.eosscontext.group_id,
-                                                                        self.user_info.eosscontext.problem_id)
-
-        print('--> SCALING INITIALIZATION COMPLETE')
-        return 0
-
-    def rebuild_experiment_containers(self):
-        self.docker_client.rebuild_experiment_containers()
 
     def initialize_experiment(self):
         print('--> INITIALIZING SCALING')
@@ -124,8 +80,6 @@ class EvaluationScaling:
         # --> 3. Wait for threads to join
         for th in build_threads:
             th.join()
-
-
 
     def initialize_dev(self, block=True):
         print('--> INITIALIZING SCALING')
@@ -159,6 +113,33 @@ class EvaluationScaling:
         print('--> SCALING INITIALIZATION COMPLETE')
 
 
+
+
+
+
+    def init_queues(self):
+        if not self.vassar_client.queue_exists_by_name("dead-letter"):
+            dead_letter_url, dead_letter_arn = self.vassar_client.create_dead_queue("dead-letter")
+        else:
+            dead_letter_url = self.vassar_client.get_queue_url("dead-letter")
+            dead_letter_arn = self.vassar_client.get_queue_arn(dead_letter_url)
+        if not self.vassar_client.queue_exists(self.response_queue_url):
+            self.vassar_client.create_queue(self.response_queue_url.split("/")[-1], dead_letter_arn)
+        if not self.vassar_client.queue_exists(self.request_queue_url):
+            self.vassar_client.create_queue(self.request_queue_url.split("/")[-1], dead_letter_arn)
+        if not self.vassar_client.queue_exists(self.request_queue_url_2):
+            self.vassar_client.create_queue(self.request_queue_url_2.split("/")[-1], dead_letter_arn)
+        if not self.vassar_client.queue_exists(self.response_queue_url_2):
+            self.vassar_client.create_queue(self.response_queue_url_2.split("/")[-1], dead_letter_arn)
+
+    def update_service_count(self, count):
+        ecs_client = prod_client('ecs')
+        cluster_arn = 'arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster'
+        service_arn = 'arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/sensitivity-service'
+        ecs_client.update_service(cluster=cluster_arn, service=service_arn, desiredCount=int(count))
+
+    def rebuild_experiment_containers(self):
+        self.docker_client.rebuild_experiment_containers()
 
     def bit_list_2_bool_list(self, bit_list):
         bool_list = []

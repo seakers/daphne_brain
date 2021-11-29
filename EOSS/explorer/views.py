@@ -33,7 +33,7 @@ class StartGA(APIView):
                 # Stop GA in container if it was running
                 async_to_sync(client.stop_ga)()
                 # Start GA in container
-                async_to_sync(client.start_ga)()
+                async_to_sync(client.start_ga)(request.data['objectives'])
 
                 # Start listening for AWS SQS inputs
                 def aws_consumer():

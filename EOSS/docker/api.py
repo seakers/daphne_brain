@@ -198,7 +198,7 @@ class DockerClient:
 
         # --> 1. Create private queues for containers
         for x in range(num):
-            queue_name_request = 'container-priv-queue-request-' + str(x)
+            queue_name_request = 'user-'+str(self.user_info.user.id)+'-container-priv-queue-request-' + str(x)
             queue_name_response = 'container-priv-queue-response-' + str(x)
             queue_url_request = self.create_or_purge_queue(queue_name_request)
             queue_url_response = self.create_or_purge_queue(queue_name_response)
@@ -249,9 +249,6 @@ class DockerClient:
         # --> 3. Join start threads
         for thread in start_threads:
             thread.join()
-
-
-
 
     def start_containers(self, num, vassar_request_url, vassar_response_url, msg_batch_size=1):
         print('--> REQUESTED', num, 'CONTAINERS')

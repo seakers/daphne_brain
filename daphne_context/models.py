@@ -3,10 +3,44 @@ from django.contrib.sessions.models import Session
 from django.db import models
 from .utils import generate_mycroft_session
 
+import random
+import string
+
 # General user information class
 from rest_framework import serializers
 
+from EOSS.aws.utils import get_boto3_client
 
+
+def get_eval_request_queue():
+    sqs_client = get_boto3_client('sqs')
+    queue_name = 'eval-request-queue-' + str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
+    list_response = sqs_client.list_queues()
+    if 'QueueUrls' in list_response:
+        queue_names = [url.split("/")[-1] for url in list_response['QueueUrls']]
+        if queue_name in queue_names:
+            queue_url_idx = queue_names.index(queue_name)
+            queue_url = list_response['QueueUrls'][queue_url_idx]
+            sqs_client.purge_queue(QueueUrl=queue_url)
+            return queue_url
+        else:
+            return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
+    return None
+
+def get_eval_response_queue():
+    sqs_client = get_boto3_client('sqs')
+    queue_name = 'eval-response-queue-' + str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
+    list_response = sqs_client.list_queues()
+    if 'QueueUrls' in list_response:
+        queue_names = [url.split("/")[-1] for url in list_response['QueueUrls']]
+        if queue_name in queue_names:
+            queue_url_idx = queue_names.index(queue_name)
+            queue_url = list_response['QueueUrls'][queue_url_idx]
+            sqs_client.purge_queue(QueueUrl=queue_url)
+            return queue_url
+        else:
+            return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
+    return None
 
 
 
@@ -36,6 +70,10 @@ class UserInformation(models.Model):
     # mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)  # four digit session number
     mycroft_connection = models.BooleanField(default=False)                                           # true if connection established
     mycroft_channel_name = models.CharField(max_length=120, null=True)                                # channel name for talking to Mycroft
+
+    # User eval request queue created at user account creation
+    eval_request_queue = models.TextField(null=True, default=get_eval_request_queue)
+    eval_response_queue = models.TextField(null=True, default=get_eval_response_queue)
 
 
     # Special restrictions
