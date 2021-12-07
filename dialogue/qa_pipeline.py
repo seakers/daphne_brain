@@ -151,10 +151,11 @@ def augment_data(data, user_information: UserInformation, session):
         data['problem_id'] = eoss_context.problem_id
         data['dataset_id'] = eoss_context.dataset_id
 
-        if 'behavioral' in session['context']:
-            data['behavioral'] = session['context']['behavioral']
-        if 'non_behavioral' in session['context']:
-            data['non_behavioral'] = session['context']['non_behavioral']
+        if 'context' in session:
+            if 'behavioral' in session['context']:
+                data['behavioral'] = session['context']['behavioral']
+            if 'non_behavioral' in session['context']:
+                data['non_behavioral'] = session['context']['non_behavioral']
     if user_information.daphne_version == "EDL":
         pass
     if user_information.daphne_version == "AT":
