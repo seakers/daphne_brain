@@ -189,12 +189,20 @@ class EOSSConsumer(DaphneConsumer):
         if not skip_check:
             if user_info.eosscontext.vassar_request_queue_url is not None and await vassar_client.queue_exists(
                     user_info.eosscontext.vassar_request_queue_url):
-                vassar_status = await vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url,
+                vassar_status, vassar_uuid = await vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url,
                                                                  user_info.eosscontext.vassar_response_queue_url)
             else:
                 vassar_status = "waiting_for_user"
+                vassar_uuid = None
         else:
             vassar_status = "waiting_for_user"
+            vassar_uuid = None
+        
+        if vassar_uuid is not None:
+            # Save information to database 
+            await sync_to_async(vassar_client._initialize_vassar)(user_info.eosscontext.vassar_request_queue_url,
+                                                                  user_info.eosscontext.vassar_response_queue_url,
+                                                                  vassar_uuid)
 
         await self.send_json({
             'type': 'services.vassar_status',
@@ -278,11 +286,19 @@ class EOSSConsumer(DaphneConsumer):
         # Check if there is an existing GA connection
         if not skip_check:
             if user_info.eosscontext.ga_request_queue_url is not None and await vassar_client.queue_exists(user_info.eosscontext.ga_request_queue_url):
-                ga_status = await vassar_client.check_status(user_info.eosscontext.ga_request_queue_url, user_info.eosscontext.ga_response_queue_url)
+                ga_status, ga_uuid = await vassar_client.check_status(user_info.eosscontext.ga_request_queue_url, user_info.eosscontext.ga_response_queue_url)
             else:
                 ga_status = "waiting_for_user"
+                ga_uuid = None
         else:
             ga_status = "waiting_for_user"
+            ga_uuid = None
+
+        if ga_uuid is not None:
+            # Save information to database 
+            await sync_to_async(vassar_client._initialize_ga)(user_info.eosscontext.ga_request_queue_url,
+                                                              user_info.eosscontext.ga_response_queue_url,
+                                                              ga_uuid)
 
         await self.send_json({
                     'type': 'services.ga_status',
@@ -397,6 +413,15 @@ class EOSSConsumer(DaphneConsumer):
                                     print('--> GA Thread: Processing a new arch!')
                                     # Keeping up for proactive
                                     add_design(self.scope["session"], self.scope["user"])
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                elif message["MessageAttributes"]["msgType"]["StringValue"] == "ping":
+                                    print('--> GA Thread: Ping received!')
+                                    channel_layer = get_channel_layer()
+                                    async_to_sync(channel_layer.send)(channel_name, {
+                                        'type': 'services.ga_running_status',
+                                        'status': 'started',
+                                        'message': "Ping back"
+                                    })
                                     sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
                                 else:
                                     # Return message to queue

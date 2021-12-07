@@ -209,7 +209,7 @@ def active_analyst_response(user_info: UserInformation, session_key):
         # End the connection before return statement
         dm_client.endConnection()
 
-        for i in range(len(advices)):  # Generate answers for the first 5 features
+        for i in range(len(advices)):
             advice = advices[i]
             result.append({
                 "type": "Analyst",
@@ -225,7 +225,7 @@ def active_analyst_response(user_info: UserInformation, session_key):
 
 def generate_analyst_message(user_info, session_key):
     message = {}
-    features_list = active_analyst_response(user_info, session_key)[:10]
+    features_list = active_analyst_response(user_info, session_key)[:20]
     random.shuffle(features_list)
     features_list = features_list[:3]
     if len(features_list) == 0:
