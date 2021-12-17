@@ -1,6 +1,7 @@
 import json
 import os
 import csv
+import timeit
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,140 +9,138 @@ from rest_framework.response import Response
 from EOSS.data.problem_helpers import assignation_problems, partition_problems
 from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
+from EOSS.vassar.evaluation import Evaluation
 
+from EOSS.graphql.clients.Dataset import Dataset
+from asgiref.sync import async_to_sync
 
 
 class ImportData(APIView):
-    """ Imports data from a csv file.
+    """ Returns architectures from the requested dataset
 
-    Request Args:
-        path: Relative path to a csv file residing inside Daphne project folder
+        Request Args:
+            group_id: Group id
+            problem_id: Problem id
+            dataset_id: Dataset id
 
-    Returns:
-        architectures: a list of python dict containing the basic architecture information.
-
-    """
-
-    def boolean_string_to_boolean_array(self, boolean_string):
-        return [b == "1" for b in boolean_string]
-
-    
-    """
-        Rquest Fields
-        - problem_id
-        - group_id
-        - load_user_files
+        Returns:
+            formatted_architectures: Correctly formatted architectures
 
     """
     def post(self, request, format=None):
+        print('--> LOADING ARCHITECTURES...')
         try:
 
-            # Get user_info and problem_id
+            # --> 1. Get user_info and save
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            problem_id = int(request.data['problem_id'])
-            group_id = int(request.data['group_id'])
-            dataset_id = int(request.data['dataset_id'])
-
-            # Get problem architectures
-            dbClient = GraphqlClient(problem_id=problem_id)
-
-            print("--> PROBLEM IDER: ", problem_id)
-
-            # If dataset_id is -1, copy all architectures in the default set for this problem into a user-specific dataset called 'default' and set that as the main dataset,
-            # Else, use the request dataset_id to get architectures
-            if dataset_id == -1:
-                default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
-                dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
-            # query = dbClient.get_architectures(problem_id, dataset_id)
-            query = dbClient.get_architectures_ai4se(problem_id, dataset_id)
-
-            # Iterate over architectures
-            # Create: user context Designs
-            # Create: object to send designs to front-end
-            architectures_json = []
-            counter = 0
-            for arch in query['data']['Architecture']:
-
-                # If the arch needs to be re-evaluated due to a problem definition change, do not add
-                if not arch['eval_status']:
-                    continue
-
-                # Arch: inputs / outputs
-                inputs = self.boolean_string_to_boolean_array(arch['input'])
-
-                # --> HERE: add the following objectives
-                # 1. cost
-                # 2. data_continuity
-                # 3. fairness
-                # 4. programmatic_risk
-                # 5. 6. 7. Stakeholder Panel Satisfaction
-                # outputs = [float(arch['science']), float(arch['cost'])]
-                outputs = [float(arch['cost']), float(arch['programmatic_risk'])]
-                for x in arch['ArchitectureScoreExplanations']:
-                    outputs.append(float(x['satisfaction'])) # There will be three stakeholder panel satisfactions
-
-                # Append design object and front-end design object
-                architectures_json.append({'id': counter, 'db_id': arch['id'], 'inputs': inputs, 'outputs': outputs})
-
-                # Increment counters
-                user_info.eosscontext.last_arch_id = counter
-                counter = counter + 1
-
-
-            # Set user context
-            user_info.eosscontext.problem_id = problem_id
-            user_info.eosscontext.group_id = group_id
-            user_info.eosscontext.dataset_id = dataset_id
+            user_info.eosscontext.problem_id = int(request.data['problem_id'])
+            user_info.eosscontext.group_id = int(request.data['group_id'])
+            user_info.eosscontext.dataset_id = int(request.data['dataset_id'])
             user_info.eosscontext.save()
             user_info.save()
 
-            print('\n------ SAVING USER CONTEXT ON PROBLEM LOAD ------')
-            print('--> PROBLEM ID:', user_info.eosscontext.problem_id)
-            print('--> DATASET ID:', user_info.eosscontext.dataset_id)
+            # --> 2. Purge evaluation queues
+            e_client = Evaluation(user_info)
+            async_to_sync(e_client.purge_all)()
 
-            # Return architectures
-            return Response(architectures_json)
+            # --> 3. Create dataset client
+            d_client = Dataset(user_info)
+
+            # --> 4. Get all architectures
+            all_architectures = []
+            user_architectures = async_to_sync(d_client.get_architectures_user_all)(None, False, True)
+            ga_architectures = async_to_sync(d_client.get_architectures_ga)(None, False, True)
+            if user_architectures is not None:
+                all_architectures.extend(user_architectures)
+            if ga_architectures is not None:
+                all_architectures.extend(ga_architectures)
+            print('--> LOADED ARCHITECTURES:', all_architectures)
+
+            # --> 4. Format architectures
+            formatted_architectures = async_to_sync(self.format_architectures_ai4se)(all_architectures)
+            return Response(formatted_architectures)
+
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")
 
+    async def format_inputs(self, inputs):
+        return [b == "1" for b in inputs]
+
+    async def format_architectures(self, architectures):
+        formatted = []
+        for idx, architecture in enumerate(architectures):
+            # --> 1. Create inputs
+            inputs = await self.format_inputs(architecture['input'])
+
+            # --> 2. Create outputs
+            outputs = [float(architecture['cost']), float(architecture['science'])]
+
+            # --> 3. Create formatted architecture
+            formatted.append({'id': idx, 'db_id': architecture['id'], 'inputs': inputs, 'outputs': outputs})
+
+        return formatted
+
+    async def format_architectures_ai4se(self, architectures):
+        formatted = []
+        for idx, architecture in enumerate(architectures):
+
+            # --> 1. Create inputs
+            inputs = await self.format_inputs(architecture['input'])
+
+            # --> 2. Create outputs
+            outputs = []
+            if 'cost' in architecture:
+                if architecture['cost'] is not None:
+                    outputs.append(float(architecture['cost']))
+            if 'science' in architecture:
+                if architecture['science'] is not None:
+                    print('--> SCIENCE SKIPPED')
+                    # outputs.append(float(architecture['science']))
+            if 'programmatic_risk' in architecture:
+                if architecture['programmatic_risk'] is not None:
+                    outputs.append(float(architecture['programmatic_risk']))
+            for x in architecture['ArchitectureScoreExplanations']:
+                outputs.append(float(x['satisfaction']))
+            while len(outputs) < 5:
+                outputs.append(0)
+
+            # --> 3. Create formatted architecture
+            formatted.append({'id': idx, 'db_id': architecture['id'], 'inputs': inputs, 'outputs': outputs})
+
+        return formatted
 
 class CopyData(APIView):
     """ Copies a dataset into another dataset
 
     Request Args:
-        src_dataset_id: Id of source dataset
-        dst_dataset_name: Name of new dataset
+        source_id: Id of source dataset
+        target_name: Name of new dataset
 
     Returns:
-        dst_dataset_id: Id of the new dataset.
-
-    """
-    """
-        Rquest Fields
-        - problem_id
-        - group_id
-        - load_user_files
+        target_id: Id of the new dataset.
 
     """
     def post(self, request, format=None):
         if request.user.is_authenticated:
             try:
-                # Get user_info and problem_id
+                # --> 1. Get request data
+                source_id = int(request.data['src_dataset_id'])
+                target_name = request.data['dst_dataset_name']
+                save = True
+                costs = True
+                scores = True
+
+                # --> 2. Create dataset client
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                src_dataset_id = int(request.data['src_dataset_id'])
-                dst_dataset_name = request.data['dst_dataset_name']
-                problem_id = user_info.eosscontext.problem_id
+                d_client = Dataset(user_info)
 
-                # Clone dataset
-                dbClient = GraphqlClient(problem_id=problem_id)
-                dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
-                user_info.eosscontext.dataset_id = dst_dataset_id
-                user_info.eosscontext.save()
+                # --> 3. Clone dataset
+                target_id = async_to_sync(d_client.clone_dataset)(source_id, target_name, save, costs, scores)
 
-                # Return architectures
+                # --> 4. Return results
                 return Response({
-                    "problem_id": problem_id,
-                    "dst_dataset_id": dst_dataset_id
+                    "problem_id": user_info.eosscontext.problem_id,
+                    "dst_dataset_id": target_id
                 })
             except Exception:
                 raise ValueError("There has been an error when cloning the dataset!")
@@ -150,8 +149,9 @@ class CopyData(APIView):
                 "error": "This is only available to registered users!"
             })
 
-""" Save current dataset to a new csv file in the user folder
-"""
+
+
+
 class SaveData(APIView):
     
     def post(self, request, format=None):
@@ -281,13 +281,19 @@ class SetProblem(APIView):
     """ Sets the name of the problem
     """
     def post(self, request, format=None):
+
+        # --> 1. Get user_info and save
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        # problem = request.data['problem']
-        problem = 'SMAP'  # HARDCODE
-        user_info.eosscontext.problem = problem
+        user_info.eosscontext.problem_id = int(request.data['problem_id'])
+        user_info.eosscontext.group_id = int(request.data['group_id'])
+        user_info.eosscontext.dataset_id = int(request.data['dataset_id'])
         user_info.eosscontext.save()
         user_info.save()
-        print("---> SetProblem", problem)
+
+        # --> 2. Purge evaluation queues
+        e_client = Evaluation(user_info)
+        async_to_sync(e_client.purge_all)()
+
         return Response({
             "status": "Problem has been set successfully."
         })

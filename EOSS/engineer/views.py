@@ -10,6 +10,12 @@ from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data.design_helpers import add_design
 
+from EOSS.vassar.evaluation import Evaluation
+
+from asgiref.sync import async_to_sync, sync_to_async
+
+from EOSS.graphql.clients.Dataset import Dataset
+
 # Get an instance of a logger
 logger = logging.getLogger('EOSS.engineer')
 
@@ -64,72 +70,83 @@ class GetInstrumentList(APIView):
 
 class EvaluateArchitecture(APIView):
     def post(self, request, format=None):
-        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        client = VASSARClient(user_information=user_info)
 
+        # --> 1. Get user info
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+        # --> 2. Create evaluation client
+        client = Evaluation(user_info)
+
+        # --> 3. Get inputs
         inputs = request.data['inputs']
         inputs = json.loads(inputs)
 
-        # Make sure the dataset is not read-only
-        is_read_only = client.check_dataset_read_only()
-
-        if is_read_only:
-            return Response({
-                "status": "Dataset is read only",
-                "code": "read_only_dataset"
-            })
-
-        # Check if the architecture already exists in DB before adding it again
-        is_same, arch_id = client.check_for_existing_arch(inputs)
-
-        if not is_same:
-            architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url, block=False, user=request.user, session=request.session)
-            return Response({
-                "status": "Architecture evaluated!",
-                "code": "arch_evaluated"
-            })
-        else:
-            return Response({
-                "status": "Architecture already exists",
-                "code": "arch_repeated",
-                "arch_id": arch_id
-            })
+        # --> 4. Evaluate and return
+        result = async_to_sync(client.evaluate)(inputs, request.session)
+        return Response(result)
 
 
-
-def trim_architectures(archs):
-    new_archs = []
-    for arch in archs:
-        input = arch['input']
-        if '1' in input:
-            new_archs.append(arch)
-
-    seen_inputs = set()
-    final_archs = []
-    for arch in new_archs:
-        input = arch['input']
-        if input not in seen_inputs:
-            final_archs.append(arch)
-            seen_inputs.add(input)
-    return final_archs
 
 
 
 class EvaluateFalseArchitecture(APIView):
-    def post(self, request, format=None):
-        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        archs = request.data['archs']
-        archs = json.loads(archs)
-        archs = trim_architectures(archs)
-        print('--> EVALUATING FALSE ARCHITECTURES:', archs)
-        vassar_client = VASSARClient(user_information=user_info)
 
-        if user_info.eosscontext.vassar_request_queue_url:
-            print("--> evaluating false architectures")
-            vassar_client.purge_queue(user_info.eosscontext.vassar_request_queue_url)
-            vassar_client.purge_queue(user_info.eosscontext.vassar_response_queue_url)
-            vassar_client.evaluate_false_architectures(user_info.eosscontext.vassar_request_queue_url, archs)
+    def post(self, request, format=None):
+        # --> 1. Get user info
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+        # --> 2. Create evaluation client
+        client = Evaluation(user_info)
+
+        # --> 3. Evaluate false
+        async_to_sync(client.update_false)()
+
+        # --> 4. Return status
         return Response({'status': 'ok'})
+
+
+
+class EvaluateArchitectureSet(APIView):
+
+    def trim_architectures(self, archs):
+        # --> 1. Remove archs with zero inputs
+        new_archs = []
+        for arch in archs:
+            input = arch['input']
+            if '1' in input:
+                new_archs.append(arch)
+
+        # --> 2. Remove repeated archs
+        seen_inputs = set()
+        final_archs = []
+        for arch in new_archs:
+            input = arch['input']
+            if input not in seen_inputs:
+                final_archs.append(arch)
+                seen_inputs.add(input)
+        return seen_inputs
+
+    def post(self, request, format=None):
+
+        # --> 1. Get user info
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+        # --> 2. Create evaluation client
+        client = Evaluation(user_info)
+
+        # --> 3. Get architectures
+        architectures = request.data['archs']
+        architectures = json.loads(architectures)
+        architectures = self.trim_architectures(architectures)
+
+        # --> 4. Evaluate batch
+        async_to_sync(client.evaluate_batch)(architectures)
+
+        # --> 5. Return status
+        return Response({'status': 'ok'})
+
+
+
 
 
 

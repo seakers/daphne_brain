@@ -613,16 +613,12 @@ class VASSARClient:
                 'StringValue': str(eosscontext.dataset_id),
                 'DataType': 'String'
             },
-            'fast': {
-                'StringValue': str(fast),
+            'eval_type': {
+                'StringValue': 'NDSM',
                 'DataType': 'String'
             },
-            'ga': {
-                'StringValue': str(ga),
-                'DataType': 'String'
-            },
-            'redo': {
-                'StringValue': str(redo),
+            'index_type': {
+                'StringValue': 'FULL',
                 'DataType': 'String'
             }
         })

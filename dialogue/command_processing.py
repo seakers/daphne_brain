@@ -28,7 +28,7 @@ def classify_command_role(command, daphne_version):
     x = tokenizer.texts_to_sequences([cleaned_command])
     expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-    print("\nEvaluating...\n")
+    print("\nEvaluating...\n", x)
 
     # Evaluation
     # ==================================================

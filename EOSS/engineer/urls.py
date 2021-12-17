@@ -12,5 +12,6 @@ urlpatterns = [
     path('run-local-search', views.RunLocalSearch.as_view()),
 
     path('get-arch-details', views.GetArchDetails.as_view()),
-    path('get-subobjective-details', views.GetSubobjectiveDetails.as_view())
+    path('get-subobjective-details', views.GetSubobjectiveDetails.as_view()),
+    path('evaluate-architecture-set', views.EvaluateArchitectureSet.as_view())
 ]

@@ -11,8 +11,8 @@ from rest_framework import serializers
 
 from EOSS.aws.utils import get_boto3_client
 
-
 def get_eval_request_queue():
+    print('--> GENERATING USER EVAL REQUEST QUEUE')
     sqs_client = get_boto3_client('sqs')
     queue_name = 'eval-request-queue-' + str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
     list_response = sqs_client.list_queues()
@@ -25,9 +25,11 @@ def get_eval_request_queue():
             return queue_url
         else:
             return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
-    return None
+    else:
+        return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
 
 def get_eval_response_queue():
+    print('--> GENERATING USER EVAL RESPONSE QUEUE')
     sqs_client = get_boto3_client('sqs')
     queue_name = 'eval-response-queue-' + str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
     list_response = sqs_client.list_queues()
@@ -40,7 +42,8 @@ def get_eval_response_queue():
             return queue_url
         else:
             return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
-    return None
+    else:
+        return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
 
 
 
@@ -72,8 +75,8 @@ class UserInformation(models.Model):
     mycroft_channel_name = models.CharField(max_length=120, null=True)                                # channel name for talking to Mycroft
 
     # User eval request queue created at user account creation
-    eval_request_queue = models.TextField(null=True, default=get_eval_request_queue)
-    eval_response_queue = models.TextField(null=True, default=get_eval_response_queue)
+    eval_request_queue = models.TextField(null=True)
+    eval_response_queue = models.TextField(null=True)
 
 
     # Special restrictions

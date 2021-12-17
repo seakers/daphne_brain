@@ -30,6 +30,7 @@ urlpatterns.extend([
 
     # Vassar Database
     path('api/vassar_db/', include('vassar_db.urls')),
+    path('api/ca/', include('CA.urls')),
     
     path('api/ifeed/', include('iFEED_API.urls')),
     path('api/experiment/', include('experiment.urls')),

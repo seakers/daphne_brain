@@ -8,7 +8,8 @@ from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
 from EOSS.vassar.scaling import EvaluationScaling
-from EOSS.docker.api import DockerClient
+from EOSS.docker.Resources import Resources
+
 
 class EOSSConsumer(DaphneConsumer):
     # WebSocket event handlers
@@ -59,32 +60,19 @@ class EOSSConsumer(DaphneConsumer):
             await self.connect_vassar(user_info, skip_check=True)
         elif content.get('msg_type') == 'connect_ga':
             await self.connect_ga(user_info, skip_check=True)
+
+        elif content.get('msg_type') == 'regulate_services':
+            await self.regulate_services(user_info, content.get('num_eval'), content.get('num_ga'))
+        elif content.get('msg_type') == 'build':
+            await self.build(user_info)
         elif content.get('msg_type') == 'ping':
-            # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
-            # Only ping vassar and GA if logged in
-            if user_info.user is not None:
-                vassar_client = VASSARClient(user_info)
-                container_statuses = await vassar_client.send_ping_message()
-                for uuid, still_alive in container_statuses["vassar"].items():
-                    if still_alive:
-                        status = "ready"
-                    else:
-                        status = "missed_ping"
-                    await self.send_json({
-                        'type': 'services.vassar_status',
-                        'uuid': uuid,
-                        'status': status
-                    })
-                for uuid, still_alive in container_statuses["ga"].items():
-                    if still_alive:
-                        status = "ready"
-                    else:
-                        status = "missed_ping"
-                    await self.send_json({
-                        'type': 'services.ga_status',
-                        'uuid': uuid,
-                        'status': status
-                    })
+            await self.ping_services(user_info)
+        elif content.get('msg_type') == 'start_ga':
+            await self.start_ga(user_info, content.get('identifier'), content.get('objectives'))
+        elif content.get('msg_type') == 'stop_ga':
+            await self.stop_ga(user_info, content.get('identifier'))
+        elif content.get('msg_type') == 'stop_ga_all':
+            await self.stop_ga_all(user_info)
         # elif content.get('msg_type') == 'mycroft':
         #     self.send_json({
         #         'type': 'mycroft.message',
@@ -160,7 +148,6 @@ class EOSSConsumer(DaphneConsumer):
         })
         print("Initial VASSAR status", vassar_status)
         return True
-
 
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
@@ -240,3 +227,48 @@ class EOSSConsumer(DaphneConsumer):
                     'status': ga_status
                 })
         print("Initial GA status", ga_status)
+
+
+
+
+
+    async def build(self,  user_info: UserInformation):
+        print('--> BUILDING EVALUATORS')
+        resources = await sync_to_async(Resources)(user_info)
+        await sync_to_async(resources.build_evaluators)()
+        return True
+
+    async def regulate_services(self, user_info: UserInformation, num_eval, num_ga):
+        print('--> REGULATING SERVICES')
+        resources = await sync_to_async(Resources)(user_info)
+        await sync_to_async(resources.regulate_resources)(int(num_eval), int(num_ga))
+        return True
+
+    async def ping_services(self, user_info: UserInformation):
+        print('--> PINGING SERVICES')
+        resources = await sync_to_async(Resources)(user_info)
+        results = await sync_to_async(resources.ping_resources)()
+        print('--> PING RESULTS:', results)
+        await self.send_json({
+            'type': 'ping',
+            'status': results
+        })
+        return True
+
+    async def start_ga(self, user_info: UserInformation, identifier, objectives):
+        print('--> STARTING GA')
+        resources = await sync_to_async(Resources)(user_info)
+        results = await sync_to_async(resources.start_GAs)([identifier], objectives)
+        return True
+
+    async def stop_ga(self, user_info: UserInformation, identifier):
+        print('--> STOPPING GA')
+        resources = await sync_to_async(Resources)(user_info)
+        results = await sync_to_async(resources.stop_GAs)([identifier])
+        return True
+
+    async def stop_ga_all(self, user_info: UserInformation):
+        print('--> STOPPING GA')
+        resources = await sync_to_async(Resources)(user_info)
+        results = await sync_to_async(resources.stop_GAs_all)()
+        return True

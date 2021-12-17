@@ -4,8 +4,9 @@ from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
 import distutils
 import json
-
+from asgiref.sync import async_to_sync, sync_to_async
 from EOSS.vassar.api import VASSARClient
+from EOSS.vassar.evaluation import Evaluation
 
 
 from .agent import FormulationAgent
@@ -15,15 +16,20 @@ agent_dict = {}
 
 class ClearEvalRequests(APIView):
     def post(self, request, format=None):
+
+        # --> 1. Get evaluation client
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        vassar_client = VASSARClient(user_information=user_info)
+        client = Evaluation(user_info)
 
-        if user_info.eosscontext.vassar_request_queue_url:
-            vassar_client.purge_queue(user_info.eosscontext.vassar_request_queue_url)
-        if user_info.eosscontext.vassar_response_queue_url:
-            vassar_client.purge_queue(user_info.eosscontext.vassar_response_queue_url)
-
+        # --> 2. Purge requests
+        async_to_sync(client.purge_requests)()
         return Response({'status': 'ok'})
+
+
+
+
+
+
 
 class ToggleAgent(APIView):
     def post(self, request, format=None):

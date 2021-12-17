@@ -174,9 +174,8 @@ class DockerClient:
                 queue_url = list_response['QueueUrls'][queue_url_idx]
                 sqs_client.purge_queue(QueueUrl=queue_url)
                 return queue_url
-            else:
-                return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
-        return False
+        else:
+            return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
 
     def rebuild_experiment_containers(self):
         sqs_client = get_boto3_client('sqs')

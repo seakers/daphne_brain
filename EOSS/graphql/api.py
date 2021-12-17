@@ -36,7 +36,6 @@ class SubscoreInformation:
         self.weight = weight
         self.subscores = subscores
 
-
 class MissionCostInformation:
     def __init__(self, orbit_name, payload, launch_vehicle, total_mass, total_power, total_cost, mass_budget, power_budget, cost_budget):
         self.orbit_name = orbit_name
@@ -180,6 +179,7 @@ class GraphqlClient:
         orbit_info = self.execute_query(query)['data']['items']
         return orbit_info
 
+    ###
     def get_architectures_like(self, dataset_id, arch_input_list):
         query = f'''
             query MyQuery {{
@@ -506,19 +506,56 @@ class GraphqlClient:
         return self.execute_query(query)
 
     def get_instrument_from_objective(self, problem_id, objective):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
+        query = ' query MyQuery { ' \
+                'Instrument(' \
+                '   where: {' \
+                '       Join__Instrument_Measurements: {' \
+                '               problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                'Measurement: {' \
+                                        'Requirement_Rule_Attributes: {' \
+                                                'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                                'Stakeholder_Needs_Subobjective: {' \
+                                                             'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                                             'Stakeholder_Needs_Objective: {' \
+                                                                          'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                                                          'name: {_eq: ' + str(objective) + '}' \
+                                                            '}' \
+                                                '}' \
+                                    '   }' \
+                                '}' \
+                    '}' \
+            '   }) { id name } } '
         return self.execute_query(query)
 
     def get_instrument_from_panel(self, problem_id, panel):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
+        query = ' query MyQuery { Instrument(' \
+                'where: {' \
+                    'Join__Instrument_Measurements: {' \
+                            'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                             'Measurement: {Requirement_Rule_Attributes: {' \
+                                     'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                      'Stakeholder_Needs_Subobjective: {' \
+                                              'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                               'Stakeholder_Needs_Objective: {' \
+                                                           'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                                            'Stakeholder_Needs_Panel: {' \
+                                                                    'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                                                     'name: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
         return self.execute_query(query)
 
+    # --> TO DO
     def get_architecture_score_explanation(self, problem_id, arch_id):
         query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
         return self.execute_query(query)
 
     def get_panel_score_explanation_by_id(self, problem_id, arch_id, panel_id):
-        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {index_id: {_eq: "' + panel_id + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
+        query = 'query myquery { PanelScoreExplanation(' \
+                'where: {' \
+                    '   architecture_id: {_eq: ' + str(arch_id) + '}, ' \
+                      'Stakeholder_Needs_Objective: {' \
+                                  'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                   'Stakeholder_Needs_Panel: {' \
+                                           'index_id: {_eq: "' + panel_id + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
         return self.execute_query(query)
 
     def get_panel_score_explanation(self, problem_id, arch_id, panel):
@@ -632,7 +669,6 @@ class GraphqlClient:
             information.append(cost_info_obj)
         return information
 
-
     def wait_for_critique(self, arch_id, timeout=20):
         results = self.get_arch_critique(arch_id)
         for x in range(0, timeout):
@@ -641,7 +677,6 @@ class GraphqlClient:
                 return results
             time.sleep(1)
         return results
-
 
     def get_arch_critique(self, arch_id):
         query = f''' query myquery {{
@@ -657,9 +692,6 @@ class GraphqlClient:
         critiques = critique.split('|')
         return critiques[:-1]
 
-
-
-    
     def get_arch_id(self, arch_object):
         id = arch_object.id
         inputs = bool_list_to_string(arch_object.inputs)
@@ -667,12 +699,10 @@ class GraphqlClient:
         print("--> Finding django arch:", self.problem_id, inputs)
         query = 'query myquery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, input: {_eq: "' + inputs + '"}}) { id } }'
         return self.execute_query(query)['data']['Architecture'][0]['id']
-        
 
     def get_problems(self):
         query = 'query get_problems { Problem { id name group_id } }'
         return self.execute_query(query)['data']['Problem']
-
 
     def get_default_dataset_id(self, dataset_name, problem_id):
         query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
@@ -697,8 +727,6 @@ class GraphqlClient:
         mutation = f'mutation {{insert_Dataset_one(object: {{group_id: {group_id}, problem_id: {problem_id}, user_id: {user_id}, name: "{dataset_name}" }}) {{id}} }}'
         return self.execute_query(mutation)
 
-
-
     def insert_user_into_group(self, user_id, group_id=1):
         mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
         return self.execute_query(mutation)
@@ -717,7 +745,7 @@ class GraphqlClient:
         return result
 
     # Return architecture details after vassar evaluates
-    def subscribe_to_architecture(self, input, problem_id, dataset_id, timeout=1000):
+    def subscribe_to_architecture(self, input, problem_id, dataset_id, timeout=100):
         query = f'query subscribe_to_architecture {{ Architecture_aggregate(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}}, eval_status: {{_eq: true }} }})  {{ aggregate {{ count }} }} }}'
 
         # Check for an entry every second

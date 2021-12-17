@@ -16,7 +16,8 @@ def create_or_purge_queue(queue_name):
             return queue_url
         else:
             return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
-    return None
+    else:
+        return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
 
 
 def get_or_create_queue(queue_name):
@@ -30,7 +31,7 @@ def get_or_create_queue(queue_name):
             return queue_url
         else:
             return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
-    print('--> GET OR CREATE QUEUE RETURNING NONE --> SMTH WRONG')
-    return None
+    else:
+        return sqs_client.create_queue(QueueName=queue_name)['QueueUrl']
 
 

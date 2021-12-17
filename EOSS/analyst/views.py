@@ -795,7 +795,6 @@ class SetProblemParameters(APIView):
             problem_id = int(request.data['problem_id'])
             params = json.loads(request.data['params'])
 
-            print("---> SetProblemParameters:", problem_id)
             entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
             self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem_id, entities)
 

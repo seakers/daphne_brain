@@ -1,0 +1,518 @@
+{
+              ArchitectureCostInformations: {data: [
+                {
+                    ArchitectureBudgets: {data: [
+                {mission_attribute_id: 1168, value: 700.000000}
+            , 
+                {mission_attribute_id: 1189, value: 4249.245779}
+            , 
+                {mission_attribute_id: 1120, value: 60.000000}
+            , 
+                {mission_attribute_id: 1107, value: 70.964669}
+            , 
+                {mission_attribute_id: 1076, value: 214.735679}
+            , 
+                {mission_attribute_id: 1176, value: 102.581198}
+            , 
+                {mission_attribute_id: 1161, value: 137.043028}
+            , 
+                {mission_attribute_id: 1146, value: 58.682035}
+            , 
+                {mission_attribute_id: 1072, value: 47.184000}
+            , 
+                {mission_attribute_id: 1184, value: 0.000000}
+            , 
+                {mission_attribute_id: 1185, value: 0.000000}
+            , 
+                {mission_attribute_id: 1065, value: 24.000000}
+            , 
+                {mission_attribute_id: 1210, value: 262.176000}
+            , 
+                {mission_attribute_id: 1066, value: 306.521847}
+            , 
+                {mission_attribute_id: 1211, value: 29.136000}
+            , 
+                {mission_attribute_id: 1165, value: 480.000000}
+            , 
+                {mission_attribute_id: 1102, value: 409.792420}
+            , 
+                {mission_attribute_id: 1183, value: 157.897008}
+            ]}, 
+                    ArchitecturePayloads: {data: [
+                {instrument_id: 28}
+            ]}, 
+                    power: 4949.245779, 
+                    others: 88.864991, 
+                    mission_name: "SSO-400-SSO-AM", 
+                    mass: 1716.707276, 
+                    launch_vehicle: "Vega", 
+                    cost: 732.871600
+                }
+            , 
+                {
+                    ArchitectureBudgets: {data: [
+                {mission_attribute_id: 1168, value: 132.000000}
+            , 
+                {mission_attribute_id: 1189, value: 801.286347}
+            , 
+                {mission_attribute_id: 1120, value: 20.000000}
+            , 
+                {mission_attribute_id: 1107, value: 30.238499}
+            , 
+                {mission_attribute_id: 1076, value: 94.145772}
+            , 
+                {mission_attribute_id: 1176, value: 52.900975}
+            , 
+                {mission_attribute_id: 1161, value: 71.076969}
+            , 
+                {mission_attribute_id: 1146, value: 29.281115}
+            , 
+                {mission_attribute_id: 1072, value: 13.467100}
+            , 
+                {mission_attribute_id: 1184, value: 0.000000}
+            , 
+                {mission_attribute_id: 1185, value: 0.000000}
+            , 
+                {mission_attribute_id: 1065, value: 6.850000}
+            , 
+                {mission_attribute_id: 1210, value: 74.829400}
+            , 
+                {mission_attribute_id: 1066, value: 219.879595}
+            , 
+                {mission_attribute_id: 1211, value: 8.315900}
+            , 
+                {mission_attribute_id: 1165, value: 137.000000}
+            , 
+                {mission_attribute_id: 1102, value: 77.670873}
+            , 
+                {mission_attribute_id: 1183, value: 54.630447}
+            ]}, 
+                    ArchitecturePayloads: {data: [
+                {instrument_id: 29}
+            ]}, 
+                    power: 933.286347, 
+                    others: 68.103723, 
+                    mission_name: "SSO-400-SSO-DD", 
+                    mass: 592.643316, 
+                    launch_vehicle: "Vega", 
+                    cost: 365.747053
+                }
+            , 
+                {
+                    ArchitectureBudgets: {data: [
+                {mission_attribute_id: 1168, value: 658.000000}
+            , 
+                {mission_attribute_id: 1189, value: 2254.228681}
+            , 
+                {mission_attribute_id: 1120, value: 45.000000}
+            , 
+                {mission_attribute_id: 1107, value: 66.875643}
+            , 
+                {mission_attribute_id: 1076, value: 122.579954}
+            , 
+                {mission_attribute_id: 1176, value: 113.146869}
+            , 
+                {mission_attribute_id: 1161, value: 259.080573}
+            , 
+                {mission_attribute_id: 1146, value: 62.441910}
+            , 
+                {mission_attribute_id: 1072, value: 50.624500}
+            , 
+                {mission_attribute_id: 1184, value: 0.000000}
+            , 
+                {mission_attribute_id: 1185, value: 0.000000}
+            , 
+                {mission_attribute_id: 1065, value: 25.750000}
+            , 
+                {mission_attribute_id: 1210, value: 281.293000}
+            , 
+                {mission_attribute_id: 1066, value: 143.171892}
+            , 
+                {mission_attribute_id: 1211, value: 31.260500}
+            , 
+                {mission_attribute_id: 1165, value: 515.000000}
+            , 
+                {mission_attribute_id: 1102, value: 189.594804}
+            , 
+                {mission_attribute_id: 1183, value: 150.629230}
+            ]}, 
+                    ArchitecturePayloads: {data: [
+                {instrument_id: 31}
+            ]}, 
+                    power: 2912.228681, 
+                    others: 57.617862, 
+                    mission_name: "LEO-800-polar-NA", 
+                    mass: 1387.323926, 
+                    launch_vehicle: "Soyuz", 
+                    cost: 726.742810
+                }
+            , 
+                {
+                    ArchitectureBudgets: {data: [
+                {mission_attribute_id: 1168, value: 387.000000}
+            , 
+                {mission_attribute_id: 1189, value: 2349.225881}
+            , 
+                {mission_attribute_id: 1120, value: 40.000000}
+            , 
+                {mission_attribute_id: 1107, value: 52.665668}
+            , 
+                {mission_attribute_id: 1076, value: 139.620973}
+            , 
+                {mission_attribute_id: 1176, value: 88.542761}
+            , 
+                {mission_attribute_id: 1161, value: 153.928371}
+            , 
+                {mission_attribute_id: 1146, value: 492.313554}
+            , 
+                {mission_attribute_id: 1072, value: 23.395400}
+            , 
+                {mission_attribute_id: 1184, value: 0.000000}
+            , 
+                {mission_attribute_id: 1185, value: 0.000000}
+            , 
+                {mission_attribute_id: 1065, value: 11.900000}
+            , 
+                {mission_attribute_id: 1210, value: 129.995600}
+            , 
+                {mission_attribute_id: 1066, value: 254.444439}
+            , 
+                {mission_attribute_id: 1211, value: 14.446600}
+            , 
+                {mission_attribute_id: 1165, value: 238.000000}
+            , 
+                {mission_attribute_id: 1102, value: 227.328625}
+            , 
+                {mission_attribute_id: 1183, value: 91.248887}
+            ]}, 
+                    ArchitecturePayloads: {data: [
+                {instrument_id: 32}
+            ]}, 
+                    power: 2736.225881, 
+                    others: 221.275436, 
+                    mission_name: "SSO-400-SSO-PM", 
+                    mass: 990.759551, 
+                    launch_vehicle: "Vega", 
+                    cost: 1188.346764
+                }
+            ]}, 
+              ArchitectureScoreExplanations: {data: [
+                {panel_id: 33, satisfaction: 0.018525}
+            , 
+                {panel_id: 34, satisfaction: 0.001287}
+            , 
+                {panel_id: 35, satisfaction: 0.000000}
+            ]}, 
+              PanelScoreExplanations: {data: [
+                {objective_id: 216, satisfaction: 0.000000}
+            , 
+                {objective_id: 217, satisfaction: 0.000000}
+            , 
+                {objective_id: 218, satisfaction: 0.000000}
+            , 
+                {objective_id: 219, satisfaction: 0.000000}
+            , 
+                {objective_id: 220, satisfaction: 0.000000}
+            , 
+                {objective_id: 221, satisfaction: 0.000000}
+            , 
+                {objective_id: 222, satisfaction: 0.000000}
+            , 
+                {objective_id: 223, satisfaction: 0.000000}
+            , 
+                {objective_id: 224, satisfaction: 0.000000}
+            , 
+                {objective_id: 225, satisfaction: 0.000000}
+            , 
+                {objective_id: 226, satisfaction: 0.000000}
+            , 
+                {objective_id: 227, satisfaction: 0.000000}
+            , 
+                {objective_id: 228, satisfaction: 0.000000}
+            , 
+                {objective_id: 229, satisfaction: 0.000000}
+            , 
+                {objective_id: 230, satisfaction: 0.000000}
+            , 
+                {objective_id: 231, satisfaction: 0.000000}
+            , 
+                {objective_id: 232, satisfaction: 0.000000}
+            , 
+                {objective_id: 233, satisfaction: 0.000000}
+            , 
+                {objective_id: 234, satisfaction: 0.000000}
+            , 
+                {objective_id: 235, satisfaction: 0.000000}
+            , 
+                {objective_id: 236, satisfaction: 0.000000}
+            , 
+                {objective_id: 237, satisfaction: 0.000000}
+            , 
+                {objective_id: 238, satisfaction: 0.000000}
+            , 
+                {objective_id: 239, satisfaction: 0.000000}
+            , 
+                {objective_id: 240, satisfaction: 0.000000}
+            , 
+                {objective_id: 241, satisfaction: 0.000000}
+            , 
+                {objective_id: 242, satisfaction: 0.000000}
+            , 
+                {objective_id: 243, satisfaction: 0.000000}
+            , 
+                {objective_id: 244, satisfaction: 0.000000}
+            , 
+                {objective_id: 245, satisfaction: 0.000000}
+            , 
+                {objective_id: 246, satisfaction: 0.000000}
+            , 
+                {objective_id: 247, satisfaction: 0.000000}
+            , 
+                {objective_id: 248, satisfaction: 0.000000}
+            , 
+                {objective_id: 249, satisfaction: 0.000000}
+            , 
+                {objective_id: 250, satisfaction: 0.000000}
+            , 
+                {objective_id: 251, satisfaction: 0.000000}
+            , 
+                {objective_id: 252, satisfaction: 0.000000}
+            , 
+                {objective_id: 253, satisfaction: 0.000000}
+            , 
+                {objective_id: 254, satisfaction: 0.000000}
+            , 
+                {objective_id: 255, satisfaction: 0.000000}
+            , 
+                {objective_id: 256, satisfaction: 0.000000}
+            , 
+                {objective_id: 257, satisfaction: 0.000000}
+            , 
+                {objective_id: 258, satisfaction: 0.000000}
+            , 
+                {objective_id: 259, satisfaction: 0.000000}
+            , 
+                {objective_id: 260, satisfaction: 0.000000}
+            , 
+                {objective_id: 261, satisfaction: 0.000000}
+            , 
+                {objective_id: 262, satisfaction: 0.000000}
+            , 
+                {objective_id: 263, satisfaction: 0.000000}
+            , 
+                {objective_id: 264, satisfaction: 0.000000}
+            , 
+                {objective_id: 265, satisfaction: 0.000000}
+            ]},
+              ObjectiveScoreExplanations: {data: [
+                {subobjective_id: 622, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 623, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 624, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 625, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 626, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 627, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 628, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 629, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 630, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 631, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 632, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 633, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 634, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 635, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 636, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 637, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 638, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 639, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 640, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 641, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 642, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 643, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 644, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 645, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 646, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 647, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 648, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 649, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 650, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 651, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 652, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 653, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 654, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 655, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 656, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 657, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 658, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 659, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 660, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 661, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 662, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 663, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 664, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 665, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 666, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 667, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 668, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 669, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 670, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 671, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 672, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 673, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 674, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 675, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 676, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 677, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 678, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 679, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 680, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 681, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 682, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 683, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 684, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 685, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 686, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 687, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 688, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 689, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 690, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 691, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 692, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 693, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 694, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 695, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 696, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 697, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 698, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 699, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 700, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 701, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 702, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 703, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 704, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 705, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 706, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 707, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 708, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 709, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 710, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 711, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 712, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 713, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 714, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 715, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 716, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 717, satisfaction: 0.000000}
+            , 
+                {subobjective_id: 718, satisfaction: 0.000000}
+            ]},  
+              SubobjectiveScoreExplanations: {data: []}, 
+              cost: 2577.846216, 
+              critique: " ", 
+              data_continuity: 483.865872, 
+              dataset_id: 25, 
+              eval_idx: 0, 
+              eval_status: true, 
+              fairness: 0.001287, 
+              ga: false, 
+              improve_hv: false, 
+              input: "000000000000000000000000000000000000000000000000000100000000010000000000100000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", 
+              problem_id: 8, 
+              programmatic_risk: 2.000000, 
+              science: 0.000000, 
+              user_id: 8
+            }
+            
