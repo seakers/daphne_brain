@@ -9,6 +9,11 @@ from EOSS.data.problem_helpers import assignation_problems, partition_problems
 from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
 
+from asgiref.sync import sync_to_async, async_to_sync
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+
 
 
 class ImportData(APIView):
@@ -52,14 +57,17 @@ class ImportData(APIView):
             if dataset_id == -1:
                 default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
                 dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
-            query = dbClient.get_architectures(problem_id, dataset_id)
+
+            dataset_client = DatasetGraphqlClient(user_info)
+            query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+            # query = dbClient.get_architectures(problem_id, dataset_id)
 
             # Iterate over architectures
             # Create: user context Designs
             # Create: object to send designs to front-end
             architectures_json = []
             counter = 0
-            for arch in query['data']['Architecture']:
+            for arch in query:
 
                 # If the arch needs to be re-evaluated due to a problem definition change, do not add
                 if not arch['eval_status']:

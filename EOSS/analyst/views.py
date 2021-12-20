@@ -6,7 +6,10 @@ import logging
 import threading
 
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from asgiref.sync import sync_to_async, async_to_sync
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -133,18 +136,20 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
             # Load architecture data from the session info
             # old: dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
-            dataset = db_client.get_architectures(problem_id, dataset_id)
-            print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset['data']['Architecture']))
+            dataset_client = DatasetGraphqlClient(user_info)
+            dataset = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+            # dataset = db_client.get_architectures(problem_id, dataset_id)
+            print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset))
 
             problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
-            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset['data']['Architecture'])))
+            logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
         
             _archs = []
             if input_type == "binary":
-                for arch in dataset['data']['Architecture']:
+                for arch in dataset:
                     arch_id = arch['id']
                     arch_inputs = boolean_string_2_boolean_array(arch['input'])
                     arch_outputs = [float(arch['science']), float(arch['cost'])]

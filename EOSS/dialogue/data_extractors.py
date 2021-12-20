@@ -10,6 +10,12 @@ from EOSS.vassar.api import VASSARClient
 from daphne_context.models import UserInformation
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index, crop_list
 
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
+
 
 def extract_mission(processed_question, number_of_features, user_information: UserInformation):
     # Get a list of missions
@@ -79,7 +85,9 @@ def extract_agent(processed_question, number_of_features, user_information: User
 def extract_instrument_parameter(processed_question, number_of_features, user_information: UserInformation):
     vassar_client = VASSARClient(user_information=user_information)
     group_id = user_information.eosscontext.group_id
-    instrument_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
+    problem_client = ProblemGraphqlClient(user_information)
+    instrument_parameters = async_to_sync(problem_client.get_instrument_attributes)(group_id)
+    # instrument_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
     instrument_parameters = [attr["name"] for attr in instrument_parameters]
     return sorted_list_of_features_by_index(processed_question, instrument_parameters, number_of_features)
 

@@ -12,6 +12,7 @@ from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, 
 from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
 
 class EOSSConsumer(DaphneConsumer):
     # WebSocket event handlers
@@ -345,10 +346,12 @@ class EOSSConsumer(DaphneConsumer):
 
     async def start_ga(self, user_info: UserInformation, tested_feature):
         vassar_client = VASSARClient(user_info)
+        dataset_client = DatasetGraphqlClient(user_info)
 
         if self.scope["user"].is_authenticated:
             try:
-                if vassar_client.check_dataset_read_only():
+
+                if await dataset_client.check_dataset_read_only():
                     await self.send_json({
                         'type': 'services.ga_running_status',
                         'status': 'dataset_error',

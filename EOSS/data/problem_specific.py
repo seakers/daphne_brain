@@ -2,19 +2,24 @@ from string import ascii_uppercase
 
 from EOSS.graphql.api import GraphqlClient
 from EOSS.vassar.api import VASSARClient
+
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 '''
     Because this functionality is hardcoded, it is not compatible with daphne's new aws architecture. The current issue
     specifically being addressed in these changes is the fluid ordering of both satellites and instruments in the aws
     architecture implementation.
 '''
 
+
 def get_orbit_dataset(problem_id):
-    dbClient = GraphqlClient()
-    orbit_info = dbClient.get_orbits_and_attributes(problem_id)
+    orbit_info = async_to_sync(AbstractGraphqlClient.get_orbits)(problem_id, None, None, True)
     dataset = []
     counter = 0
-    for orb_obj in orbit_info:
-        orbit = orb_obj['orbit']
+    for orbit in orbit_info:
         counter += 1
         orb_dict = {}
         orb_dict['alias'] = str(counter * 1000)
@@ -29,9 +34,10 @@ def get_orbit_dataset(problem_id):
         dataset.append(orb_dict)
     return dataset
 
-
 def get_orbits_info(vassar_client: VASSARClient, problem_id: int):
-    orbit_names = vassar_client.get_orbit_list(problem_id)
+    orbit_info = async_to_sync(AbstractGraphqlClient.get_orbits)(problem_id, None, None, False)
+    orbit_names = [orbit['name'] for orbit in orbit_info]
+    # orbit_names = vassar_client.get_orbit_list(problem_id)
     orbit_infos = generate_orbit_info_from_names(orbit_names)
     orbit_infos.insert(0, "<b>Orbit name: Orbit information</b>")
     return orbit_infos
@@ -93,12 +99,12 @@ def create_orbit_info(orbit_name):
 
 
 def get_instrument_dataset(problem_id):
-    dbClient = GraphqlClient()
-    instrument_info = dbClient.get_instruments_and_attributes(problem_id)
+    instrument_info = async_to_sync(AbstractGraphqlClient.get_instruments)(problem_id, None, None, True)
+    # dbClient = GraphqlClient()
+    # instrument_info = dbClient.get_instruments_and_attributes(problem_id)
     dataset = []
     counter = 0
-    for inst_obj in instrument_info:
-        instrument = inst_obj['instrument']
+    for instrument in instrument_info:
         inst_dict = {}
         inst_dict['alias'] = ascii_uppercase[counter]
         inst_dict['name'] = instrument['name']
@@ -131,25 +137,33 @@ def get_instruments_info(vassar_client: VASSARClient, problem_id: int):
 
 
 def get_instruments_parameters(vassar_client: VASSARClient, group_id: int):
-    instruments_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
+    instruments_parameters = async_to_sync(AbstractGraphqlClient.get_instrument_attributes)(group_id)
+    # instruments_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
     return [attr["name"] for attr in instruments_parameters]
 
 
 def get_problem_measurements(vassar_client: VASSARClient, problem_id: int):
-    problem_measurements = vassar_client.dbClient.get_problem_measurements(problem_id)
+    problem_measurements = async_to_sync(AbstractGraphqlClient.get_measurements)(problem_id)
+    # problem_measurements = vassar_client.dbClient.get_problem_measurements(problem_id)
     return [meas["Measurement"]["name"] for meas in problem_measurements]
 
 
 def get_stakeholders_list(vassar_client: VASSARClient, problem_id: int):
-    stakeholders = vassar_client.dbClient.get_stakeholders_list(problem_id)
+    stakeholders = async_to_sync(AbstractGraphqlClient.get_stakeholders)(problem_id, True, False, False)
+    stakeholders = stakeholders['panel']
+    # stakeholders = vassar_client.dbClient.get_stakeholders_list(problem_id)
     return [stakeholder["name"] for stakeholder in stakeholders]
 
 
 def get_objectives_list(vassar_client: VASSARClient, problem_id: int):
-    objectives = vassar_client.dbClient.get_objectives_list(problem_id)
+    objectives = async_to_sync(AbstractGraphqlClient.get_stakeholders)(problem_id, False, True, False)
+    objectives = objectives['objective']
+    # objectives = vassar_client.dbClient.get_objectives_list(problem_id)
     return [objective["name"] for objective in objectives]
 
 
 def get_subobjectives_list(vassar_client: VASSARClient, problem_id: int):
-    subobjectives = vassar_client.dbClient.get_subobjectives_list(problem_id)
+    subobjectives = async_to_sync(AbstractGraphqlClient.get_stakeholders)(problem_id, False, False, True)
+    subobjectives = subobjectives['subobjective']
+    # subobjectives = vassar_client.dbClient.get_subobjectives_list(problem_id)
     return [subobjective["name"] for subobjective in subobjectives]

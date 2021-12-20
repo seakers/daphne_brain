@@ -7,6 +7,11 @@ from EOSS.data import problem_specific
 from EOSS.models import EOSSContext
 from daphne_context.models import UserInformation
 
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+
 logger = logging.getLogger('VASSAR')
 
 
