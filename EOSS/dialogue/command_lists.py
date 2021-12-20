@@ -3,6 +3,12 @@ from sqlalchemy.orm import sessionmaker
 
 from EOSS.vassar.api import VASSARClient
 
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
+
 if 'EOSS' in settings.ACTIVE_MODULES:
     import EOSS.historian.models as models
     import EOSS.data.problem_specific as problem_specific
@@ -107,7 +113,17 @@ def engineer_measurement_list(vassar_client: VASSARClient, problem_id: int):
 
 
 def engineer_stakeholder_list(vassar_client: VASSARClient, problem_id: int):
-    return problem_specific.get_stakeholders_list(vassar_client, problem_id)
+    query = """
+        query get_stakeholders_query {
+          stakeholders: Stakeholder_Needs_Panel(where: {problem_id: {_eq: %d}}) {
+            id
+            name
+          }
+        }
+    """
+    result = async_to_sync(AbstractGraphqlClient.query)(query)
+    return result['stakeholders']
+    # return problem_specific.get_stakeholders_list(vassar_client, problem_id)
 
 
 def engineer_objectives_list(vassar_client: VASSARClient, problem_id: int):

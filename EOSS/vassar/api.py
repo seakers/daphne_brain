@@ -2,7 +2,7 @@ import asyncio
 import concurrent.futures
 import json
 import os
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 import boto3
 import random
 import threading
@@ -18,6 +18,10 @@ from EOSS.aws.EvalQueue import EvalQueue
 from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import sync_to_async_mt
 
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
 
 ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
 SECRET_KEY = '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'
@@ -50,6 +54,9 @@ class VASSARClient:
     def __init__(self, user_information: UserInformation):
         self.user_id = user_information.user.id
         self.user_information = user_information
+
+        self.dataset_client = DatasetGraphqlClient(self.user_information)
+        self.problem_client = ProblemGraphqlClient(self.user_information)
 
         # Boto3
         self.queue_name = 'test_queue'
@@ -559,14 +566,16 @@ class VASSARClient:
 
     # working
     def get_orbit_list(self, problem_id):
-        query = self.dbClient.get_orbit_list(problem_id)
-        orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
+        query = async_to_sync(self.problem_client.get_orbits)(problem_id)
+        orbits = [orbit['name'] for orbit in query]
+        # query = self.dbClient.get_orbit_list(problem_id)
         return orbits
 
     # working
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_instrument_list(group_id, self.problem_id)
-        instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
+        # query = self.dbClient.get_instrument_list(group_id, self.problem_id)
+        query = async_to_sync(self.problem_client.get_instruments)(self.problem_id)
+        instruments = [instrument['name'] for instrument in query]
         # hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
         # return hardcode
         return instruments
@@ -584,14 +593,16 @@ class VASSARClient:
         return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
 
     def get_dataset_architectures(self, problem_id, dataset_id):
-        query = self.dbClient.get_architectures(problem_id, dataset_id)
+        query = async_to_sync(self.dataset_client.get_architectures)(dataset_id, problem_id)
+        # query = self.dbClient.get_architectures(problem_id, dataset_id)
+
 
         def boolean_string_to_boolean_array(boolean_string):
             return [b == "1" for b in boolean_string]
 
         architectures_json = []
         counter = 0
-        for arch in query['data']['Architecture']:
+        for arch in query:
             # If the arch needs to be re-evaluated due to a problem definition change, do not add
             if not arch['eval_status']:
                 continue
@@ -606,7 +617,8 @@ class VASSARClient:
         return architectures_json
 
     def get_architecture_from_id(self, arch_id):
-        result_arch = self.dbClient.get_architecture_from_id(arch_id)
+        # result_arch = self.dbClient.get_architecture_from_id(arch_id)
+        result_arch = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id)
         outputs = [result_arch['science'], result_arch['cost']]
         arch = {'id': result_arch['id'], 'inputs': [b == "1" for b in result_arch['input']], 'outputs': outputs}
 
@@ -693,12 +705,8 @@ class VASSARClient:
             else:
                 inputs = inputs + '0'
         eosscontext: EOSSContext = self.user_information.eosscontext
-        return self.dbClient.check_for_existing_arch(eosscontext.problem_id, eosscontext.dataset_id, inputs)
-
-    def check_dataset_read_only(self) -> bool:
-        eosscontext: EOSSContext = self.user_information.eosscontext
-        return self.dbClient.check_dataset_read_only(eosscontext.dataset_id)
-
+        return async_to_sync(self.dataset_client.check_existing_architecture_2)(inputs, eosscontext.dataset_id, eosscontext.problem_id)
+        # return self.dbClient.check_for_existing_arch(eosscontext.problem_id, eosscontext.dataset_id, inputs)
 
     # working
     def evaluate_false_architectures(self, problem_id, dataset_id, eval_queue_url):
@@ -740,7 +748,8 @@ class VASSARClient:
                 new_inputs = self.random_local_change(inputs)
                 print('---> NEW DESIGN ary: ', new_inputs)
                 # Check if the architecture already exists in DB before adding it again
-                is_same, arch_id = self.check_for_existing_arch(new_inputs)
+                # is_same, arch_id = self.check_for_existing_arch(new_inputs)
+                is_same, arch_id = async_to_sync(self.dataset_client.check_existing_architecture_2)(new_inputs)
                 if not is_same:
                     design_futures.append(executor.submit(self.evaluate_architecture, new_inputs, eval_queue_url, fast=True, ga=False))
                 else:
@@ -904,20 +913,24 @@ class VASSARClient:
     # working
     def get_parameter_value_for_instrument(self, problem_id, parameter, instrument):
         print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
-        return self.dbClient.get_instrument_attribute_value(problem_id, instrument, parameter)
+        return async_to_sync(self.problem_client.get_instrument_attribute_value)(problem_id, instrument, parameter)
+        # return self.dbClient.get_instrument_attribute_value(problem_id, instrument, parameter)
 
     # working
     def get_capability_value_for_instrument(self, group_id, parameter, instrument, measurement=None):
         print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
-        return self.dbClient.get_instrument_capability_values(group_id, instrument, parameter, measurement)
+        return async_to_sync(self.problem_client.get_instrument_capability_values)(group_id, instrument, parameter, measurement)
+        # return self.dbClient.get_instrument_capability_values(group_id, instrument, parameter, measurement)
 
     # working
     def get_measurement_requirements(self, problem_id, measurement_name, measurement_attribute, subobjective=None):
         print("\n\n----> get_measurement_requirements", measurement_name, measurement_attribute, subobjective)
-        return self.dbClient.get_measurement_requirements(problem_id, measurement_name, measurement_attribute, subobjective)
+        return async_to_sync(self.problem_client.get_measurement_requirements)(problem_id, measurement_name, measurement_attribute, subobjective)
+        # return self.dbClient.get_measurement_requirements(problem_id, measurement_name, measurement_attribute, subobjective)
 
     def get_measurement_for_subobjective(self, problem_id, subobjective):
-        return self.dbClient.get_measurement_for_subobjective(problem_id, subobjective)
+        return async_to_sync(self.problem_client.get_requirement_rule_attribute)(problem_id, None, None, subobjective)
+        # return self.dbClient.get_measurement_for_subobjective(problem_id, subobjective)
 
 
     # working

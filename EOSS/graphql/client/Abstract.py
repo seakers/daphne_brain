@@ -175,7 +175,7 @@ class AbstractGraphqlClient:
     async def _where_neighbor(neighbor, field, logic, value, value_type):
         return """
             %s: {%s}
-        """ % (neighbor, await Client._where(field, logic, value, value_type))
+        """ % (neighbor, await AbstractGraphqlClient._where(field, logic, value, value_type))
 
     @staticmethod
     async def _table_wrap(table, value):
@@ -235,3 +235,204 @@ class AbstractGraphqlClient:
         else:
             converted_inputs = inputs
         return converted_inputs
+
+
+
+
+    """
+          _____                 _  __ _        _____                            _       
+         / ____|               (_)/ _(_)      |  __ \                          | |      
+        | (___  _ __   ___  ___ _| |_ _  ___  | |__) |___  __ _ _   _  ___  ___| |_ ___ 
+         \___ \| '_ \ / _ \/ __| |  _| |/ __| |  _  // _ \/ _` | | | |/ _ \/ __| __/ __|
+         ____) | |_) |  __/ (__| | | | | (__  | | \ \  __/ (_| | |_| |  __/\__ \ |_\__ \
+        |_____/| .__/ \___|\___|_|_| |_|\___| |_|  \_\___|\__, |\__,_|\___||___/\__|___/
+               | |                                           | |                        
+               |_|                                           |_|                  
+    """
+
+    @staticmethod
+    async def get_orbits(problem_id=None, group_id=None, orbit_name=None, attributes=False):
+
+        # --> 1. Where statements
+        statements = []
+        if problem_id is not None:
+            statements.append(await AbstractGraphqlClient._where_neighbor('Join__Problem_Orbits', 'problem_id', '_eq', int(problem_id), int))
+        if problem_id is not None:
+            statements.append(await AbstractGraphqlClient._where('group_id', '_eq', int(group_id), int))
+        where_str = await AbstractGraphqlClient._where_wrapper(statements)
+
+        # --> 2. Return statements
+        return_str = """
+            id
+            name
+        """
+        if attributes is True:
+            return_str += """
+                attributes: Join__Orbit_Attributes {
+                    value
+                    Orbit_Attribute {
+                        name
+                    }
+                }
+            """
+
+        # --> 3. Query
+        query = """
+            query abstract_query {
+                Orbit%s {
+                    %s
+                }
+            }
+        """ % (where_str, return_str)
+        result = await AbstractGraphqlClient.query(query)
+        if 'Orbit' not in result:
+            return None
+        return result['Orbit']
+
+    @staticmethod
+    async def get_instruments(problem_id=None, group_id=None, instrument_name=None, attributes=False):
+
+        # --> 1. Where statements
+        statements = []
+        if problem_id is not None:
+            statements.append(await AbstractGraphqlClient._where_neighbor('Join__Problem_Instruments', 'problem_id', '_eq', int(problem_id), int))
+        if problem_id is not None:
+            statements.append(await AbstractGraphqlClient._where('group_id', '_eq', int(group_id), int))
+        where_str = await AbstractGraphqlClient._where_wrapper(statements)
+
+        # --> 2. Return statements
+        return_str = """
+                    id
+                    name
+                """
+        if attributes is True:
+            temp_where_str = ''
+            if problem_id is not None:
+                temp_where_str = await AbstractGraphqlClient._where_wrapper([await AbstractGraphqlClient._where('problem_id', '_eq', int(group_id), int)])
+            return_str += """
+                attributes: Join__Instrument_Characteristics%s {
+                    value
+                    Instrument_Attribute {
+                        name
+                    }
+                }
+            """ % temp_where_str
+
+        # --> 3. Query
+        query = """
+                query abstract_query {
+                    Instrument%s {
+                        %s
+                    }
+                }
+            """ % (where_str, return_str)
+        result = await AbstractGraphqlClient.query(query)
+        if 'Instrument' not in result:
+            return None
+        return result['Instrument']
+
+    @staticmethod
+    async def get_instrument_attributes(group_id=None, attribute_name=None):
+
+        # --> 1. Where statements
+        statements = []
+        if group_id is not None:
+            statements.append(await AbstractGraphqlClient._where('group_id', '_eq', int(group_id), int))
+        if attribute_name is not None:
+            statements.append(await AbstractGraphqlClient._where('name', '_eq', str(attribute_name), str))
+        where_str = await AbstractGraphqlClient._where_wrapper(statements)
+
+        # --> 2. Return statements
+        return_str = """
+            id
+            name
+        """
+
+        # --> 3. Query
+        query = """
+            query abstract_query {
+                attributes: Instrument_Attribute%s {
+                    %s
+                }
+            }
+        """ % (where_str, return_str)
+        result = await AbstractGraphqlClient.query(query)
+        if 'attributes' not in result:
+            return None
+        return result['attributes']
+
+    @staticmethod
+    async def get_measurements(problem_id=None):
+
+        # --> 1. Where statements
+        statements = []
+        if problem_id is not None:
+            statements.append(await AbstractGraphqlClient._where('problem_id', '_eq', int(problem_id), int))
+        where_str = await AbstractGraphqlClient._where_wrapper(statements, distinct='[measurement_id]')
+
+        # --> 2. Return statements
+        return_str = """
+            Measurement {
+                name
+                id
+            }
+        """
+
+        # --> 3. Query
+        query = """
+            query abstract_query {
+                measurements: Requirement_Rule_Attribute%s {
+                    %s
+                }
+            }
+        """ % (where_str, return_str)
+        result = await AbstractGraphqlClient.query(query)
+        if 'measurements' not in result:
+            return None
+        return result['measurements']
+
+    @staticmethod
+    async def get_stakeholders(problem_id, panel=False, objective=False, subobjective=False):
+
+        panel_str = ''
+        if panel is True:
+            panel_str = """
+                        panel :Stakeholder_Needs_Panel(
+                            where: {problem_id: {_eq: %d}}
+                        ) {
+                            id
+                            name
+                        }
+                    """ % problem_id
+
+        objective_str = ''
+        if objective is True:
+            objective_str = """
+                        objective :Stakeholder_Needs_Objective(
+                            where: {problem_id: {_eq: %d}}
+                        ) {
+                            id
+                            name
+                        }
+                    """ % problem_id
+
+        subobjective_str = ''
+        if subobjective is True:
+            subobjective_str = """
+                        subobjective :Stakeholder_Needs_Subobjective(
+                            where: {problem_id: {_eq: %d}}
+                        ) {
+                            id
+                            name
+                        }
+                    """ % problem_id
+
+        query = """        
+            query get_stakeholder_info {
+                %s
+                %s
+                %s
+            }
+        """ % (panel_str, objective_str, subobjective_str)
+        return await AbstractGraphqlClient.query(query)
+

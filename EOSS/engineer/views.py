@@ -10,6 +10,11 @@ from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data.design_helpers import add_design
 
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+
 # Get an instance of a logger
 logger = logging.getLogger('EOSS.engineer')
 
@@ -23,7 +28,9 @@ class GetOrbitList(APIView):
             port = user_info.eosscontext.vassar_port
             client = VASSARClient(port, user_info=user_info)
             client.start_connection()
-            orbit_list = client.get_orbit_list(request.data['problem_name'])
+            problem_client = ProblemGraphqlClient(user_info)
+            orbit_list = async_to_sync(problem_client.get_orbits)()
+            # orbit_list = client.get_orbit_list(request.data['problem_name'])
             
             # End the connection before return statement
             client.end_connection()
@@ -46,8 +53,10 @@ class GetInstrumentList(APIView):
             port = user_info.eosscontext.vassar_port
             client = VASSARClient(port, user_info=user_info)
             # Start connection with VASSAR
-            client.start_connection()
-            instrument_list = client.get_instrument_list(request.data['problem_name'])
+            problem_client = ProblemGraphqlClient(user_info)
+            instrument_list = async_to_sync(problem_client.get_instruments)()
+            # client.start_connection()
+            # instrument_list = client.get_instrument_list(request.data['problem_name'])
             
             # End the connection before return statement
             client.end_connection()
@@ -71,7 +80,9 @@ class EvaluateArchitecture(APIView):
         inputs = json.loads(inputs)
 
         # Make sure the dataset is not read-only
-        is_read_only = client.check_dataset_read_only()
+        dataset_client = DatasetGraphqlClient(user_info)
+        is_read_only = async_to_sync(dataset_client.check_dataset_read_only)()
+        # is_read_only = client.check_dataset_read_only()
 
         if is_read_only:
             return Response({
@@ -80,7 +91,9 @@ class EvaluateArchitecture(APIView):
             })
 
         # Check if the architecture already exists in DB before adding it again
-        is_same, arch_id = client.check_for_existing_arch(inputs)
+        dataset_client = DatasetGraphqlClient(user_info)
+        is_same, arch_id = async_to_sync(dataset_client.check_existing_architecture_2)(inputs)
+        # is_same, arch_id = client.check_for_existing_arch(inputs)
 
         if not is_same:
             architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url, block=False, user=request.user, session=request.session)
@@ -211,6 +224,8 @@ class GetSubobjectiveDetails(APIView):
 
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        problem_client = ProblemGraphqlClient(user_info)
+        dataset_client = DatasetGraphqlClient(user_info)
         eosscontext = user_info.eosscontext
         client = VASSARClient(user_information=user_info)
 
@@ -225,7 +240,9 @@ class GetSubobjectiveDetails(APIView):
             if design["id"] == arch_id:
                 arch = design
 
+
         subobjective_explanation = client.get_subobjective_score_explanation(arch, subobjective)
+        subobjective_explanation = subobjective_explanation['SubobjectiveScoreExplanation']
 
         print(subobjective_explanation)
         subobjective_details = {
