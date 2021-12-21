@@ -371,17 +371,9 @@ class GraphqlClient:
         problem_measurements = self.execute_query(query, variables)['data']['measurements'][0]['Measurement']['name']
         return problem_measurements
 
-
-
-
-    # ---------------------------------
-
-
-
-
     def get_stakeholders_list(self, problem_id):
         query = '''
-        query get_stakeholders_list($problem_id: Int!) {
+        query get_stakeholdersd_list($problem_id: Int!) {
           stakeholders: Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}}) {
             id
             name
@@ -449,19 +441,27 @@ class GraphqlClient:
         return self.execute_query(query)
 
     def get_architecture_score_explanation(self, problem_id, arch_id):
-        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
+        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }'
         return self.execute_query(query)
 
     def get_panel_score_explanation_by_id(self, problem_id, arch_id, panel_id):
-        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {index_id: {_eq: "' + panel_id + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
+        query = 'query myquery { PanelScoreExplanation(where: {' \
+                'architecture_id: {_eq: ' + str(arch_id) + '}, ' \
+                                                           'Stakeholder_Needs_Objective: {' \
+                                                                'problem_id: {_eq: ' + str(problem_id) + '}, ' \
+                                                             'Stakeholder_Needs_Panel: {index_id: {_eq: "' + panel_id + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
         return self.execute_query(query)
 
     def get_panel_score_explanation(self, problem_id, arch_id, panel):
-        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {name: {_eq: "' + panel + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
+        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(
+            arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(
+            problem_id) + '}, Stakeholder_Needs_Panel: {name: {_eq: "' + panel + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
         return self.execute_query(query)
 
     def get_objective_score_explanation(self, problem_id, arch_id, objective):
-        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
+        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(
+            arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(
+            problem_id) + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
         return self.execute_query(query)
 
     def get_subobjective_score_explanation(self, arch_id, subobjective):
@@ -474,7 +474,7 @@ class GraphqlClient:
             }
         }'''
         return self.execute_query(query, {"arch_id": arch_id, "subobjective_name": subobjective})
-    
+
     def get_arch_science_information(self, problem_id, arch_id):
         query = f'''
         query myquery {{
@@ -513,11 +513,17 @@ class GraphqlClient:
                 subobjective_info = []
                 for subobj in obj['subobjectives']:
                     if len(subobj['satisfaction']) > 0:
-                        subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
+                        subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'],
+                                                                     subobj['satisfaction'][0]['value'],
+                                                                     subobj['weight']))
                 if len(obj['satisfaction']) > 0:
-                    objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
+                    objective_info.append(
+                        SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'],
+                                            obj['weight'], subobjective_info))
             if len(panel['satisfaction']) > 0:
-                information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
+                information.append(
+                    SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'],
+                                        panel['weight'], objective_info))
         print("\n---> all stakeholder info", information)
         return information
 
@@ -570,6 +576,15 @@ class GraphqlClient:
             information.append(cost_info_obj)
         return information
 
+
+
+    # ---------------------------------
+
+
+
+
+
+
     def wait_for_critique(self, arch_id, timeout=20):
         results = self.get_arch_critique(arch_id)
         for x in range(0, timeout):
@@ -592,6 +607,13 @@ class GraphqlClient:
             return []
         critiques = critique.split('|')
         return critiques[:-1]
+
+
+
+
+
+
+
 
     def get_arch_id(self, arch_object):
         id = arch_object.id

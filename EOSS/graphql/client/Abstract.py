@@ -13,6 +13,84 @@ from asgiref.sync import async_to_sync, sync_to_async
 
 from graphql import (build_ast_schema, parse)
 
+class MissionCostWrapper:
+    powerBudgetSlots = ["payload-peak-power#", "satellite-BOL-power#"]
+    costBudgetSlots = ["payload-cost#", "bus-cost#", "launch-cost#", "program-cost#", "IAT-cost#", "operations-cost#"]
+    massBudgetSlots = ["adapter-mass", "propulsion-mass#", "structure-mass#", "avionics-mass#", "ADCS-mass#",
+                       "EPS-mass#", "propellant-mass-injection", "propellant-mass-ADCS", "thermal-mass#",
+                       "payload-mass#"]
+
+    def __init__(self, cost_info):
+        information = []
+        for info in cost_info:
+            # payload
+            payloads = []
+            for inst in info['payloads']:
+                if inst['Instrument'] != None:
+                    payloads.append(inst['Instrument']['name'])
+
+            # budgets
+            mass_budget = {}
+            power_budget = {}
+            cost_budget = {}
+            for budget in info['budgets']:
+                budget_type = budget['Mission_Attribute']['name']
+                if budget_type in self.powerBudgetSlots:
+                    power_budget[budget_type] = budget['value']
+                if budget_type in self.massBudgetSlots:
+                    mass_budget[budget_type] = budget['value']
+                if budget_type in self.costBudgetSlots:
+                    cost_budget[budget_type] = budget['value']
+            cost_info_obj = MissionCostInformation(info['mission_name'], payloads, info['launch_vehicle'], info['mass'],
+                                                   info['power'], info['cost'], mass_budget, power_budget, cost_budget)
+            information.append(cost_info_obj)
+        self.information = information
+
+    def get_info(self):
+        return self.information
+
+class MissionCostInformation:
+    def __init__(self, orbit_name, payload, launch_vehicle, total_mass, total_power, total_cost, mass_budget, power_budget, cost_budget):
+        self.orbit_name = orbit_name
+        self.payload = payload
+        self.launch_vehicle = launch_vehicle
+        self.total_mass = total_mass
+        self.total_power = total_power
+        self.total_cost = total_cost
+
+        self.mass_budget = mass_budget       # dict
+        self.power_budget = power_budget     # dict
+        self.cost_budget = cost_budget       # dict
+
+
+
+class SubscoreWrapper:
+    def __init__(self, panels):
+        information = []
+        for panel in panels:
+            objective_info = []
+            for obj in panel['objectives']:
+                subobjective_info = []
+                for subobj in obj['subobjectives']:
+                    if len(subobj['satisfaction']) > 0:
+                        subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
+                if len(obj['satisfaction']) > 0:
+                    objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
+            if len(panel['satisfaction']) > 0:
+                information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
+        self.information = information
+
+    def get_info(self):
+        return self.information
+
+class SubscoreInformation:
+    def __init__(self, name, description, value, weight, subscores=None):
+        self.name = name
+        self.description = description
+        self.value = value
+        self.weight = weight
+        self.subscores = subscores
+
 
 class AbstractGraphqlClient:
 
@@ -95,7 +173,7 @@ class AbstractGraphqlClient:
         async with aiohttp.ClientSession() as session:
             for attempt in range(tries):
                 # --> 1. Check to see if the obj exists
-                async with session.post('http://graphql:8080/v1/graphql', json={'query': subscription}) as response:
+                async with session.post(graphql_server_address(), json={'query': subscription}) as response:
                     result = json.loads(await response.text())
                     if 'data' not in result:
                         print('--> DATA FIELD NOT FOUND IN SUB REQUEST', result)
@@ -436,3 +514,72 @@ class AbstractGraphqlClient:
         """ % (panel_str, objective_str, subobjective_str)
         return await AbstractGraphqlClient.query(query)
 
+    @staticmethod
+    async def get_arch_science_info(problem_id, arch_id):
+
+        # --> 1. Query
+        query = """
+            query abstract_query {
+                panels: Stakeholder_Needs_Panel(where: {problem_id: {_eq: %d}}) {
+                    code: index_id
+                    description
+                    name
+                    weight
+                    satisfaction: ArchitectureScoreExplanations(where: {architecture_id: {_eq: %d}}) {
+                        value: satisfaction
+                    }
+                    objectives: Stakeholder_Needs_Objectives {
+                        code: name
+                        description
+                        weight
+                        satisfaction: PanelScoreExplanations(where: {architecture_id: {_eq: %d}} {
+                            value: satisfaction
+                        }
+                        subobjectives: Stakeholder_Needs_Subobjectives {
+                            code: name
+                            description
+                            weight
+                            satisfaction: ObjectiveScoreExplanations {
+                                value: satisfaction
+                            }
+                        }
+                    }
+                }
+            }
+        """ % (int(problem_id), int(arch_id), int(arch_id))
+        results = AbstractGraphqlClient.query(query)
+        panels = results['panels']
+        information = SubscoreWrapper(panels).get_info()
+        print("\n---> all stakeholder info", information)
+        return information
+
+    @staticmethod
+    async def get_arch_cost_info(arch_id):
+        # --> 1. Query
+        query = """
+            query abstract_query {
+                cost_info: ArchitectureCostInformation(where: {architecture_id: {_eq: %d}}) {
+                    mission_name
+                    launch_vehicle
+                    mass
+                    power
+                    cost
+                    others
+                    payloads: ArchitecturePayloads {
+                        Instrument {
+                            name
+                        }
+                    }
+                    budgets: ArchitectureBudgets {
+                        value
+                        Mission_Attribute {
+                            name
+                        }
+                    }
+                }
+            }
+        """ % int(arch_id)
+        results = AbstractGraphqlClient.query(query)
+        cost_info = results['cost_info']
+        information = MissionCostWrapper(cost_info).get_info()
+        return information

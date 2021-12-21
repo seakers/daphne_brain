@@ -53,22 +53,37 @@ class DatasetGraphqlClient(Client):
         """
         self.info_scores = """
             ArchitectureScoreExplanations {
-              satisfaction
-              panel_id
-              id
-              architecture_id
+                satisfaction
+                panel_id
+                id
+                architecture_id
+                Stakeholder_Needs_Panel {
+                    id
+                    name
+                    index_id
+                    weight
+                    problem_id
+                }
             }
             PanelScoreExplanations {
-              satisfaction
-              objective_id
-              id
-              architecture_id
+                satisfaction
+                objective_id
+                id
+                architecture_id
+                Stakeholder_Needs_Objective { 
+                    name 
+                    weight 
+                }
             }
             ObjectiveScoreExplanations {
-              subobjective_id
-              satisfaction
-              id
-              architecture_id
+                subobjective_id
+                satisfaction
+                id
+                architecture_id
+                Stakeholder_Needs_Subobjective { 
+                    name 
+                    weight 
+                }
             }
             SubobjectiveScoreExplanations {
               taken_by
@@ -1065,7 +1080,11 @@ class DatasetGraphqlClient(Client):
         )
         return await Client._subscribe(subscription)
 
-
-
-
-
+    async def subscribe_to_critique(self, arch_id):
+        for idx in range(5):
+            query = await self.get_architecture_pk(arch_id)
+            if query['critique'] is not None:
+                critiques = query['critique'].splic('|')
+                return critiques[:-1]
+            await asyncio.sleep(2)
+        return []

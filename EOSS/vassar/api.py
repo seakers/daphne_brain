@@ -22,6 +22,8 @@ from asgiref.sync import async_to_sync, sync_to_async
 from EOSS.graphql.client.Dataset import DatasetGraphqlClient
 from EOSS.graphql.client.Admin import AdminGraphqlClient
 from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
+
 
 ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
 SECRET_KEY = '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'
@@ -582,15 +584,17 @@ class VASSARClient:
 
     # working
     def get_objective_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_objective_list(group_id, self.problem_id)
-        print([obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']])
-        return [obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']]
+        # query = self.dbClient.get_objective_list(group_id, self.problem_id)
+        query = async_to_sync(self.problem_client.get_stakeholders)(problem_id, False, True, False)
+        print([obj['name'] for obj in query['objective']])
+        return [obj['name'] for obj in query['objective']]
 
     # working
     def get_subobjective_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
-        print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
-        return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
+        # query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
+        query = async_to_sync(self.problem_client.get_stakeholders)(problem_id, False, False, True)
+        print([subobj['name'] for subobj in query['subobjective']])
+        return [subobj['name'] for subobj in query['subobjective']]
 
     def get_dataset_architectures(self, problem_id, dataset_id):
         query = async_to_sync(self.dataset_client.get_architectures)(dataset_id, problem_id)
@@ -710,8 +714,8 @@ class VASSARClient:
 
     # working
     def evaluate_false_architectures(self, problem_id, dataset_id, eval_queue_url):
-        query_info = self.dbClient.get_false_architectures(problem_id, dataset_id)
-        all_archs = query_info['data']['Architecture']
+        all_archs = async_to_sync(self.dataset_client.get_architectures_false)()
+        # query_info = self.dbClient.get_false_architectures(problem_id, dataset_id)
         for arch in all_archs:
             print("--> re-evaluate:", arch['input'])
             self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
@@ -844,24 +848,27 @@ class VASSARClient:
     def get_instruments_for_objective(self, problem_id, objective):
         # return self.client.getInstrumentsForObjective(problem, objective)
         print("--> Getting instrument for objective:", objective)
-        query = self.dbClient.get_instrument_from_objective(problem_id, objective)
-        insts = [inst['name'] for inst in query['data']['Instrument']]
+        # query = self.dbClient.get_instrument_from_objective(problem_id, objective)
+        query = async_to_sync(self.problem_client.get_instrument_from_objective)(objective, problem_id)
+        insts = [inst['name'] for inst in query['data']]
         return insts
 
     # working
     def get_instruments_for_panel(self, problem_id, panel):
         # return self.client.getInstrumentsForPanel(problem, panel)
         print("--> Getting instrument for panel:", panel)
-        query = self.dbClient.get_instrument_from_panel(problem_id, panel)
-        insts = [inst['name'] for inst in query['data']['Instrument']]
+        # query = self.dbClient.get_instrument_from_panel(problem_id, panel)
+        query = async_to_sync(self.problem_client.get_instrument_from_panel)(panel, problem_id)
+        insts = [inst['name'] for inst in query['data']]
         return insts
     
     # working
     def get_architecture_score_explanation(self, problem_id, arch):
         print("--> Getting architecture score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['data']['ArchitectureScoreExplanation'] ]
+        # query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['ArchitectureScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -869,8 +876,9 @@ class VASSARClient:
     def get_panel_score_explanation(self, problem_id, arch, panel):
         print("--> get_panel_score_explanation:", arch["id"], arch["inputs"], arch["outputs"], panel)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_panel_score_explanation(problem_id, arch_id, panel)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['data']['PanelScoreExplanation'] ]
+        # query = self.dbClient.get_panel_score_explanation(problem_id, arch_id, panel)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['PanelScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -878,8 +886,9 @@ class VASSARClient:
     def get_objective_score_explanation(self, problem_id, arch, objective):
         print("--> Getting objective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['data']['ObjectiveScoreExplanation'] ]
+        # query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['ObjectiveScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -887,14 +896,16 @@ class VASSARClient:
     def get_subobjective_score_explanation(self, arch, subobjective):
         print("--> Getting subobjective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
-        explanations = [ {
-            "attribute_values": expla["measurement_attribute_values"],
-            "score": expla["score"],
-            "taken_by": expla["taken_by"],
-            "justifications": expla["justifications"],
-        } 
-        for expla in query['data']['SubobjectiveScoreExplanation'] ]
+        # query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = []
+        for expla in query['SubobjectiveScoreExplanation']:
+            explanations.append({
+                "attribute_values": expla["measurement_attribute_values"],
+                "score": expla["score"],
+                "taken_by": expla["taken_by"],
+                "justifications": expla["justifications"],
+            })
         print("--> explanations", explanations)
         return explanations
 
@@ -902,13 +913,15 @@ class VASSARClient:
     def get_arch_science_information(self, problem_id, arch):
         print("\n\n----> get_arch_science_information", problem_id, arch)
         arch_id = arch["db_id"]
+        async_to_sync(AbstractGraphqlClient.get_arch_science_info)(problem_id, arch_id)
         return self.dbClient.get_arch_science_information(problem_id, arch_id)
 
     # working
     def get_arch_cost_information(self, problem_id, arch):
         print("\n\n----> get_arch_cost_information", problem_id, arch)
         arch_id = arch["db_id"]
-        return self.dbClient.get_arch_cost_information(problem_id, arch_id)
+        return async_to_sync(AbstractGraphqlClient.get_arch_cost_info)(arch_id)
+        # return self.dbClient.get_arch_cost_information(problem_id, arch_id)
 
     # working
     def get_parameter_value_for_instrument(self, problem_id, parameter, instrument):

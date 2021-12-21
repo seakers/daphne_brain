@@ -113,16 +113,8 @@ def engineer_measurement_list(vassar_client: VASSARClient, problem_id: int):
 
 
 def engineer_stakeholder_list(vassar_client: VASSARClient, problem_id: int):
-    query = """
-        query get_stakeholders_query {
-          stakeholders: Stakeholder_Needs_Panel(where: {problem_id: {_eq: %d}}) {
-            id
-            name
-          }
-        }
-    """
-    result = async_to_sync(AbstractGraphqlClient.query)(query)
-    return result['stakeholders']
+    result = async_to_sync(AbstractGraphqlClient.get_stakeholders)(problem_id, True, False, False)
+    return result['panel']
     # return problem_specific.get_stakeholders_list(vassar_client, problem_id)
 
 
