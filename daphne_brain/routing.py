@@ -30,5 +30,5 @@ ws_routes.extend([
     path('api/experiment', ExperimentConsumer.as_asgi()),
 ])
 ws_routes.extend([
-    path('api/mycroft', MycroftConsumer),
+    path('api/mycroft', MycroftConsumer.as_asgi()),
 ])
