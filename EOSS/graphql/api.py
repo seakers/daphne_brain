@@ -576,15 +576,6 @@ class GraphqlClient:
             information.append(cost_info_obj)
         return information
 
-
-
-    # ---------------------------------
-
-
-
-
-
-
     def wait_for_critique(self, arch_id, timeout=20):
         results = self.get_arch_critique(arch_id)
         for x in range(0, timeout):
@@ -607,6 +598,14 @@ class GraphqlClient:
             return []
         critiques = critique.split('|')
         return critiques[:-1]
+
+
+
+
+
+
+
+    # ---------------------------------
 
 
 

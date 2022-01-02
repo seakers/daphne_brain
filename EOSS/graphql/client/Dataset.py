@@ -340,6 +340,12 @@ class DatasetGraphqlClient(Client):
     ### GET ###
     ###########
 
+    async def get_architecture_critique(self, arch_id):
+        architecture = await self.get_architecture_pk(arch_id)
+        if architecture is None or architecture['critique'] is None:
+            return []
+        return critiques[:-1]
+
     async def get_architecture_pk(self, arch_id, costs=False, scores=False):
 
         # --> 2. Determine requested info
@@ -1084,7 +1090,7 @@ class DatasetGraphqlClient(Client):
         for idx in range(5):
             query = await self.get_architecture_pk(arch_id)
             if query['critique'] is not None:
-                critiques = query['critique'].splic('|')
+                critiques = query['critique'].split('|')
                 return critiques[:-1]
             await asyncio.sleep(2)
         return []
