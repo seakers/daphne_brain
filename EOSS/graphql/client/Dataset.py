@@ -173,7 +173,10 @@ class DatasetGraphqlClient(Client):
             return None
         return result['Dataset'][0]
 
-    async def get_default_dataset(self):
+    async def get_default_dataset(self, problem_id=None):
+        if problem_id is None:
+            problem_id = self.problem_id
+
         query = await self.wrap_query(
             """
             query dataset_id {
@@ -183,7 +186,7 @@ class DatasetGraphqlClient(Client):
                     id
                 }
             }
-            """ % (self.problem_id)
+            """ % (problem_id)
         )
         result = await self._execute(query)
         if 'Dataset' not in result:

@@ -43,6 +43,7 @@ class ImportData(APIView):
 
             # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            dataset_client = DatasetGraphqlClient(user_info)
             problem_id = int(request.data['problem_id'])
             group_id = int(request.data['group_id'])
             dataset_id = int(request.data['dataset_id'])
@@ -55,7 +56,8 @@ class ImportData(APIView):
             # If dataset_id is -1, copy all architectures in the default set for this problem into a user-specific dataset called 'default' and set that as the main dataset,
             # Else, use the request dataset_id to get architectures
             if dataset_id == -1:
-                default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
+                default_dataset_id = async_to_sync(dataset_client.get_default_dataset)(problem_id)['id']
+                # default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
                 dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
 
             dataset_client = DatasetGraphqlClient(user_info)

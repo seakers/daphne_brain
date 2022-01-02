@@ -603,7 +603,10 @@ class GraphqlClient:
         query = 'query get_problems { Problem { id name group_id } }'
         return self.execute_query(query)['data']['Problem']
 
-
+    def get_default_dataset_id(self, dataset_name, problem_id):
+        print('--> DEFAULT DATASET ID', dataset_name, problem_id)
+        query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
+        return self.execute_query(query)['data']['Dataset'][0]['id']
 
 
 
@@ -619,10 +622,6 @@ class GraphqlClient:
 
 
 
-    def get_default_dataset_id(self, dataset_name, problem_id):
-        print('--> DEFAULT DATASET ID', dataset_name, problem_id)
-        query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
-        return self.execute_query(query)['data']['Dataset'][0]['id']
 
     def add_new_dataset(self, problem_id, user_id, dataset_name):
         add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dataset_name}", problem_id: {problem_id}, user_id: {user_id} }}) {{ id }} }}'
