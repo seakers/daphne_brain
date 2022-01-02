@@ -15,29 +15,16 @@ class AdminGraphqlClient(GQLClient):
     def __init__(self, user_info: UserInformation):
         super().__init__(user_info)
 
-    ##############
-    ### INSERT ###
-    ##############
+    ###########
+    ### ADD ###
+    ###########
 
-    async def add_to_group(self, group_id):
+    async def add_user_to_group(self, group_id, user_id=None):
+        if user_id is None:
+            user_id = self.user_id
 
         # --> 1. Check to see if the user is already part of the group
-        query = """
-            query add_to_group_check {
-                panel: Join__AuthUser_Group_aggregate%s {
-                    aggregate {
-                        count
-                    }
-                }
-            }
-        """ % await GQLClient._where_wrapper([
-            await GQLClient._where('group_id', '_eq', int(group_id), int),
-            await GQLClient._where('user_id', '_eq', int(self.user_id), int)
-        ])
-        response = await self._query(query)
-
-        if int(response['panel']['aggregate']['count']) > 0:
-            print('--> USER ALREADY IN GROUP')
+        if await self.check_user_in_group(group_id, user_id=user_id) is True:
             return None
 
         # --> 2. Add user to group
@@ -55,3 +42,26 @@ class AdminGraphqlClient(GQLClient):
         if 'insert_Join__AuthUser_Group_one' not in result:
             return None
         return result['insert_Join__AuthUser_Group_one']
+
+    async def check_user_in_group(self, group_id, user_id=None):
+        if user_id is None:
+            user_id = self.user_id
+
+        # --> 1. Check to see if the user is already part of the group
+        query = """
+                query add_to_group_check {
+                    panel: Join__AuthUser_Group_aggregate%s {
+                        aggregate {
+                            count
+                        }
+                    }
+                }
+            """ % await GQLClient._where_wrapper([
+            await GQLClient._where('group_id', '_eq', int(group_id), int),
+            await GQLClient._where('user_id', '_eq', int(self.user_id), int)
+        ])
+        response = await self._query(query)
+
+        if int(response['panel']['aggregate']['count']) > 0:
+            return True
+        return False

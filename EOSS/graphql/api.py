@@ -628,7 +628,9 @@ class GraphqlClient:
     def clone_default_dataset(self, origin_dataset_id, user_id):
         return self.clone_dataset(origin_dataset_id, user_id, "default")
 
-
+    def insert_user_into_group(self, user_id, group_id=1):
+        mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
+        return self.execute_query(mutation)
 
 
     # ---------------------------------
@@ -655,9 +657,7 @@ class GraphqlClient:
 
 
 
-    def insert_user_into_group(self, user_id, group_id=1):
-        mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
-        return self.execute_query(mutation)
+
 
     def execute_query(self, query, variables=None):
         json_body = {'query': query }
