@@ -614,13 +614,6 @@ class GraphqlClient:
 
 
 
-    def get_arch_id(self, arch_object):
-        id = arch_object.id
-        inputs = bool_list_to_string(arch_object.inputs)
-        outputs = arch_object.outputs
-        print("--> Finding django arch:", self.problem_id, inputs)
-        query = 'query myquery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, input: {_eq: "' + inputs + '"}}) { id } }'
-        return self.execute_query(query)['data']['Architecture'][0]['id']
 
     def get_problems(self):
         query = 'query get_problems { Problem { id name group_id } }'
