@@ -951,12 +951,14 @@ class VASSARClient:
         print("\n\n----> critique_architecture", problem_id, arch)
         arch_id = arch['db_id']
         print("---> architecture id", arch_id)
-        critique = self.dbClient.get_arch_critique(arch_id)
+        # critique = self.dbClient.get_arch_critique(arch_id)  # !!!
+        critique = async_to_sync(self.dataset_client.get_architecture_critique)(arch_id)
         if critique == []:
             print("---> Re-evaluating architecture ")
             queue_url = self.user_information.eosscontext.vassar_request_queue_url
             self.evaluate_architecture(arch["inputs"], queue_url, redo=True)
-            critique = self.dbClient.wait_for_critique(arch_id)
+            # critique = self.dbClient.wait_for_critique(arch_id) # !!!
+            critique = async_to_sync(self.dataset_client.subscribe_to_critique)(arch_id)
         print("--> FINAL CRITIQUE ", critique)
         return critique
     
