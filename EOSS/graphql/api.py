@@ -608,6 +608,13 @@ class GraphqlClient:
         query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
         return self.execute_query(query)['data']['Dataset'][0]['id']
 
+    def add_new_dataset(self, problem_id, user_id, dataset_name):
+        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dataset_name}", problem_id: {problem_id}, user_id: {user_id} }}) {{ id }} }}'
+        new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
+        return new_dataset_id
+
+
+
 
 
     # ---------------------------------
@@ -623,10 +630,7 @@ class GraphqlClient:
 
 
 
-    def add_new_dataset(self, problem_id, user_id, dataset_name):
-        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dataset_name}", problem_id: {problem_id}, user_id: {user_id} }}) {{ id }} }}'
-        new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
-        return new_dataset_id
+
 
     def clone_dataset(self, src_dataset_id, user_id, dst_dataset_name):
         get_src_dataset_query = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {src_dataset_id} }} }}) {{ id name problem_id }} Architecture(order_by: {{id: asc}}, where: {{dataset_id: {{_eq: {src_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
