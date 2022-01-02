@@ -252,6 +252,7 @@ class UploadData(APIView):
 
             # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            dataset_client = DatasetGraphqlClient(user_info)
             problem_id = user_info.eosscontext.problem_id
             user_id = user_info.user.id
 
@@ -259,7 +260,8 @@ class UploadData(APIView):
             dbClient = GraphqlClient(problem_id=problem_id)
 
             dataset_path = "./EOSS/data/" + request.data["filename"] + ".csv"
-            dataset_id = dbClient.add_new_dataset(problem_id, user_id, request.data["filename"])
+            dataset_id = async_to_sync(dataset_client.new_user_dataset)(request.data["filename"], False)['id']
+            # dataset_id = dbClient.add_new_dataset(problem_id, user_id, request.data["filename"])
 
             with open(dataset_path, newline='') as csvfile:
                 arch_reader = csv.reader(csvfile, delimiter=',')
