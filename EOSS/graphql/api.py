@@ -599,7 +599,9 @@ class GraphqlClient:
         critiques = critique.split('|')
         return critiques[:-1]
 
-
+    def get_problems(self):
+        query = 'query get_problems { Problem { id name group_id } }'
+        return self.execute_query(query)['data']['Problem']
 
 
 
@@ -615,9 +617,7 @@ class GraphqlClient:
 
 
 
-    def get_problems(self):
-        query = 'query get_problems { Problem { id name group_id } }'
-        return self.execute_query(query)['data']['Problem']
+
 
     def get_default_dataset_id(self, dataset_name, problem_id):
         print('--> DEFAULT DATASET ID', dataset_name, problem_id)
