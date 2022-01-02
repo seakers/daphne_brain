@@ -329,6 +329,24 @@ class AbstractGraphqlClient:
     """
 
     @staticmethod
+    async def add_user_to_group(user_id, group_id):
+        mutation = """
+            mutation insert_user_to_group {
+                insert_Join__AuthUser_Group_one(
+                    object: {user_id: %d, group_id: %d, admin: false}
+                ) {
+                    id
+                    group_id
+                    user_id
+                }
+            }
+        """ % (int(user_id), int(group_id))
+        result = await AbstractGraphqlClient.query(mutation)
+        if 'insert_Join__AuthUser_Group_one' not in result:
+            return None
+        return result['insert_Join__AuthUser_Group_one']
+
+    @staticmethod
     async def get_problems():
         query = """
             query abstract_query {
@@ -343,7 +361,6 @@ class AbstractGraphqlClient:
         if 'Problem' not in result:
             return None
         return result['Problem']
-
 
     @staticmethod
     async def get_orbits(problem_id=None, group_id=None, orbit_name=None, attributes=False):
