@@ -329,6 +329,23 @@ class AbstractGraphqlClient:
     """
 
     @staticmethod
+    async def get_problems():
+        query = """
+            query abstract_query {
+                Problem {
+                    id 
+                    name 
+                    group_id
+                }
+            }
+        """
+        result = await AbstractGraphqlClient.query(query)
+        if 'Problem' not in result:
+            return None
+        return result['Problem']
+
+
+    @staticmethod
     async def get_orbits(problem_id=None, group_id=None, orbit_name=None, attributes=False):
 
         # --> 1. Where statements
