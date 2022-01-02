@@ -57,8 +57,9 @@ class ImportData(APIView):
             # Else, use the request dataset_id to get architectures
             if dataset_id == -1:
                 default_dataset_id = async_to_sync(dataset_client.get_default_dataset)(problem_id)['id']
+                dataset_id = async_to_sync(dataset_client.clone_dataset)(default_dataset_id, "default", False)
                 # default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
-                dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
+                # dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
 
             dataset_client = DatasetGraphqlClient(user_info)
             query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
@@ -123,13 +124,15 @@ class CopyData(APIView):
             try:
                 # Get user_info and problem_id
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                dataset_client = DatasetGraphqlClient(user_info)
                 src_dataset_id = int(request.data['src_dataset_id'])
                 dst_dataset_name = request.data['dst_dataset_name']
                 problem_id = user_info.eosscontext.problem_id
 
                 # Clone dataset
                 dbClient = GraphqlClient(problem_id=problem_id)
-                dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
+                # dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
+                dst_dataset_id = async_to_sync(dataset_client.clone_dataset)(src_dataset_id, dst_dataset_name, False)
 
                 # Return architectures
                 return Response({
