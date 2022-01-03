@@ -26,43 +26,32 @@ class Login(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
+            # Try to look for user session object. If it exists, then the session will be changed to that. If not,
+            # the current session information will be transferred to the user
+            userinfo_qs = UserInformation.objects.filter(user__exact=user)
 
-            try:
-                user_info = get_user_information(None, user)
-            except Exception:
-                user_info = None
-            if user_info is None or not hasattr(user_info, "atexperimentcontext") or (not user_info.atexperimentcontext.is_running):
-                # Try to look for user session object. If it exists, then the session will be changed to that. If not,
-                # the current session information will be transferred to the user
-                userinfo_qs = UserInformation.objects.filter(user__exact=user)
+            if len(userinfo_qs) == 0:
+                # Try to get or create a session user_info from the session and transfer it to the user
+                userinfo = get_or_create_user_information(request.session, user, daphne_version)
+                userinfo.user = user
+                userinfo.session = None
+                userinfo.save()
 
-                if len(userinfo_qs) == 0:
-                    # Try to get or create a session user_info from the session and transfer it to the user
-                    userinfo = get_or_create_user_information(request.session, user, daphne_version)
-                    userinfo.user = user
-                    userinfo.session = None
-                    userinfo.save()
+            if len(userinfo_qs) != 0:
+                # Force the user information daphne version to be the one from the login
+                userinfo = userinfo_qs[0]
+                userinfo.daphne_version = daphne_version
+                userinfo.save()
 
-                if len(userinfo_qs) != 0:
-                    # Force the user information daphne version to be the one from the login
-                    userinfo = userinfo_qs[0]
-                    userinfo.daphne_version = daphne_version
-                    userinfo.save()
+            # Log the user in
+            login(request, user)
 
-                # Log the user in
-                login(request, user)
-
-                # Return the login response
-                return Response({
-                    'status': 'logged_in',
-                    'username': username,
-                    'permissions': []
-                })
-            else:
-                return Response({
-                    'status': 'auth_error',
-                    'login_error': 'This user is currently in an experiment!'
-                })
+            # Return the login response
+            return Response({
+                'status': 'logged_in',
+                'username': username,
+                'permissions': []
+            })
         else:
             # TODO: Get different messages based on auth error
             return Response({
