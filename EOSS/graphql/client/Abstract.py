@@ -363,7 +363,9 @@ class AbstractGraphqlClient:
         return result['Problem']
 
     @staticmethod
-    async def get_orbits(problem_id=None, group_id=1, orbit_name=None, attributes=False):
+    async def get_orbits(problem_id=None, group_id=None, orbit_name=None, attributes=False):
+        if group_id is None:
+            group_id = 1
 
         # --> 1. Where statements
         statements = []
