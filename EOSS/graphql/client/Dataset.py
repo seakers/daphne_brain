@@ -552,6 +552,26 @@ class DatasetGraphqlClient(Client):
             return None
         return result['Architecture']
 
+    ###########
+    ### SET ###
+    ###########
+
+    async def set_architecture_invalid(self, arch_id):
+
+        # --> 1. Create mutation
+        mutation = """
+            mutation invalidate_architecture {
+                item: update_Architecture(where: {id: {_eq: %d}}, _set: {eval_status: false}) {
+                    affected_rows
+                }
+            }
+        """ % int(arch_id)
+
+        # --> 2. Execute mutation
+        result = await self._execute(mutation)
+        if 'item' not in result:
+            return False
+        return int(result['item']['affected_rows']) > 0
 
     #############
     ### CLONE ###
@@ -1069,9 +1089,12 @@ class DatasetGraphqlClient(Client):
     ### SUBSCRIBE ###
     #################
 
-    async def subscribe_to_architecture(self, input, dataset_id=None):
-        # --> 1. Determine dataset_id
-        used_dataset_id = await self._dataset_id(dataset_id)
+    async def subscribe_to_architecture(self, input, dataset_id=None, problem_id=None):
+        # --> 1. Determine variables
+        if dataset_id is None:
+            dataset_id = self.dataset_id
+        if problem_id is None:
+            problem_id = self.problem_id
 
         # --> 2. Create and run subscription
         subscription = await self.wrap_query(
@@ -1083,9 +1106,12 @@ class DatasetGraphqlClient(Client):
                     aggregate {
                       count
                     }
+                    nodes {
+                        %s
+                    }
                 }
             }
-            """ % (used_dataset_id, self.problem_id, input)
+            """ % (dataset_id, problem_id, input, self.info_base)
         )
         return await Client._subscribe(subscription)
 
