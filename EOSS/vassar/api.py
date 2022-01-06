@@ -630,9 +630,11 @@ class VASSARClient:
 
     def reevaluate_architecture(self, design, eval_queue_url):
         # Unevaluate architecture
-        self.dbClient.unevaluate_architecture(design["db_id"])
+        # self.dbClient.unevaluate_architecture(design["db_id"])
+        async_to_sync(self.dataset_client.set_architecture_invalid)(design["db_id"])
         # Find arch in database
-        arch_info = self.dbClient.get_architecture(design["db_id"])
+        # arch_info = self.dbClient.get_architecture(design["db_id"])
+        arch_info = async_to_sync(self.dataset_client.get_architecture_pk)(design["db_id"])
         self.evaluate_architecture(design["inputs"], eval_queue_url, ga=arch_info["ga"], redo=True)
 
 
@@ -679,10 +681,11 @@ class VASSARClient:
         arch = {}
         if block:
             # --> OLD CODE, FOR THE BLOCKING BLOCKHEAD
-            result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
-            if not result:
+            # result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
+            result = async_to_sync(self.dataset_client.subscribe_to_architecture)(inputs, eosscontext.dataset_id, eosscontext.problem_id)
+            if result is None:
                 raise ValueError('---> Evaluation Timeout!!!!')
-            result_formatted = result['data']['Architecture'][0]
+            result_formatted = result[0]
             outputs = [result_formatted['science'], result_formatted['cost']]
             arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
         else:
@@ -695,8 +698,9 @@ class VASSARClient:
         return arch
 
     def subscribe_and_add(self, inputs, problem_id, dataset_id, user, session):
-        result = self.dbClient.subscribe_to_architecture(inputs, problem_id, dataset_id)
-        if result:
+        # result = self.dbClient.subscribe_to_architecture(inputs, problem_id, dataset_id)
+        result = async_to_sync(self.dataset_client.subscribe_to_architecture)(inputs, dataset_id, problem_id)
+        if result is not None:
             EOSS.data.design_helpers.add_design(session, user)
         return
 

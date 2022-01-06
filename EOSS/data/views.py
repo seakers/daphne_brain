@@ -13,6 +13,7 @@ from asgiref.sync import sync_to_async, async_to_sync
 from EOSS.graphql.client.Dataset import DatasetGraphqlClient
 from EOSS.graphql.client.Admin import AdminGraphqlClient
 from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 
 
@@ -272,7 +273,8 @@ class UploadData(APIView):
                     inputs = "".join(["1" if inp == "True" else "0" for inp in row[0:25]])
                     science = row[25]
                     cost = row[26]
-                    result = dbClient.insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost)
+                    async_to_sync(AbstractGraphqlClient.insert_architecture)(problem_id, dataset_id, user_id, inputs, science, cost)
+                    # result = dbClient.insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost)
             return Response({"YAY!"})
 
         except Exception:

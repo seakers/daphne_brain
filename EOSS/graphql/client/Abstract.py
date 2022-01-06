@@ -363,7 +363,7 @@ class AbstractGraphqlClient:
         return result['Problem']
 
     @staticmethod
-    async def get_orbits(problem_id=None, group_id=None, orbit_name=None, attributes=False):
+    async def get_orbits(problem_id=None, group_id=1, orbit_name=None, attributes=False):
 
         # --> 1. Where statements
         statements = []
@@ -581,7 +581,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (int(problem_id), int(arch_id), int(arch_id))
-        results = AbstractGraphqlClient.query(query)
+        results = await AbstractGraphqlClient.query(query)
         panels = results['panels']
         information = SubscoreWrapper(panels).get_info()
         print("\n---> all stakeholder info", information)
@@ -613,7 +613,27 @@ class AbstractGraphqlClient:
                 }
             }
         """ % int(arch_id)
-        results = AbstractGraphqlClient.query(query)
+        results = await AbstractGraphqlClient.query(query)
         cost_info = results['cost_info']
         information = MissionCostWrapper(cost_info).get_info()
         return information
+
+    @staticmethod
+    async def insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost):
+        mutation = """
+            mutation insert_architecture {
+                architecture: insert_Architecture_one(object: {problem_id: %d, dataset_id: %d, user_id: %d, input: "%s", science: %f, cost: %f, ga: false, eval_status: false, improve_hv: false}) {
+                    id
+                }
+            }
+        """ % (int(problem_id), int(dataset_id), int(user_id), str(inputs), float(science), float(cost))
+        return await AbstractGraphqlClient.query(mutation)
+
+
+
+
+
+
+
+
+

@@ -69,6 +69,23 @@ class GraphqlClient:
         else:
             self.problem_id = str(5)
 
+    def execute_query(self, query, variables=None):
+        json_body = {'query': query }
+        if variables is not None:
+            json_body['variables'] = variables
+        r = requests.post(self.hasura_url, json=json_body)
+        result = json.loads(r.text)
+        # print('\n-------- Query Result --------')
+        # print('----> URL:', self.hasura_url)
+        # print('--> QUERY:', query)
+        # pprint(result)
+        # print('-------------------------\n')
+        return result
+
+
+
+
+
     def get_architecture_from_id(self, arch_id):
         query = '''
         query get_architecture_from_id($arch_id: Int!) {
@@ -632,46 +649,6 @@ class GraphqlClient:
         mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
         return self.execute_query(mutation)
 
-
-    # ---------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def execute_query(self, query, variables=None):
-        json_body = {'query': query }
-        if variables is not None:
-            json_body['variables'] = variables
-        r = requests.post(self.hasura_url, json=json_body)
-        result = json.loads(r.text)
-        # print('\n-------- Query Result --------')
-        # print('----> URL:', self.hasura_url)
-        # print('--> QUERY:', query)
-        # pprint(result)
-        # print('-------------------------\n')
-        return result
-
     def subscribe_to_architecture(self, input, problem_id, dataset_id, timeout=1000):
         query = f'query subscribe_to_architecture {{ Architecture_aggregate(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}}, eval_status: {{_eq: true }} }})  {{ aggregate {{ count }} }} }}'
 
@@ -683,7 +660,7 @@ class GraphqlClient:
             counter = counter + 1
             if counter >= timeout:
                 return False
-        
+
         query = f'query get_architecture {{ Architecture(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ id input science cost }} }}'
         return self.execute_query(query)
 
@@ -708,3 +685,27 @@ class GraphqlClient:
             }}
         }}'''
         return self.execute_query(query)
+
+
+    # ---------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
