@@ -330,6 +330,9 @@ class AbstractGraphqlClient:
 
     @staticmethod
     async def add_user_to_group(user_id, group_id):
+        if group_id is None:
+            group_id = 1
+        
         mutation = """
             mutation insert_user_to_group {
                 insert_Join__AuthUser_Group_one(
@@ -405,6 +408,8 @@ class AbstractGraphqlClient:
 
     @staticmethod
     async def get_instruments(problem_id=None, group_id=None, instrument_name=None, attributes=False):
+        if group_id is None:
+            group_id = 1
 
         # --> 1. Where statements
         statements = []
@@ -447,6 +452,8 @@ class AbstractGraphqlClient:
 
     @staticmethod
     async def get_instrument_attributes(group_id=None, attribute_name=None):
+        if group_id is None:
+            group_id = 1
 
         # --> 1. Where statements
         statements = []
