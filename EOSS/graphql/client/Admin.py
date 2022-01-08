@@ -38,7 +38,7 @@ class AdminGraphqlClient(GQLClient):
             }
         """ % (int(self.user_id), int(group_id))
 
-        result = await self._execute(query)
+        result = await self._query(mutation)
         if 'insert_Join__AuthUser_Group_one' not in result:
             return None
         return result['insert_Join__AuthUser_Group_one']
@@ -50,16 +50,13 @@ class AdminGraphqlClient(GQLClient):
         # --> 1. Check to see if the user is already part of the group
         query = """
                 query add_to_group_check {
-                    panel: Join__AuthUser_Group_aggregate%s {
+                    panel: Join__AuthUser_Group_aggregate(where: {group_id: {_eq: %d}, user_id: {_eq: %d}}) {
                         aggregate {
                             count
                         }
                     }
                 }
-            """ % await GQLClient._where_wrapper([
-            await GQLClient._where('group_id', '_eq', int(group_id), int),
-            await GQLClient._where('user_id', '_eq', int(self.user_id), int)
-        ])
+            """ % (int(group_id), int(user_id))
         response = await self._query(query)
 
         if int(response['panel']['aggregate']['count']) > 0:

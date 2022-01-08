@@ -2,6 +2,7 @@ import timeit
 
 from EOSS.graphql.client.Abstract import AbstractGraphqlClient as GQLClient
 from daphne_context.models import UserInformation
+from EOSS.graphql.generation.WhereGenerator import WhereGenerator
 from asgiref.sync import async_to_sync, sync_to_async
 from concurrent.futures import ProcessPoolExecutor
 import asyncio
@@ -28,12 +29,7 @@ class ProblemGraphqlClient(GQLClient):
     async def get_orbits(self, problem_id=None, attributes=False):
         problem_id = await self._problem_id(problem_id)
 
-        # --> 1. Where
-        where_str = await self._where_wrapper([
-            await self._where_neighbor('Join__Problem_Orbits', 'problem_id', '_eq', int(problem_id), int)
-        ])
-
-        # --> 2. Return
+        # --> 1. Return
         return_str = ''
         if attributes is True:
             return_str = """
@@ -45,18 +41,18 @@ class ProblemGraphqlClient(GQLClient):
                 }
             """
 
-        # --> 3. Query
+        # --> 2. Query
         query = """        
             query get_orbit_list {
-                Orbit%s{
+                Orbit(where: {Join__Problem_Orbits: {problem_id: {_eq: %d}}}){
                     id
                     name
                     %s
                 }
             }
-        """ % (where_str, return_str)
+        """ % (int(problem_id), return_str)
 
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Orbit' not in result:
             return None
         return result['Orbit']
@@ -115,7 +111,7 @@ class ProblemGraphqlClient(GQLClient):
             }
         """ % (int(problem_id), attr_str, meas_str, capa_str)
 
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Instrument' not in result:
             return None
         return result['Instrument']
@@ -124,21 +120,16 @@ class ProblemGraphqlClient(GQLClient):
         if group_id is None:
             group_id = self.group_id
 
-        # --> 1. Where
-        where_str = await self._where_wrapper([
-            await self._where('group_id', '_eq', int(group_id), int)
-        ])
-
         query = """
             query get_instrument_attributes {
-                attributes: Instrument_Attribute%s {
+                attributes: Instrument_Attribute(where: {group_id: {_eq: %d}}) {
                     id
                     name
                 }
             }
-        """ % where_str
+        """ % int(group_id)
 
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'attributes' not in result:
             return None
         return result['attributes']
@@ -148,13 +139,19 @@ class ProblemGraphqlClient(GQLClient):
             problem_id = self.problem_id
 
         # --> 1. Where
-        statements = []
+        statements = {}
+        statements['problem_id'] = {'type': int, 'logic': '_eq', 'value': problem_id}
         if attribute is not None:
-            statements.append(await self._where_neighbor('Instrument_Attribute', 'name', '_eq', str(attribute), str))
+            nested = {
+                'name': {'type': str, 'logic': '_eq', 'value': attribute},
+            }
+            statements['Instrument_Attribute'] = {'statements': nested}
         if instrument is not None:
-            statements.append(await self._where_neighbor('Instrument', 'name', '_eq', str(instrument), str))
-        statements.append(await self._where('problem_id', '_eq', int(problem_id), int))
-        where_str = await self._where_wrapper(statements)
+            nested = {
+                'name': {'type': str, 'logic': '_eq', 'value': instrument},
+            }
+            statements['Instrument'] = {'statements': nested}
+        where_str = await WhereGenerator.from_dict(statements)
 
         # --> 2. Query
         query = """
@@ -173,7 +170,7 @@ class ProblemGraphqlClient(GQLClient):
         """ % where_str
 
         # --> 3. Result
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'attribute_value' not in result:
             return None
         return result['attribute_value']
@@ -183,15 +180,21 @@ class ProblemGraphqlClient(GQLClient):
             group_id = self.group_id
 
         # --> 1. Where
-        statements = []
+        statements = {}
         if attribute is not None:
-            statements.append(await self._where_neighbor('Measurement_Attribute', 'name', '_eq', str(attribute), str))
+            statements['Measurement_Attribute'] = {'statements': {
+                'name': {'type': str, 'logic': '_eq', 'value': attribute},
+            }}
         if instrument is not None:
-            statements.append(await self._where_neighbor('Instrument', 'name', '_eq', str(instrument), str))
+            statements['Instrument'] = {'statements': {
+                'name': {'type': str, 'logic': '_eq', 'value': instrument},
+            }}
         if measurement is not None:
-            statements.append(await self._where_neighbor('Measurement', 'name', '_eq', str(measurement), str))
-        statements.append(await self._where('group_id', '_eq', int(group_id), int))
-        where_str = await self._where_wrapper(statements)
+            statements['Measurement'] = {'statements': {
+                'name': {'type': str, 'logic': '_eq', 'value': measurement},
+            }}
+        statements['group_id'] = {'type': int, 'logic': '_eq', 'value': group_id}
+        where_str = await WhereGenerator.from_dict(statements)
 
         # --> 2. Query
         query = """
@@ -213,7 +216,7 @@ class ProblemGraphqlClient(GQLClient):
         """ % where_str
 
         # --> 3. Result
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'capability_value' not in result:
             return None
         return result['capability_value']
@@ -223,15 +226,27 @@ class ProblemGraphqlClient(GQLClient):
             problem_id = self.problem_id
 
         # --> 1. Where
-        statements = []
+        statements = {}
         if measurement_attribute is not None:
-            statements.append(await self._where_neighbor('Measurement_Attribute', 'name', '_eq', str(measurement_attribute), str))
+            statements['Measurement_Attribute'] = {'statements': {
+                'name': {'type': str, 'logic': '_eq', 'value': measurement_attribute},
+            }}
         if subobjective is not None:
-            statements.append(await self._where_neighbor('Stakeholder_Needs_Subobjective', 'name', '_eq', str(subobjective), str))
+            statements['Stakeholder_Needs_Subobjective'] = {'statements': {
+                'name': {'type': str, 'logic': '_eq', 'value': subobjective},
+            }}
         if measurement_name is not None:
-            statements.append(await self._where_neighbor('Measurement', 'name', '_eq', str(measurement_name), str))
-        statements.append(await self._where('problem_id', '_eq', int(problem_id), int))
-        where_str = await self._where_wrapper(statements, distinct=distinct)
+            statements['Measurement'] = {'statements': {
+                'name': {'type': str, 'logic': '_eq', 'value': measurement_name},
+            }}
+        statements['problem_id'] = {'type': int, 'logic': '_eq', 'value': problem_id}
+        where_str = await WhereGenerator.from_dict(statements)
+
+
+
+
+
+
 
         # --> 2. Query
         query = """
@@ -253,7 +268,7 @@ class ProblemGraphqlClient(GQLClient):
         """ % where_str
 
         # --> 3. Result
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'requirements' not in result:
             return None
         return result['requirements']
@@ -299,7 +314,7 @@ class ProblemGraphqlClient(GQLClient):
                     }
                 """ % where_statement
 
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'requirements' not in result:
             return None
         return result['requirements']
@@ -348,7 +363,7 @@ class ProblemGraphqlClient(GQLClient):
             }
         """ % (panel_str, objective_str, subobjective_str)
 
-        return await self._execute(query)
+        return await self._query(query)
 
 
     ############
@@ -360,23 +375,23 @@ class ProblemGraphqlClient(GQLClient):
             problem_id = self.problem_id
 
         # --> 1. Where
-        where_build = ','.join([
-            await self._where('problem_id', '_eq', int(problem_id), int),
-            await self._where('name', '_eq', str(objective), str)
-        ])
-        where_build = await GQLClient._table_wrap('Stakeholder_Needs_Objective', where_build)
-        where_build = ','.join([
-            where_build,
-            await self._where('problem_id', '_eq', int(problem_id), int),
-        ])
-        where_build = await GQLClient._table_wrap('Requirement_Rule_Attributes', where_build)
-        where_build = await GQLClient._table_wrap('Measurement', where_build)
-        where_build = ','.join([
-            where_build,
-            await self._where('problem_id', '_eq', int(problem_id), int),
-        ])
-        where_build = await GQLClient._table_wrap('Join__Instrument_Measurements', where_build)
-        where_str = await GQLClient._where_wrapper(where_build)
+        statements = {}
+        statements['Join__Instrument_Measurements'] = {'statements': {
+            'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+            'Measurement': {'statements': {
+                'Requirement_Rule_Attributes': {'statements': {
+                    'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                    'Stakeholder_Needs_Objective': {'statements': {
+                        'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                        'name': {'type': str, 'logic': '_eq', 'value': objective},
+                    }}
+                }}
+            }}
+        }}
+        where_str = await WhereGenerator.from_dict(statements)
+
+
+
 
         # --> 2. Query
         query = """
@@ -389,7 +404,7 @@ class ProblemGraphqlClient(GQLClient):
         """ % where_str
 
         # --> 3. Result
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Instrument' not in result:
             return None
         return result['Instrument']
@@ -399,33 +414,33 @@ class ProblemGraphqlClient(GQLClient):
             problem_id = self.problem_id
 
         # --> 1. Where
-        where_build = ','.join([
-            await self._where('problem_id', '_eq', int(problem_id), int),
-            await self._where('name', '_eq', str(panel), str)
-        ])
-        where_build = await GQLClient._table_wrap('Stakeholder_Needs_Panel', where_build)
-        where_build = ','.join([
-            where_build,
-            await self._where('problem_id', '_eq', int(problem_id), int),
-        ])
-        where_build = await GQLClient._table_wrap('Stakeholder_Needs_Objective', where_build)
-        where_build = ','.join([
-            where_build,
-            await self._where('problem_id', '_eq', int(problem_id), int),
-        ])
-        where_build = await GQLClient._table_wrap('Stakeholder_Needs_Subobjective', where_build)
-        where_build = ','.join([
-            where_build,
-            await self._where('problem_id', '_eq', int(problem_id), int),
-        ])
-        where_build = await GQLClient._table_wrap('Requirement_Rule_Attributes', where_build)
-        where_build = await GQLClient._table_wrap('Measurement', where_build)
-        where_build = ','.join([
-            where_build,
-            await self._where('problem_id', '_eq', int(problem_id), int),
-        ])
-        where_build = await GQLClient._table_wrap('Join__Instrument_Measurements', where_build)
-        where_str = await GQLClient._where_wrapper(where_build)
+        statements = {}
+        statements['Join__Instrument_Measurements'] = {'statements': {
+            'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+            'Measurement': {'statements': {
+                'Requirement_Rule_Attributes': {'statements': {
+                    'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                    'Stakeholder_Needs_Subobjective': {'statements': {
+                        'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                        'Stakeholder_Needs_Objective': {'statements': {
+                            'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                            'Stakeholder_Needs_Panel': {'statements': {
+                                'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                                'name': {'type': str, 'logic': '_eq', 'value': panel},
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}
+        where_str = await WhereGenerator.from_dict(statements)
+
+
+
+
+
+
+
 
         # --> 2. Query
         query = """
@@ -438,7 +453,7 @@ class ProblemGraphqlClient(GQLClient):
         """ % where_str
 
         # --> 3. Result
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Instrument' not in result:
             return None
         return result['Instrument']
