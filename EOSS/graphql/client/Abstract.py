@@ -5,6 +5,7 @@ import json
 from concurrent.futures import ProcessPoolExecutor
 
 from EOSS.aws.utils import graphql_server_address
+from EOSS.graphql.generation.WhereGenerator import WhereGenerator
 
 from gql import Client as GQLClient
 from gql.transport.websockets import WebsocketsTransport
@@ -108,35 +109,23 @@ class AbstractGraphqlClient:
         # --> 2. Get client from schema file
         self.hasura_url = graphql_server_address()
 
-    async def _schema(self):
+    @property
+    def schema(self):
         schema_content = ""
         with open('/app/daphne/daphne_brain/EOSS/graphql/schema.graphql') as f:
-            schema_content = await sync_to_async(f.read)()
-        schema_parsed = await sync_to_async(parse)(schema_content)
-        return await sync_to_async(build_ast_schema)(schema_parsed)
+            schema_content = f.read()
+        schema_parsed = parse(schema_content)
+        return build_ast_schema(schema_parsed)
 
-    async def _execute2_gql(self, query):
-        transport = AIOHTTPTransport(url='http://graphql:8080/v1/graphql')
-        async with GQLClient(transport=transport, fetch_schema_from_transport=False, ) as session:
-            return await session.execute(query)
 
-    async def _execute(self, query):
-        async with aiohttp.ClientSession() as session:
-            async with session.post('http://graphql:8080/v1/graphql', json={'query': query}) as response:
-                result = json.loads(await response.text())
-                if 'data' not in result:
-                    return dict()
-                return result['data']
 
-    def save_to_file(self, input, file_name):
+
+    @staticmethod
+    def _save(input, file_name):
         file_path = '/app/daphne/daphne_brain/EOSS/graphql/output/' + file_name
         f = open(file_path, "w+")
         f.write(input)
         f.close()
-
-
-
-
 
     @staticmethod
     async def _proc(func, *args):
@@ -154,19 +143,6 @@ class AbstractGraphqlClient:
                 if 'data' not in result:
                     return dict()
                 return result['data']
-
-
-    @staticmethod
-    async def query(query):
-        async with aiohttp.ClientSession() as session:
-            async with session.post('http://graphql:8080/v1/graphql', json={'query': query}) as response:
-                result = json.loads(await response.text())
-                if 'data' not in result:
-                    return dict()
-                return result['data']
-
-
-
 
     @staticmethod
     async def _subscribe(subscription, tries=5, sleep_time=2):
@@ -196,125 +172,6 @@ class AbstractGraphqlClient:
         print('--> ITEM NOT FOUND IN', tries * sleep_time, 'SECONDS')
         return None
 
-    @staticmethod
-    async def _table(table_name, where=None, get=None):
-
-        query = """
-            query abstract_query {
-
-
-
-            }   
-        """
-
-    @staticmethod
-    async def _where(where_dict):
-
-        # --> 1. Build where string
-        where_list = []
-        for key, value in where_dict.items():
-            # --> problem_id: {_eq: %d}
-            temp_str = ''
-            if value['type'] == 'string':
-                temp_str = """%s: {%s: "%s"}""" % (str(key), str(value['logic']), str(value['value']))
-            if value['type'] == 'int':
-                temp_str = """%s: {%s: %d}""" % (str(key), str(value['logic']), int(value['value']))
-            if value['type'] == 'float':
-                temp_str = """%s: {%s: %f}""" % (str(key), str(value['logic']), float(value['value']))
-            where_list.append(temp_str)
-        where_str = ''
-        if len(where_list) > 0:
-            where_str = ', '.join(where_list)
-
-        # --> 2. Build and return final statement
-        statement = """
-            (where: {%s})
-        """ % where_str
-
-        return statement
-
-    @staticmethod
-    async def _where(field, logic, value, value_type):
-        if value_type == str:
-            return """%s: {%s: "%s"}""" % (field, logic, value)
-        elif value_type == int:
-            return """%s: {%s: %d}""" % (field, logic, value)
-        elif value_type == float:
-            return """%s: {%s: %f}""" % (field, logic, value)
-        elif value_type == list:
-            value_str = ''
-            if isinstance(value, list):
-                value_str = '[' + ','.join(value) + ']'
-                return """%s: {%s: %s}""" % (field, logic, value_str)
-            return """%s: {%s: %s}""" % (field, logic, value)
-        return ''
-
-    @staticmethod
-    async def _where_neighbor(neighbor, field, logic, value, value_type):
-        return """
-            %s: {%s}
-        """ % (neighbor, await AbstractGraphqlClient._where(field, logic, value, value_type))
-
-    @staticmethod
-    async def _table_wrap(table, value):
-        return """
-                %s: {%s}
-        """ % (table, value)
-
-    @staticmethod
-    async def _where_wrapper(statements, distinct=None):
-
-        # --> 1. Distinct
-        distinct_str = ''
-        if distinct is not None:
-            distinct_str = """distinct_on: %s """ % str(distinct)
-
-        # --> 2. Where
-        where_string = ''
-        if isinstance(statements, str):
-            where_string = """ where: {%s} """ % statements
-        elif isinstance(statements, list):
-            if len(statements) > 0:
-                statement_str = ','.join(statements)
-                where_string = """ where: {%s} """ % statement_str
-
-        # --> 3. Build and return
-        if distinct_str == '' and where_string == '':
-            return ''
-        where_statement = '(' + distinct_str + ' ' + where_string + ')'
-        return where_statement
-
-
-
-    @staticmethod
-    async def _format_input(inputs):
-        ### Inputs could be one of three forms --> convert as necessary
-        # 1. List of bits
-        # 2. List of booleans
-        # 3. String of bits (required for eval)
-        converted_inputs = ''
-        if isinstance(inputs, list):
-            if len(inputs) > 0:
-                if isinstance(inputs[0], int):
-                    for x in inputs:
-                        if x == 0:
-                            converted_inputs += '0'
-                        elif x == 1:
-                            converted_inputs += '1'
-                elif isinstance(inputs[0], bool):
-                    for x in inputs:
-                        if x == False:
-                            converted_inputs += '0'
-                        elif x == True:
-                            converted_inputs += '1'
-            else:
-                print('--> INPUT LIST EMPTY')
-                return None
-        else:
-            converted_inputs = inputs
-        return converted_inputs
-
-
 
 
     """
@@ -326,13 +183,16 @@ class AbstractGraphqlClient:
         |_____/| .__/ \___|\___|_|_| |_|\___| |_|  \_\___|\__, |\__,_|\___||___/\__|___/
                | |                                           | |                        
                |_|                                           |_|                  
+    
+        - Sometime queries need to be ran when a UserInformation object is not available... When this is the 
+            case, these static method queries are called.
     """
 
     @staticmethod
     async def add_user_to_group(user_id, group_id):
         if group_id is None:
             group_id = 1
-        
+
         mutation = """
             mutation insert_user_to_group {
                 insert_Join__AuthUser_Group_one(
@@ -344,7 +204,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (int(user_id), int(group_id))
-        result = await AbstractGraphqlClient.query(mutation)
+        result = await AbstractGraphqlClient._query(mutation)
         if 'insert_Join__AuthUser_Group_one' not in result:
             return None
         return result['insert_Join__AuthUser_Group_one']
@@ -360,7 +220,7 @@ class AbstractGraphqlClient:
                 }
             }
         """
-        result = await AbstractGraphqlClient.query(query)
+        result = await AbstractGraphqlClient._query(query)
         if 'Problem' not in result:
             return None
         return result['Problem']
@@ -371,12 +231,14 @@ class AbstractGraphqlClient:
             group_id = 1
 
         # --> 1. Where statements
-        statements = []
+        statements = {}
+        if group_id is not None:
+            statements['group_id'] = {'type': int, 'logic': '_eq', 'value': group_id}
         if problem_id is not None:
-            statements.append(await AbstractGraphqlClient._where_neighbor('Join__Problem_Orbits', 'problem_id', '_eq', int(problem_id), int))
-        if problem_id is not None:
-            statements.append(await AbstractGraphqlClient._where('group_id', '_eq', int(group_id), int))
-        where_str = await AbstractGraphqlClient._where_wrapper(statements)
+            nested = {}
+            nested['problem_id'] = {'type': int, 'logic': '_eq', 'value': problem_id}
+            statements['Join__Problem_Orbits'] = {'statements': nested}
+        where_str = await WhereGenerator.from_dict(statements)
 
         # --> 2. Return statements
         return_str = """
@@ -401,7 +263,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (where_str, return_str)
-        result = await AbstractGraphqlClient.query(query)
+        result = await AbstractGraphqlClient._query(query)
         if 'Orbit' not in result:
             return None
         return result['Orbit']
@@ -412,12 +274,14 @@ class AbstractGraphqlClient:
             group_id = 1
 
         # --> 1. Where statements
-        statements = []
+        statements = {}
+        if group_id is not None:
+            statements['group_id'] = {'type': int, 'logic': '_eq', 'value': group_id}
         if problem_id is not None:
-            statements.append(await AbstractGraphqlClient._where_neighbor('Join__Problem_Instruments', 'problem_id', '_eq', int(problem_id), int))
-        if problem_id is not None:
-            statements.append(await AbstractGraphqlClient._where('group_id', '_eq', int(group_id), int))
-        where_str = await AbstractGraphqlClient._where_wrapper(statements)
+            nested = {}
+            nested['problem_id'] = {'type': int, 'logic': '_eq', 'value': problem_id}
+            statements['Join__Problem_Instruments'] = {'statements': nested}
+        where_str = await WhereGenerator.from_dict(statements)
 
         # --> 2. Return statements
         return_str = """
@@ -427,7 +291,7 @@ class AbstractGraphqlClient:
         if attributes is True:
             temp_where_str = ''
             if problem_id is not None:
-                temp_where_str = await AbstractGraphqlClient._where_wrapper([await AbstractGraphqlClient._where('problem_id', '_eq', int(group_id), int)])
+                temp_where_str = """(where: {problem_id: {_eq: %d}})""" % int(problem_id)
             return_str += """
                 attributes: Join__Instrument_Characteristics%s {
                     value
@@ -445,7 +309,7 @@ class AbstractGraphqlClient:
                     }
                 }
             """ % (where_str, return_str)
-        result = await AbstractGraphqlClient.query(query)
+        result = await AbstractGraphqlClient._query(query)
         if 'Instrument' not in result:
             return None
         return result['Instrument']
@@ -456,12 +320,12 @@ class AbstractGraphqlClient:
             group_id = 1
 
         # --> 1. Where statements
-        statements = []
+        statements = {}
         if group_id is not None:
-            statements.append(await AbstractGraphqlClient._where('group_id', '_eq', int(group_id), int))
+            statements['group_id'] = {'type': int, 'logic': '_eq', 'value': group_id}
         if attribute_name is not None:
-            statements.append(await AbstractGraphqlClient._where('name', '_eq', str(attribute_name), str))
-        where_str = await AbstractGraphqlClient._where_wrapper(statements)
+            statements['name'] = {'type': str, 'logic': '_eq', 'value': str(attribute_name)}
+        where_str = await WhereGenerator.from_dict(statements)
 
         # --> 2. Return statements
         return_str = """
@@ -477,7 +341,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (where_str, return_str)
-        result = await AbstractGraphqlClient.query(query)
+        result = await AbstractGraphqlClient._query(query)
         if 'attributes' not in result:
             return None
         return result['attributes']
@@ -486,10 +350,10 @@ class AbstractGraphqlClient:
     async def get_measurements(problem_id=None):
 
         # --> 1. Where statements
-        statements = []
+        statements = {}
         if problem_id is not None:
-            statements.append(await AbstractGraphqlClient._where('problem_id', '_eq', int(problem_id), int))
-        where_str = await AbstractGraphqlClient._where_wrapper(statements, distinct='[measurement_id]')
+            statements['problem_id'] = {'type': int, 'logic': '_eq', 'value': problem_id}
+        where_str = await WhereGenerator.from_dict(statements)
 
         # --> 2. Return statements
         return_str = """
@@ -507,7 +371,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (where_str, return_str)
-        result = await AbstractGraphqlClient.query(query)
+        result = await AbstractGraphqlClient._query(query)
         if 'measurements' not in result:
             return None
         return result['measurements']
@@ -555,7 +419,7 @@ class AbstractGraphqlClient:
                 %s
             }
         """ % (panel_str, objective_str, subobjective_str)
-        return await AbstractGraphqlClient.query(query)
+        return await AbstractGraphqlClient._query(query)
 
     @staticmethod
     async def get_arch_science_info(problem_id, arch_id):
@@ -590,7 +454,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (int(problem_id), int(arch_id), int(arch_id))
-        results = await AbstractGraphqlClient.query(query)
+        results = await AbstractGraphqlClient._query(query)
         panels = results['panels']
         information = SubscoreWrapper(panels).get_info()
         print("\n---> all stakeholder info", information)
@@ -622,7 +486,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % int(arch_id)
-        results = await AbstractGraphqlClient.query(query)
+        results = await AbstractGraphqlClient._query(query)
         cost_info = results['cost_info']
         information = MissionCostWrapper(cost_info).get_info()
         return information
@@ -636,7 +500,7 @@ class AbstractGraphqlClient:
                 }
             }
         """ % (int(problem_id), int(dataset_id), int(user_id), str(inputs), float(science), float(cost))
-        return await AbstractGraphqlClient.query(mutation)
+        return await AbstractGraphqlClient._query(mutation)
 
 
 
