@@ -1,5 +1,6 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from asgiref.sync import async_to_sync, sync_to_async
 
 
 """
@@ -10,9 +11,14 @@ from concurrent.futures import ProcessPoolExecutor
     - To do this, simply import the _proc function and pass it a SYNCHRONOUS function and any parameters
 """
 
-async def _proc(func, *args):
+async def _proc(func, *args, debug=False):
     loop = asyncio.get_running_loop()
     result = None
+
+    # --> Run in current process if debugging
+    if debug is True:
+        return await sync_to_async(func)(*args)
+
+    # --> Run in new process for production
     with ProcessPoolExecutor(max_workers=1) as pool:
-        result = await loop.run_in_executor(pool, func, *args)
-    return result
+        return await loop.run_in_executor(pool, func, *args)

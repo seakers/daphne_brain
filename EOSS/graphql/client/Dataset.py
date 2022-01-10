@@ -96,6 +96,12 @@ class DatasetGraphqlClient(Client):
               architecture_id
             }
         """
+        self.into_experiment = """
+            data_continuity
+            fairness
+            programmatic_risk
+            eval_idx
+        """
 
         # --> Initialization (handles case: dataset_id == -1)
         # async_to_sync(self.initialize)()
@@ -314,8 +320,30 @@ class DatasetGraphqlClient(Client):
             return None
         target_id = new_dataset['id']
 
-        # --> 2. Clone architectures
-        await self.clone_architectures(source_id, target_id, costs=costs, scores=scores)
+        # --> 2. Get architectures from source dataset
+        architectures = await self.get_architectures(dataset_id=source_id, costs=costs, scores=scores)
+
+        # --> 3. Open new process to clone archs
+        arch_strings = await CloneGenerator(self.user_info).architectures(architectures, target_id, costs, scores)
+
+        # --> 4. Build mutation
+        mutation = """
+            mutation insert_architectures {
+                insert_Architecture(
+                    objects: %s
+                ) {
+                    returning {
+                        id
+                    }
+                }
+            }
+        """ % arch_strings
+        # await sync_to_async(self._save)(mutation_string, 'mutation.json')
+
+        # --> 5. Execute mutation and return new dataset id
+        await self._query(mutation)
+
+
         return target_id
 
     #############
@@ -419,17 +447,14 @@ class DatasetGraphqlClient(Client):
             info_list += self.info_scores
 
         # --> 3. Build query
-        query_start = """
-                    query get_architectures {
-                        Architecture(
-                            where: {dataset_id: {_eq: %d}, problem_id: {_eq: %d}}
-                        ) { 
-                """ % (dataset_id, problem_id)
-        query_end = """
-                        }
-                    } 
-                """
-        query = await self.wrap_query(query_start + info_list + query_end)
+        query = """
+            query get_architectures {
+                Architecture(where: {dataset_id: {_eq: %d}, problem_id: {_eq: %d}}) {
+                    %s
+                }
+            }
+        """ % (dataset_id, problem_id, info_list)
+
 
         # --> 4. Run query
         result = await self._query(query)
@@ -605,36 +630,6 @@ class DatasetGraphqlClient(Client):
         return int(result['item']['affected_rows']) > 0
 
     #############
-    ### CLONE ###
-    #############
-
-    async def clone_architectures(self, source_id, target_id, costs=False, scores=False):
-
-        # --> 1. Get architectures from source dataset
-        architectures = await self.get_architectures(dataset_id=source_id, costs=costs, scores=scores)
-
-        # --> 2. Open new process to clone archs
-        arch_strings = await CloneGenerator().architectures(architectures, target_id, costs, scores)
-
-        # --> 3. Build mutation
-        mutation_string = """
-                mutation insert_architectures {
-                    insert_Architecture(
-                        objects: %s
-                    ) {
-                        returning {
-                            id
-                        }
-                    }
-                }
-            """ % (arch_strings)
-        # await sync_to_async(self._save)(mutation_string, 'mutation.json')
-        mutation = await self.wrap_query(mutation_string)
-
-        # --> 4. Execute mutation
-        result = await self._query(mutation)
-
-    #############
     ### CHECK ###
     #############
 
@@ -684,12 +679,12 @@ class DatasetGraphqlClient(Client):
             }
         """ % (int(problem_id), int(dataset_id), await self._format_input(input))
         result = await self._query(query)
-        if 'items' not in result:
+        if result is None or 'items' not in result:
             return False, None
-        count = result['items']['aggregate']['count']
-        arch_id = None
-        if count > 0:
+        if int(result['items']['aggregate']['count']) > 0:
             arch_id = result["items"]["nodes"][0]["id"]
+            return True, arch_id
+        return False, None
 
     #################
     ### SUBSCRIBE ###
