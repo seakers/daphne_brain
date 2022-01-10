@@ -8,13 +8,17 @@ from EOSS.graphql.utils import _proc
 
 class CloneGenerator:
 
-    def __init__(self):
+    def __init__(self, user_info=None):
         self.init = 0
+        self.user_info = user_info
 
         #####################
         ### EXAMPLE USAGE ###
         #####################
 
+    ####################
+    ### ARCHITECTURE ###
+    ####################
 
     async def architectures(self, architectures, dataset_id, costs=False, scores=False):
         return await _proc(self._clone_architecture_strings, architectures, dataset_id, costs, scores)
@@ -23,9 +27,7 @@ class CloneGenerator:
         arch_list = []
         for idx, arch in enumerate(architectures):
             arch_list.append(self._clone_architecture(arch, dataset_id, costs=costs, scores=scores))
-
-        result = '[' + ','.join(arch_list) + ']'
-        return result
+        return '[' + ','.join(arch_list) + ']'
 
     def _clone_architecture(self, architecture, dataset_id, costs=False, scores=False):
 
@@ -35,11 +37,13 @@ class CloneGenerator:
             else:
                 return "false"
 
+        # --> 1. Build cost string
         cost_string = """"""
         if costs is True:
             cost_info = self._clone_architecture_cost_info(architecture)
             cost_string = """ArchitectureCostInformations: {data: %s},""" % cost_info
 
+        # --> 2. Build score string
         score_string = """"""
         if scores is True:
             score_info = self._clone_architecture_score_info(architecture)
@@ -55,25 +59,31 @@ class CloneGenerator:
                 score_info['subobjective']
             )
 
-        eval_status = True
-        if costs is False or scores is False:
-            eval_status = False
+        # --> 3. Ensure correct if user id is None
+        user_id = architecture['user_id']
+        if user_id is None:
+            if self.user_info is not None:
+                user_id = self.user_info.user.id
+        else:
+            user_id = int(user_id)
 
+        # --> 4. Set eval status to false when cloning an arch without cost or score info
+        eval_status = convert_bool(architecture['eval_status'])
+        # if costs is False or scores is False:
+        #     eval_status = False
+
+        # --> 5. Compose final string
         clone = """{
               %s 
               %s 
               cost: %f, 
               critique: "%s", 
-              data_continuity: %f, 
               dataset_id: %d, 
-              eval_idx: %d, 
               eval_status: %s, 
-              fairness: %f, 
               ga: %s, 
               improve_hv: %s, 
               input: "%s", 
               problem_id: %d, 
-              programmatic_risk: %f, 
               science: %f, 
               user_id: %d
             }
@@ -82,18 +92,18 @@ class CloneGenerator:
             score_string,
             float(architecture['cost']),
             architecture['critique'],
-            architecture['data_continuity'],
+            # architecture['data_continuity'],
             int(dataset_id),
-            architecture['eval_idx'],
-            convert_bool(eval_status),
-            float(architecture['fairness']),
+            # architecture['eval_idx'],
+            eval_status,
+            # float(architecture['fairness']),
             convert_bool(architecture['ga']),
             convert_bool(architecture['improve_hv']),
             architecture['input'],
             architecture['problem_id'],
-            float(architecture['programmatic_risk']),
+            # float(architecture['programmatic_risk']),
             float(architecture['science']),
-            architecture['user_id']
+            user_id
         )
 
         return clone
@@ -216,3 +226,13 @@ class CloneGenerator:
         all_payload_info += ']'
 
         return all_payload_info
+
+    ###############
+    ### PROBLEM ###
+    ###############
+
+
+
+
+
+

@@ -133,7 +133,7 @@ class CopyData(APIView):
                 # Clone dataset
                 dbClient = GraphqlClient(problem_id=problem_id)
                 # dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
-                dst_dataset_id = async_to_sync(dataset_client.clone_dataset)(src_dataset_id, dst_dataset_name, False)
+                dst_dataset_id = async_to_sync(dataset_client.clone_dataset)(src_dataset_id, dst_dataset_name, False, False, False)
 
                 # Return architectures
                 return Response({
