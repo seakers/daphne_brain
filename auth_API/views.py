@@ -1,15 +1,15 @@
 import json
 import os
 
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from rest_framework.views import APIView
 
-from auth_API.helpers import get_or_create_user_information, get_user_information
+from auth_API.helpers import get_or_create_user_information, get_user_information, str_to_bool
 from daphne_context.models import UserInformation
 
 
@@ -23,35 +23,78 @@ class Login(APIView):
         username = request.data['username']
         password = request.data['password']
         daphne_version = request.data['daphneVersion']
+        isSecondUser = str_to_bool(request.data['isSecondUser'])
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            # Try to look for user session object. If it exists, then the session will be changed to that. If not,
-            # the current session information will be transferred to the user
-            userinfo_qs = UserInformation.objects.filter(user__exact=user)
 
-            if len(userinfo_qs) == 0:
-                # Try to get or create a session user_info from the session and transfer it to the user
-                userinfo = get_or_create_user_information(request.session, user, daphne_version)
-                userinfo.user = user
-                userinfo.session = None
-                userinfo.save()
+            try:
+                user_info = get_user_information(None, user)
+            except Exception:
+                user_info = None
+            if (not isSecondUser) and (user_info is None or not hasattr(user_info, "atexperimentcontext") or (not
+            user_info.atexperimentcontext.is_running)):
+                # Try to look for user session object. If it exists, then the session will be changed to that. If not,
+                # the current session information will be transferred to the user
+                userinfo_qs = UserInformation.objects.filter(user__exact=user)
 
-            if len(userinfo_qs) != 0:
-                # Force the user information daphne version to be the one from the login
-                userinfo = userinfo_qs[0]
-                userinfo.daphne_version = daphne_version
-                userinfo.save()
+                if len(userinfo_qs) == 0:
+                    # Try to get or create a session user_info from the session and transfer it to the user
+                    userinfo = get_or_create_user_information(request.session, user, daphne_version)
+                    userinfo.user = user
+                    userinfo.session = None
+                    userinfo.save()
 
-            # Log the user in
-            login(request, user)
+                if len(userinfo_qs) != 0:
+                    # Force the user information daphne version to be the one from the login
+                    userinfo = userinfo_qs[0]
+                    userinfo.daphne_version = daphne_version
+                    userinfo.save()
 
-            # Return the login response
-            return Response({
-                'status': 'logged_in',
-                'username': username,
-                'permissions': []
-            })
+                # Log the user in
+                login(request, user)
+
+                # Return the login response
+                return Response({
+                    'status': 'logged_in',
+                    'username': username,
+                    'password': password,
+                    'permissions': []
+                })
+            elif isSecondUser:
+                # If the User has clicked on Yes to continue with the session
+                # Try to look for user session object. If it exists, then the session will be changed to that. If not,
+                # the current session information will be transferred to the user
+                userinfo_qs = UserInformation.objects.filter(user__exact=user)
+
+                if len(userinfo_qs) == 0:
+                    # Try to get or create a session user_info from the session and transfer it to the user
+                    userinfo = get_or_create_user_information(request.session, user, daphne_version)
+                    userinfo.user = user
+                    userinfo.session = None
+                    userinfo.save()
+
+                if len(userinfo_qs) != 0:
+                    # Force the user information daphne version to be the one from the login
+                    userinfo = userinfo_qs[0]
+                    userinfo.daphne_version = daphne_version
+                    userinfo.save()
+
+                # Log the user in
+                login(request, user)
+
+                # Return the login response
+                return Response({
+                    'status': 'logged_in',
+                    'username': username,
+                    'permissions': []
+                })
+            else:
+                return Response({
+                    'status': 'login_alert',
+                    'login_error': 'This user is currently in an experiment! If you login with this username, '
+                                   'they will loose all their data. Are you sure you want to continue? '
+                })
         else:
             # TODO: Get different messages based on auth error
             return Response({
@@ -64,6 +107,7 @@ class Logout(APIView):
     """
     Logout a user -> Important!! When the frontend logs out it needs to start fresh
     """
+
     def post(self, request, format=None):
         # Log the user out
         logout(request)
@@ -77,6 +121,7 @@ class Register(APIView):
     """
     Register a user
     """
+
     def post(self, request, format=None):
         username = request.data["username"]
         email = request.data["email"]
@@ -136,6 +181,7 @@ class ResetPassword(APIView):
     """
     Send a reset password email
     """
+
     def post(self, request, format=None):
         password_reset_form = PasswordResetForm(request.POST)
         if password_reset_form.is_valid():
@@ -154,6 +200,7 @@ class CheckStatus(APIView):
     """
     Check if a user is logged in
     """
+
     def get(self, request, format=None):
 
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
@@ -190,6 +237,7 @@ class GenerateSession(APIView):
     """
     Simply generate a session for the user (solves a ton of bugs)
     """
+
     def post(self, request, format=None):
         request.session.set_expiry(0)
         request.session.save()

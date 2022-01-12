@@ -49,7 +49,6 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
 
 
 def get_user_information(session, user):
-
     if user.is_authenticated:
         # First try lookup by username
         userinfo_qs = UserInformation.objects.filter(user__exact=user)
@@ -76,3 +75,12 @@ def get_or_create_user_information(session, user, version='EOSS'):
             return create_user_information(username=user.username, version=version)
         else:
             return create_user_information(session_key=session.session_key, version=version)
+
+
+def str_to_bool(s):
+    if (s == 'True') or (s == 'true'):
+        return True
+    elif (s == 'False') or (s == 'false'):
+        return False
+    else:
+        raise ValueError("Cannot covert {} to a bool".format(s))
