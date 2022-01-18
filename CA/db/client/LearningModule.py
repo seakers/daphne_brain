@@ -1,6 +1,7 @@
 import json
 
 from client.modules.basics import basics
+from client.modules.bottom_up_ca import bottom_up_ca
 
 
 class LearningModule:
@@ -14,7 +15,13 @@ class LearningModule:
                 'icon': 'mdi-alphabetical',
                 'slide_idx': 0,
                 'topics': ['Lifecycle Cost', 'Cost Estimation Methods']
-            }
+            },
+            'Bottom-up Cost Estimation': {
+                'slides': bottom_up_ca,
+                'icon': 'mdi-arrow-expand-up',
+                'slide_idx': 0,
+                'topics': ['Work Breakdown Structures', 'Bottom-up Cost Estimation']
+            },
         }
 
     def index_info_slide(self, slide, module_id):
