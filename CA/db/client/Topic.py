@@ -24,6 +24,6 @@ class Topic:
 
             # --> 2. For each user, index ExcelExerciseCompletion for the exercise
             for user in self.client.get_users():
-                self.client.index_ability_parameter(user.id, topic_id, None)
+                self.client.index_ability_parameter(user.id, topic_id, 0)
         return 0
 

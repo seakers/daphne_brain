@@ -9,7 +9,7 @@ class Excel:
         self.client = client
 
         self.exercises = [
-            'Tutorial'
+            'Tutorial.xls'
         ]
 
 

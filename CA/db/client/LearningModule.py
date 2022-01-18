@@ -9,7 +9,12 @@ class LearningModule:
         self.client = client
 
         self.modules = {
-            'Basics': {'slides': basics, 'icon': 'mdi-alphabetical'}
+            'Basics': {
+                'slides': basics,
+                'icon': 'mdi-alphabetical',
+                'slide_idx': 0,
+                'topics': ['Lifecycle Cost', 'Cost Estimation Methods']
+            }
         }
 
     def index_info_slide(self, slide, module_id):
@@ -45,12 +50,14 @@ class LearningModule:
         for module, info in self.modules.items():
             slides = info['slides']
             icon = info['icon']
+            slide_idx = info['slide_idx']
+            topics = info['topics']
             # --> 1. Index learning module
-            module_id = self.client.index_learning_module(module, icon)
+            module_id = self.client.index_learning_module(module, icon, topics)
 
-            # --> 2. Index Join__User_LearningModule
+            # --> 2. Index Join__User_LearningModule for all users
             for user in self.client.get_users():
-                self.client.index_join_user_learning_module(user.id, module_id, 0.0)
+                self.client.index_join_user_learning_module(user.id, module_id, slide_idx)
 
             # --> 3. Index Learning Module Slides
             for slide in slides:

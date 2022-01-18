@@ -80,11 +80,17 @@ class Client:
         self.session.commit()
         return entry.id
 
-    def index_learning_module(self, name, icon):
+    def index_learning_module(self, name, icon, topics):
         entry = LearningModule(name=name, icon=icon)
         self.session.add(entry)
         self.session.commit()
-        return entry.id
+        module_id = entry.id
+        for topic in topics:
+            topic_id = self.get_topic_id(topic)
+            join_entry = Join__LearningModule_Topic(topic_id=topic_id, module_id=entry.id)
+            self.session.add(join_entry)
+            self.session.commit()
+        return module_id
 
     def index_question(self, text, choices, difficulty, discrimination, guessing, topics, explanation):
         entry = Question(text=text, choices=choices, difficulty=difficulty, discrimination=discrimination, guessing=guessing, explanation=explanation)
@@ -97,8 +103,8 @@ class Client:
             self.session.commit()
         return entry.id
 
-    def index_join_user_learning_module(self, user_id, module_id, completion):
-        entry = Join__User_LearningModule(user_id=user_id, module_id=module_id, completion=completion)
+    def index_join_user_learning_module(self, user_id, module_id, slide_idx):
+        entry = Join__User_LearningModule(user_id=user_id, module_id=module_id, slide_idx=slide_idx)
         self.session.add(entry)
         self.session.commit()
         return entry.id
@@ -111,7 +117,7 @@ class Client:
         return entry.id
 
     def index_question_slide(self, module_id, type, question_id, answered, correct, choice_id, user_id, idx):
-        entry = Slide(module_id=module_id, type=type, question_id=question_id, answered=answered, correct=correct, choice_id=choice_id, user_id=user_id, idx=idx)
+        entry = Slide(module_id=module_id, type=type, question_id=question_id, answered=answered, correct=correct, choice_id=choice_id, user_id=user_id, idx=idx, attempts=0)
         self.session.add(entry)
         self.session.commit()
         return entry.id
@@ -200,6 +206,15 @@ class Join__Question_Topic(DeclarativeBase):
     question_id = Column('question_id', Integer, ForeignKey('Question.id'))
     topic_id = Column('topic_id', Integer, ForeignKey('Topic.id'))
 
+
+class Join__LearningModule_Topic(DeclarativeBase):
+    __tablename__ = 'Join__LearningModule_Topic'
+    id = Column(Integer, primary_key=True)
+    topic_id = Column('topic_id', Integer, ForeignKey('Topic.id'))
+    module_id = Column('module_id', Integer, ForeignKey('LearningModule.id'))
+
+
+
 class Question(DeclarativeBase):
     __tablename__ = 'Question'
     id = Column(Integer, primary_key=True)
@@ -225,6 +240,7 @@ class Test(DeclarativeBase):
     num_questions = Column('num_questions', Integer)
     type = Column('type', String)
     in_progress = Column('in_progress', Boolean)
+    score = Column('score', String, nullable=True, default=None) # Null when test has not been completed
 
 
 
@@ -250,13 +266,18 @@ class LearningModule(DeclarativeBase):
     name = Column('name', String)
     icon = Column('icon', String)
 
+
+
 class Join__User_LearningModule(DeclarativeBase):
     """Sqlalchemy broad measurement categories model"""
-    __tablename__ = 'Table'
+    __tablename__ = 'Join__User_LearningModule'
     id = Column(Integer, primary_key=True)
     user_id = Column('user_id', Integer, ForeignKey('auth_user.id'))
     module_id = Column('module_id', Integer, ForeignKey('LearningModule.id'))
-    completion = Column('completion', Float, default=float(0.0))
+    slide_idx = Column('slide_idx', Integer, default=0)
+
+
+
 
 
 
@@ -273,3 +294,4 @@ class Slide(DeclarativeBase):
     choice_id = Column('choice_id', Integer)
     user_id = Column('user_id', Integer, ForeignKey('auth_user.id'))
     idx = Column('idx', Integer)
+    attempts = Column('attempts', Integer, nullable=True, default=None)

@@ -184,6 +184,7 @@ class CheckStatus(APIView):
         # problem: is now the problem_id (from the database)
         response = {
             'username': request.user.username,
+            'email': 'gapaza@msu.edu',
             'permissions': [],
             'problem_id': problem_id,
             'group_id': group_id,
