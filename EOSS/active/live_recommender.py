@@ -14,7 +14,6 @@ from EOSS.data_mining.api import DataMiningClient
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
 from daphne_context.models import UserInformation, DialogueHistory
 
-from EOSS.graphql.api import GraphqlClient
 from EOSS.vassar.api import VASSARClient
 
 

@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 import pprint
 
-from EOSS.graphql.api import GraphqlClient
 from EOSS.aws.EvalQueue import EvalQueue
 from EOSS.aws.Cluster import Cluster
 from EOSS.aws.Task import Task
