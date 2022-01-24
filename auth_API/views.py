@@ -195,7 +195,10 @@ class CheckStatus(APIView):
             response['is_logged_in'] = True
             response['pk'] = get_user_pk(request.user.username)
         else:
-            response['is_guest'] = request.session['is_guest']
+            if 'is_guest' in request.session:
+                response['is_guest'] = request.session['is_guest']
+            else:
+                response['is_guest'] = False  # --> Assume user hasn't selected guest if is_guest key not in session
             response['is_logged_in'] = False
         return Response(response)
 
