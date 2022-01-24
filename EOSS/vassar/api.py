@@ -797,7 +797,7 @@ class VASSARClient:
         return 1
 
     # working
-    async def start_ga(self, algorithm_url, tested_feature=None):
+    async def start_ga(self, algorithm_url):
         # Connect to queue
         ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
         print(ga_queue_url)
@@ -837,10 +837,27 @@ class VASSARClient:
                         'DataType': 'String'
                     }
                 }
-            if tested_feature is not None:
-                message_attributes["tested_feature"] = {
-                    'StringValue': tested_feature,
-                    'DataType': 'String'
+            await sync_to_async_mt(self.sqs_client.send_message)(
+                QueueUrl=ga_queue_url,
+                MessageBody='boto3',
+                MessageAttributes=message_attributes
+            )
+
+    # working
+    async def apply_feature(self, feature_expression):
+        # Connect to queue
+        ga_queue_url = self.user_information.eosscontext.ga_request_queue_url
+        print(ga_queue_url)
+        if ga_queue_url is not None and await self.queue_exists(ga_queue_url):
+            message_attributes = {
+                    'msgType': {
+                        'StringValue': 'apply_feature',
+                        'DataType': 'String'
+                    },
+                    'tested_feature': {
+                        'StringValue': feature_expression,
+                        'DataType': 'String'
+                    },
                 }
             await sync_to_async_mt(self.sqs_client.send_message)(
                 QueueUrl=ga_queue_url,
