@@ -1,4 +1,4 @@
-basics = [
+slides = [
     {
         'type': 'info',
         'src': 'LifecycleCost',

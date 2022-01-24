@@ -1,7 +1,12 @@
 import json
 
-from client.modules.basics import basics
-from client.modules.bottom_up_ca import bottom_up_ca
+from client.modules.basics import slides as basics
+from client.modules.bottom_up_ca import slides as bottom_up_ca
+from client.modules.parametric_ca import slides as parametric_ca
+from client.modules.cost_over_time import slides as cost_over_time
+from client.modules.eoc_learning_curve import slides as eoc_learning_curve
+from client.modules.software_cost_estimation import slides as software_cost_estimation
+from client.modules.space_system_cost_drivers import slides as space_system_cost_drivers
 
 
 class LearningModule:
@@ -18,10 +23,40 @@ class LearningModule:
             },
             'Bottom-up Cost Estimation': {
                 'slides': bottom_up_ca,
-                'icon': 'mdi-arrow-expand-up',
+                'icon': 'mdi-tray-arrow-up',
                 'slide_idx': 0,
                 'topics': ['Work Breakdown Structures', 'Bottom-up Cost Estimation']
             },
+            'Parametric Cost Estimation': {
+                'slides': parametric_ca,
+                'icon': 'mdi-function-variant',
+                'slide_idx': 0,
+                'topics': ['Cost Estimating Relationships']
+            },
+            'Cost Over Time': {
+                'slides': cost_over_time,
+                'icon': 'mdi-clipboard-text-clock-outline',
+                'slide_idx': 0,
+                'topics': ['Cash Flows', 'Net Present Value', 'Discount Rate', 'Inflation']
+            },
+            'Economies of Scale': {
+                'slides': eoc_learning_curve,
+                'icon': 'mdi-scale-unbalanced',
+                'slide_idx': 0,
+                'topics': ['Learning Curve']
+            },
+            'Software Cost Estimation': {
+                'slides': software_cost_estimation,
+                'icon': 'mdi-desktop-classic',
+                'slide_idx': 0,
+                'topics': ['COCOMO']
+            },
+            # 'Space System Cost Drivers': {
+            #     'slides': space_system_cost_drivers,
+            #     'icon': 'mdi-satellite-variant',
+            #     'slide_idx': 0,
+            #     'topics': ['Lifecycle Cost']
+            # }
         }
 
     def index_info_slide(self, slide, module_id):
