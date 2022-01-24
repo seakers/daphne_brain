@@ -7,7 +7,6 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from EOSS.vassar.api import VASSARClient
-from EOSS.graphql.api import GraphqlClient
 
 from EOSS.models import EOSSContext
 from daphne_context.models import UserInformation
@@ -25,7 +24,7 @@ def activate_diversifier(user_info: UserInformation):
     # vassar_client = VASSARClient(user_information=user_info)
     problem_id = eosscontext.problem_id
     dataset_id = eosscontext.dataset_id
-    dbClient = GraphqlClient(problem_id=problem_id)
+    # dbClient = GraphqlClient(problem_id=problem_id)
 
     # 1. Compute the pareto front
     dataset_client = DatasetGraphqlClient(user_info)

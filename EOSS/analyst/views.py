@@ -13,7 +13,6 @@ from EOSS.graphql.client.Problem import ProblemGraphqlClient
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from EOSS.graphql.api import GraphqlClient
 from EOSS.data import problem_helpers
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, \
     ContinuousInputArchitecture, AssigningProblemEntities
@@ -106,7 +105,6 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
         try:
             problem_id = int(request.data['problem_id'])
             dataset_id = request.data['dataset_id']
-            db_client = GraphqlClient(problem_id=int(problem_id))
 
 
             # Start data mining client

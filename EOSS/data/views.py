@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from EOSS.data.problem_helpers import assignation_problems, partition_problems
-from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
 
 from asgiref.sync import sync_to_async, async_to_sync
@@ -50,7 +49,7 @@ class ImportData(APIView):
             dataset_id = int(request.data['dataset_id'])
 
             # Get problem architectures
-            dbClient = GraphqlClient(problem_id=problem_id)
+            # dbClient = GraphqlClient(problem_id=problem_id)
 
             print("--> PROBLEM IDER: ", problem_id)
 
@@ -131,7 +130,7 @@ class CopyData(APIView):
                 problem_id = user_info.eosscontext.problem_id
 
                 # Clone dataset
-                dbClient = GraphqlClient(problem_id=problem_id)
+                # dbClient = GraphqlClient(problem_id=problem_id)
                 # dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
                 dst_dataset_id = async_to_sync(dataset_client.clone_dataset)(src_dataset_id, dst_dataset_name, False, False, False)
 
@@ -261,7 +260,7 @@ class UploadData(APIView):
             user_id = user_info.user.id
 
             # Get problem architectures
-            dbClient = GraphqlClient(problem_id=problem_id)
+            # dbClient = GraphqlClient(problem_id=problem_id)
 
             dataset_path = "./EOSS/data/" + request.data["filename"] + ".csv"
             dataset_id = async_to_sync(dataset_client.new_user_dataset)(request.data["filename"], False)['id']

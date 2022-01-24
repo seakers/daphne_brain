@@ -1,6 +1,5 @@
 from string import ascii_uppercase
 
-from EOSS.graphql.api import GraphqlClient
 from EOSS.vassar.api import VASSARClient
 
 from asgiref.sync import async_to_sync, sync_to_async
