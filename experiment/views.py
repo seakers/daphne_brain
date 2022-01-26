@@ -26,9 +26,9 @@ def stage_type(id, stage_num):
             return 'daphne_classic'
     elif stage_config == 2:
         if stage_num == 0:
-            return 'daphne_dm'
-        else:
             return 'daphne_classic'
+        else:
+            return 'daphne_dm'
     elif stage_config == 3:
         if stage_num == 0:
             return 'daphne_dm'
