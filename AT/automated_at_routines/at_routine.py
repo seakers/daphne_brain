@@ -50,13 +50,13 @@ def build_threshold_tag(value, info):
 def build_detection_text(variable, threshold_tag):
     text = ''
     if threshold_tag == 'LowerWarningLimit':
-        text = variable + ': Is below Lower Warning Limit.'
+        text = variable + " " + 'Exceeds Lower Warning Limit'
     elif threshold_tag == 'LowerCautionLimit':
-        text = variable + ': Is below Lower Caution Limit.'
+        text = variable + " " + 'Exceeds Lower Caution Limit'
     elif threshold_tag == 'UpperCautionLimit':
-        text = variable + ': Is above Upper Caution Limit.'
+        text = variable + " " + 'Exceeds Upper Caution Limit'
     elif threshold_tag == 'UpperWarningLimit':
-        text = variable + ': Is above Upper Warning Limit.'
+        text = variable + " " + 'Exceeds Upper Warning Limit'
     else:
         print('Invalid threshold tag')
         raise

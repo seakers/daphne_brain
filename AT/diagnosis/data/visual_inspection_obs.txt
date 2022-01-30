@@ -1,0 +1,6 @@
+ppCO2	UWL
+ppO2	Nominal
+ppH2O	Nominal
+ppH2	Nominal
+ppN2	Nominal
+ppCO	Nominal

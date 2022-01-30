@@ -1,0 +1,5 @@
+ppCO2	sensor1	1.0
+ppO2	sensor2	1.0
+ppH2O	sensor3	1.0
+ppN2	sensor4	1.0
+ppH2	sensor5	1.0

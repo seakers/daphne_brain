@@ -1,0 +1,10 @@
+ppN2	sensor3	shows	ok	0.3461387157440185
+ppH2O	sensor5	shows	nok	0.4378669261932373
+ppH2	sensor4	shows	ok	0.2673720121383667
+ppH2	sensor4	shows	nok	0.7326279878616333
+ppH2O	sensor5	shows	ok	0.5621330738067627
+ppO2	sensor2	shows	ok	1.0
+ppCO2	sensor1	shows	nok	0.0
+ppO2	sensor2	shows	nok	0.0006481309537775815
+ppCO2	sensor1	shows	ok	0.9986339211463928
+ppN2	sensor3	shows	nok	0.6538612842559814

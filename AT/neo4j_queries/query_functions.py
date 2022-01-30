@@ -1,4 +1,5 @@
 import itertools
+import re
 
 from neo4j import GraphDatabase, basic_auth
 
@@ -33,28 +34,32 @@ def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     return diagnosis
 
 
-def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
-    # This function has several ugly patches and needs to be improved. This will probably require to do a deep refactor
-    # of all the VA code.
+def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
+    relationship = ''
+    if threshold_tag == 'LowerWarningLimit':
+        relationship = 'Exceeds_LowerWarningLimit'
+    elif threshold_tag == 'LowerCautionLimit':
+        relationship = 'Exceeds_LowerCautionLimit'
+    elif threshold_tag == 'UpperWarningLimit':
+        relationship = 'Exceeds_UpperWarningLimit'
+    elif threshold_tag == 'UpperCautionLimit':
+        relationship = 'Exceeds_UpperCautionLimit'
+    else:
+        print('Invalid threshold tag')
+        raise
 
-    # Notation (needed to understand the function)
-    #     Let A = {a1, a2, ..., aN} be the set of all anomalies.
-    #     Let Sk = {sk1, sk2, ..., skM} be the set of symptoms of anomaly k (with 1<=k<=N).
-    #     Let S = (Union of all Sk) = (s1, s2, ..., sM) be the set of all symptoms.
-    #     Let X be a subset of S to be diagnosed (that is, the input of this function, X = "requested_symptoms").
-    #     Let f be the diagnosis function. Then f is defined as:
-    #           f: P(S) -> P(A), f(X) := {ak in A : (Sk intersection X) is nonempty}
-    #     In other words, f return all the anomalies which have some of their symptoms in the symptoms to be diagnosed.
-    #
-    #     This code function computes f(requested_symptoms) and sorts the resulting list according to a certain score.
-    #     Such score is defined as g(ak) = g1(ak) * g2(ak), where:
-    #          g1(ak) = #(Sk intersection X) / #X
-    #          g2(ak) = #(Sk intersection X) / #Sk
-    #     Where #A is used to denote the cardinal of the set A.
-    #
+    return relationship
 
-    # **************************************************
-    # This first block of the function queries the neo4j graph. The result is f(X) (not sorted yet!)
+
+def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
+    parsed_symptoms_list = []
+    for item in symptoms_list:
+        threshold_tag = item['threshold_tag']
+        relationship = convert_threshold_tag_to_neo4j_relationship(threshold_tag)
+        symptom = {'measurement': item['measurement'],
+                   'display_name': item['display_name'],
+                   'relationship': relationship}
+        parsed_symptoms_list.append(symptom)
 
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
@@ -62,10 +67,10 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
 
     # Build the query based on the symptoms list
     query = 'MATCH (m:Measurement)-[r]->(a:Anomaly) WHERE '
-    for index, symptom in enumerate(requested_symptoms):
+    for index, symptom in enumerate(parsed_symptoms_list):
         measurement = symptom['measurement']
         clause = '(m.Name = "' + measurement + '")'
-        if (index + 1) < len(requested_symptoms):
+        if (index + 1) < len(parsed_symptoms_list):
             clause = clause + ' OR '
         query = query + clause
     query = query + ' RETURN DISTINCT a.Title'
@@ -75,71 +80,36 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     result = session.run(query)
     diagnosis = [node[0] for node in result]
 
-    # **************************************************
-
-    # **************************************************
-    # This second section does some super ugly parsing that needs to be improved. The input of this function is a data
-    # structure that looks as follows (disregarding all the previous notation):
-    #     requested_symptoms = [symptDict1, symptDict2, ...., symptDictN]
-    # Where:
-    #     symptDictK = {measurement: 'Raw name of the measurement',
-    #                   display_name: 'Raw name of the measurement + parameter group',
-    #                   relationship: 'Threshold signature (as 'Exceeds_UWL')'}                      (*1)
-    #
-    # The output of the query in the first block, on the other hand, looks as follows:
-    #     diagnosis = [anomaly1, anomaly2, ...., anomalyN]
-    #
-    # For each anomaly in the previous list, the set of its symptoms is retrieved (using another function within
-    # this same script. The result looks as follows:
-    #     symptoms_of_anomaly = {measurement: 'Raw name of the measurement + parameter group',
-    #                            relationship: 'Threshold signature (as 'Upper Warning Limit')'}     (*2)
-    #
-    # To compute the desired intersections we will need to compare items like (*1) with items like (*2), and hence the
-    # need to do some ugly parsing. Both types of items will be "translated" to the following common ground:
-    #     symptCommonDict = {measurement: 'Raw name of the measurement + parameter group',
-    #                        relationship: 'Threshold signature (as 'Exceeds_UWL')'}                 (*3)
-
-    # The input is parsed from (*1) to (*3) ('measurement' field is substituted by 'display name' value, 'display_name'
-    # field is stripped and 'relationship' field is left equal).
     parsed_input_symptoms = []
-    for symptom in requested_symptoms:
+    for symptom in parsed_symptoms_list:
         parsed_input_symptoms.append({'measurement': symptom['display_name'], 'relationship': symptom['relationship']})
 
-    # For each anomaly of the diagnosis output, an object like (*2) is obtained and converted to (*3). The only parsing
-    # needed is to convert the relationship format.
-    symptoms_of_each_anomaly = {}
+    parsed_symptoms_of_each_anomaly = {}
     for anomaly in diagnosis:
         # Retrieve symptoms of anomaly
         anomaly_symptoms = retrieve_symptoms_from_anomaly(anomaly)
+        parsed_symptom_of_anomaly = []
         symptom_of_anomaly = []
 
         # For each symptom of the anomaly, parse the relationship field
         for symptom in anomaly_symptoms:
             relationship = symptom['relationship']
-            if relationship == "Upper Warning Limit" or relationship == "Upper Critic Limit":
+            symptom_of_anomaly.append(symptom)
+            if relationship == "Upper Warning Limit":
+                relationship = 'Exceeds_UpperWarningLimit'
+            elif relationship == "Upper Caution Limit":
                 relationship = 'Exceeds_UpperCautionLimit'
-            else:
+            elif relationship == "Lower Warning Limit":
+                relationship = 'Exceeds_LowerWarningLimit'
+            elif relationship == "Lower Caution Limit":
                 relationship = 'Exceeds_LowerCautionLimit'
             symptom['relationship'] = relationship
-            symptom_of_anomaly.append(symptom)
+            parsed_symptom_of_anomaly.append(symptom)
 
         # Append the resulting object to the dictionary
-        symptoms_of_each_anomaly[anomaly] = symptom_of_anomaly
+        parsed_symptoms_of_each_anomaly[anomaly] = parsed_symptom_of_anomaly
 
-    # **************************************************
-
-    # **************************************************
-    # In this third part of the code, the cardinal of the said intersections is computed. Also, the amount of symptoms
-    # of each anomaly is retrieved.
-
-    # Let A and B be sets. A is looped. For each element in a, B is looped. For each element b in B, a and b are
-    # compared, and the cardinal is increased if equal. This could  be done more efficiently, but the already poor
-    # readability of this function would be completely obliterated.
-    # A -> requested_symptoms
-    # B -> anomaly_symptoms
-
-    # Define auxiliary function to compare the symptom dictionaries
-    def compare(anomaly_symptom, parsed_input_symptom):
+    def compare_parsed(anomaly_symptom, parsed_input_symptom):
         measurements_are_equal = (anomaly_symptom['measurement'] == parsed_input_symptom['measurement'])
         relationships_are_equal = (anomaly_symptom['relationship'] == parsed_input_symptom['relationship'])
         if measurements_are_equal and relationships_are_equal:
@@ -150,33 +120,44 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
     # Initialize result storing variables
     cardinality_for_each_anomaly = {}
     size_of_each_anomaly = {}
+    signature = {}
+    anomalyContainsRequestedSymptoms = {}
 
-    # Loop over the anomalies
+    # Loop over the anomalies to get comparison with parsed symptoms
     for anomaly in diagnosis:
         # Initialize the cardinal counter
         cardinal = 0
+        containsSymptoms = []
+        signatureSymptom = []
         # Loop over A
-        for anomaly_symptom in symptoms_of_each_anomaly[anomaly]:
+        for anomaly_symptom in parsed_symptoms_of_each_anomaly[anomaly]:
+            signatureSymptom.append(anomaly_symptom['measurement'] + ' ' + re.sub(r"(\w)([A-Z])", r"\1 \2",
+                                                                                  anomaly_symptom[
+                                                                                      'relationship'].replace(
+                                                                                      '_', ' ')))
             # Loop over B
             for parsed_input_symptom in parsed_input_symptoms:
                 # Compare
-                are_equal = compare(anomaly_symptom, parsed_input_symptom)
+                are_equal = compare_parsed(anomaly_symptom, parsed_input_symptom)
                 if are_equal:
                     cardinal += 1
+                    anomalyContainsSymptoms = anomaly_symptom['measurement'] + ' ' + re.sub(r"(\w)([A-Z])",
+                                                                                            r"\1 \2",
+                                                                                            anomaly_symptom[
+                                                                                                'relationship'].replace(
+                                                                                                '_', ' '))
+
+                    containsSymptoms.append(anomalyContainsSymptoms)
 
         # Store the results
         cardinality_for_each_anomaly[anomaly] = cardinal
-        size_of_each_anomaly[anomaly] = len(symptoms_of_each_anomaly[anomaly])
-
-    # **************************************************
-
-    # **************************************************
-    # In this fourth part of the code, the score of each anomaly is computed and the final ordered list of anomalies is
-    # built.
+        anomalyContainsRequestedSymptoms[anomaly] = containsSymptoms
+        size_of_each_anomaly[anomaly] = len(parsed_symptoms_of_each_anomaly[anomaly])
+        signature[anomaly] = signatureSymptom
 
     # Create the result storing variable and parse the size of the requested symptoms set
     scored_diagnosis = {}
-    total_requested_symptoms = len(requested_symptoms)
+    total_requested_symptoms = len(parsed_symptoms_list)
 
     # Loop over the anomalies, compute each of the partial scores and the total scores (g1, g2 and g)
     for anomaly in diagnosis:
@@ -203,14 +184,17 @@ def diagnose_symptoms_by_intersection_with_anomaly(requested_symptoms):
         anomaly = ordered_diagnosis[i]
         score = scored_diagnosis[anomaly]
         text_score = ""
-        if score < 0.33:
-            text_score = "Least likely"
-        elif score < 0.66:
-            text_score = "Somewhat likely"
-        else:
-            text_score = "Very likely"
+        if score != 0:
+            if score < 0.33:
+                text_score = "Somewhat likely"
+            elif score < 0.66:
+                text_score = "Likely"
+            else:
+                text_score = "Very likely"
 
-        top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
+            top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score, 'cardinality':
+                cardinality_for_each_anomaly[anomaly], 'containsRequestedSymptoms': anomalyContainsRequestedSymptoms[
+                anomaly], 'signature': signature[anomaly]})
 
     # Return result
     final_diagnosis = top_n_diagnosis
@@ -441,16 +425,29 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
                               "' RETURN DISTINCT m.Name, m.ParameterGroup"
     result_UpperCautionLimit = session.run(query_UpperCautionLimit)
 
+    # Build and send the query to obtain the affected measurements that exceed the lower caution limit
+    query_LowerCautionLimit = "MATCH (a:Anomaly)-[r:Exceeds_LowerCautionLimit]-(m:Measurement) WHERE a.Title='" + \
+                              anomaly_name + \
+                              "' RETURN DISTINCT m.Name, m.ParameterGroup"
+    result_LowerCautionLimit = session.run(query_LowerCautionLimit)
+
+    # Build and send the query to obtain the affected measurements that exceed the upper warning limit
+    query_UpperWarningLimit = "MATCH (a:Anomaly)-[r:Exceeds_UpperWarningLimit]-(m:Measurement) WHERE a.Title='" + \
+                              anomaly_name + \
+                              "' RETURN DISTINCT m.Name, m.ParameterGroup"
+    result_UpperWarningLimit = session.run(query_UpperWarningLimit)
+
+    # Build and send the query to obtain the affected measurements that exceed the lower warning limit
+    query_LowerWarningLimit = "MATCH (a:Anomaly)-[r:Exceeds_LowerWarningLimit]-(m:Measurement) WHERE a.Title='" + \
+                              anomaly_name + \
+                              "' RETURN DISTINCT m.Name, m.ParameterGroup"
+    result_LowerWarningLimit = session.run(query_LowerWarningLimit)
+
     # Parse the result
     symptoms_list_UpperCautionLimit = []
     for item in result_UpperCautionLimit:
         measurement_name = item[0] + ' (' + item[1] + ')'
         symptoms_list_UpperCautionLimit.append(measurement_name)
-
-    # Build and send the query to obtain the affected measurements that exceed the lower caution limit
-    query_LowerCautionLimit = "MATCH (a:Anomaly)-[r:Exceeds_LowerCautionLimit]-(m:Measurement) WHERE a.Title='" + anomaly_name + \
-                              "' RETURN DISTINCT m.Name, m.ParameterGroup"
-    result_LowerCautionLimit = session.run(query_LowerCautionLimit)
 
     # Parse the result
     symptoms_list_LowerCautionLimit = []
@@ -458,12 +455,30 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
         measurement_name = item[0] + ' (' + item[1] + ')'
         symptoms_list_LowerCautionLimit.append(measurement_name)
 
+    # Parse the result
+    symptoms_list_UpperWarningLimit = []
+    for item in result_UpperWarningLimit:
+        measurement_name = item[0] + ' (' + item[1] + ')'
+        symptoms_list_UpperWarningLimit.append(measurement_name)
+
+    # Parse the result
+    symptoms_list_LowerWarningLimit = []
+    for item in result_LowerWarningLimit:
+        measurement_name = item[0] + ' (' + item[1] + ')'
+        symptoms_list_LowerWarningLimit.append(measurement_name)
+
     # Build the output (making the relationship explicit)
     symptoms_list = []
     for measurement in symptoms_list_LowerCautionLimit:
         symptom = {'measurement': measurement, 'relationship': 'Lower Caution Limit'}
         symptoms_list.append(symptom)
     for measurement in symptoms_list_UpperCautionLimit:
+        symptom = {'measurement': measurement, 'relationship': 'Upper Caution Limit'}
+        symptoms_list.append(symptom)
+    for measurement in symptoms_list_LowerWarningLimit:
+        symptom = {'measurement': measurement, 'relationship': 'Lower Warning Limit'}
+        symptoms_list.append(symptom)
+    for measurement in symptoms_list_UpperWarningLimit:
         symptom = {'measurement': measurement, 'relationship': 'Upper Warning Limit'}
         symptoms_list.append(symptom)
 

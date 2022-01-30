@@ -22,3 +22,6 @@ tensorflow~=2.4.1
 thrift~=0.13.0
 xlrd~=2.0.1
 asgiref~=3.3.4
+scikit-learn~=0.24.2
+pslpython~=2.2.2
+PyYAML~=5.4.1

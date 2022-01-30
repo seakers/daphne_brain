@@ -1,0 +1,9 @@
+ppCO2	filter1
+ppO2	filter1
+ppO2	filter2
+ppH2O	filter2
+ppH2	filter3
+ppN2	filter3
+ppH2	filter4
+ppH2O	filter4
+ppCO	filter5

@@ -1,0 +1,14 @@
+ppH2	filter3	shows	ok	0.9981234669685364
+ppO2	filter1	shows	ok	1.0
+ppH2	filter6	shows	ok	0.6140320301055908
+ppH2O	filter5	shows	ok	0.6805204749107361
+ppN2	filter4	shows	ok	1.0
+ppH2	filter6	shows	nok	0.3859587013721466
+ppH2	filter3	shows	nok	0.0
+ppN2	filter4	shows	nok	0.0007946677505970001
+ppH2O	filter2	shows	nok	0.0
+ppCO2	filter1	shows	nok	1.0
+ppH2O	filter5	shows	nok	0.3194566071033478
+ppH2O	filter2	shows	ok	0.9994573593139648
+ppCO2	filter1	shows	ok	0.0008540749549865723
+ppO2	filter1	shows	nok	0.000944286584854126

@@ -1,0 +1,5 @@
+sensor1	ppCO2	shows	ok	1.0
+sensor2	ppO2	shows	ok	1.0
+sensor3	ppN2	shows	ok	1.0
+sensor4	ppH2	shows	nok	1.0
+sensor5	ppH2O	shows	nok	1.0

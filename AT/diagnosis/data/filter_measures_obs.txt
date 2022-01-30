@@ -1,0 +1,7 @@
+filter1	ppCO2	shows	nok	1.0
+filter1	ppO2	shows	ok	1.0
+filter4	ppN2	shows	ok	1.0
+filter3	ppH2	shows	ok	1.0
+filter2	ppH2O	shows	ok	1.0
+filter5	ppH2O	shows	ok	1.0
+filter6	ppH2	shows	ok	1.0
