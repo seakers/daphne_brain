@@ -36,6 +36,16 @@ def stage_type(id, stage_num):
             return 'daphne_classic'
 
 
+def experiment_condition(id):
+    condition_id = id % 3 
+    if condition_id == 0:
+        return "reflection"
+    elif condition_id == 1:
+        return "incubation"
+    elif condition_id == 2:
+        return "control"
+
+
 # Create your views here.
 class StartExperiment(APIView):
 
@@ -72,15 +82,22 @@ class StartExperiment(APIView):
         experiment_context.experiment_id = new_id
 
         # Specific to current experiment
+        experiment_condition_text = experiment_condition(new_id)
         experiment_context.experimentstage_set.all().delete()
-        experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
-                                                      start_date=datetime.datetime.now(),
-                                                      end_date=datetime.datetime.now(),
-                                                      end_state="")
-        experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
-                                                      start_date=datetime.datetime.now(),
-                                                      end_date=datetime.datetime.now(),
-                                                      end_state="")
+        if experiment_condition_text == "reflection" or experiment_condition_text == "incubation":
+            experiment_context.experimentstage_set.create(type="daphne_refinc",
+                                                        start_date=datetime.datetime.now(),
+                                                        end_date=datetime.datetime.now(),
+                                                        end_state="")
+            experiment_context.experimentstage_set.create(type="daphne_refinc",
+                                                        start_date=datetime.datetime.now(),
+                                                        end_date=datetime.datetime.now(),
+                                                        end_state="")
+        else:
+            experiment_context.experimentstage_set.create(type="daphne_control",
+                                                        start_date=datetime.datetime.now(),
+                                                        end_date=datetime.datetime.now(),
+                                                        end_state="")
 
         # Save experiment started on database
         experiment_context.is_running = True
@@ -92,7 +109,10 @@ class StartExperiment(APIView):
         for stage in experiment_context.experimentstage_set.all():
             experiment_stages.append(stage.type)
 
-        return Response(experiment_stages)
+        return Response({
+            "condition": experiment_condition_text,
+            "stages": experiment_stages
+        })
 
 
 class StartStage(APIView):
