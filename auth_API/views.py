@@ -51,6 +51,7 @@ class Login(APIView):
             return Response({
                 'status': 'logged_in',
                 'username': username,
+                'email': user.email,
                 'pk': user_pk,
                 'is_experiment_user': userinfo.is_experiment_user,
                 'permissions': []
@@ -184,7 +185,7 @@ class CheckStatus(APIView):
         # problem: is now the problem_id (from the database)
         response = {
             'username': request.user.username,
-            'email': 'gapaza@msu.edu',
+            'email': 'placeholder',
             'permissions': [],
             'problem_id': problem_id,
             'group_id': group_id,
@@ -195,8 +196,12 @@ class CheckStatus(APIView):
         if request.user.is_authenticated:
             response['is_logged_in'] = True
             response['pk'] = get_user_pk(request.user.username)
+            response['email'] = get_user_email(request.user.username)
         else:
-            response['is_guest'] = request.session['is_guest']
+            if 'is_guest' in request.session:
+                response['is_guest'] = request.session['is_guest']
+            else:
+                response['is_guest'] = False
             response['is_logged_in'] = False
         return Response(response)
 
@@ -273,6 +278,16 @@ def get_user_pk(username):
         return users[0].id
     else:
         print("---> USER PK ERROR")
+        return False
+
+
+def get_user_email(username):
+    users = User.objects.filter(username__exact=username)
+    if len(users) == 1:
+        print("---> USER FOUND", users[0].email)
+        return users[0].email
+    else:
+        print("---> USER EMAIL ERROR")
         return False
 
 

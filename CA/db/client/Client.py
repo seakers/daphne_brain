@@ -3,6 +3,7 @@ import os
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.orm import sessionmaker, mapper
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import func
 from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, Time, Enum, ForeignKey, Table, CheckConstraint, Boolean, ARRAY, and_
 import pandas as pd
 
@@ -124,6 +125,11 @@ class Client:
 
 
 
+    def index_message(self, user_id, text, sender):
+        entry = Message(user_id=user_id, text=text, sender=sender)
+        self.session.add(entry)
+        self.session.commit()
+        return entry.id
 
 
 
@@ -183,6 +189,19 @@ class ExcelExerciseCompletion(DeclarativeBase):
     exercise_id = Column('exercise_id', Integer, ForeignKey('ExcelExercise.id'))
     is_completed = Column('is_completed', Boolean, default=False)
     reason = Column('reason', String, default="Has not been started")
+
+
+
+
+class Message(DeclarativeBase):
+    __tablename__ = 'Message'
+    id = Column(Integer, primary_key=True)
+    user_id = Column('user_id', Integer, ForeignKey('auth_user.id'))
+    text = Column('text', String)
+    sender = Column('sender', String)
+    cleared = Column('cleared', Boolean, default=False)
+    date = Column('date', DateTime, default=func.now())
+
 
 
 

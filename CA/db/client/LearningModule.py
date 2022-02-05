@@ -21,42 +21,42 @@ class LearningModule:
                 'slide_idx': 0,
                 'topics': ['Lifecycle Cost', 'Cost Estimation Methods']
             },
-            'Bottom-up Cost Estimation': {
-                'slides': bottom_up_ca,
-                'icon': 'mdi-tray-arrow-up',
-                'slide_idx': 0,
-                'topics': ['Work Breakdown Structures', 'Bottom-up Cost Estimation']
-            },
-            'Parametric Cost Estimation': {
-                'slides': parametric_ca,
-                'icon': 'mdi-function-variant',
-                'slide_idx': 0,
-                'topics': ['Cost Estimating Relationships']
-            },
-            'Cost Over Time': {
-                'slides': cost_over_time,
-                'icon': 'mdi-clipboard-text-clock-outline',
-                'slide_idx': 0,
-                'topics': ['Cash Flows', 'Net Present Value', 'Discount Rate', 'Inflation']
-            },
-            'Economies of Scale': {
-                'slides': eoc_learning_curve,
-                'icon': 'mdi-scale-unbalanced',
-                'slide_idx': 0,
-                'topics': ['Learning Curve']
-            },
-            'Software Cost Estimation': {
-                'slides': software_cost_estimation,
-                'icon': 'mdi-desktop-classic',
-                'slide_idx': 0,
-                'topics': ['COCOMO']
-            },
-            # 'Space System Cost Drivers': {
-            #     'slides': space_system_cost_drivers,
-            #     'icon': 'mdi-satellite-variant',
+            # 'Bottom-up Cost Estimation': {
+            #     'slides': bottom_up_ca,
+            #     'icon': 'mdi-tray-arrow-up',
             #     'slide_idx': 0,
-            #     'topics': ['Lifecycle Cost']
-            # }
+            #     'topics': ['Work Breakdown Structures', 'Bottom-up Cost Estimation']
+            # },
+            # 'Parametric Cost Estimation': {
+            #     'slides': parametric_ca,
+            #     'icon': 'mdi-function-variant',
+            #     'slide_idx': 0,
+            #     'topics': ['Cost Estimating Relationships']
+            # },
+            # 'Cost Over Time': {
+            #     'slides': cost_over_time,
+            #     'icon': 'mdi-clipboard-text-clock-outline',
+            #     'slide_idx': 0,
+            #     'topics': ['Cash Flows', 'Net Present Value', 'Discount Rate', 'Inflation']
+            # },
+            # 'Economies of Scale': {
+            #     'slides': eoc_learning_curve,
+            #     'icon': 'mdi-scale-unbalanced',
+            #     'slide_idx': 0,
+            #     'topics': ['Learning Curve']
+            # },
+            # 'Software Cost Estimation': {
+            #     'slides': software_cost_estimation,
+            #     'icon': 'mdi-desktop-classic',
+            #     'slide_idx': 0,
+            #     'topics': ['COCOMO']
+            # },
+            'Space System Cost Drivers': {
+                'slides': space_system_cost_drivers,
+                'icon': 'mdi-satellite-variant',
+                'slide_idx': 0,
+                'topics': ['Lifecycle Cost']
+            }
         }
 
     def index_info_slide(self, slide, module_id):

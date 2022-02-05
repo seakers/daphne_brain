@@ -3,6 +3,7 @@ from client.Client import Client
 from client.Excel import Excel
 from client.Topic import Topic
 from client.LearningModule import LearningModule
+from client.Message import Message
 
 
 
@@ -16,6 +17,7 @@ def main():
     Excel(client).index()
     Topic(client).index()
     LearningModule(client).index()
+    Message(client).index()
 
 
 
