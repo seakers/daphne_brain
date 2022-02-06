@@ -72,9 +72,11 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'connect_ga':
             await self.connect_ga(user_info, skip_check=True)
         elif content.get('msg_type') == 'start_ga':
+            await self.start_ga(user_info)
+        elif content.get('msg_type') == 'apply_feature':
             # Also check for hypothesis being tested
             tested_feature = content.get("featureExpression")
-            await self.start_ga(user_info, tested_feature)
+            await self.apply_ga_feature(user_info, tested_feature)
         elif content.get('msg_type') == 'stop_ga':
             await self.stop_ga(user_info)
         elif content.get('msg_type') == 'rebuild_vassar':
@@ -343,7 +345,7 @@ class EOSSConsumer(DaphneConsumer):
                 })
         print("Initial GA status", ga_status)
 
-    async def start_ga(self, user_info: UserInformation, tested_feature):
+    async def start_ga(self, user_info: UserInformation):
         vassar_client = VASSARClient(user_info)
 
         if self.scope["user"].is_authenticated:
@@ -368,7 +370,7 @@ class EOSSConsumer(DaphneConsumer):
                     ga_algorithm_queue_url = await vassar_client.get_queue_url(ga_algorithm_queue_name)
                 
                 # Start GA in container
-                await vassar_client.start_ga(ga_algorithm_queue_url, tested_feature)
+                await vassar_client.start_ga(ga_algorithm_queue_url)
 
                 # Start listening for AWS SQS inputs
                 def aws_consumer():
@@ -451,6 +453,10 @@ class EOSSConsumer(DaphneConsumer):
                 'status': 'auth_error',
                 'message': "This is only available to registered users!"
             })
+    
+    async def apply_ga_feature(self, user_info: UserInformation, feature_expression):
+        vassar_client = VASSARClient(user_info)
+        await vassar_client.apply_feature(feature_expression)
 
     async def stop_ga(self, user_info: UserInformation):
         vassar_client = VASSARClient(user_info)
