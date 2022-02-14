@@ -39,9 +39,8 @@ class Client:
         to_delete = []
         for table, table_obj in DeclarativeBase.metadata.tables.items():
             print(table, '\n')
-            to_delete.append(table_obj)
-            # if table not in ['auth_user']:
-            #     to_delete.append(table_obj)
+            if table not in ['auth_user']:
+                to_delete.append(table_obj)
         DeclarativeBase.metadata.drop_all(self.engine, to_delete)
 
 
