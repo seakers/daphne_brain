@@ -6,6 +6,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import func
 from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, Time, Enum, ForeignKey, Table, CheckConstraint, Boolean, ARRAY, and_
 import pandas as pd
+from datetime import datetime
 
 from client.base import DeclarativeBase
 
@@ -39,13 +40,13 @@ class Client:
         to_delete = []
         for table, table_obj in DeclarativeBase.metadata.tables.items():
             print(table, '\n')
-            if table not in ['auth_user']:
+            if table not in ['auth_user', 'Join__AuthUser_Group', 'Group']:
                 to_delete.append(table_obj)
         DeclarativeBase.metadata.drop_all(self.engine, to_delete)
 
 
     def get_users(self):
-        users = self.session.query(auth_user.id).all()
+        users = self.session.query(auth_user.id, auth_user.username).all()
         return users
 
     def get_topic_id(self, name):
@@ -132,6 +133,18 @@ class Client:
         return entry.id
 
 
+    def index_authuser_group(self, user_id, group_id, admin=False):
+        entry = Join__AuthUser_Group(user_id=user_id, group_id=group_id, admin=admin)
+        self.session.add(entry)
+        self.session.commit()
+        return entry.id
+
+    def index_demo_user(self, username, email, password):
+        entry = auth_user(username=username, email=email, password=password, is_superuser=False, first_name='', last_name='', is_staff=False, is_active=True, date_joined=datetime.now())
+        self.session.add(entry)
+        self.session.commit()
+        return entry.id
+
 
 
     def index_user(self, user_id):
@@ -176,6 +189,19 @@ class auth_user(DeclarativeBase):
     """Sqlalchemy broad measurement categories model"""
     __tablename__ = 'auth_user'
     __table_args__ = {'autoload': True}
+
+class Group(DeclarativeBase):
+    """Sqlalchemy broad measurement categories model"""
+    __tablename__ = 'Group'
+    id = Column(Integer, primary_key=True)
+    name = Column('name', String)
+
+class Join__AuthUser_Group(DeclarativeBase):
+    __tablename__ = 'Join__AuthUser_Group'
+    id = Column(Integer, primary_key=True)
+    user_id = Column('user_id', Integer, ForeignKey('auth_user.id'))
+    group_id = Column('group_id', Integer, ForeignKey('Group.id'))
+    admin = Column('admin', Boolean, default=False)
 
 class ExcelExercise(DeclarativeBase):
     __tablename__ = 'ExcelExercise'
