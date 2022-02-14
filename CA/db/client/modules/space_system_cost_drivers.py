@@ -49,6 +49,21 @@ slides = [
         'src': 'COSTD_10',
         'idx': 9
     },
+    {
+        'type': 'info',
+        'src': 'COSTD_11',
+        'idx': 10
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_12',
+        'idx': 11
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_13',
+        'idx': 12
+    },
 
 ]
 
