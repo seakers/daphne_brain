@@ -3,24 +3,24 @@ from daphne_brain.nlp_object import nlp
 from EOSS.dialogue.data_extractors import extract_function as eoss_extract_function
 from EOSS.dialogue.data_processors import process_function as eoss_process_function
 
-from EDL.dialogue.data_extractors import extract_function as edl_extract_function
-from EDL.dialogue.data_processors import process_function as edl_process_function
-
-from AT.dialogue.data_extractors import extract_function as at_extract_function
-from AT.dialogue.data_processors import process_function as at_process_function
+# from EDL.dialogue.data_extractors import extract_function as edl_extract_function
+# from EDL.dialogue.data_processors import process_function as edl_process_function
+#
+# from AT.dialogue.data_extractors import extract_function as at_extract_function
+# from AT.dialogue.data_processors import process_function as at_process_function
 
 
 
 extract_functions = {
     'EOSS': eoss_extract_function,
-    'EDL': edl_extract_function,
-    'AT': at_extract_function
+    # 'EDL': edl_extract_function,
+    # 'AT': at_extract_function
 }
 
 process_functions = {
     'EOSS': eoss_process_function,
-    'EDL': edl_process_function,
-    'AT': at_process_function
+    # 'EDL': edl_process_function,
+    # 'AT': at_process_function
 }
 
 
