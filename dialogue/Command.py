@@ -375,8 +375,7 @@ class Command:
         if self.daphne_version == "AT":
             pass
 
-        # TODO: Add useful information from context if needed
-        return 0
+        return command_data
 
 
     def intent_query(self, intent_info, command_data, role):

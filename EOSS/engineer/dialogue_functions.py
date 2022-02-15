@@ -10,6 +10,17 @@ from daphne_context.models import UserInformation
 logger = logging.getLogger('EOSS.engineer')
 
 
+
+
+def get_definition_1():
+    return "Delta-V is the total change in spacecraft velocity over a mission lifecycle"
+
+def get_definition_2():
+    return "Eccentricity is the deviation of a spacecraft's orbit from circularity"
+
+def get_definition_3():
+    return "Orbital inclination measures the tilt of a spacecraft's orbit around a celestial body. It is expressed as the angle between a reference plane and the orbital plane or axis of direction of the orbiting object."
+
 def find_design_by_id(design_set, design_id):
     for design in design_set:
         if design["id"] == design_id:

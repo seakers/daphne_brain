@@ -57,17 +57,14 @@ class NonBlockingCommand(APIView):
 
 
         # --> 4. Process command
-        frontend_response = async_to_sync(self.process_command)(user_info, request)
+        frontend_response = async_to_sync(self.process_command)(user_info, request, context)
         return Response({'response': frontend_response})
 
 
 
     # --> Sync processing of command in new subprocess
 
-    async def process_command_async_wrapper(self, user_info, request, context):
-        return await _proc(self.process_command, user_info, request, context)
-
-    def process_command(self, user_info, request, context, session):
+    def process_command(self, user_info, request, context):
 
         # --> 1. Create command object
         command = Command(request.data['command'])
