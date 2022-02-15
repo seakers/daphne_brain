@@ -55,7 +55,7 @@ class LearningModule:
                 'slides': space_system_cost_drivers,
                 'icon': 'mdi-satellite-variant',
                 'slide_idx': 0,
-                'topics': ['Lifecycle Cost']
+                'topics': ['Orbits', 'Spacecraft', 'Payloads']
             }
         }
 
