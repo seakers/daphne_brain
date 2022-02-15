@@ -89,14 +89,6 @@ def error_answers(objective, missing_param):
     }
 
 
-def not_allowed_condition(user_information: UserInformation, command_class, command_type):
-    if len(user_information.allowedcommand_set.all()) == 0:
-        return False
-    for allowed_command in user_information.allowedcommand_set.all():
-        if command_class == allowed_command.command_type and command_type == str(allowed_command.command_descriptor):
-            return False
-    return True
-
 
 def not_allowed_answers():
     return {
@@ -106,21 +98,6 @@ def not_allowed_answers():
     }
 
 
-def answer_command(processed_command, question_type, command_class, condition_name, user_info: UserInformation,
-                   context, new_dialogue_contexts, session):
-    # Create a DialogueContext for the user to fill
-
-    answer = command(processed_command, question_type, command_class, condition_name, user_info, context,
-                     new_dialogue_contexts, session)
-    dialogue_history = DialogueHistory.objects.create(user_information=user_info,
-                                                      voice_message=answer["voice_answer"],
-                                                      visual_message_type=json.dumps(answer["visual_answer_type"]),
-                                                      visual_message=json.dumps(answer["visual_answer"]),
-                                                      dwriter="daphne",
-                                                      date=datetime.datetime.utcnow())
-
-    forward_to_mycroft(user_info, 'Here is what I have found')
-    return dialogue_history
 
 
 def choose_command(command_types, daphne_version, command_role, command_class, context: UserInformation):
@@ -173,6 +150,47 @@ def not_answerable(context: UserInformation):
     forward_to_mycroft(context, answer["voice_answer"])
 
 
+def think_response(context: UserInformation):
+    # TODO: Make this intelligent, e.g. hook this to a rule based engine
+    db_answer = context.dialoguehistory_set.order_by("-date")[:1].get()
+    frontend_answer = {
+        "voice_message": db_answer.voice_message,
+        "visual_message_type": json.loads(db_answer.visual_message_type),
+        "visual_message": json.loads(db_answer.visual_message),
+        "writer": "daphne",
+    }
+    return frontend_answer
+
+
+
+
+
+
+
+# ----------------------------------------------------------------------------------------------------
+
+
+
+
+
+def answer_command(processed_command, question_type, command_class, condition_name, user_info: UserInformation,
+                   context, new_dialogue_contexts, session):
+    # Create a DialogueContext for the user to fill
+
+    answer = command(processed_command, question_type, command_class, condition_name, user_info, context,
+                     new_dialogue_contexts, session)
+    dialogue_history = DialogueHistory.objects.create(user_information=user_info,
+                                                      voice_message=answer["voice_answer"],
+                                                      visual_message_type=json.dumps(answer["visual_answer_type"]),
+                                                      visual_message=json.dumps(answer["visual_answer"]),
+                                                      dwriter="daphne",
+                                                      date=datetime.datetime.utcnow())
+
+    forward_to_mycroft(user_info, 'Here is what I have found')
+    return dialogue_history
+
+
+
 def command(processed_command, question_type, command_class, condition_name, user_information: UserInformation, context,
             new_dialogue_contexts, session):
     if not_allowed_condition(user_information, condition_name, str(question_type)):
@@ -202,13 +220,17 @@ def command(processed_command, question_type, command_class, condition_name, use
     return answers
 
 
-def think_response(context: UserInformation):
-    # TODO: Make this intelligent, e.g. hook this to a rule based engine
-    db_answer = context.dialoguehistory_set.order_by("-date")[:1].get()
-    frontend_answer = {
-        "voice_message": db_answer.voice_message,
-        "visual_message_type": json.loads(db_answer.visual_message_type),
-        "visual_message": json.loads(db_answer.visual_message),
-        "writer": "daphne",
-    }
-    return frontend_answer
+def not_allowed_condition(user_information: UserInformation, command_class, command_type):
+    if len(user_information.allowedcommand_set.all()) == 0:
+        return False
+    for allowed_command in user_information.allowedcommand_set.all():
+        if command_class == allowed_command.command_type and command_type == str(allowed_command.command_descriptor):
+            return False
+    return True
+
+
+
+
+
+
+

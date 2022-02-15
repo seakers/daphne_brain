@@ -67,45 +67,7 @@ class NonBlockingCommand(APIView):
     async def process_command_async_wrapper(self, user_info, request, context):
         return await _proc(self.process_command, user_info, request, context)
 
-    def process_command(self, user_info, request, context):
-
-        if "is_clarifying_input" in context["dialogue"] and context["dialogue"]["is_clarifying_input"]:
-            self.clarify(user_info, request, context)
-        else:
-            self.classify(user_info, request, context)
-
-        return command_processing.think_response(user_info)
-
-    def clarify(self, user_info, request, context):
-
-        user_choice = request.data['command'].strip().lower()
-        choices = json.loads(context["dialogue"]["clarifying_commands"])
-        if user_choice == "first":
-            choice = choices[0]
-        elif user_choice == "second":
-            choice = choices[1]
-        elif user_choice == "third":
-            choice = choices[2]
-        else:
-            choice = choices[0]
-            user_turn = DialogueHistory.objects.filter(dwriter__exact="user").order_by("-date")[1]
-
-        # Preprocess the command
-        processed_command = nlp(user_turn.voice_message.strip().lower())
-
-        role_index = context["dialogue"]["clarifying_role"]
-        command_class = self.command_options[role_index]
-        condition_name = self.condition_names[role_index]
-
-        new_dialogue_contexts = self.create_dialogue_contexts()
-        dialogue_turn = command_processing.answer_command(processed_command, choice, command_class,
-                                                          condition_name, user_info, context,
-                                                          new_dialogue_contexts, request.session)
-        self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
-
-
-    def classify2(self, user_info, request, context):
-
+    def process_command(self, user_info, request, context, session):
 
         # --> 1. Create command object
         command = Command(request.data['command'])
@@ -114,70 +76,60 @@ class NonBlockingCommand(APIView):
         command = command.set_version(self.daphne_version)
         command = command.set_create_context_func(self.create_dialogue_contexts)
         command = command.set_save_context_func(self.save_dialogue_contexts)
-        client = CommandClassifier(user_info, command)
-
-        # --> 2. Predict which roles are being called
-        role_prediction_logits = client.classify_roles()
-        roles_idx = client.get_prediction_idx(role_prediction_logits, top_number=1)
-
-        # --> 3. For each role, predict the command type
-        for idx, role_idx in enumerate(roles_idx):
-            role = self.command_options[role_idx]
-            condition = self.condition_names[role_idx]
-
-            # --> Predict the command type and find prediction confidence
-            type_prediction_logits = client.classify_types(role)
-            type_prediction_confidence = client.get_type_confidence(type_prediction_logits)
-
-            if type_prediction_confidence > 0.95:
-                command_type = client.get_type_prediction(type_prediction_logits, role, top_number=1)[0]
-                new_dialogue_contexts = self.create_dialogue_contexts()
+        command = command.set_user_info(user_info)
+        command = command.set_session(request.session)
+        command = command.set_current_context(context)
 
 
+        # --> 2. Determine if clarifying or answering
+        if "is_clarifying_input" in context["dialogue"] and context["dialogue"]["is_clarifying_input"]:
+            self.clarify(command, request, context)
+        else:
+            self.classify(command)
 
-            elif type_prediction_confidence > 0.90:
-                x = 1
-            else:
-                x = 1
+        return self.think_response(user_info)
 
+    def clarify(self, command, request, context):
 
+        # --> Determine role, type, and condition for command
+        user_choice = request.data['command'].strip().lower()
 
+        types = json.loads(context["dialogue"]["clarifying_commands"])
+        if user_choice == "first":
+            type = types[0]
+        elif user_choice == "second":
+            type = types[1]
+        elif user_choice == "third":
+            type = types[2]
+        else:
+            type = types[0]
 
+        # --> Set selected command in command obj
+        user_turn = DialogueHistory.objects.filter(dwriter__exact="user").order_by("-date")[1]
+        command.set_command(user_turn.voice_message.strip().lower())
 
+        role_index = context["dialogue"]["clarifying_role"]
+        role = self.command_options[role_index]
+        condition = self.condition_names[role_index]
 
-    def classify(self, user_info, request, context):
+        # --> Answer command
+        command.answer(role, condition, type)
 
-        # Preprocess the command in new subprocess
-        processed_command = nlp(request.data['command'].strip())
+    def classify(self, command):
+        client = CommandClassifier(command)
+        client.classify()
+        command.process_intents()
 
-        command_roles = command_processing.classify_command_role(processed_command, self.daphne_version)
-
-        # Act based on the types
-        for command_role in command_roles:
-            command_class = self.command_options[command_role]  # command_options: ['iFEED', 'VASSAR', 'Critic', 'Historian']
-            condition_name = self.condition_names[command_role]  #  command_names: ['analyst', 'engineer', 'critic', 'historian']
-
-            command_predictions = command_processing.command_type_predictions(processed_command, self.daphne_version,
-                                                                              command_class)
-
-            # If highest value prediction is over 95%, take that question. If over 90%, ask the user to make sure
-            # that is correct by choosing over 3. If less, call BS
-            max_value = np.amax(command_predictions)
-            if max_value > 0.95:
-                command_type = command_processing.get_top_types(command_predictions, self.daphne_version,
-                                                                command_class, top_number=1)[0]
-                new_dialogue_contexts = self.create_dialogue_contexts()
-                dialogue_turn = command_processing.answer_command(processed_command, command_type, command_class,
-                                                                  condition_name, user_info, context,
-                                                                  new_dialogue_contexts, request.session)
-                self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
-            elif max_value > 0.90:
-                command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
-                                                                 command_class, top_number=3)
-                command_processing.choose_command(command_types, self.daphne_version, command_role, command_class,
-                                                  user_info)
-            else:
-                command_processing.not_answerable(user_info)
+    def think_response(self, user_info):
+        # TODO: Make this intelligent, e.g. hook this to a rule based engine
+        db_answer = user_info.dialoguehistory_set.order_by("-date")[:1].get()
+        frontend_answer = {
+            "voice_message": db_answer.voice_message,
+            "visual_message_type": json.loads(db_answer.visual_message_type),
+            "visual_message": json.loads(db_answer.visual_message),
+            "writer": "daphne",
+        }
+        return frontend_answer
 
 
 

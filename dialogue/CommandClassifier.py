@@ -1,12 +1,7 @@
-from daphne_brain.utils import _proc
 import numpy as np
 import pickle
 import os
 from tensorflow.keras.models import load_model
-from daphne_brain.nlp_object import nlp
-from asgiref.sync import async_to_sync, sync_to_async
-
-from dialogue import qa_pipeline
 
 
 
@@ -16,8 +11,8 @@ from dialogue import qa_pipeline
 
 class CommandClassifier:
 
-    def __init__(self, user_info, command):
-        self.user_info = user_info
+    def __init__(self, command):
+        self.user_info = command.user_info
         self.command = command
 
         # --> Classification Variables
@@ -25,17 +20,11 @@ class CommandClassifier:
         self.type_logits = None
 
 
-    def clarify(self):
-        return 0
-
-
-
-
-    def classify(self):
+    def classify(self, max_role_matches=1):
 
         # --> 1. Classify Roles (e.g. VASSAR)
         self.classify_roles()
-        roles = self.get_role_prediction(top_number=1)
+        roles = self.get_role_prediction(top_number=max_role_matches)
         for role in roles:
 
             # --> 2. Classify Types (e.g. 1001)
@@ -45,9 +34,6 @@ class CommandClassifier:
 
             # --> 3. Add appropriate command intent
             self.command.add_intent(role, types, confidence)  # e.g. ( 'VASSAR', '[ 1001, 1002 ]', 0.94 )
-
-
-
 
 
     """
@@ -166,61 +152,6 @@ class CommandClassifier:
 
     def get_type_confidence(self, logits):
         return np.amax(logits)
-
-
-    """
-                                                  
-         /\                                      
-        /  \    _ __   ___ __      __ ___  _ __  
-       / /\ \  | '_ \ / __|\ \ /\ / // _ \| '__| 
-      / ____ \ | | | |\__ \ \ V  V /|  __/| |    
-     /_/    \_\|_| |_||___/  \_/\_/  \___||_|    
-                                                                                                      
-            
-    """
-
-    def answer(self, role, condition):
-        answer = None
-
-        # --> 1. Get top command type (return list of length 1)
-        command_type = self.get_type_prediction(role, top_number=1)
-
-        # --> 2. Create new dialogue context
-        dialogue_context = self.command.create_dialogue_contexts()
-
-        # --> 3. Validate conditions
-        if self._check_conditions(condition, command_type) is False:
-            answer = {
-                'voice_answer': 'This command is restricted right now.',
-                'visual_answer_type': ['text'],
-                'visual_answer': ['This command is restricted right now.']
-            }
-            return answer
-
-        # --> 4. Load type info
-        information = qa_pipeline.load_type_info(command_type, self.command.daphne_version, role)
-
-
-
-
-
-
-
-
-        return 0
-
-
-
-    def _check_conditions(self, command_condition, command_type):
-        if len(self.user_info.allowedcommand_set.all()) == 0:
-            return False
-        for allowed_command in self.user_info.allowedcommand_set.all():
-            if command_condition == allowed_command.command_type and command_type == str(
-                    allowed_command.command_descriptor):
-                return False
-
-
-
 
 
 

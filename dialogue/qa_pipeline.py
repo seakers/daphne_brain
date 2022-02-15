@@ -50,25 +50,6 @@ def classify(question, daphne_version, module_name):
     return named_labels[prediction[0][0]]
 
 
-def load_type_info(question_type, daphne_version, module_name):
-    print('--> LOAD TYPE INFO:', daphne_version, module_name, question_type)
-    type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
-                                  str(question_type) + '.json')
-    with open(type_info_file, 'r') as file:
-        type_info = json.load(file)
-    information = {}
-    information["type"] = type_info["type"]
-    information["params"] = type_info["params"]
-    information["objective"] = type_info["objective"]
-    if type_info["type"] == "db_query":
-        information["query"] = type_info["query"]
-    elif type_info["type"] == "run_function":
-        information["function"] = type_info["function"]
-    information["voice_response"] = type_info["voice_response"]
-    information["visual_response"] = type_info["visual_response"]
-    return information
-
-
 def get_extract_functions(daphne_version):
     if daphne_version == "EOSS":
         from EOSS.dialogue.data_extractors import extract_function
@@ -91,6 +72,67 @@ def get_process_functions(daphne_version):
     if daphne_version == "AT":
         from AT.dialogue.data_processors import process_function
         return process_function
+
+
+
+def get_query_model(command_class):
+    if command_class == "Historian":
+        import EOSS.historian.models as models
+        engine = models.db_connect()
+        session = sessionmaker(bind=engine)()
+        return models, session
+    if command_class == "EDL":
+        import EDL.data.model as models
+        engine = models.db_connect()
+        session = sessionmaker(bind=engine)()
+        return models, session
+    return None, None
+
+
+def get_response_helpers(command_class):
+    if command_class == "Historian":
+        import EOSS.historian.response_helpers as response_helpers
+        return response_helpers
+    return None
+
+
+
+def get_dialogue_functions(daphne_version):
+    if daphne_version == "EOSS":
+        import EOSS.dialogue.dialogue_functions as dialogue_functions
+        return dialogue_functions
+    if daphne_version == "EDL":
+        import EDL.dialogue.dialogue_functions as dialogue_functions
+        return dialogue_functions
+    if daphne_version == "AT":
+        import AT.dialogue.dialogue_functions as dialogue_functions
+        return dialogue_functions
+
+
+
+
+
+# ----------------------------------------------------------------------
+
+
+def load_type_info(question_type, daphne_version, module_name):
+    print('--> LOAD TYPE INFO:', daphne_version, module_name, question_type)
+    type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
+                                  str(question_type) + '.json')
+    with open(type_info_file, 'r') as file:
+        type_info = json.load(file)
+    information = {}
+    information["type"] = type_info["type"]
+    information["params"] = type_info["params"]
+    information["objective"] = type_info["objective"]
+    if type_info["type"] == "db_query":
+        information["query"] = type_info["query"]
+    elif type_info["type"] == "run_function":
+        information["function"] = type_info["function"]
+    information["voice_response"] = type_info["voice_response"]
+    information["visual_response"] = type_info["visual_response"]
+    return information
+
 
 
 def extract_data(processed_question, params, user_information: UserInformation, context):
@@ -138,7 +180,6 @@ def extract_data(processed_question, params, user_information: UserInformation, 
                                                                             user_information)
     return extracted_data
 
-
 def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
     data['session_key'] = session.session_key
@@ -163,28 +204,6 @@ def augment_data(data, user_information: UserInformation, session):
 
     # TODO: Add useful information from context if needed
     return data
-
-
-def get_query_model(command_class):
-    if command_class == "Historian":
-        import EOSS.historian.models as models
-        engine = models.db_connect()
-        session = sessionmaker(bind=engine)()
-        return models, session
-    if command_class == "EDL":
-        import EDL.data.model as models
-        engine = models.db_connect()
-        session = sessionmaker(bind=engine)()
-        return models, session
-    return None, None
-
-
-def get_response_helpers(command_class):
-    if command_class == "Historian":
-        import EOSS.historian.response_helpers as response_helpers
-        return response_helpers
-    return None
-
 
 def query(query, data, command_class):
     models, session = get_query_model(command_class)
@@ -221,19 +240,6 @@ def query(query, data, command_class):
 
     return results
 
-
-def get_dialogue_functions(daphne_version):
-    if daphne_version == "EOSS":
-        import EOSS.dialogue.dialogue_functions as dialogue_functions
-        return dialogue_functions
-    if daphne_version == "EDL":
-        import EDL.dialogue.dialogue_functions as dialogue_functions
-        return dialogue_functions
-    if daphne_version == "AT":
-        import AT.dialogue.dialogue_functions as dialogue_functions
-        return dialogue_functions
-
-
 def run_function(function_info, data, daphne_version, context, new_dialogue_contexts, user_information, session):
     # Load the functions that must be run
     dialogue_functions = get_dialogue_functions(daphne_version)
@@ -262,6 +268,8 @@ def run_function(function_info, data, daphne_version, context, new_dialogue_cont
         results.append(result)
 
     return results
+
+
 
 
 def build_answers(voice_response_templates, visual_response_templates, results, data):
@@ -382,3 +390,6 @@ def build_answers(voice_response_templates, visual_response_templates, results, 
             answers["visual_answer"].append(visual_answer)
 
     return answers
+
+
+
