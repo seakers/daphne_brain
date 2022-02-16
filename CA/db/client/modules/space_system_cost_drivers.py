@@ -50,89 +50,169 @@ slides = [
         'idx': 9
     },
     {
+        'type': 'question',
+        'answered': False,
+        'correct': False,
+        'choice_id': -1,
+        'idx': 10,
+        'question': {
+            'topics': ['Orbits'],
+            'text': 'Q1. True or False: spacecraft orbital altitude plays a role in determining mission cost',
+            'choices': [
+                {'text': 'A. True', 'correct': True, 'id': 0},
+                {'text': 'B. False', 'correct': False, 'id': 1},
+            ],
+            'explanation': 'The answer is true! Spacecraft orbital altitude is connected to strong cost-driving cariables such as delta-v',
+            'difficulty': 0.0,
+            'discrimination': 0.0,
+            'guessing': 0.25
+        }
+    },
+    {
+        'type': 'question',
+        'answered': False,
+        'correct': False,
+        'choice_id': -1,
+        'idx': 11,
+        'question': {
+            'topics': ['Orbits'],
+            'text': 'Q2. Which of the following circular orbits (defined by altitude) will have the longest orbital period?',
+            'choices': [
+                {'text': 'A. 500km', 'correct': False, 'id': 0},
+                {'text': 'B. 600km', 'correct': False, 'id': 1},
+                {'text': 'C. 750km', 'correct': False, 'id': 2},
+                {'text': 'D. 800km', 'correct': True, 'id': 3},
+            ],
+            'explanation': 'Choice D is correct! The higher the orbit, the longer the period.',
+            'difficulty': 0.0,
+            'discrimination': 0.0,
+            'guessing': 0.25
+        }
+    },
+    {
+        'type': 'question',
+        'answered': False,
+        'correct': False,
+        'choice_id': -1,
+        'idx': 12,
+        'question': {
+            'topics': ['Orbits'],
+            'text': 'Q3. True or False: geostationary orbits have a period of one day and the spacecraft does not move relative to earth',
+            'choices': [
+                {'text': 'A. True', 'correct': True, 'id': 0},
+                {'text': 'B. False', 'correct': False, 'id': 1},
+            ],
+            'explanation': 'The answer is true! Geostationary orbits are at an altitude such that the ground velocity of the spacecraft matches the rotation rate of earth',
+            'difficulty': 0.0,
+            'discrimination': 0.0,
+            'guessing': 0.25
+        }
+    },
+    {
+        'type': 'question',
+        'answered': False,
+        'correct': False,
+        'choice_id': -1,
+        'idx': 13,
+        'question': {
+            'topics': ['Orbits'],
+            'text': 'Q4. Which of the following are considered orbit perturbations?',
+            'choices': [
+                {'text': 'A. Atmospheric Drag', 'correct': False, 'id': 0},
+                {'text': 'B. Spherical Harmonics', 'correct': False, 'id': 1},
+                {'text': 'C. 3rd Body Effects', 'correct': False, 'id': 2},
+                {'text': 'D. All of the above', 'correct': True, 'id': 3},
+            ],
+            'explanation': 'Choice D is correct! All of these elements are considered orbit perturbations.',
+            'difficulty': 0.0,
+            'discrimination': 0.0,
+            'guessing': 0.25
+        }
+    },
+    {
         'type': 'info',
         'src': 'COSTD_11',
-        'idx': 10
-    },
-    {
-        'type': 'info',
-        'src': 'COSTD_12',
-        'idx': 11
-    },
-    {
-        'type': 'info',
-        'src': 'COSTD_13',
-        'idx': 12
-    },
-    {
-        'type': 'info',
-        'src': 'COSTD_14',
-        'idx': 13
-    },
-    {
-        'type': 'info',
-        'src': 'COSTD_15',
         'idx': 14
     },
     {
         'type': 'info',
-        'src': 'COSTD_16',
+        'src': 'COSTD_12',
         'idx': 15
     },
     {
         'type': 'info',
-        'src': 'COSTD_17',
+        'src': 'COSTD_13',
         'idx': 16
     },
     {
         'type': 'info',
-        'src': 'COSTD_18',
+        'src': 'COSTD_14',
         'idx': 17
     },
     {
         'type': 'info',
-        'src': 'COSTD_19',
+        'src': 'COSTD_15',
         'idx': 18
     },
     {
         'type': 'info',
-        'src': 'COSTD_20',
+        'src': 'COSTD_16',
         'idx': 19
     },
     {
         'type': 'info',
-        'src': 'COSTD_21',
+        'src': 'COSTD_17',
         'idx': 20
     },
     {
         'type': 'info',
-        'src': 'COSTD_22',
+        'src': 'COSTD_18',
         'idx': 21
     },
     {
         'type': 'info',
-        'src': 'COSTD_23',
+        'src': 'COSTD_19',
         'idx': 22
     },
     {
         'type': 'info',
-        'src': 'COSTD_24',
+        'src': 'COSTD_20',
         'idx': 23
     },
     {
         'type': 'info',
-        'src': 'COSTD_25',
+        'src': 'COSTD_21',
         'idx': 24
     },
     {
         'type': 'info',
-        'src': 'COSTD_26',
+        'src': 'COSTD_22',
         'idx': 25
     },
     {
         'type': 'info',
-        'src': 'COSTD_27',
+        'src': 'COSTD_23',
         'idx': 26
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_24',
+        'idx': 27
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_25',
+        'idx': 28
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_26',
+        'idx': 29
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_27',
+        'idx': 30
     }
 ]
 
