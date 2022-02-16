@@ -1,7 +1,8 @@
 import itertools
-import re
-import numpy
 import os
+import re
+
+import numpy
 import pandas as pd
 from neo4j import GraphDatabase, basic_auth
 
@@ -1009,16 +1010,29 @@ def get_explanations_from_historical_database(anomalies_list):
     filename = working_directory + '/AT/databases/Historical_Database.csv'
 
     with open(filename, 'r') as csvfile:
-        csv_reader = pd.read_csv(csvfile, usecols=range(4, 56), dtype=object)
-        header = csv_reader.columns.values
+        df = pd.read_csv(csvfile, dtype=object)
+        anomaly_id = df.iloc[:, 0]
+        start_date = df.iloc[:, 1]
+        start_time = df.iloc[:, 2]
+        anomaly_description: df.iloc[:, 3]
+        signature = df.iloc[:, range(4, 55)]
+        signature_text = df.iloc[:, 56]
+        root_cause = df.iloc[:, 57]
+        risks = df.iloc[:, 58]
+        actions_taken = df.iloc[:, 59]
+        end_date = df.iloc[:, 60]
+        end_time = df.iloc[:, 61]
+        affected_systems = df.iloc[:, 62]
 
-        for row in csv_reader.values:
+        signature_header = signature.columns.values
+
+        for row in signature.values:
             values = "".join(row)
             historical_binary_signatures.append(values)
 
     explanation_report = []
     for anomaly in anomalies_list:
-        binary_signature = get_binary_signatures(anomaly['signature'], header)
+        binary_signature = get_binary_signatures(anomaly['signature'], signature_header)
 
         # Number of times occurred in the past
         # First convert everything to numpy array
@@ -1026,16 +1040,26 @@ def get_explanations_from_historical_database(anomalies_list):
         historical_binary_signatures = numpy.array(historical_binary_signatures)
         binary_signature = numpy.array(binary_signature)
         all_occurrences_in_past = numpy.where(historical_binary_signatures == binary_signature)
-        numOfOccurrences = len(numpy.transpose(all_occurrences_in_past))
+        transposed_occurrences = numpy.transpose(all_occurrences_in_past)
+        numOfOccurrences = len(transposed_occurrences)
 
-        # Most recent occurrence date time - and when and how it was resolved
-        # Final root cause
+        # show all occurrences, resolution, root cause
+        time_stamps = []
+        resolution = []
+        final_root_cause = []
+        for occurrence in transposed_occurrences:
+            time_stamps.append({'start_date': start_date.values[occurrence[0]],
+                                'start_time': start_time.values[occurrence[0]],
+                                'end_date': end_date.values[occurrence[0]],
+                                'end_time': end_time.values[occurrence[0]],
+                                'actions_taken': actions_taken.values[occurrence[0]],
+                                'root_cause': root_cause.values[occurrence[0]]})
+            # resolution.append({'actions_taken': actions_taken.values[occurrence[0]]})
+            # final_root_cause.append({'root_cause': root_cause.values[occurrence[0]]})
 
-        # show all occurrences - and resolution
-
-        # Build the explanation report and send it to the frontend
-        explanation_report.append({'anomaly': anomaly['name'], 'signature': anomaly['signature'], 'num_occurrences':
-            numOfOccurrences})
+            # Build the explanation report and send it to the frontend
+        explanation_report.append({'name': anomaly['name'], 'signature': anomaly['signature'], 'num_occurrences':
+            numOfOccurrences, 'time': time_stamps})
 
     return explanation_report
 
