@@ -29,7 +29,34 @@ dani_account = {
     'password': 'aYH8x9y9hPsghbK5'
 }
 
-demo_accounts = [dani_account, bryan_account]
+demo_user_1 = {
+    'username': 'duser1',
+    'email': 'duser1@seaklab.com',
+    'password': 'MDEdnqxs373gK8Um'
+}
+demo_user_2 = {
+    'username': 'duser2',
+    'email': 'duser2@seaklab.com',
+    'password': 'qJ64ZPLaGum8XcDf'
+}
+demo_user_3 = {
+    'username': 'duser3',
+    'email': 'duser3@seaklab.com',
+    'password': 'UY2TV8DUUfgzdGVr'
+}
+demo_user_4 = {
+    'username': 'duser4',
+    'email': 'duser4@seaklab.com',
+    'password': '667Ayq9UJNz2U2Tb'
+}
+demo_user_5 = {
+    'username': 'duser5',
+    'email': 'duser5@seaklab.com',
+    'password': 'U4VPbxK2Ch9PZ5NL'
+}
+
+
+demo_accounts = [dani_account, bryan_account, demo_user_1, demo_user_2, demo_user_3, demo_user_4, demo_user_5]
 
 
 
