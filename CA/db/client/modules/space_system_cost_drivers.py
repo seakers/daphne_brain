@@ -62,7 +62,7 @@ slides = [
                 {'text': 'A. True', 'correct': True, 'id': 0},
                 {'text': 'B. False', 'correct': False, 'id': 1},
             ],
-            'explanation': 'The answer is true! Spacecraft orbital altitude is connected to strong cost-driving cariables such as delta-v',
+            'explanation': 'The answer is true! Spacecraft orbital altitude is connected to strong cost-driving variables such as delta-v',
             'difficulty': 0.0,
             'discrimination': 0.0,
             'guessing': 0.25
@@ -150,69 +150,107 @@ slides = [
         'idx': 17
     },
     {
+        'type': 'question',
+        'answered': False,
+        'correct': False,
+        'choice_id': -1,
+        'idx': 18,
+        'question': {
+            'topics': ['Orbits'],
+            'text': 'Q5. True or False: spacecraft power consumption is a factor in determining spacecraft cost',
+            'choices': [
+                {'text': 'A. True', 'correct': True, 'id': 0},
+                {'text': 'B. False', 'correct': False, 'id': 1},
+            ],
+            'explanation': 'The answer is true. Power consumption drives both solar panel and battery sizing, both of which play a role in determining cost',
+            'difficulty': 0.0,
+            'discrimination': 0.0,
+            'guessing': 0.25
+        }
+    },
+    {
+        'type': 'question',
+        'answered': False,
+        'correct': False,
+        'choice_id': -1,
+        'idx': 19,
+        'question': {
+            'topics': ['Orbits'],
+            'text': 'Q6. True or False: one of the propulsion subsystems functions is to execute station-keeping maneuvers to correct for any orbital perturbations',
+            'choices': [
+                {'text': 'A. True', 'correct': True, 'id': 0},
+                {'text': 'B. False', 'correct': False, 'id': 1},
+            ],
+            'explanation': 'The answer is true. Orbital perturbations can cause the spacecraft to de-orbit, so it is necessary to correct for these errors',
+            'difficulty': 0.0,
+            'discrimination': 0.0,
+            'guessing': 0.25
+        }
+    },
+    {
         'type': 'info',
         'src': 'COSTD_15',
-        'idx': 18
-    },
-    {
-        'type': 'info',
-        'src': 'COSTD_16',
-        'idx': 19
-    },
-    {
-        'type': 'info',
-        'src': 'COSTD_17',
         'idx': 20
     },
     {
         'type': 'info',
-        'src': 'COSTD_18',
+        'src': 'COSTD_16',
         'idx': 21
     },
     {
         'type': 'info',
-        'src': 'COSTD_19',
+        'src': 'COSTD_17',
         'idx': 22
     },
     {
         'type': 'info',
-        'src': 'COSTD_20',
+        'src': 'COSTD_18',
         'idx': 23
     },
     {
         'type': 'info',
-        'src': 'COSTD_21',
+        'src': 'COSTD_19',
         'idx': 24
     },
     {
         'type': 'info',
-        'src': 'COSTD_22',
+        'src': 'COSTD_20',
         'idx': 25
     },
     {
         'type': 'info',
-        'src': 'COSTD_23',
+        'src': 'COSTD_21',
         'idx': 26
     },
     {
         'type': 'info',
-        'src': 'COSTD_24',
+        'src': 'COSTD_22',
         'idx': 27
     },
     {
         'type': 'info',
-        'src': 'COSTD_25',
+        'src': 'COSTD_23',
         'idx': 28
     },
     {
         'type': 'info',
-        'src': 'COSTD_26',
+        'src': 'COSTD_24',
         'idx': 29
     },
     {
         'type': 'info',
-        'src': 'COSTD_27',
+        'src': 'COSTD_25',
         'idx': 30
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_26',
+        'idx': 31
+    },
+    {
+        'type': 'info',
+        'src': 'COSTD_27',
+        'idx': 32
     }
 ]
 
