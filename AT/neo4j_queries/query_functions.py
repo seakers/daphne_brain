@@ -1,6 +1,8 @@
 import itertools
 import re
-
+import numpy
+import os
+import pandas as pd
 from neo4j import GraphDatabase, basic_auth
 
 
@@ -122,6 +124,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
     size_of_each_anomaly = {}
     signature = {}
     anomalyContainsRequestedSymptoms = {}
+    missing_anomaly_symptoms = {}
 
     # Loop over the anomalies to get comparison with parsed symptoms
     for anomaly in diagnosis:
@@ -129,31 +132,34 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         cardinal = 0
         containsSymptoms = []
         signatureSymptom = []
+        missing_symptom = []
         # Loop over A
         for anomaly_symptom in parsed_symptoms_of_each_anomaly[anomaly]:
-            signatureSymptom.append(anomaly_symptom['measurement'] + ' ' + re.sub(r"(\w)([A-Z])", r"\1 \2",
-                                                                                  anomaly_symptom[
-                                                                                      'relationship'].replace(
-                                                                                      '_', ' ')))
+            readable_symptom = anomaly_symptom['measurement'] + ' ' + re.sub(r"(\w)([A-Z])", r"\1 \2",
+                                                                             anomaly_symptom[
+                                                                                 'relationship'].replace(
+                                                                                 '_', ' '))
+            signatureSymptom.append(readable_symptom)
             # Loop over B
             for parsed_input_symptom in parsed_input_symptoms:
                 # Compare
                 are_equal = compare_parsed(anomaly_symptom, parsed_input_symptom)
                 if are_equal:
                     cardinal += 1
-                    anomalyContainsSymptoms = anomaly_symptom['measurement'] + ' ' + re.sub(r"(\w)([A-Z])",
-                                                                                            r"\1 \2",
-                                                                                            anomaly_symptom[
-                                                                                                'relationship'].replace(
-                                                                                                '_', ' '))
-
-                    containsSymptoms.append(anomalyContainsSymptoms)
+                    containsSymptoms.append(readable_symptom)
+        # add missing symptoms from the signature
+        for symptom in signatureSymptom:
+            if symptom in containsSymptoms:
+                pass
+            else:
+                missing_symptom.append(symptom)
 
         # Store the results
         cardinality_for_each_anomaly[anomaly] = cardinal
         anomalyContainsRequestedSymptoms[anomaly] = containsSymptoms
         size_of_each_anomaly[anomaly] = len(parsed_symptoms_of_each_anomaly[anomaly])
         signature[anomaly] = signatureSymptom
+        missing_anomaly_symptoms[anomaly] = missing_symptom
 
     # Create the result storing variable and parse the size of the requested symptoms set
     scored_diagnosis = {}
@@ -194,7 +200,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
             top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score, 'cardinality':
                 cardinality_for_each_anomaly[anomaly], 'containsRequestedSymptoms': anomalyContainsRequestedSymptoms[
-                anomaly], 'signature': signature[anomaly]})
+                anomaly], 'signature': signature[anomaly], 'missing_symptoms': missing_anomaly_symptoms[anomaly]})
 
     # Return result
     final_diagnosis = top_n_diagnosis
@@ -995,3 +1001,63 @@ def retrieve_step_from_procedure(step_number, procedure):
         step = item[0]
 
     return step
+
+
+def get_explanations_from_historical_database(anomalies_list):
+    historical_binary_signatures = []
+    working_directory = os.getcwd()
+    filename = working_directory + '/AT/databases/Historical_Database.csv'
+
+    with open(filename, 'r') as csvfile:
+        csv_reader = pd.read_csv(csvfile, usecols=range(4, 56), dtype=object)
+        header = csv_reader.columns.values
+
+        for row in csv_reader.values:
+            values = "".join(row)
+            historical_binary_signatures.append(values)
+
+    explanation_report = []
+    for anomaly in anomalies_list:
+        binary_signature = get_binary_signatures(anomaly['signature'], header)
+
+        # Number of times occurred in the past
+        # First convert everything to numpy array
+        # Then do transpose because 'where' method returns a tuple of 1 element
+        historical_binary_signatures = numpy.array(historical_binary_signatures)
+        binary_signature = numpy.array(binary_signature)
+        all_occurrences_in_past = numpy.where(historical_binary_signatures == binary_signature)
+        numOfOccurrences = len(numpy.transpose(all_occurrences_in_past))
+
+        # Most recent occurrence date time - and when and how it was resolved
+        # Final root cause
+
+        # show all occurrences - and resolution
+
+        # Build the explanation report and send it to the frontend
+        explanation_report.append({'anomaly': anomaly['name'], 'signature': anomaly['signature'], 'num_occurrences':
+            numOfOccurrences})
+
+    return explanation_report
+
+
+def get_binary_signatures(anomaly, header):
+    arr = numpy.zeros(len(header), dtype='<U256')
+    for symptom in anomaly:
+        measurement = symptom.split(' Exceeds ')[0]
+        threshold = symptom.split(' Exceeds ')[1]
+        try:
+            index = numpy.where(header == measurement)
+            if threshold == "Upper Warning Limit":
+                arr[index] = "0001"
+            elif threshold == "Upper Caution Limit":
+                arr[index] = "0010"
+            elif threshold == "Lower Caution Limit":
+                arr[index] = "0100"
+            elif threshold == "Lower Warning Limit":
+                arr[index] = "1000"
+        except ValueError:
+            print("Measurement doesn't exist.")
+
+    arr[numpy.where(arr == '')] = '0000'
+    binary_signature = "".join(arr)
+    return binary_signature

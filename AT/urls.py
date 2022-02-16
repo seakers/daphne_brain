@@ -9,6 +9,7 @@ urlpatterns = [
     path('receiveSeclssFeed', views.SeclssFeed.as_view(), name='receiveSeclssFeed'),
     path('receiveHeraFeed', views.HeraFeed.as_view(), name='receiveHeraFeed'),
     path('requestDiagnosis', views.RequestDiagnosis.as_view(), name='RequestDiagnosis'),
+    path('requestExplanations', views.RequestExplanations.as_view(), name='RequestExplanations'),
     path('loadAllAnomalies', views.LoadAllAnomalies.as_view(), name='LoadAllAnomalies'),
     path('retrieveProcedureFromAnomaly', views.RetrieveProcedureFromAnomaly.as_view(),
          name='retrieveProcedureFromAnomaly'),

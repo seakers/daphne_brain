@@ -1,22 +1,15 @@
 import json
-import threading
 
-import redis
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from AT.automated_at_routines.at_routine import anomaly_treatment_routine
-from AT.automated_at_routines.hub_routine import hub_routine
-from AT.simulator_thread.simulator_routine_by_false_eclss import simulate_by_dummy_eclss
-from AT.simulator_thread.simulator_routine_by_real_eclss import handle_eclss_update
 from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly, \
-    retrieve_figures_from_procedure, retrieve_references_from_procedure, retrieve_reference_links_from_procedure
+    retrieve_figures_from_procedure, retrieve_references_from_procedure, retrieve_reference_links_from_procedure, \
+    get_explanations_from_historical_database
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_procedures_fTitle_from_anomaly
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from auth_API.helpers import get_or_create_user_information
 
 # THREADS + QUEUES
@@ -129,6 +122,21 @@ class RequestDiagnosis(APIView):
         return Response(diagnosis_report)
 
 
+class RequestExplanations(APIView):
+    def post(self, request):
+        # Retrieve the symptoms list from the request
+        anomalies_list = json.loads(request.data['anomaliesList'])
+
+        # Query the historical database to get all information
+        # then find the information you need
+        explanations = get_explanations_from_historical_database(anomalies_list)
+
+        # Build the explanations report and send it to frontend
+        explanations_report = {'anomalies_list': anomalies_list, 'explanations': explanations}
+
+        return Response(explanations_report)
+
+
 class LoadAllAnomalies(APIView):
     def post(self, request):
         # Query the neo4j graph
@@ -167,7 +175,6 @@ class RetrieveInfoFromProcedure(APIView):
             if step['depth'] > 0:
                 checkable_steps += 1
                 checkable_steps_list.append(step)
-
 
         # Build the output dictionary
         info = {

@@ -92,8 +92,7 @@ class Login(APIView):
             else:
                 return Response({
                     'status': 'login_alert',
-                    'login_error': 'This user is currently in an experiment! If you login with this username, '
-                                   'they will loose all their data. Are you sure you want to continue? '
+                    'login_error': 'This username is already in use! Are you sure you want to continue?'
                 })
         else:
             # TODO: Get different messages based on auth error
