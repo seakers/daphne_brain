@@ -1045,8 +1045,6 @@ def get_explanations_from_historical_database(anomalies_list):
 
         # show all occurrences, resolution, root cause
         time_stamps = []
-        resolution = []
-        final_root_cause = []
         for occurrence in transposed_occurrences:
             time_stamps.append({'start_date': start_date.values[occurrence[0]],
                                 'start_time': start_time.values[occurrence[0]],
@@ -1054,8 +1052,6 @@ def get_explanations_from_historical_database(anomalies_list):
                                 'end_time': end_time.values[occurrence[0]],
                                 'actions_taken': actions_taken.values[occurrence[0]],
                                 'root_cause': root_cause.values[occurrence[0]]})
-            # resolution.append({'actions_taken': actions_taken.values[occurrence[0]]})
-            # final_root_cause.append({'root_cause': root_cause.values[occurrence[0]]})
 
             # Build the explanation report and send it to the frontend
         explanation_report.append({'name': anomaly['name'], 'signature': anomaly['signature'], 'num_occurrences':
