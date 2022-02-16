@@ -12,7 +12,7 @@ class Message:
     def index(self):
         for user in self.client.get_users():
             self.client.index_message(user.id, self.welcome_text, 'Daphne')
-            self.client.index_message(user.id, self.warning_text, 'Daphne')
+            # self.client.index_message(user.id, self.warning_text, 'Daphne')
 
 
 
