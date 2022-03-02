@@ -9,13 +9,6 @@ def get_module():
     builder.add_slide('DODS_2')
     builder.add_slide('DODS_3')
 
-    builder.add_tf_question(
-        'Radar systems can be both passive and active.',
-        False,
-        'The correct answer is false, as radars are active instruments',
-        ['Remote Sensing']
-    )
-
     builder.add_mc_question(
         'What is the difference between active and passive remote sensing instruments?',
         [
