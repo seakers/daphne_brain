@@ -20,29 +20,26 @@ class EOSSCommand(Command):
     def get_current_context(self, user_info: UserInformation):
         context = {}
 
-        # First encode the constant context (visual)
-        screen_context_serializer = EOSSContextSerializer(user_info.eosscontext)
-        active_context_serializer = ActiveContextSerializer(user_info.eosscontext.activecontext)
-        screen_context = screen_context_serializer.data
-        screen_context["activecontext"] = active_context_serializer.data
+        # --> 1. Encode user EOSSContext and ActiveContext entries in context dict
+        screen_context = EOSSContextSerializer(user_info.eosscontext).data
+        screen_context["activecontext"] = ActiveContextSerializer(user_info.eosscontext.activecontext).data
         context["screen"] = screen_context
 
-        # Then encode the temporal context
-        # 1. Get the last 5 DialogueContext
+
+        # --> 2. Encode last 5 user DialogueContext entries to save current context for answer
+        merged_dialogue_contexts = {}
         dialogue_contexts = DialogueContext.objects.order_by("-dialogue_history__date")[:5]
-        # 2. Generate the JSON for each of them
         dialogue_contexts_dict = [
             self.generate_eoss_dialogue_context(dialogue_context) for dialogue_context in dialogue_contexts
         ]
-        # 3. Merge the JSONs starting by the newest
         if len(dialogue_contexts_dict) > 0:
             merged_dialogue_contexts = dialogue_contexts_dict[0]
             for idx in range(len(dialogue_contexts_dict)-1):
                 pass
-        else:
-            merged_dialogue_contexts = {}
-        # 4. Add the merged JSON to the context object
         context["dialogue"] = merged_dialogue_contexts
+
+
+        # --> 3. Return context
         return context
 
     def generate_eoss_dialogue_context(self, dialogue_context: DialogueContext):

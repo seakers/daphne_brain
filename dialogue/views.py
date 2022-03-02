@@ -40,7 +40,7 @@ class NonBlockingCommand(APIView):
 
         # --> 1. Get userinfo and current context
         user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
-        context = self.get_current_context(user_info)
+        context = self.get_current_context(user_info)  # Returns an empty dict (for now)
 
 
         # --> 2. Save command into dialogue history
@@ -57,7 +57,7 @@ class NonBlockingCommand(APIView):
 
 
         # --> 4. Process command
-        frontend_response = async_to_sync(self.process_command)(user_info, request, context)
+        frontend_response = self.process_command(user_info, request, context)
         return Response({'response': frontend_response})
 
 

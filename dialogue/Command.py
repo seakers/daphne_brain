@@ -256,10 +256,10 @@ class Command:
         if not self._validate(condition, types[0]):
             return self.msg_restricted
 
-        # --> 2. Get intent info
+        # --> 2. Get intent info dict
         intent_info = self.get_intent_info(role, types[0])
 
-        # --> 3. Extract intent features
+        # --> 3. Get dict containing extracted command parameters
         try:
             command_data = self.extract_intent_features(intent_info)
         except ParameterMissingError as error:
@@ -313,7 +313,8 @@ class Command:
     def extract_intent_features(self, intent_info):
         """ Extract the features from the processed question, with a correcting factor """
 
-        # --> Read the type and number of parameters in the classified intent
+        # --> 1. Create dict mapping expected command parameters to the # times expected
+        # - e.x. { 'mission': 2 } -> the command template expects two mission names to be in the user command
         number_of_features = {}
         for param in intent_info['params']:
             if not param["from_context"]:
@@ -322,7 +323,8 @@ class Command:
                 else:
                     number_of_features[param["type"]] = 1
 
-        # --> Extract the corresponding parameters from the command
+        # --> 2. Create dict mapping expected command parameters to matched command words
+        # - e.x. { 'mission': ['SMAP', 'Landsat'] }
         extracted_raw_data = {}
         for type, num in number_of_features.items():
             extracted_raw_data[type] = self.extract_function[type](self.cmd_nlp, num, self.user_info)

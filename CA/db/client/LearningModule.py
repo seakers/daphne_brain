@@ -1,6 +1,6 @@
 import json
 
-from client.modules.basics import slides as basics
+
 from client.modules.bottom_up_ca import slides as bottom_up_ca
 from client.modules.parametric_ca import slides as parametric_ca
 from client.modules.cost_over_time import slides as cost_over_time
@@ -9,54 +9,21 @@ from client.modules.software_cost_estimation import slides as software_cost_esti
 from client.modules.space_system_cost_drivers import slides as space_system_cost_drivers
 
 
+from client.modules.basics import get_module as get_basic_module
+from client.modules.remote_sensing import get_module as get_rms_module
+from client.modules.spacecraft_bus import get_module as get_sb_module
+
+
+
 class LearningModule:
 
     def __init__(self, client):
         self.client = client
 
         self.modules = {
-            'Basics': {
-                'slides': basics,
-                'icon': 'mdi-alphabetical',
-                'slide_idx': 0,
-                'topics': ['Lifecycle Cost', 'Cost Estimation Methods']
-            },
-            # 'Bottom-up Cost Estimation': {
-            #     'slides': bottom_up_ca,
-            #     'icon': 'mdi-tray-arrow-up',
-            #     'slide_idx': 0,
-            #     'topics': ['Work Breakdown Structures', 'Bottom-up Cost Estimation']
-            # },
-            # 'Parametric Cost Estimation': {
-            #     'slides': parametric_ca,
-            #     'icon': 'mdi-function-variant',
-            #     'slide_idx': 0,
-            #     'topics': ['Cost Estimating Relationships']
-            # },
-            # 'Cost Over Time': {
-            #     'slides': cost_over_time,
-            #     'icon': 'mdi-clipboard-text-clock-outline',
-            #     'slide_idx': 0,
-            #     'topics': ['Cash Flows', 'Net Present Value', 'Discount Rate', 'Inflation']
-            # },
-            # 'Economies of Scale': {
-            #     'slides': eoc_learning_curve,
-            #     'icon': 'mdi-scale-unbalanced',
-            #     'slide_idx': 0,
-            #     'topics': ['Learning Curve']
-            # },
-            # 'Software Cost Estimation': {
-            #     'slides': software_cost_estimation,
-            #     'icon': 'mdi-desktop-classic',
-            #     'slide_idx': 0,
-            #     'topics': ['COCOMO']
-            # },
-            'Space System Cost Drivers': {
-                'slides': space_system_cost_drivers,
-                'icon': 'mdi-satellite-variant',
-                'slide_idx': 0,
-                'topics': ['Orbits', 'Spacecraft', 'Payloads']
-            }
+            'Basics': get_basic_module(),
+            'Spacecraft Bus': get_sb_module(),
+            'Mission Payloads': get_rms_module()
         }
 
     def index_info_slide(self, slide, module_id):
@@ -94,8 +61,9 @@ class LearningModule:
             icon = info['icon']
             slide_idx = info['slide_idx']
             topics = info['topics']
+            course = info['course']
             # --> 1. Index learning module
-            module_id = self.client.index_learning_module(module, icon, topics)
+            module_id = self.client.index_learning_module(module, icon, topics, course)
 
             # --> 2. Index Join__User_LearningModule for all users
             for user in self.client.get_users():

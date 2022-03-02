@@ -82,8 +82,8 @@ class Client:
         self.session.commit()
         return entry.id
 
-    def index_learning_module(self, name, icon, topics):
-        entry = LearningModule(name=name, icon=icon)
+    def index_learning_module(self, name, icon, topics, course=None):
+        entry = LearningModule(name=name, icon=icon, course=course)
         self.session.add(entry)
         self.session.commit()
         module_id = entry.id
@@ -310,6 +310,7 @@ class LearningModule(DeclarativeBase):
     id = Column(Integer, primary_key=True)
     name = Column('name', String)
     icon = Column('icon', String)
+    course = Column('course', String, nullable=True)
 
 
 
