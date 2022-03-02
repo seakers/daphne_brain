@@ -126,8 +126,8 @@ class Client:
 
 
 
-    def index_message(self, user_id, text, sender):
-        entry = Message(user_id=user_id, text=text, sender=sender)
+    def index_message(self, user_id, text, sender, more_info=None):
+        entry = Message(user_id=user_id, text=text, sender=sender, more_info=more_info)
         self.session.add(entry)
         self.session.commit()
         return entry.id
@@ -227,6 +227,7 @@ class Message(DeclarativeBase):
     sender = Column('sender', String)
     cleared = Column('cleared', Boolean, default=False)
     date = Column('date', DateTime, default=func.now())
+    more_info = Column('more_info', String, nullable=True)
 
 
 
