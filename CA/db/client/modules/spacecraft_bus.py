@@ -2,7 +2,12 @@ from client.modules.AbstractBuilder import AbstractBuilder
 
 def get_module():
 
-    builder = AbstractBuilder('mdi-satellite-variant', ['Spacecraft Subsystems'], 'Space Training 101')
+    status = {
+        'color': '#E65100',
+        'text': 'beta'
+    }
+
+    builder = AbstractBuilder('mdi-satellite-variant', ['Spacecraft Subsystems'], 'Space Training 101', status)
 
     builder.add_slide('DODS_15')  # Spacecraft bus
     builder.add_slide('DODS_16')

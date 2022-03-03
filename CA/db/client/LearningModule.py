@@ -62,8 +62,9 @@ class LearningModule:
             slide_idx = info['slide_idx']
             topics = info['topics']
             course = info['course']
+            status = info['status']
             # --> 1. Index learning module
-            module_id = self.client.index_learning_module(module, icon, topics, course)
+            module_id = self.client.index_learning_module(module, icon, topics, course, status)
 
             # --> 2. Index Join__User_LearningModule for all users
             for user in self.client.get_users():

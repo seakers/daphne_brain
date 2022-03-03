@@ -5,10 +5,11 @@
 
 class AbstractBuilder:
 
-    def __init__(self, icon, topics, course=None):
+    def __init__(self, icon, topics, course=None, status=None):
         self.icon = icon
         self.topics = topics
         self.course = course
+        self.status = status
         self.slides = []
 
         self.q_counter = 1
@@ -20,7 +21,8 @@ class AbstractBuilder:
             'icon': self.icon,
             'slide_idx': 0,
             'topics': self.topics,
-            'course': self.course
+            'course': self.course,
+            'status': self.status,
         }
 
     def add_slide(self, src):

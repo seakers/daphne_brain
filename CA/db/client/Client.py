@@ -1,4 +1,5 @@
 import os
+import json
 
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.orm import sessionmaker, mapper
@@ -82,8 +83,10 @@ class Client:
         self.session.commit()
         return entry.id
 
-    def index_learning_module(self, name, icon, topics, course=None):
-        entry = LearningModule(name=name, icon=icon, course=course)
+    def index_learning_module(self, name, icon, topics, course=None, status=None):
+        if status is not None:
+            status = json.dumps(status)
+        entry = LearningModule(name=name, icon=icon, course=course, status=status)
         self.session.add(entry)
         self.session.commit()
         module_id = entry.id
@@ -312,6 +315,7 @@ class LearningModule(DeclarativeBase):
     name = Column('name', String)
     icon = Column('icon', String)
     course = Column('course', String, nullable=True)
+    status = Column('status', String, nullable=True)  # Json object
 
 
 
