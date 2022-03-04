@@ -205,9 +205,9 @@ class DownloadData(APIView):
 
             # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            problem_id = int(request.data['problem_id'])
-            group_id = int(request.data['group_id'])
-            dataset_id = int(request.data['dataset_id'])
+            problem_id = user_info.eosscontext.problem_id
+            group_id = user_info.eosscontext.group_id
+            dataset_id = user_info.eosscontext.dataset_id
 
             # Get problem architectures
             dbClient = GraphqlClient(problem_id=problem_id)
