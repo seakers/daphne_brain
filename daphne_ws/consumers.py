@@ -8,6 +8,10 @@ from daphne_context.models import UserInformation
 import itertools
 
 
+from daphne_context.models import MycroftUser
+
+
+
 class MycroftConsumer(JsonWebsocketConsumer):
     scheduler = schedule.Scheduler()
     sched_stopper = None
@@ -107,7 +111,7 @@ class MycroftConsumer(JsonWebsocketConsumer):
             if str(header[0], 'utf-8') == 'mycroft-session':
                 mycroft_session = str(header[1], 'utf-8')
                 print('MYCROFT SESSION:', mycroft_session)
-                return UserInformation.objects.get(mycroft_session=mycroft_session)
+                return MycroftUser.objects.get(mycroft_session=mycroft_session)
         return False
 
     # Send a message to the front-end

@@ -32,10 +32,11 @@ class StartGA(APIView):
                 # Start connection with VASSAR
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
                 port = user_info.eosscontext.vassar_port
-                client = VASSARClient(port)
+                client = VASSARClient(port, user_info=user_info)
                 client.start_connection()
 
-                problem = request.data['problem']
+                # problem = request.data['problem']
+                problem = 'SMAP'
 
                 # Restart archs queue before starting the GA again
                 Design.objects.filter(activecontext__exact=user_info.eosscontext.activecontext).delete()
@@ -170,7 +171,7 @@ class StopGA(APIView):
 
                 # Start connection with VASSAR
                 port = user_info.eosscontext.vassar_port
-                client = VASSARClient(port)
+                client = VASSARClient(port, user_info=user_info)
                 client.start_connection()
 
                 # Call the GA stop function on Engineer
@@ -207,7 +208,7 @@ class CheckGA(APIView):
                 # Start connection with VASSAR
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
                 port = user_info.eosscontext.vassar_port
-                client = VASSARClient(port)
+                client = VASSARClient(port, user_info=user_info)
                 client.start_connection()
 
                 status = client.is_ga_running(user_info.eosscontext.ga_id)

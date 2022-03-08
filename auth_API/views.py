@@ -10,7 +10,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import UserInformation
+from daphne_context.models import UserInformation, MycroftUser
+from EOSS.graphql.api import GraphqlClient
 
 import requests
 import json
@@ -77,6 +78,7 @@ class Register(APIView):
     Register a user
     """
     def post(self, request, format=None):
+        print("--> REGISTERING USER")
         username = request.data["username"]
         email = request.data["email"]
         password1 = request.data["password1"]
@@ -109,25 +111,19 @@ class Register(APIView):
                 'registration_error': 'This username is already in use.'
             })
 
+        print("---> PASSED TESTS")
         # Do the registration procedure which includes creating folders for all problems
         try:
-            user = User.objects.create_user(username, email, password1)
-            user.save()
-            print("USER ID", user.id)
-            user_id = user.id
-            # Create folders in the server structure
-            folder_name = os.path.join(os.getcwd(), "EOSS", "data", "datasets", username)
-            os.mkdir(folder_name)
-            problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2", "Aerosols_Clouds"]
-            for problem in problem_list:
-                subfolder_name = os.path.join(folder_name, problem)
-                os.mkdir(subfolder_name)
+            # Create user
+            user_id = self.create_user(username, email, password1)
 
-            # We must give the user access to the default group: seakers (default)
-            URL = 'http://graphql:8080/v1/graphql'
-            mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: 1, user_id: ' + str(user_id) + '}) { returning { group_id user_id id }}}'
-            request_data = json.dumps({'query': mutation})
-            r = requests.post(url=URL, data=request_data)
+
+            # Create folders in the server structure
+            # self.create_user_dirs(username)
+
+            # We must give the user access to the default group: seakers (default) - all users will be admins
+            self.insert_into_groups(user_id)
+            print("--> USER INSERTED INTO GROUP")
 
 
         except ValueError:
@@ -136,9 +132,34 @@ class Register(APIView):
                 'registration_error': 'Please write a username.'
             })
 
+        print("--> FINISHED REGISTRATION")
         return Response({
             'status': 'registered'
         })
+
+
+    def create_user_dirs(self, username):
+        folder_name = os.path.join(os.getcwd(), "EOSS", "data", "datasets", username)
+        os.mkdir(folder_name)
+        problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2"]
+        for problem in problem_list:
+            subfolder_name = os.path.join(folder_name, problem)
+            os.mkdir(subfolder_name)
+
+    def create_user(self, username, email, password):
+        user = User.objects.create_user(username, email, password)
+        user.save()
+
+        # mycroft_user = MycroftUser(user=user)
+        # mycroft_user.save()
+        print("--> USER CREATED ", user.id)
+        return user.id
+
+    def insert_into_groups(self, user_id):
+        client = GraphqlClient()
+        result = client.insert_user_into_group(user_id)
+        print("--> RESULT", result)
+
 
 
 class ResetPassword(APIView):
@@ -167,6 +188,8 @@ class CheckStatus(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         problem = user_info.eosscontext.problem
+        problem_id = user_info.eosscontext.problem_id
+        group_id = user_info.eosscontext.group_id
         dataset_filename = user_info.eosscontext.dataset_name
         dataset_user = user_info.eosscontext.dataset_user
 
@@ -174,6 +197,8 @@ class CheckStatus(APIView):
         response = {
             'username': request.user.username,
             'permissions': [],
+            'problem_id': problem_id,
+            'group_id': group_id,
             'problem': problem,
             'dataset_filename': dataset_filename,
             'dataset_user': dataset_user
@@ -185,9 +210,6 @@ class CheckStatus(APIView):
             # Transform the database design data into a json for the frontend
             response['data'] = []
             if user_info.eosscontext.design_set.count() > 0:
-                for design in user_info.eosscontext.design_set.order_by('id').all():
-                    response['data'].append(
-                        {'id': design.id, 'inputs': json.loads(design.inputs), 'outputs': json.loads(design.outputs)})
                 response['modified_dataset'] = True
             else:
                 response['modified_dataset'] = False
@@ -224,24 +246,25 @@ class GetUserPk(APIView):
         else:
             return Response({'status': 'query returned more than one users'})
 
+
 class CheckStatusHasura(APIView):
     """
     Request sent from the hasura container! Authenticates the user editing a problem
     """
     def get(self, request, format=None):
-        # print("Check hasura status", request.data)
-        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-
-        problem = user_info.eosscontext.problem
-        dataset_filename = user_info.eosscontext.dataset_name
-        dataset_user = user_info.eosscontext.dataset_user
+        print("Check hasura status", request.data)
+        #user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        #print("--> GOT USER INFORMATION")
+        #problem = user_info.eosscontext.problem
+        #dataset_filename = user_info.eosscontext.dataset_name
+        #dataset_user = user_info.eosscontext.dataset_user
 
         response = {
             "X-Hasura-User-Id": "1",
             "X-Hasura-Role": "admin",
-            "X-Hasura-Is-Owner": "true",
-            "X-Hasura-Custom": "custom value"
+            "X-Hasura-Is-Owner": "true"
         }
+        print("--> RESPONSE", response)
         return Response(response)
 
         # if request.user.is_authenticated:
@@ -260,8 +283,6 @@ class CheckStatusHasura(APIView):
         # return Response(response)
 
 
-
-
 def get_user_pk(username):
     users = User.objects.filter(username__exact=username)
     if len(users) == 1:
@@ -270,6 +291,7 @@ def get_user_pk(username):
     else:
         print("---> USER PK ERROR")
         return False
+
 class ConfirmGuest(APIView):
     def post(self, request, format=None):
         request.session['is_guest'] = True

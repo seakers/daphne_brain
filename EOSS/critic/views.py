@@ -52,7 +52,7 @@ class CriticizeArchitecture(APIView):
     def get_expert_critique(self, problem, inputs, port):
 
         try:
-            self.VASSARClient = VASSARClient(port)
+            self.VASSARClient = VASSARClient(port, problem_id=problem)
 
             # Start connection with VASSAR
             self.VASSARClient.start_connection()

@@ -1,4 +1,14 @@
 import pandas
+from string import ascii_uppercase
+
+
+from EOSS.graphql.api import GraphqlClient
+'''
+    Because this functionality is hardcoded, it is not compatible with daphne's new aws architecture. The current issue
+    specifically being addressed in these changes is the fluid ordering of both satellites and instruments in the aws
+    architecture implementation.
+'''
+
 
 assignation_problems = ['SMAP', 'SMAP_JPL1', 'SMAP_JPL2', 'ClimateCentric', 'Aerosols_Clouds']
 partition_problems = ['Decadal2017Aerosols']
@@ -72,68 +82,18 @@ cc_instruments_info = [
 cc_stakeholder_list = ["Atmospheric", "Oceanic", "Terrestrial"]
 
 
-SMAP_ORBIT_DATASET = [
-    {"alias": "1000", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
-    {"alias": "2000", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
-    {"alias": "3000", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
-    {"alias": "4000", "name": "SSO-800-SSO-AM", "type": "Sun-synchronous", "altitude": 800, "LST": "AM"},
-    {"alias": "5000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"}]
 
 
-SMAP_INSTRUMENT_DATASET = [
-    {"alias": "A", "name": "BIOMASS", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
-     "geometry": "Conical scanning", "wavebands": ["P-band"]},
-    {"alias": "B", "name": "SMAP_RAD", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
-     "geometry": "Conical scanning", "wavebands": ["L-band"]},
-    {"alias": "C", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
-     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L-band"]},
-    {"alias": "D", "name": "CMIS", "type": "Imaging multi-spectral radiometers (passive microwave)",
-     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning",
-     "wavebands": ["C-band", "X-band", "K-band", "Ka-band", "W-band"]},
-    {"alias": "E", "name": "VIIRS", "type": "High-resolution nadir-scanning IR spectrometer",
-     "technology": "Atmospheric temperature and humidity sounders", "geometry": "Nadir-viewing",
-     "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
-]
 
 
-smap_capabilities_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls',
-                                            sheet_name='CHARACTERISTICS')
-
-smap_instrument_sheet = lambda vassar_instrument: pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls',
-                                                                    sheet_name=vassar_instrument, header=None)
-
-smap_requirements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Requirement Rules.xls',
-                                            sheet_name='Attributes')
-
-smap_instruments_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Instrument')
-smap_measurements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Measurement')
-smap_param_names = []
-for row in smap_measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            smap_param_names.append(row[i])
 
 
-smap_orbits_info = [
-    "<b>Orbit name: Orbit information</b>",
-    "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
-    "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
-    "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
-    "SSO-800-SSO-AM: Low Earth, Sun-synchronous, High Altitude (800 km), Morning",
-    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk"
-]
 
 
-smap_instruments_info = [
-    "<b>Instrument name: Instrument type, Instrument technology, Band, Mass, Power</b>",
-    "BIOMASS: Imaging microwave radars, Imaging radar (SAR), P-band, 500kg, 1672W",
-    "SMAP_RAD: Imaging microwave radars, Imaging radar (SAR), L-band, 45.2kg, 1672W",
-    "SMAP_MWR: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, L-band, 10.4kg, 45.2W",
-    "CMIS: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, C-band/X-band/K-band/Ka-band/W-band, 257kg, 340W",
-    "VIIRS: High-resolution nadir-scanning IR spectrometer, Atmospheric temperature and humidity sounders, VIS/NIR/SWIR/MWIR/TIR, 199kg, 134W",
-]
 
-smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
+
+
+
 
 AC_ORBIT_DATASET = [
     {"alias": "1000", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
@@ -245,28 +205,91 @@ ac_instruments_info = [
 ac_stakeholder_list = ["Weather", "Climate", "Land and Ecosystems", "Water", "Earth Surface and Interior"]
 
 
+
+
+
+
+
+
+
+
+
+SMAP_ORBIT_DATASET = [
+    {"alias": "1000", "name": "LEO-600-polar-NA", "type": "Inclined, non-sun-synchronous", "altitude": 600, "LST": ""},
+    {"alias": "2000", "name": "SSO-600-SSO-DD", "type": "Sun-synchronous", "altitude": 600, "LST": "DD"},
+    {"alias": "3000", "name": "SSO-600-SSO-AM", "type": "Sun-synchronous", "altitude": 600, "LST": "AM"},
+    {"alias": "4000", "name": "SSO-800-SSO-DD", "type": "Sun-synchronous", "altitude": 800, "LST": "DD"},
+    {"alias": "5000", "name": "SSO-800-SSO-AM", "type": "Sun-synchronous", "altitude": 800, "LST": "AM"}
+]
+
+# completed
 def get_orbit_dataset(problem):
-    if problem == "ClimateCentric":
-        return CC_ORBIT_DATASET
-    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
-        return SMAP_ORBIT_DATASET
-    if problem == "Decadal2017Aerosols":
-        return SMAP_ORBIT_DATASET
-    if problem == "Aerosols_Clouds":
-        return AC_ORBIT_DATASET
+    dbClient = GraphqlClient()
+    orbit_info = dbClient.get_orbits_and_attributes()
+    dataset = []
+    counter = 0
+    for orb_obj in orbit_info:
+        orbit = orb_obj['orbit']
+        counter += 1
+        orb_dict = {}
+        orb_dict['alias'] = str(counter * 1000)
+        orb_dict['name'] = orbit['name']
+        for attribute in orbit['attributes']:
+            if attribute['Orbit_Attribute']['name'] == 'type':
+                orb_dict['type'] = attribute['value']
+            elif attribute['Orbit_Attribute']['name'] == 'altitude':
+                orb_dict['altitude'] = attribute['value']
+            elif attribute['Orbit_Attribute']['name'] == 'RAAN#':
+                orb_dict['LST'] = attribute['value']
+        dataset.append(orb_dict)
+    return dataset
 
 
+
+
+SMAP_INSTRUMENT_DATASET = [
+    {"alias": "A", "name": "SMAP_RAD", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
+         "geometry": "Conical scanning", "wavebands": ["L-band"]},
+
+    {"alias": "B", "name": "SMAP_MWR", "type": "Imaging multi-spectral radiometers (passive microwave)",
+     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning", "wavebands": ["L-band"]},
+
+    {"alias": "C", "name": "VIIRS", "type": "High-resolution nadir-scanning IR spectrometer",
+     "technology": "Atmospheric temperature and humidity sounders", "geometry": "Nadir-viewing",
+     "wavebands": ["VIS", "NIR", "SWIR", "MWIR", "TIR"]},
+
+    {"alias": "D", "name": "CMIS", "type": "Imaging multi-spectral radiometers (passive microwave)",
+     "technology": "Multi-purpose imaging MW radiometer", "geometry": "Conical scanning",
+     "wavebands": ["C-band", "X-band", "K-band", "Ka-band", "W-band"]},
+
+    {"alias": "E", "name": "BIOMASS", "type": "Imaging microwave radars", "technology": "Imaging radar (SAR)",
+     "geometry": "Conical scanning", "wavebands": ["P-band"]},
+
+]
 def get_instrument_dataset(problem):
-    if problem == "ClimateCentric":
-        return CC_INSTRUMENT_DATASET
-    if problem == "SMAP" or problem == "SMAP_JPL1" or problem == "SMAP_JPL2":
-        return SMAP_INSTRUMENT_DATASET
-    if problem == "Decadal2017Aerosols":
-        return SMAP_INSTRUMENT_DATASET
-    if problem == "Aerosols_Clouds":
-        return AC_INSTRUMENT_DATASET
+    dbClient = GraphqlClient()
+    instrument_info = dbClient.get_orbits_and_attributes()
+    dataset = []
+    counter = 0
+    for inst_obj in instrument_info:
+        instrument = inst_obj['instrument']
+        inst_dict = {}
+        inst_dict['alias'] = ascii_uppercase[counter]
+        inst_dict['name'] = instrument['name']
+        for attribute in instrument['attributes']:
+            if attribute['Instrument_Attribute']['name'] == 'Concept':
+                inst_dict['type'] = attribute['value']
+            elif attribute['Instrument_Attribute']['name'] == 'Intent':
+                inst_dict['technology'] = attribute['value']
+            elif attribute['Instrument_Attribute']['name'] == 'Geometry':
+                inst_dict['geometry'] = attribute['value']
+            elif attribute['Instrument_Attribute']['name'] == 'spectral-bands':
+                inst_dict['wavebands'] = [attribute['value']]
+        dataset.append(inst_dict)
+        counter += 1
+    return dataset
 
-
+smap_capabilities_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name='CHARACTERISTICS')
 def get_capabilities_sheet(problem):
     if problem == "ClimateCentric":
         return cc_capabilities_sheet
@@ -276,6 +299,12 @@ def get_capabilities_sheet(problem):
         return ac_capabilities_sheet
 
 
+
+
+
+
+
+smap_instrument_sheet = lambda vassar_instrument: pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Instrument Capability Definition.xls', sheet_name=vassar_instrument, header=None)
 def get_instrument_sheet(problem, instrument):
     if problem == "ClimateCentric":
         return cc_instrument_sheet(instrument)
@@ -285,6 +314,12 @@ def get_instrument_sheet(problem, instrument):
         return ac_instrument_sheet(instrument)
 
 
+
+
+
+
+
+smap_instruments_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Instrument')
 def get_instruments_sheet(problem):
     if problem == "ClimateCentric":
         return cc_instruments_sheet
@@ -294,6 +329,14 @@ def get_instruments_sheet(problem):
         return ac_instruments_sheet
 
 
+
+
+
+
+
+
+
+smap_requirements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/Requirement Rules.xls', sheet_name='Attributes')
 def get_requirements_sheet(problem):
     if problem == "ClimateCentric":
         return cc_requirements_sheet
@@ -303,6 +346,14 @@ def get_requirements_sheet(problem):
         return ac_requirements_sheet
 
 
+
+
+smap_measurements_sheet = pandas.read_excel('../VASSAR_resources/problems/SMAP/xls/AttributeSet.xls', sheet_name='Measurement')
+smap_param_names = []
+for row in smap_measurements_sheet.itertuples(index=True, name='Measurement'):
+    if row[2] == 'Parameter':
+        for i in range(6, len(row)):
+            smap_param_names.append(row[i])
 def get_param_names(problem):
     if problem == "ClimateCentric":
         return cc_param_names
@@ -312,6 +363,20 @@ def get_param_names(problem):
         return ac_param_names
 
 
+
+
+
+
+
+
+smap_orbits_info = [
+    "<b>Orbit name: Orbit information</b>",
+    "LEO-600-polar-NA: Low Earth, Medium Altitude (600 km), Polar",
+    "SSO-600-SSO-AM: Low Earth, Sun-synchronous, Medium Altitude (600 km), Morning",
+    "SSO-600-SSO-DD: Low Earth, Sun-synchronous, Medium Altitude (600 km), Dawn-Dusk",
+    "SSO-800-SSO-AM: Low Earth, Sun-synchronous, High Altitude (800 km), Morning",
+    "SSO-800-SSO-DD: Low Earth, Sun-synchronous, High Altitude (800 km), Dawn-Dusk"
+]
 def get_orbits_info(problem):
     if problem == "ClimateCentric":
         return cc_orbits_info
@@ -323,6 +388,20 @@ def get_orbits_info(problem):
         return ac_orbits_info
 
 
+
+
+
+
+
+
+smap_instruments_info = [
+    "<b>Instrument name: Instrument type, Instrument technology, Band, Mass, Power</b>",
+    "BIOMASS: Imaging microwave radars, Imaging radar (SAR), P-band, 500kg, 1672W",
+    "SMAP_RAD: Imaging microwave radars, Imaging radar (SAR), L-band, 45.2kg, 1672W",
+    "SMAP_MWR: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, L-band, 10.4kg, 45.2W",
+    "CMIS: Imaging multi-spectral radiometers (passive microwave), Multi-purpose imaging MW radiometer, C-band/X-band/K-band/Ka-band/W-band, 257kg, 340W",
+    "VIIRS: High-resolution nadir-scanning IR spectrometer, Atmospheric temperature and humidity sounders, VIS/NIR/SWIR/MWIR/TIR, 199kg, 134W",
+]
 def get_instruments_info(problem):
     if problem == "ClimateCentric":
         return cc_instruments_info
@@ -333,6 +412,14 @@ def get_instruments_info(problem):
     if problem == "Aerosols_Clouds":
         return ac_instruments_info
 
+
+
+
+
+
+
+
+smap_stakeholder_list = ["Weather", "Climate", "Land and ecosystems", "Water", "Human health"]
 def get_stakeholders_list(problem):
     if problem == "ClimateCentric":
         return cc_stakeholder_list

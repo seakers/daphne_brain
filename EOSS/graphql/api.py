@@ -3,6 +3,8 @@
 import requests
 import json
 import time
+from auth_API.helpers import get_or_create_user_information
+
 
 
 
@@ -53,9 +55,18 @@ class MissionCostInformation:
 
 class GraphqlClient:
 
-    def __init__(self, hasura_url='http://graphql:8080/v1/graphql'):
+    def __init__(self, hasura_url='http://graphql:8080/v1/graphql', request=None, problem_id=None, user_info=None):
         self.hasura_url = hasura_url
-        self.problem_id = str(4)
+
+        if user_info is not None:
+            self.problem_id = user_info.eosscontext.problem_id
+        elif problem_id is not None:
+            self.problem_id = str(problem_id)
+        elif request is not None:
+            user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
+            self.problem_id = str(user_info.eosscontext.problem_id)
+        else:
+            self.problem_id = str(5)
 
 
     def get_architectures(self, problem_id=3):
@@ -64,17 +75,55 @@ class GraphqlClient:
         return self.execute_query(query)
 
     def get_orbit_list(self, group_id, problem_id):
-        group_id = str(group_id)
-        problem_id = str(problem_id)
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
         query = ' query get_orbit_list { Join__Problem_Orbit(where: {problem_id: {_eq: ' + self.problem_id + '}}){ Orbit { id name } } } '
         return self.execute_query(query)
+
+    def get_orbits_and_attributes(self):
+        query = f'''
+            query MyQuery {{
+                items: Join__Problem_Orbit(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                    orbit: Orbit {{
+                      name
+                      attributes: Join__Orbit_Attributes {{
+                        value
+                        Orbit_Attribute {{
+                          name
+                        }}
+                      }}
+                    }}
+                }}
+            }}
+        '''
+        orbit_info = self.execute_query(query)['data']['items']
+        return orbit_info
 
     def get_instrument_list(self, group_id, problem_id):
         group_id = str(group_id)
         problem_id = str(problem_id)
         query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + self.problem_id + '}}) { Instrument { id name } } } '
         return self.execute_query(query)
+
+    def get_instruments_and_attributes(self):
+        query = f'''
+            query MyQuery {{
+                items: Join__Problem_Instrument(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                    instrument: Instrument {{
+                      name
+                      attributes: Join__Instrument_Characteristics(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                        value
+                        Orbit_Attribute {{
+                          name
+                        }}
+                      }}
+                    }}
+                }}
+            }}
+        '''
+        instrument_info = self.execute_query(query)['data']['items']
+        return instrument_info
+
+
 
     def get_objective_list(self, group_id, problem_id):
         group_id = str(group_id)
@@ -207,6 +256,16 @@ class GraphqlClient:
         return information
 
 
+    def wait_for_critique(self, arch_id, timeout=20):
+        results = self.get_arch_critique(arch_id)
+        for x in range(0, timeout):
+            results = self.get_arch_critique(arch_id)
+            if results:
+                return results
+            time.sleep(1)
+        return results
+
+
     def get_arch_critique(self, arch_id):
         query = f''' query myquery {{
             Architecture_by_pk(id: {arch_id}) {{
@@ -233,16 +292,21 @@ class GraphqlClient:
         return self.execute_query(query)['data']['Architecture'][0]['id']
         
 
+    def get_problems(self):
+        query = 'query MyQuery { Problem { id name group_id } }'
+        return self.execute_query(query)['data']['Problem']
 
 
+    def insert_user_into_group(self, user_id, group_id=1):
+        mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
+        return self.execute_query(mutation)
 
     def execute_query(self, query):
         r = requests.post(self.hasura_url, json={'query': query })
         result = json.loads(r.text)
-        print('\n-------- Query Result --------')
-        print(result)
-        print('-------------------------\n')
-
+        # print('\n-------- Query Result --------')
+        # print(result)
+        # print('-------------------------\n')
         return result
 
     # Return architecture details after vassar evaluates

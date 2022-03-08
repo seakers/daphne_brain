@@ -107,7 +107,7 @@ def extract_vassar_stakeholder(processed_question, number_of_features, user_info
 
 def extract_vassar_objective(processed_question, number_of_features, user_information: UserInformation):
     port = user_information.eosscontext.vassar_port
-    vassar_client = VASSARClient(port)
+    vassar_client = VASSARClient(port, problem_id=user_information.eosscontext.problem_id)
     vassar_client.start_connection()
     objectives = vassar_client.get_objective_list('SMAP')
     objectives = [objective.lower() for objective in objectives]
@@ -117,7 +117,7 @@ def extract_vassar_objective(processed_question, number_of_features, user_inform
 
 def extract_vassar_subobjective(processed_question, number_of_features, user_information: UserInformation):
     port = user_information.eosscontext.vassar_port
-    vassar_client = VASSARClient(port)
+    vassar_client = VASSARClient(port, problem_id=user_information.eosscontext.problem_id)
     vassar_client.start_connection()
     subobjectives = vassar_client.get_subobjective_list('SMAP')
     subobjectives = [subobjective.lower() for subobjective in subobjectives]
