@@ -31,7 +31,7 @@ USE_X_FORWARDED_HOST = True
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
 ACTIVE_MODULES = ['EOSS']
 
-EDL_PATH = '/Users/ssantini/Desktop/'
+EDL_PATH = '/Users/ssantini/Code/'
 
 
 # Application definition
@@ -170,7 +170,7 @@ CHANNEL_LAYERS = {
 }
 
 # ASGI_APPLICATION should be set to your outermost router
-ASGI_APPLICATION = 'daphne_brain.routing.application'
+ASGI_APPLICATION = 'daphne_brain.asgi.application'
 
 # Databases for Daphne
 ALCHEMY_DATABASE = {
@@ -189,6 +189,15 @@ EDL_DATABASE = {
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
+}
+
+ECLSS_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'www.selva-research.com',
+    'port': '5432',
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
+    'database': 'eclss'
 }
 
 
@@ -255,7 +264,7 @@ LOGGING = {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
             'propagate': True,
-        },        
+        },
         'data-mining': {
             'handlers': ['file', 'console'],
             'level': 'ERROR',
