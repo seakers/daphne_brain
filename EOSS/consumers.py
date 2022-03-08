@@ -1,4 +1,5 @@
 import pika
+import json
 import os
 
 from auth_API.helpers import get_user_information
@@ -6,9 +7,13 @@ from auth_API.helpers import get_user_information
 from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
 
+from EOSS.models import ArchitecturesClicked, ArchitecturesUpdated, ArchitecturesEvaluated
+
 
 class EOSSConsumer(DaphneConsumer):
-    # WebSocket event handlers
+    daphne_version = "EOSS"
+
+    ##### WebSocket event handlers
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload
@@ -32,6 +37,7 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'active_engineer':
             message = live_recommender.generate_engineer_message(user_info, content.get('genome'),
                                                                  self.scope['session'].session_key)
+
             if message:
                 self.send_json({
                         'type': 'active.message',
@@ -40,6 +46,7 @@ class EOSSConsumer(DaphneConsumer):
         elif content.get('msg_type') == 'active_historian':
             message = live_recommender.generate_historian_message(user_info, content.get('genome'),
                                                                   self.scope['session'].session_key)
+
             if message:
                 self.send_json({
                     'type': 'active.message',
@@ -63,6 +70,34 @@ class EOSSConsumer(DaphneConsumer):
     def mycroft_message(self, event):
         print(event)
         self.send_json(event)
+
+
+        # --> Messages for TeacherAgent Context into Tables
+        elif content.get('msg_type') == 'teacher_clicked_arch':
+            content = content.get('teacher_context')    # --> Dict
+            entry = ArchitecturesClicked(user_information=user_info, arch_clicked=json.dumps(content))
+            entry.save()
+        elif content.get('msg_type') == 'teacher_clicked_arch_update':
+            content = content.get('teacher_context')  # --> List
+            entry = ArchitecturesUpdated(user_information=user_info, arch_updated=json.dumps(content))
+            entry.save()
+        elif content.get('msg_type') == 'teacher_evaluated_arch':
+            content = content.get('teacher_context')  # --> Dict
+            entry = ArchitecturesEvaluated(user_information=user_info, arch_evaluated=json.dumps(content))
+            entry.save()
+
+
+
+
+
+    def teacher_design_space(self, event):
+        self.send(json.dumps(event))
+    def teacher_objective_space(self, event):
+        self.send(json.dumps(event))
+    def teacher_sensitivities(self, event):
+        self.send(json.dumps(event))
+    def teacher_features(self, event):
+        self.send(json.dumps(event))
 
     def ga_new_archs(self, event):
         print(event)
