@@ -40,6 +40,8 @@ class Login(APIView):
                 userinfo.user = user
                 userinfo.session = None
                 userinfo.save()
+            else:
+                userinfo = userinfo_qs.first()
 
             if len(userinfo_qs) != 0:
                 # Force the user information daphne version to be the one from the login
@@ -58,6 +60,7 @@ class Login(APIView):
                 'status': 'logged_in',
                 'username': username,
                 'pk': user_pk,
+                'is_experiment_user': userinfo.is_experiment_user,
                 'permissions': []
             })
         else:
@@ -125,10 +128,6 @@ class Register(APIView):
             # Create user
             user_id = self.create_user(username, email, password1)
 
-
-            # Create folders in the server structure
-            # self.create_user_dirs(username)
-
             # We must give the user access to the default group: seakers (default) - all users will be admins
             self.insert_into_groups(user_id)
             print("--> USER INSERTED INTO GROUP")
@@ -144,15 +143,6 @@ class Register(APIView):
         return Response({
             'status': 'registered'
         })
-
-
-    def create_user_dirs(self, username):
-        folder_name = os.path.join(os.getcwd(), "EOSS", "data", "datasets", username)
-        os.mkdir(folder_name)
-        problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2"]
-        for problem in problem_list:
-            subfolder_name = os.path.join(folder_name, problem)
-            os.mkdir(subfolder_name)
 
     def create_user(self, username, email, password):
         user = User.objects.create_user(username, email, password)
@@ -195,11 +185,9 @@ class CheckStatus(APIView):
     def get(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
-        problem = user_info.eosscontext.problem
         problem_id = user_info.eosscontext.problem_id
         group_id = user_info.eosscontext.group_id
-        dataset_filename = user_info.eosscontext.dataset_name
-        dataset_user = user_info.eosscontext.dataset_user
+        dataset_id = user_info.eosscontext.dataset_id
 
         # problem: is now the problem_id (from the database)
         response = {
@@ -207,22 +195,18 @@ class CheckStatus(APIView):
             'permissions': [],
             'problem_id': problem_id,
             'group_id': group_id,
-            'problem': problem,
-            'dataset_filename': dataset_filename,
-            'dataset_user': dataset_user
+            'dataset_id': dataset_id,
+            'is_experiment_user': user_info.is_experiment_user
         }
 
         if request.user.is_authenticated:
             response['is_logged_in'] = True
             response['pk'] = get_user_pk(request.user.username)
-            # Transform the database design data into a json for the frontend
-            response['data'] = []
-            if user_info.eosscontext.design_set.count() > 0:
-                response['modified_dataset'] = True
-            else:
-                response['modified_dataset'] = False
         else:
-            response['is_guest'] = request.session['is_guest']
+            if 'is_guest' in request.session:
+                response['is_guest'] = request.session['is_guest']
+            else:
+                response['is_guest'] = False  # --> Assume user hasn't selected guest if is_guest key not in session
             response['is_logged_in'] = False
         return Response(response)
 

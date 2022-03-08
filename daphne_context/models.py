@@ -37,6 +37,9 @@ class UserInformation(models.Model):
     mycroft_connection = models.BooleanField(default=False)                                           # true if connection established
     mycroft_channel_name = models.CharField(max_length=120, null=True)                                # channel name for talking to Mycroft
 
+    # Experiment
+    is_experiment_user = models.BooleanField(default=False)
+
     # Special restrictions
     class Meta:
         unique_together = ("session", "user")

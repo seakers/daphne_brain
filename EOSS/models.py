@@ -7,25 +7,27 @@ from daphne_context.models import UserInformation, DialogueContext
 # Context for EOSS Users
 class EOSSContext(models.Model):
     user_information = models.OneToOneField(UserInformation, on_delete=models.CASCADE)
-    problem = models.CharField(max_length=50)
-    dataset_name = models.CharField(max_length=80)
-    dataset_user = models.BooleanField()
 
     # Properties related to the dataset, the list of designs comes from the Design model
     last_arch_id = models.IntegerField()
     selected_arch_id = models.IntegerField()
 
-    # Default problem and group ID is for SMAP
+    # Problem and dataset settings for current user
     group_id = models.IntegerField(default=1)
-    problem_id = models.IntegerField(default=4)
-
+    problem_id = models.IntegerField(default=1)
+    dataset_id = models.IntegerField()
 
     # Counter for manually added designs
     added_archs_count = models.IntegerField()
 
     # Backends information
-    vassar_port = models.IntegerField()
-    ga_id = models.TextField(null=True)
+    vassar_request_queue_url = models.TextField(null=True)
+    vassar_response_queue_url = models.TextField(null=True)
+    vassar_information = models.JSONField(default=dict)
+    ga_request_queue_url = models.TextField(null=True)
+    ga_response_queue_url = models.TextField(null=True)
+    ga_information = models.JSONField(default=dict)
+    ga_thread_id = models.IntegerField(default=-1)
 
 
 class EOSSContextSerializer(serializers.ModelSerializer):
@@ -75,34 +77,3 @@ class EngineerContextSerializer(serializers.ModelSerializer):
     class Meta:
         model = EngineerContext
         fields = '__all__'
-
-
-# A design can be part of either a dataset in the EOSSContext or a queue for the active background search
-class Design(models.Model):
-    design_id = models.AutoField(primary_key=True)
-
-    eosscontext = models.ForeignKey(EOSSContext, on_delete=models.CASCADE, null=True)
-    activecontext = models.ForeignKey(ActiveContext, on_delete=models.CASCADE, null=True)
-
-    id = models.IntegerField()
-    inputs = models.TextField()
-    outputs = models.TextField()
-
-    # Special restrictions
-    class Meta:
-        unique_together = ("eosscontext", "activecontext", "id")
-
-
-
-# --> many-to-one relationship with UserInformation
-class ArchitecturesClicked(models.Model):
-    user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
-    arch_clicked = models.TextField(max_length=500)
-
-class ArchitecturesUpdated(models.Model):
-    user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
-    arch_updated = models.TextField(max_length=500)
-
-class ArchitecturesEvaluated(models.Model):
-    user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
-    arch_evaluated = models.TextField(max_length=500)

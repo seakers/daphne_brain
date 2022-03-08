@@ -1,6 +1,6 @@
 import boto3
 
-from EOSS.aws.utils import dev_client, prod_client
+from EOSS.aws.utils import dev_client, prod_client, user_input, pprint
 
 
 
@@ -18,6 +18,8 @@ class Cluster:
     def get_or_create_cluster(self):
         cluster_arn = self.does_cluster_exist(self.cluster_name)
         if cluster_arn is None:
+            if not user_input('\n\n evaluator-cluster IS ABOUT TO BE CREATED, WOULD YOU LIKE TO CONTINUE (yes/no): '):
+                exit(0)
             response = self.client.create_cluster(
                 clusterName=self.cluster_name,
                 capacityProviders=['FARGATE'],
@@ -25,14 +27,22 @@ class Cluster:
                     {'key': 'name', 'value': 'evaluator-cluster'}
                 ]
             )
+            print('--> CLUSTER CREATE REQUEST RESPONSE', response)
             return response['cluster']['clusterArn']
         else:
+            print('---> evaluator-cluster ALREADY EXISTS WITH ARN ', cluster_arn)
             return cluster_arn
 
     def does_cluster_exist(self, cluster_name):
-        cluster_arns = self.client.list_clusters()['clusterArns']
+        print('\n\n ---> CHECKING IF CLUSTER EXISTS: ', cluster_name)
+        list_cluster_response = self.client.list_clusters()
+        if 'clusterArns' not in list_cluster_response:
+            print('--> NO CLUSTERS')
+            return None
+        cluster_arns = list_cluster_response['clusterArns']
         clusters = self.client.describe_clusters(clusters=cluster_arns, include=['ATTACHMENTS', 'SETTINGS'])['clusters']
         for cluster in clusters:
+            pprint(cluster)
             if cluster['clusterName'] == cluster_name:
                 return cluster['clusterArn']
         return None
@@ -47,6 +57,7 @@ class Cluster:
 
 
     def remove_services(self):
+        print('\n\n---------- REMOVING CLUSTER SERVICES ----------')
         # 1. Get all the services in the evaluator cluster
         service_arns = self.get_cluster_service_arns()
         if not service_arns:
@@ -54,27 +65,45 @@ class Cluster:
 
         # 2. Stop all the tasks for each service in the cluster
         service_details = self.get_cluster_service_descriptions(service_arns)
+        print('\n\n', service_details)
+        if not user_input('---> Above are the services to be removed. Would you like to continue (yes/no): '):
+            exit(0)
         for details in service_details:
             self.stop_service_tasks(details)
             self.update_service_desired_task_count(details)
             self.delete_service(details)
+        print('--- FINISHED\n\n')
 
+    # Returns a list of service ARNs running on evaluator-cluster
+    def get_cluster_service_arns(self):
+        # Check to see if the cluster exists first
+        cluster_arn = self.does_cluster_exist(self.cluster_name)
+        if cluster_arn is None:
+            return []
 
-
-    def delete_service(self, service_details):
-        response = self.client.delete_service(
+        response = self.client.list_services(
             cluster=self.cluster_name,
-            service=service_details['serviceName'],
-            force=True
+            launchType='FARGATE',
         )
+        if 'serviceArns' not in response:
+            return []
+        else:
+            return response['serviceArns']
 
-    def update_service_desired_task_count(self, service_details, count=0):
-        response = self.client.update_service(
+    # Returns full info of all cluster services
+    def get_cluster_service_descriptions(self, service_arns):
+        response = self.client.describe_services(
             cluster=self.cluster_name,
-            service=service_details['serviceName'],
-            desiredCount=count
+            services=service_arns,
+            include=[
+                'TAGS',
+            ]
         )
-        return
+        if 'services' not in response:
+            return []
+        else:
+            return response['services']
+
 
     def stop_service_tasks(self, service_details):
         # 1. List all tasks and filter on service
@@ -94,29 +123,22 @@ class Cluster:
         return
 
 
-
-    def get_cluster_service_arns(self):
-        response = self.client.list_services(
+    def update_service_desired_task_count(self, service_details, count=0):
+        response = self.client.update_service(
             cluster=self.cluster_name,
-            launchType='FARGATE',
+            service=service_details['serviceName'],
+            desiredCount=count
         )
-        if 'serviceArns' not in response:
-            return []
-        else:
-            return response['serviceArns']
+        print('---> UPDATING SERVICE DESIRED TASK COUNT')
+        return
 
-    def get_cluster_service_descriptions(self, service_arns):
-        response = self.client.describe_services(
+
+    def delete_service(self, service_details):
+        response = self.client.delete_service(
             cluster=self.cluster_name,
-            services=service_arns,
-            include=[
-                'TAGS',
-            ]
+            service=service_details['serviceName'],
+            force=True
         )
-        if 'services' not in response:
-            return []
-        else:
-            return response['services']
-
+        print('---> DELETING SERVICE', response)
 
 

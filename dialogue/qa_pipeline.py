@@ -15,6 +15,11 @@ from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation
 from dialogue.nn_models import nn_models
 
+from daphne_brain import settings
+if "EOSS" in settings.ACTIVE_MODULES:
+    from EOSS.vassar.api import VASSARClient
+    from EOSS.models import EOSSContext
+
 
 def classify(question, daphne_version, module_name):
     cleaned_question = data_helpers.clean_str(question)
@@ -47,6 +52,7 @@ def classify(question, daphne_version, module_name):
 
 
 def load_type_info(question_type, daphne_version, module_name):
+    print('--> LOAD TYPE INFO:', daphne_version, module_name, question_type)
     type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
                                   str(question_type) + '.json')
     with open(type_info_file, 'r') as file:
@@ -139,8 +145,19 @@ def augment_data(data, user_information: UserInformation, session):
     data['now'] = datetime.datetime.utcnow()
     data['session_key'] = session.session_key
     if user_information.daphne_version == "EOSS":
-        data['designs'] = user_information.eosscontext.design_set.order_by('id').all()
-        data['problem'] = user_information.eosscontext.problem
+        eoss_context: EOSSContext = user_information.eosscontext
+        vassar_client = VASSARClient(user_information=user_information)
+        data['designs'] = vassar_client.get_dataset_architectures(problem_id=eoss_context.problem_id,
+                                                                  dataset_id=eoss_context.dataset_id)
+        data['group_id'] = eoss_context.group_id
+        data['problem_id'] = eoss_context.problem_id
+        data['dataset_id'] = eoss_context.dataset_id
+
+        if 'context' in session:
+            if 'behavioral' in session['context']:
+                data['behavioral'] = session['context']['behavioral']
+            if 'non_behavioral' in session['context']:
+                data['non_behavioral'] = session['context']['non_behavioral']
     if user_information.daphne_version == "EDL":
         pass
     if user_information.daphne_version == "AT":
@@ -236,7 +253,7 @@ def get_dialogue_functions(daphne_version):
         return dialogue_functions
 
 
-def run_function(function_info, data, daphne_version, context, new_dialogue_contexts):
+def run_function(function_info, data, daphne_version, context, new_dialogue_contexts, user_information, session):
     # Load the functions that must be run
     dialogue_functions = get_dialogue_functions(daphne_version)
     # Run the function and save the results

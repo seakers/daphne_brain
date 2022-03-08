@@ -4,7 +4,7 @@ import time
 import boto3
 
 from EOSS.aws.utils import dev_client, prod_client
-from EOSS.aws.utils import eval_task_iam_arn
+from EOSS.aws.utils import eval_task_iam_arn, task_execution_role_arn
 
 
 class Task:
@@ -30,6 +30,7 @@ class Task:
             response = self.client.register_task_definition(
                 family='evaluator',
                 taskRoleArn=eval_task_iam_arn(),
+                executionRoleArn=task_execution_role_arn(),
                 networkMode='awsvpc',
                 requiresCompatibilities=['FARGATE'],
                 cpu='1 vCPU',
@@ -38,19 +39,24 @@ class Task:
                     {
                         "name": "vassar",
                         "image": "apazagab/design-evaluator",
-                        "privileged": True,
+                        "privileged": False,
                         "interactive": True,
                         "logConfiguration": {
-                            "logDriver": "awslogs"
+                            "logDriver": "awslogs",
+                            'options': {
+                                'awslogs-region': 'us-east-2',
+                                'awslogs-group': 'seakers-evaluation-logs',
+                                'awslogs-stream-prefix': 'daphne-eval-logs'
+                            }
                         },
                         "environment": [
-                            {"name": "PROBLEM_ID", "value": problem_id},
-                            {"name": "GROUP_ID", "value": group_id},
-                            {"name": "REQUEST_MODE", "value": request_mode},
+                            {"name": "PROBLEM_ID", "value": str(problem_id)},
+                            {"name": "GROUP_ID", "value": str(group_id)},
+                            {"name": "REQUEST_MODE", "value": str(request_mode)},
                             {"name": "PRIVATE_QUEUE_NAME", "value": "RANDOM"},
-                            {"name": "EVAL_QUEUE_URL", "value": eval_queue_url},
-                            {"name": "APOLLO_URL_WS", "value": apollo_url},
-                            {"name": "APOLLO_URL", "value": apollo_ws_url}
+                            {"name": "EVAL_QUEUE_URL", "value": str(eval_queue_url)},
+                            {"name": "APOLLO_URL_WS", "value": str(apollo_url)},
+                            {"name": "APOLLO_URL", "value": str(apollo_ws_url)}
                         ]
                     }
                 ],
@@ -88,16 +94,20 @@ class Task:
 
 
     def delete_all_eval_task_definitions(self):
+        print('\n\n---------- REMOVING TASK DEFINITIONS ----------')
 
         # 1. Get all task definition arns in the correct family
         list_response = self.client.list_task_definitions(familyPrefix='evaluator')
         if 'taskDefinitionArns' not in list_response:
+            print('---> NO TASK DEFINITIONS FOUND')
             return
         task_def_arns = list_response['taskDefinitionArns']
 
         # 2. Deregister all task definitions
         for task_def_arn in task_def_arns:
+            print('---> DEREGISTERING TASK', task_def_arn)
             self.client.deregister_task_definition(taskDefinition=task_def_arn)
+        print('--- FINISHED\n\n')
         return
 
 

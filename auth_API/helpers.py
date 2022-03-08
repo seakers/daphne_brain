@@ -26,8 +26,8 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         user_info.save()
 
         # Create the EOSS Context and its children
-        eoss_context = EOSSContext(user_information=user_info, problem='', dataset_name='', dataset_user=False,
-                                   last_arch_id=0, selected_arch_id=-1, added_archs_count=0, vassar_port=9090, problem_id=4)
+        eoss_context = EOSSContext(user_information=user_info, dataset_id=-1, last_arch_id=0, selected_arch_id=-1, 
+                                   added_archs_count=0, group_id=1, problem_id=1)
         eoss_context.save()
 
         active_context = ActiveContext(eosscontext=eoss_context, show_background_search_feedback=False,
@@ -53,16 +53,16 @@ def get_user_information(session, user):
 
     if user.is_authenticated:
         # First try lookup by username
-        userinfo_qs = UserInformation.objects.filter(user__exact=user)
+        userinfo_qs = UserInformation.objects.filter(user__exact=user).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
     else:
         # Try to look by session key
         # If no session exists, create one here
         if session.session_key is None:
             session.create()
         session = Session.objects.get(session_key=session.session_key)
-        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key)
+        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
 
-    if len(userinfo_qs) == 1:
+    if len(userinfo_qs) >= 1:
         return userinfo_qs[0]
     elif len(userinfo_qs) == 0:
         raise Exception("Information not already created!")

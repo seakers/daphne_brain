@@ -1,0 +1,107 @@
+version: '3.7'
+services:
+  daphne:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: apazagab/daphne_brain
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - USER=daphne
+      - PASSWORD=daphne
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - postgres
+    tty: true
+    container_name: daphne_brain
+    # command: daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=daphne
+      - POSTGRES_PASSWORD=daphne
+      - POSTGRES_DB=daphne
+    container_name: daphne_database
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    container_name: daphne_redis
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+      - "5671:5671"
+    hostname: "my-rabbitmq"
+    container_name: daphne_rabbitmq
+  neo4j:
+    image: neo4j:3.5.14
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    container_name: daphne_neo4j
+    volumes:
+      - ${NEO_DIR}/data:/data
+      - ${NEO_DIR}/logs:/logs
+    environment:
+      - NEO4J_AUTH=neo4j/test
+  graphql:
+    image: hasura/graphql-engine:latest
+    ports:
+      - "6002:8080"
+    depends_on:
+      - "postgres"
+    restart: always
+    environment:
+      - HASURA_GRAPHQL_DATABASE_URL=postgres://daphne:daphne@postgres:5432/daphne
+      - HASURA_GRAPHQL_ENABLE_CONSOLE=true
+      - HASURA_GRAPHQL_ADMIN_SECRET=daphne
+      - HASURA_GRAPHQL_AUTH_HOOK=http://daphne:8000/api/auth/check-status-hasura
+      - HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL=100
+    container_name: daphne_graphql
+  historical_db:
+    image: apazagab/historical_db
+    depends_on:
+      - "postgres"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - USER=daphne
+      - PASSWORD=daphne
+      - NEO4J_HOST=neo4j
+      - NEO4J_PORT=7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=test
+    tty: true
+    container_name: historical_db
+  command_classifier:
+    image: apazagab/command_classifier
+    depends_on:
+      - "postgres"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - USER=daphne
+      - PASSWORD=daphne
+    tty: true
+    container_name: command_classifier
+  vassar_resources:
+    image: apazagab/vassar_resources
+    depends_on:
+      - "postgres"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - USER=daphne
+      - PASSWORD=daphne
+    tty: true
+    container_name: vassar_resources

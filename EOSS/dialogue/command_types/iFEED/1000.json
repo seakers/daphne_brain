@@ -1,9 +1,10 @@
 {
   "type": "run_function",
   "params": [],
+  "objective": "Determine the driving features in a set of designs",
   "function":
   {
-    "run_template": "dialogue_functions.analyst.data_mining_run(data['designs'], data['behavioral'], data['non_behavioral'], context)",
+    "run_template": "dialogue_functions.analyst.data_mining_run(context, user_information, session)",
     "results": [
       {
         "result_type": "list",
