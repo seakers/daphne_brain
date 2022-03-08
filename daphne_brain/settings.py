@@ -31,7 +31,7 @@ USE_X_FORWARDED_HOST = True
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
 ACTIVE_MODULES = ['EOSS']
 
-EDL_PATH = '/Users/ssantini/Desktop/'
+EDL_PATH = '/Users/ssantini/Code/'
 
 
 # Application definition
