@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "procedure_number", "type": "procedure_number", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Provide the affected components for a certain procedure number",
+  "function":
+  {
+    "run_template": "dialogue_functions.get_procedure_affected_components(data['procedure_number'])",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "component": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The procedure ${procedure_number} affects the following components or subsystems:",
+      "repeat": "${component}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The procedure ${procedure_number} affects the following components or subsystems:",
+      "item_template": "${component}."
+    }
+  ]
+}

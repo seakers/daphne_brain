@@ -1,35 +1,36 @@
 {
-  "type": "db_query",
+  "type": "run_function",
   "params":
   [
-    { "name": "anomaly_id", "type": "anomaly_id", "options": "", "from_context": false, "mandatory": true }
+    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "describe an anomaly with a certain id",
-  "query":
+  "objective": "Provide the symptoms of a certain anomaly",
+  "function":
   {
-    "always": "session.query(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",
-    "opt": [],
-    "end": "",
+    "run_template": "dialogue_functions.get_anomaly_symptoms(data['anomaly'])",
     "results": [
       {
-        "result_type": "single",
+        "result_type": "list",
         "result_fields": {
-          "description": "row.description"
+          "measurement": "item['measurement']",
+          "relationship": "item['relationship']"
         }
       }
     ]
   },
   "voice_response": [
     {
-      "type": "single",
-      "template": "Anomaly ${anomaly_id} Description: ${description}"
+      "type": "list",
+      "begin": "The effects of the ${anomaly} anomaly are:",
+      "repeat": "${measurement} exceeds the ${relationship}.",
+      "end": "."
     }
   ],
   "visual_response": [
     {
-      "type": "text",
-      "from": "single",
-      "template": "Anomaly ${anomaly_id} Description: ${description}"
+      "type": "list",
+      "begin": "The effects of the ${anomaly} anomaly are:",
+      "item_template": "${measurement} exceeds the ${relationship}."
     }
   ]
 }

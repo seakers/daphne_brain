@@ -141,10 +141,10 @@ class DaphneConsumer(JsonWebsocketConsumer):
         Called when the websocket is handshaking as part of initial connection.
         """
         # Accept the connection
-        self.accept()
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
         user_info.channel_name = self.channel_name
         user_info.save()
+        self.accept()
 
         key = self.scope['path'].lstrip('api/')
         hash_key = hashlib.sha256(key.encode('utf-8')).hexdigest()

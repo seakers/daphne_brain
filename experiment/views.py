@@ -123,8 +123,8 @@ class ReloadExperiment(APIView):
         if hasattr(user_info, 'experimentcontext'):
             experiment_context = user_info.experimentcontext
             if experiment_context.is_running:
-                return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
-        return Response({ 'is_running': False })
+                return Response({'experiment_data': json.loads(experiment_context.current_state)})
+        return Response()
         
         
 class FinishExperiment(APIView):
@@ -161,3 +161,8 @@ class FinishExperiment(APIView):
         experiment_context.delete()
 
         return Response('Experiment finished correctly!')
+
+    def disconnect(self, close_code):
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], 'AT')
+        user_info.experimentcontext = False
+        user_info.experimentcontext.save()

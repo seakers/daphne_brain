@@ -1,5 +1,4 @@
 import time
-from statsmodels.tsa import ar_model
 
 
 def compute_zone(value, info):
@@ -8,13 +7,13 @@ def compute_zone(value, info):
     """
 
     zone = 0
-    if value <= info['low_critic_threshold']:
+    if value <= info['low_warning_threshold']:
         zone = -2
-    elif value <= info['low_warning_threshold']:
+    elif value <= info['low_caution_threshold']:
         zone = -1
-    elif value <= info['high_warning_threshold']:
+    elif value <= info['high_caution_threshold']:
         zone = 0
-    elif value <= info['high_critic_threshold']:
+    elif value <= info['high_warning_threshold']:
         zone = 1
     else:
         zone = 2
@@ -22,128 +21,178 @@ def compute_zone(value, info):
     return zone
 
 
-def threshold_check(value, info):
+def build_threshold_tag(value, info):
     """
     This function returns an string depending on the threshold zone on which a value is located.
+    In the knowledge graph with the information about the anomalies, the word "limit" is used instead of "threshold",
+    and hence the change of nomenclature here. Also, no distinction is made when being beyond the warning limit.
     """
 
-    message = ''
+    tag = ''
     zone = compute_zone(value, info)
     if zone == -2:
-        message = 'below low critical threshold'
+        tag = 'LowerWarningLimit'
     elif zone == -1:
-        message = 'below low warning threshold'
+        tag = 'LowerCautionLimit'
     elif zone == 0:
-        message = ''
+        tag = 'nominal'
     elif zone == 1:
-        message = 'above high warning threshold'
+        tag = 'UpperCautionLimit'
     elif zone == 2:
-        message = 'above high critical threshold'
+        tag = 'UpperWarningLimit'
     else:
         print('Invalid zone value')
         raise
 
-    return message
+    return tag
 
 
-def forecast_check(trace, info):
-    """
-    This function uses a trace to forecast its evolution, and then builds a warning message if such forecast becomes
-    anomalous (outside thresholds).
-    """
+def build_detection_text(variable, threshold_tag):
+    text = ''
+    if threshold_tag == 'LowerWarningLimit':
+        text = variable + ': Is below Lower Warning Limit.'
+    elif threshold_tag == 'LowerCautionLimit':
+        text = variable + ': Is below Lower Caution Limit.'
+    elif threshold_tag == 'UpperCautionLimit':
+        text = variable + ': Is above Upper Caution Limit.'
+    elif threshold_tag == 'UpperWarningLimit':
+        text = variable + ': Is above Upper Warning Limit.'
+    else:
+        print('Invalid threshold tag')
+        raise
 
-    # Input parse
-    last_point = trace[-1]
-    base_zone = compute_zone(last_point, info)
-
-    # AR model fitting and prediction
-    forecast_span = 120  # number of points to forecast (its value in seconds depends on the simulation configuration)
-    start_index = len(trace) - 1
-    end_index = start_index + forecast_span
-    model = ar_model.AR(endog=trace)
-    results = model.fit()
-    prediction = results.predict(start=start_index, end=end_index)
-
-    # Anomaly check
-    second = 1
-    message = ''
-    for value in prediction:
-        zone = compute_zone(value, info)
-        if zone != base_zone:
-            if zone == -2:
-                message = 'low critical zone in ' + str(second) + ' seconds'
-            elif zone == -1:
-                message = 'low warning zone in ' + str(second) + ' seconds'
-            elif zone == 0:
-                message = 'nominal zone in ' + str(second) + ' seconds'
-            elif zone == 1:
-                message = 'high warning zone in ' + str(second) + ' seconds'
-            elif zone == 2:
-                message = 'high critical zone in ' + str(second) + ' seconds'
-            else:
-                print('Invalid zone value')
-                raise
-            break
-
-        second += 1
-    return message
+    return text
 
 
-def build_message(window):
+def build_symptoms_report(window):
     """
     This function checks the status of the trace and builds the proper warning messages if necessary.
     """
 
     # Input parse
     values = window['values']
-    values = values.drop(labels='timestamp', axis='columns')
+    # values = values.drop(labels='timestamp', axis='columns')
     info = window['info']
 
     # Iteration over each telemetry feed variable's trace to search anomalies and build the proper message
-    messages = []
-    for item in values:
+    symptoms_report = []
+    for variable in values:
         # Retrieve trace as an array
-        trace = list(values[item])
+        trace = list(values[variable])
 
         # Check and build the threshold and forecast messages
-        threshold_message = threshold_check(trace[-1], info[item])
-        forecast_message = forecast_check(trace, info[item])
-        if threshold_message != '':
-            message = item.capitalize() + ' is ' + threshold_message + '.'
-            messages.append(message)
-        if forecast_message != '':
-            message = item.capitalize() + ' might switch to ' + forecast_message + '.'
-            messages.append(message)
+        last_point = trace[-1]
+        variable_info = info[variable]
+        threshold_tag = build_threshold_tag(last_point, variable_info)
+        if threshold_tag != '' and threshold_tag != 'nominal':
+            detection_text = build_detection_text(variable, threshold_tag)
+            display_name = variable_info['display_name']
+            event = {'measurement': variable,
+                     'display_name': display_name,
+                     'detection_text': detection_text,
+                     'threshold_tag': threshold_tag}
+            symptoms_report.append(event)
 
-    if len(messages) == 0:
-        messages.append('OK')
+    return symptoms_report
 
-    return messages
+
+def symptom_reports_are_equal(old_report, new_report):
+    if len(old_report) != len(new_report):
+        return False
+    else:
+        N = len(old_report)
+        are_equal = True
+        for i in range(0, N):
+            old_display_name = old_report[i]['display_name']
+            new_display_name = new_report[i]['display_name']
+            old_threshold_tag = old_report[i]['threshold_tag']
+            new_threshold_tag = new_report[i]['threshold_tag']
+            same_name = (old_display_name == new_display_name)
+            same_tag = (old_threshold_tag == new_threshold_tag)
+            if not same_name or not same_tag:
+                are_equal = False
+        return are_equal
+
+
+def decide_alarm(old_report, new_report, t_nominal, cs_is_pending, cs_wait):
+    # Check whether the previous and new symptoms reports are equal or not
+    are_equal = symptom_reports_are_equal(old_report, new_report)
+
+    # Act depending on the case
+    if are_equal and len(old_report) != 0:
+        # This means that the symptoms reports are equal and nonempty. No new anomalies have appeared and no clear sound
+        # should is pending.
+        return 'None', t_nominal, False
+    else:
+        if len(new_report) == 0 and len(old_report) != 0:
+            # This means that the situation just switched to nominal. No clear sound is triggered since we want to wait
+            # a safe time before doing so. Hence we mark the clear sound as pending and compute the time in which this
+            # switch took place.
+            return 'None', time.time(), True
+        elif len(new_report) == 0 and len(old_report) == 0:
+            # This means that the situation has been nominal for a while. Hence we check our auxiliary variables.
+            elapsed_time = time.time() - t_nominal
+            if elapsed_time >= cs_wait and cs_is_pending:
+                # If we waited pass the safe time and the clear sound is pending, then we emmit a clear sound.
+                return 'alarmOut', t_nominal, False
+            else:
+                # Do nothing otherwise
+                return 'None', t_nominal, cs_is_pending
+        elif len(old_report) != 0:
+            # Do nothing, only sound alarm on first anomaly
+            return 'None', t_nominal, False
+        else:
+            # We can only get here if the symptoms reports are not equal and the new one is not empty. Hence we make an
+            # alarm sound.
+            return 'alarmIn', t_nominal, False
 
 
 def anomaly_treatment_routine(hub_to_at, at_to_hub):
-    print('AD thread started')
-
     keep_alive = True
-    while keep_alive:
+    last_symptoms_report = []
+    t_nominal = -1  # This variable is used to store the last time the telemetry switched from off nominal to nominal
+    cs_is_pending = False  # cs stand for "clear sound"
+    cs_wait = 5  # cs stands for "clear sound"
+
+    # Set the ping routine counters
+    life_limit = 40.
+    time_since_last_ping = 0.
+    current_time = time.time()
+
+    while keep_alive and time_since_last_ping < life_limit:
+        time_since_last_ping = time.time() - current_time
         while not hub_to_at.empty():
             signal = hub_to_at.get()
             if signal['type'] == 'stop':
                 keep_alive = False
-                # at_to_hub.put({'type': 'stop', 'content': ''})
+            elif signal['type'] == 'ping':
+                current_time = time.time()
             elif signal['type'] == 'window':
                 # To prevent the anomaly detection thread from falling behind the telemetry feed, empty the queue and
                 # only process the last received window
                 if hub_to_at.empty():
                     window = signal['content']
-                    anomaly_list = build_message(window)
+                    # Build the new symptoms report
 
-                    # Trigger diagnosis here
+                    symptoms_report = build_symptoms_report(window)
+
+                    # Decide if an alarm has to be triggered or not
+                    alarm, t_nominal, cs_is_pending = decide_alarm(last_symptoms_report, symptoms_report,
+                                                                   t_nominal, cs_is_pending, cs_wait)
+
+                    # Update the last symptoms report
+                    last_symptoms_report = symptoms_report
+
+                    # Build the message for the frontend
+                    content = {'symptoms_report': symptoms_report, 'alarm': alarm}
 
                     # Send message to frontend
-                    at_to_hub.put({'type': 'diagnosed_anomalies', 'content': anomaly_list})
+                    at_to_hub.put({'type': 'symptoms_report', 'content': content})
 
         time.sleep(0.5)
 
+    # Clear the queues and print a stop message
+    at_to_hub.queue.clear()
+    hub_to_at.queue.clear()
     print('Anomaly treatment thread stopped.')
     return
