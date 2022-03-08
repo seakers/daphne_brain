@@ -29,6 +29,11 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     print('----> user:', user)
     print('----> channel name:', channel_name)
     print('--------------------------', '\n')
+    print('--------- Problem', request.data['problem'])
+
+
+    # --> Tutorial
+    in_tutorial = request.data['tutorial']
 
 
     # --> Architectures
@@ -63,8 +68,22 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     # features.sort(key=lambda feature: feature['score'])
     # top_features = features[:5]
     features.sort(key=lambda feature: feature['complexity'])
-    question_features = features[:5]
+    question_features = features[:7]
     features.sort(key=lambda feature: feature['overall'])
+
+
+    # --> Questions
+    current_design_question_index = 0
+    designq_first_choice_info = []
+    designq_second_choice_info = []
+    designq_correct_answer = []
+    designq_question = []
+    for x in range(7):
+        first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments, x, request.data['problem'])
+        designq_first_choice_info.append(first_choice_info)
+        designq_second_choice_info.append(second_choice_info)
+        designq_correct_answer.append(correct_answer)
+        designq_question.append(question)
 
 
     # --> Set initial user information
@@ -98,11 +117,6 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     four_evals = False
     five_evals_counter = num_evaluated
     five_evals = False
-    sensitivity_info_given = False
-    feature_info_given = False
-    design_space_info_given = False
-    objective_space_info_given = False
-
     send_message = False
     question_given = False
 
@@ -112,14 +126,49 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
     try:
         if os.path.isfile(teacher_log_file):
             log_file = open(teacher_log_file, 'a')
-            log_file.write('\n ------------ Teacher Thread Started ------------')
+            log_file.write('\n ------------ Teacher Thread Started: ')
+            log_file.write(request.data['problem'])
+            log_file.write(' ------------')
             for feature in question_features:
                 feature_str = json.dumps(feature)
                 feature_str = '\n' + feature_str
                 log_file.write(feature_str)
+            log_file.write('\n\n --> Design Prediction Questions \n')
+            for x in range(7):
+                design_choice_one_log = json.dumps(designq_first_choice_info[x])
+                design_choice_two_log = json.dumps(designq_second_choice_info[x])
+                design_answer_log = json.dumps(designq_correct_answer[x])
+                design_question_log = json.dumps(designq_question[x])
+                log_file.write(design_question_log)
+                log_file.write('\n')
+                log_file.write(design_choice_one_log)
+                log_file.write('\n')
+                log_file.write(design_choice_two_log)
+                log_file.write('\n')
+                log_file.write(design_answer_log)
+                log_file.write('\n--- \n')
+            log_file.write('-----> Sensitivity Info: science \n')
+            for trio in sensitivity_info['science']['S1_mins']:
+                log_file.write(json.dumps(trio[0]))
+                log_file.write(' | ')
+                log_file.write(json.dumps(trio[1]))
+                log_file.write(' | ')
+                log_file.write(json.dumps(trio[2]))
+                log_file.write('\n')
+            log_file.write('-----> Sensitivity Info: cost \n')
+            for trio in sensitivity_info['cost']['S1_mins']:
+                log_file.write(json.dumps(trio[0]))
+                log_file.write(' | ')
+                log_file.write(json.dumps(trio[1]))
+                log_file.write(' | ')
+                log_file.write(json.dumps(trio[2]))
+                log_file.write('\n')
             log_file.close()
     except:
         print("Error with teacher log file")
+
+
+
 
 
     thought_iteration = 0
@@ -168,8 +217,8 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
 
         # 6000 = one minute
-        # -------------------------------------------------------------------------------------------------- Sensitivity - Minute 1 - Second 60
-        if thought_iteration == 6000:
+        # -------------------------------------------------------------------------------------------------- Sensitivity - Minute 3 - Second 120
+        if thought_iteration == 18000:
             async_to_sync(channel_layer.send)(channel_name, {
                 'type': 'teacher.sensitivities',
                 'name': 'displaySensitivityInformation',
@@ -182,15 +231,13 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             })
             sensitivity_info_given = True
 
-        # ----------------------------------------------------------------------------------------- Sensitivity Question - Minute 3 - Second 180
-        if thought_iteration == 18000:
-            first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info)
+        # ----------------------------------------------------------------------------------------- Sensitivity Question - Minute 6 - Second 300
+        if thought_iteration == 36000:  # 30000
+            first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info, orbits, instruments)
             first_choice = first_choice_info[0] + ' | ' + first_choice_info[1]
             second_choice = second_choice_info[0] + ' | ' + second_choice_info[1]
-            second_choice_revealed = second_choice_info[0] + ' | ' + second_choice_info[1] + ' = ' + str(
-                abs(float(second_choice_info[2])))
-            first_choice_revealed = first_choice_info[0] + ' | ' + first_choice_info[1] + ' = ' + str(
-                abs(float(first_choice_info[2])))
+            second_choice_revealed = second_choice_info[0] + ' | ' + second_choice_info[1] + ' = ' + str(abs(float(second_choice_info[2])))
+            first_choice_revealed = first_choice_info[0] + ' | ' + first_choice_info[1] + ' = ' + str(abs(float(first_choice_info[2])))
             async_to_sync(channel_layer.send)(channel_name, {
                 'type': 'teacher.sensitivities',
                 'name': 'sensitivityQuestion',
@@ -208,62 +255,9 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                 "writer": "daphne"
             })
 
-        # ------------------------------------------------------------------------------------------------- Design Space - Minute 4 - Second 240
-        if thought_iteration == 24000:
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'teacher.design_space',
-                'name': 'displayDesignSpaceInformation',
-                'data': design_space_info,
-                'speak': 'ping',
-                "voice_message": 'testing',
-                "visual_message_type": ["design_space_plot"],
-                "visual_message": ["ping"],
-                "writer": "daphne"
-            })
-            design_space_info_given = True
 
-        # ---------------------------------------------------------------------------------------- Design Space Question - Minute 6 - Second 360
-        if thought_iteration == 36000:
-            first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'teacher.design_space',
-                'name': 'designQuestion',
-                'data': None,
-                'speak': 'ping',
-                "voice_message": 'testing',
-                "visual_message_type": ["question_template"],
-                "visual_message": ["ping"],
-                "first_choice": first_choice_info,
-                "second_choice": second_choice_info,
-                "correct_answer": correct_answer,
-                "question": question,
-                "writer": "daphne"
-            })
-
-        # ----------------------------------------------------------------------------------------------------- Features - Minute 7 - Second 420
-        if thought_iteration == 42000:
-            single_feature = random.choice(question_features)
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'teacher.features',
-                'name': 'displayFeatureInformation',
-                'data': single_feature,
-            })
-            feature_info_given = True
-
-        # -------------------------------------------------------------------------------------------- Features Question - Minute 9 - Second 540
+        # ---------------------------------------------------------------------------------------------- Objective Space - Minute 9 - Second 600
         if thought_iteration == 54000:
-            feature_choices, answer = generate_feature_question(question_features)
-            async_to_sync(channel_layer.send)(channel_name, {
-                'type': 'teacher.features',
-                'name': 'featureQuestion',
-                'first_choice': feature_choices[0],
-                'second_choice': feature_choices[1],
-                'correct_answer': answer,
-                'question': 'Which of these two features better describes the Pareto Front?',
-            })
-
-        # ---------------------------------------------------------------------------------------------- Objective Space - Minute 10 - Second 600
-        if thought_iteration == 60000:
             async_to_sync(channel_layer.send)(channel_name, {
                 'type': 'teacher.objective_space',
                 'name': 'displayObjectiveSpaceInformation',
@@ -276,11 +270,71 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
             })
             objective_space_info_given = True
 
-        # ---------------------------------------------------------------------------------------------- Random Question - Minute 12 (every minute after)
-        if thought_iteration >= 72000 and thought_iteration % 6000 == 0:
+        # ------------------------------------------------------------------------------------------------- Design Space - Minute 12 - Second 240
+        if thought_iteration == 72000:
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.design_space',
+                'name': 'displayDesignSpaceInformation',
+                'data': design_space_info,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["design_space_plot"],
+                "visual_message": ["ping"],
+                "writer": "daphne"
+            })
+            design_space_info_given = True
+
+
+        
+        # ---------------------------------------------------------------------------------------- Design Space Question - Minute 15 - Second 360
+        if thought_iteration == 90000:  # 36000
+            # first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.design_space',
+                'name': 'designQuestion',
+                'data': None,
+                'speak': 'ping',
+                "voice_message": 'testing',
+                "visual_message_type": ["question_template"],
+                "visual_message": ["ping"],
+                "first_choice": designq_first_choice_info[current_design_question_index],
+                "second_choice": designq_second_choice_info[current_design_question_index],
+                "correct_answer": designq_correct_answer[current_design_question_index],
+                "question": designq_question[current_design_question_index],
+                "writer": "daphne"
+            })
+            current_design_question_index = current_design_question_index + 1
+
+        # -------------------------------------------------------------------------------------------- Features Question - Minute 18 - Second 540
+        if thought_iteration == 108000:
+            feature_choices, answer = generate_feature_question(question_features)
+            async_to_sync(channel_layer.send)(channel_name, {
+                'type': 'teacher.features',
+                'name': 'featureQuestion',
+                'first_choice': feature_choices[0],
+                'second_choice': feature_choices[1],
+                'correct_answer': answer,
+                'question': 'Which of these two features better describes the Pareto Front?',
+            })
+
+        
+        # ----------------------------------------------------------------------------------------------------- Features - Minute 14 - Second 420
+        # if thought_iteration == 42000:  # 42000
+        #     single_feature = random.choice(question_features)
+        #     async_to_sync(channel_layer.send)(channel_name, {
+        #         'type': 'teacher.features',
+        #         'name': 'displayFeatureInformation',
+        #         'data': single_feature,
+        #     })
+        #     feature_info_given = True
+
+        
+
+        # ---------------------------------------------------------------------------------------------- Random Question - Minute 20 (every three minutes after)
+        if thought_iteration >= 120000 and thought_iteration % 18000 == 0:
             rand = random.random()
             if rand < 0.33:
-                first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
+                # first_choice_info, second_choice_info, correct_answer, question = generate_design_prediction_question(arch_dict_list, orbits, instruments)
                 async_to_sync(channel_layer.send)(channel_name, {
                     'type': 'teacher.design_space',
                     'name': 'designQuestion',
@@ -289,14 +343,15 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                     "voice_message": 'testing',
                     "visual_message_type": ["question_template"],
                     "visual_message": ["ping"],
-                    "first_choice": first_choice_info,
-                    "second_choice": second_choice_info,
-                    "correct_answer": correct_answer,
-                    "question": question,
+                    "first_choice": designq_first_choice_info[current_design_question_index],
+                    "second_choice": designq_second_choice_info[current_design_question_index],
+                    "correct_answer": designq_correct_answer[current_design_question_index],
+                    "question": designq_question[current_design_question_index],
                     "writer": "daphne"
                 })
+                current_design_question_index = current_design_question_index + 1
             elif rand < 0.66:
-                first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info)
+                first_choice_info, second_choice_info, correct_answer, question = generate_sensitivity_question(sensitivity_info, orbits, instruments)
                 first_choice = first_choice_info[0] + ' | ' + first_choice_info[1]
                 second_choice = second_choice_info[0] + ' | ' + second_choice_info[1]
                 second_choice_revealed = second_choice_info[0] + ' | ' + second_choice_info[1] + ' = ' + str(abs(float(second_choice_info[2])))
@@ -329,10 +384,83 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
                 })
 
 
-        one_evals = False
-        two_evals = False
-        three_evals = False
-        four_evals = False
+
+
+
+        if in_tutorial == 'true':
+            print("---> In Turorial?")
+            print(in_tutorial)
+            print(type(in_tutorial))
+            if thought_iteration == 1:
+
+                # Sensitivities Information
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.sensitivities',
+                    'name': 'displaySensitivityInformation',
+                    'data': sensitivity_info,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["sensitivity_plot"],
+                    "visual_message": ["ping"],
+                    "writer": "daphne"
+                })
+
+                # Design Space Information
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.design_space',
+                    'name': 'displayDesignSpaceInformation',
+                    'data': design_space_info,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["design_space_plot"],
+                    "visual_message": ["ping"],
+                    "writer": "daphne"
+                })
+
+                # Design Space Question
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.design_space',
+                    'name': 'designQuestion',
+                    'data': None,
+                    'speak': 'ping',
+                    "voice_message": 'testing',
+                    "visual_message_type": ["question_template"],
+                    "visual_message": ["ping"],
+                    "first_choice": designq_first_choice_info[current_design_question_index],
+                    "second_choice": designq_second_choice_info[current_design_question_index],
+                    "correct_answer": designq_correct_answer[current_design_question_index],
+                    "question": designq_question[current_design_question_index],
+                    "writer": "daphne"
+                })
+                current_design_question_index = current_design_question_index + 1
+
+                # Features Info
+                single_feature = random.choice(question_features)
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.features',
+                    'name': 'displayFeatureInformation',
+                    'data': single_feature,
+                })
+
+                # Objective Space Info
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.objective_space',
+                    'name': 'displayObjectiveSpaceInformation',
+                    'data': objective_space_science_1,
+                    'speak': 'ping',
+                    "voice_message": "",
+                    "visual_message_type": ["objective_space_plot"],
+                    "visual_message": [""],
+                    "writer": "daphne"
+                })
+
+                print("Shutting off teacher")
+                async_to_sync(channel_layer.send)(channel_name, {
+                    'type': 'teacher.features',
+                    'name': 'shutOFF',
+                })
+
+
         sleep(0.01)
 
 
@@ -357,11 +485,7 @@ def teacher_thread(request, thread_queue, user_info, channel_layer):
 
 
 # --> Questions
-
-def generate_design_prediction_question(designs, orbits, instruments):
-    objectives = ['lower cost', 'higher science']
-    objective = random.choice(objectives)
-
+def generate_design_prediction_question(designs, orbits, instruments, question_number, problem):
     # --> Default to science questions for now
     objective = 'higher science'
 
@@ -369,8 +493,19 @@ def generate_design_prediction_question(designs, orbits, instruments):
 
     # --> Sort designs by cost
     designs.sort(key=lambda design: design['outputs'][1])
-    first_design = random.choice(designs)
-    first_design_index = designs.index(first_design)
+    num_designs = len(designs)
+
+    if problem == 'SMAP_JPL1':
+        first_design_index = round((question_number / 10) * num_designs)
+    elif problem == 'SMAP_JPL2':
+        first_design_index = round(((question_number + 4) / 11) * num_designs)
+    elif problem == 'SMAP':
+        first_design_index = round(((question_number + 8) / 17) * num_designs)
+
+
+
+    first_design = designs[first_design_index]
+
     second_design_index = 0
     if (first_design_index+1) < len(designs):
         second_design_index = first_design_index + 1
@@ -410,7 +545,7 @@ def generate_design_prediction_question(designs, orbits, instruments):
 
     return first_design_dict, second_design_dict, correct_answer, question
 
-def generate_sensitivity_question(sensitivities):
+def generate_sensitivity_question(sensitivities, orbits, instruments):
     rand = random.random()
     objective = ''
     data = 0
@@ -418,32 +553,21 @@ def generate_sensitivity_question(sensitivities):
     if rand > 0.7:
         print('Cost Question', rand)
         objective = 'Cost'
-        data = sensitivities['science']['S1']
+        data = sensitivities['cost']['S1_mins']
     else:
         print('Science Question', rand)
         objective = 'Science'
-        data = sensitivities['cost']['S1']
+        data = sensitivities['science']['S1_mins']
 
-    orbit_key_list = [*data]
-    orbit = random.choice(orbit_key_list)
+    first_choice_info = random.choice(data)
+    data.remove(first_choice_info)
+    second_choice_info = random.choice(data)
 
-    instrument_data = data[orbit]
-    instrument_key_list = [*instrument_data]
-    first_inst = random.choice(instrument_key_list)
-    instrument_key_list.remove(first_inst)
-    second_inst = random.choice(instrument_key_list)
-
-    first_choice_info = [orbit, first_inst, data[orbit][first_inst]]
-    second_choice_info = [orbit, second_inst, data[orbit][second_inst]]
     correct_answer = 0
     if abs(float(first_choice_info[2])) < abs(float(second_choice_info[2])):
         correct_answer = 1
 
     question = 'Which design decision has a higher sensitivity for ' + str(objective) + '?'
-    first_choice = first_choice_info[0] + ' - ' + first_choice_info[1]
-    second_choice = second_choice_info[0] + ' - ' + second_choice_info[1]
-
-
     return first_choice_info, second_choice_info, correct_answer, question
 
 def generate_feature_question(features):
@@ -533,10 +657,6 @@ def get_driving_features_epsilon_moea(request, user_info, pareto=0):
 
     return features
 
-
-
-
-
 def get_design_orbit_instrument_combinations(orbits, instruments, design):
     inputs = design['inputs']
     combinations = []
@@ -552,8 +672,6 @@ def get_orbit_instrument_from_index(orbits, instruments, index):
     orbit_index = math.floor(index / len(instruments))
     instrument_index = index - (orbit_index * len(instruments))
     return [orbits[orbit_index], instruments[instrument_index]]
-
-
 
 def get_orbits(request):
     # --> Get the Problem Orbits
