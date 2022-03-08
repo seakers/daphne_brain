@@ -25,10 +25,10 @@ ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.
 
 USE_X_FORWARDED_HOST = True
 
-# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT', 'example_problem']
 ACTIVE_MODULES = ['EOSS']
 
-EDL_PATH = '/Users/ssantini/Desktop/'
+EDL_PATH = '/Users/ssantini/Code/'
 
 
 # Application definition
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'channels',
     'corsheaders',
     'daphne_context',
+    'example_problem',
     'EOSS',
     'EDL',
     'AT',
@@ -186,6 +187,15 @@ EDL_DATABASE = {
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
+}
+
+ECLSS_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'www.selva-research.com',
+    'port': '5432',
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
+    'database': 'eclss'
 }
 
 
