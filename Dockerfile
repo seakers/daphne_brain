@@ -18,4 +18,4 @@ RUN apt-get -y update &&\
 # Commands to start daphne_brain
 RUN python3 manage.py migrate --run-syncdb &&\
     python3 manage.py collectstatic --clear --noinput
-CMD daphne -b 0.0.0.0 -p 8001 daphne_brain.asgi:application
+CMD daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
