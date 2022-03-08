@@ -52,7 +52,7 @@ def generate_engineer_message(user_info, genome, session_key):
                                    voice_message=message["voice_message"],
                                    visual_message_type=json.dumps(message["visual_message_type"]),
                                    visual_message=json.dumps(message["visual_message"]),
-                                   writer="daphne",
+                                   dwriter="daphne",
                                    date=datetime.datetime.utcnow())
     return message
 
@@ -102,7 +102,7 @@ def generate_historian_message(user_info, genome, session_key):
                                    voice_message=message["voice_message"],
                                    visual_message_type=json.dumps(message["visual_message_type"]),
                                    visual_message=json.dumps(message["visual_message"]),
-                                   writer="daphne",
+                                   dwriter="daphne",
                                    date=datetime.datetime.utcnow())
     return message
 

@@ -9,6 +9,8 @@ from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.models import Design
 from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
+from EOSS.data.design_helpers import add_design
+
 
 
 class ImportData(APIView):
@@ -42,7 +44,7 @@ class ImportData(APIView):
             problem_id = request.data['problem_id']
 
 
-
+            # Remove all design objects
             Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
             architectures = []
             architectures_json = []
@@ -55,22 +57,17 @@ class ImportData(APIView):
             print("---> Architecture Query:", query)
             counter = 0
             for arch in query['data']['Architecture']:
-
                 if not arch['eval_status']:
                     continue
-                
                 # Inputs
                 inputs = []
                 string_input = arch['input']
                 inputs = self.boolean_string_to_boolean_array(string_input)
-                print("---> Input transformation:", string_input, ' -> ', inputs)
+                # print("---> Input transformation:", string_input, ' -> ', inputs)
 
                 # Outputs
                 outputs = [float(arch['science']), float(arch['cost'])]
 
-
-
-                
                 inputs_unique_set = set()
                 hashed_input = hash(tuple(inputs))
 
@@ -90,6 +87,7 @@ class ImportData(APIView):
                                                     inputs=json.dumps(inputs),
                                                     outputs=json.dumps(outputs)))
                     architectures_json.append({'id': counter, 'inputs': inputs, 'outputs': outputs})
+                    # architectures_json.append({'id': arch['id'], 'inputs': inputs, 'outputs': outputs})
                     user_info.eosscontext.last_arch_id = counter
                     inputs_unique_set.add(hashed_input)
                 counter = counter + 1
@@ -322,6 +320,27 @@ class SetProblem(APIView):
         user_info.eosscontext.problem = problem
         user_info.eosscontext.save()
         user_info.save()
+        return Response({
+            "status": "Problem has been set successfully."
+        })
+
+
+class AddDesign(APIView):
+    """ Adds a design to the problem
+    """
+    def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        design = json.loads(request.data['design'])
+
+        db_design = {}
+        db_design['id'] = design['id']
+        db_design['inputs'] = design['inputs']
+        db_design['outputs'] = design['outputs']
+
+        print("--> Design being added to context:", db_design)
+        architecture = add_design(db_design, request.session, request.user, False)
+        user_info.save()
+
         return Response({
             "status": "Problem has been set successfully."
         })

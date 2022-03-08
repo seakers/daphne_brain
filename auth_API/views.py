@@ -229,7 +229,7 @@ class CheckStatusHasura(APIView):
     Request sent from the hasura container! Authenticates the user editing a problem
     """
     def get(self, request, format=None):
-        print("Check hasura status", request.data)
+        # print("Check hasura status", request.data)
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         problem = user_info.eosscontext.problem

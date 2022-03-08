@@ -46,7 +46,7 @@ class DialogueHistory(models.Model):
         ('user', 'Human'),
         ('daphne', 'Machine'),
     )
-    writer = models.CharField(max_length=40, choices=WRITERS)
+    dwriter = models.CharField(max_length=40, choices=WRITERS)
     date = models.DateTimeField()
 
 
