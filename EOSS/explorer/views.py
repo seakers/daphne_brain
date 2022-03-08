@@ -63,7 +63,8 @@ class StartGA(APIView):
 
                 if user_info.eosscontext.ga_id is not None:
                     client.stop_ga(user_info.eosscontext.ga_id)
-                ga_id = client.start_ga(problem, request.user.username, thrift_list)
+                # ga_id = client.start_ga(problem, request.user.username, thrift_list)
+                ga_id = client.start_ga()
                 user_info.eosscontext.ga_id = ga_id
                 user_info.eosscontext.save()
 
@@ -73,6 +74,8 @@ class StartGA(APIView):
                 # Start listening for redis inputs to share through websockets
                 connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
                 channel = connection.channel()
+
+                print("---> Queue:", str(ga_id + '_gabrain'))
 
                 channel.queue_declare(queue=ga_id + '_gabrain')
 
