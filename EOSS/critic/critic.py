@@ -17,6 +17,26 @@ from EOSS.vassar.api import VASSARClient
 from EOSS.data_mining.api import DataMiningClient
 
 
+
+def bool_list_to_string(bool_list_str, unpacked=False):
+    if not unpacked:
+        bool_list = json.loads(bool_list_str)
+    else:
+        bool_list = bool_list_str
+    print("--> bool_list_to_string", bool_list)
+    return_str = ''
+    for bool_pos in bool_list:
+        if bool_pos:
+            return_str = return_str + '1'
+        else:
+            return_str = return_str + '0'
+    return return_str
+
+def boolean_string_to_boolean_array(boolean_string):
+    return [b == "1" for b in boolean_string]
+
+
+
 class Critic:
 
     def __init__(self, context: EOSSContext, session_key):
@@ -138,7 +158,7 @@ class Critic:
         # Criticize architecture (based on rules)
         port = self.context.vassar_port
         problem = self.context.problem
-        client = VASSARClient(port)
+        client = VASSARClient(port, problem_id=self.context.problem_id)
         client.start_connection()
 
         result_list = client.critique_architecture(problem, design)
@@ -183,6 +203,9 @@ class Critic:
                 advice = " ".join(advice)
                 out.append(advice)
 
+            print("--> get_advices_from_bit_string_diff", out, ninstr)
+            if not out:
+                return out
             out = ", and ".join(out)
             out = out[0].upper() + out[1:]
             return out
@@ -191,7 +214,7 @@ class Critic:
         original_inputs = json.loads(design.inputs)
         problem = self.context.problem
         port = self.context.vassar_port
-        client = VASSARClient(port)
+        client = VASSARClient(port, problem_id=self.context.problem_id)
         client.start_connection()
 
         archs = None
@@ -203,6 +226,7 @@ class Critic:
                 new_outputs = arch["outputs"]
 
                 new_design_inputs = arch["inputs"]
+                print("--> explorer_critic diff:", new_design_inputs, original_inputs)
                 diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
                 advice = [get_advices_from_bit_string_diff(diff)]
                 costdiff = abs(round(new_outputs[0] - original_outputs[0], 3))

@@ -27,7 +27,7 @@ class GetOrbitList(APIView):
             # Start connection with VASSAR
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
             client.start_connection()
             orbit_list = client.get_orbit_list(request.data['problem_name'])
 
@@ -50,7 +50,7 @@ class GetInstrumentList(APIView):
         try:
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
             # Start connection with VASSAR
             client.start_connection()
             instrument_list = client.get_instrument_list(request.data['problem_name'])
@@ -74,7 +74,7 @@ class EvaluateArchitecture(APIView):
         try:
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
             # Start connection with VASSAR
             client.start_connection()
 
@@ -118,7 +118,7 @@ class EvaluateFalseArchitecture(APIView):
         try:
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
 
             problem_id = request.data['problem_id']
 
@@ -168,7 +168,7 @@ class RunLocalSearch(APIView):
             # Start connection with VASSAR
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
             client.start_connection()
 
             inputs = request.data['inputs']
@@ -201,7 +201,7 @@ class GetArchDetails(APIView):
             # Start connection with VASSAR
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
             client.start_connection()
 
             # Get the correct architecture
@@ -411,7 +411,7 @@ class GetSubobjectiveDetails(APIView):
             # Start connection with VASSAR
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port)
+            client = VASSARClient(port, user_info=user_info)
             client.start_connection()
 
             # Get the correct architecture
