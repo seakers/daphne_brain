@@ -58,7 +58,7 @@ class GraphqlClient:
         self.problem_id = str(4)
 
 
-    def get_architectures(self, problem_id=5):
+    def get_architectures(self, problem_id=3):
         problem_id = str(problem_id)
         query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}}) { id input cost science eval_status } } '
         return self.execute_query(query)

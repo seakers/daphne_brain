@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.db import models
+from .utils import generate_mycroft_session
 
 
 # General user information class
@@ -22,6 +23,11 @@ class UserInformation(models.Model):
 
     # Websockets communication
     channel_name = models.CharField(max_length=120)
+
+    # Mycroft information
+    mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)  # four digit session number
+    mycroft_connection = models.BooleanField(default=False)                                           # true if connection established
+    mycroft_channel_name = models.CharField(max_length=120, null=True)                                # channel name for talking to Mycroft
 
     # Special restrictions
     class Meta:

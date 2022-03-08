@@ -1,0 +1,35 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "anomaly_id", "type": "anomaly_id", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "describe an anomaly with a certain id",
+  "query":
+  {
+    "always": "session.query(models.ECLSSAnomalies).filter(models.ECLSSAnomalies.id == ${anomaly_id})",
+    "opt": [],
+    "end": "",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "description": "row.description"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "Anomaly ${anomaly_id} Description: ${description}"
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "Anomaly ${anomaly_id} Description: ${description}"
+    }
+  ]
+}
