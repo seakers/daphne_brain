@@ -205,15 +205,17 @@ class Critic:
                 new_design_inputs = arch["inputs"]
                 diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
                 advice = [get_advices_from_bit_string_diff(diff)]
+                costdiff = abs(round(new_outputs[0] - original_outputs[0], 3))
+                sciencediff = abs(round(new_outputs[1] - original_outputs[0], 3))
 
                 # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
                 if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
                     # New solution dominates the original solution
                     advice.append(" to increase the science benefit and lower the cost.")
                 elif new_outputs[0] > original_outputs[0]:
-                    advice.append(" to increase the science benefit (but cost may increase!).")
+                    advice.append(" to increase the science benefit by "+str(sciencediff)+", but the cost would go up by about $"+str(costdiff)+"M.")
                 elif new_outputs[1] < original_outputs[1]:
-                    advice.append(" to lower the cost (but science may decrease too!).")
+                    advice.append(" to lower the cost by $"+str(costdiff)+"M but decrease science by "+str(sciencediff)+".")
                 else:
                     continue
 
@@ -256,17 +258,16 @@ class Critic:
                 if orbit["name"] == mission["orbit"]:
                     orbit_info = orbit
                     break
-
             # Find similar past missions from the information on the current mission, including orbit and instruments
             res = self.missions_similarity(orbit_info, mission["instruments"], missions_database)
             if len(mission["instruments"]) > 0:
                 if res[0] < 6:
-                    historian_feedback.append("""I noticed that nobody has ever flown a satellite with these 
-                    instruments: {} in the {} orbit. This is great from an innovation standpoint, but be sure to check 
+                    historian_feedback.append("""I noticed that nobody has ever flown a satellite with instruments of type: {} 
+                    in the orbit: {}. This is great from an innovation standpoint, but be sure to check 
                     the Expert for some reasons this might not be a good idea!"""
-                                              .format(", ".join([instr["name"] for instr in mission["instruments"]]),
+                                              .format(", ".join([instr["type"] for instr in mission["instruments"]]),
                                                       mission["orbit"]))
-                else:
+                elif res[0] > 3:
                     historian_feedback.append("""I found a mission that is similar to your design in orbit {}: {}.
                     Would you like to see more information? Click <a target="_blank" href="http://database.eohandbook.com/database/missionsummary.aspx?missionID={}">here</a>"""
                                               .format(mission["orbit"], res[1].name, res[1].id))
