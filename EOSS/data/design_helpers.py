@@ -22,14 +22,15 @@ def add_design(design, session, user, active: bool):
     with design_lock:
         eosscontext = get_user_information(session, user).eosscontext
         design["id"] = eosscontext.last_arch_id
+        print("--> add_design id:", eosscontext.last_arch_id)
         if active:
             Design.objects.create(activecontext=eosscontext.activecontext,
-                                  id=eosscontext.last_arch_id,
+                                  id=design["id"],
                                   inputs=json.dumps(design['inputs']),
                                   outputs=json.dumps(design['outputs']))
         else:
             Design.objects.create(eosscontext=eosscontext,
-                                  id=eosscontext.last_arch_id,
+                                  id=design["id"],
                                   inputs=json.dumps(design['inputs']),
                                   outputs=json.dumps(design['outputs']))
             eosscontext.added_archs_count += 1
