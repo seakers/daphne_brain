@@ -1,0 +1,36 @@
+{
+  "type": "neo4j_query",
+  "params":
+  [
+    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Retrieve and display the steps from the specified procedure.",
+  "neo4j_query":
+  {
+    "query": "match (p:Procedure)-[:Has]-(s:Step) where p.pNumber={procedure} return s.Action order by s.Step",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "step": "item[\"text\"]",
+          "step_id": "item[\"id\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "Here are the steps for procedure ${procedure}: ",
+      "repeat": "Step ${step_id}: ${step}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "Here are the steps for procedure ${procedure}: ",
+      "item_template": "Step ${step_id}: ${step}"
+    }
+  ]
+}
