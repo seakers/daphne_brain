@@ -43,7 +43,6 @@ class EOSSConsumer(DaphneConsumer):
                         'type': 'active.message',
                         'message': message
                     })
-
         elif content.get('msg_type') == 'active_historian':
             message = live_recommender.generate_historian_message(user_info, content.get('genome'),
                                                                   self.scope['session'].session_key)
@@ -62,6 +61,15 @@ class EOSSConsumer(DaphneConsumer):
                 queue_name = user_info.eosscontext.ga_id + '_brainga'
                 channel.queue_declare(queue=queue_name)
                 channel.basic_publish(exchange='', routing_key=queue_name, body='ping')
+        # elif content.get('msg_type') == 'mycroft':
+        #     self.send_json({
+        #         'type': 'mycroft.message',
+        #         'message': 'mycroft test'
+        #     })
+
+    def mycroft_message(self, event):
+        print(event)
+        self.send_json(event)
 
 
         # --> Messages for TeacherAgent Context into Tables
