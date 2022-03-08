@@ -3,6 +3,9 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
+from EOSS.models import Design
+
+
 
 from thrift.Thrift import TApplicationException
 
@@ -91,15 +94,15 @@ class EvaluateArchitecture(APIView):
                 if is_same:
                     break
 
-            if not is_same:
-                architecture = add_design(architecture, request.session, request.user, False)
+            # if not is_same:
+            #     architecture = add_design(architecture, request.session, request.user, False)
 
             user_info.save()
 
             # End the connection before return statement
-            client.end_connection()
-            return Response(architecture)
-
+            # client.end_connection()
+            return Response({})
+        
         except TApplicationException as exc:
             logger.exception('Evaluating an architecture failed')
             client.end_connection()
@@ -107,6 +110,55 @@ class EvaluateArchitecture(APIView):
                 "error": "Evaluating an architecture failed",
                 "explanation": str(exc)
             })
+
+
+
+class EvaluateFalseArchitecture(APIView):
+    def post(self, request, format=None):
+        try:
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            port = user_info.eosscontext.vassar_port
+            client = VASSARClient(port)
+
+            problem_id = request.data['problem_id']
+
+            # Delete all design objects
+            Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
+        
+            architecture = client.evaluate_false_architectures(problem_id)
+
+
+
+            # # Check if the architecture already exists in DB before adding it again
+            # is_same = True
+            # for old_arch in user_info.eosscontext.design_set.all():
+            #     is_same = True
+            #     old_arch_outputs = json.loads(old_arch.outputs)
+            #     for i in range(len(old_arch_outputs)):
+            #         if old_arch_outputs[i] != architecture['outputs'][i]:
+            #             is_same = False
+            #     if is_same:
+            #         break
+
+            # if not is_same:
+            #     architecture = add_design(architecture, request.session, request.user, False)
+
+            # user_info.save()
+
+            # # End the connection before return statement
+            # client.end_connection()
+            return Response({})
+        
+        except TApplicationException as exc:
+            logger.exception('Evaluating false architectures failed')
+            client.end_connection()
+            return Response({
+                "error": "Evaluating false architectures failed",
+                "explanation": str(exc)
+            })
+
+
+
 
 
 class RunLocalSearch(APIView):
