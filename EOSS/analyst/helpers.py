@@ -4,11 +4,13 @@ import sys
 import traceback
 
 from EOSS.data import problem_specific
+from EOSS.models import EOSSContext
+from daphne_context.models import UserInformation
 
 logger = logging.getLogger('VASSAR')
 
 
-def base_feature_expression_to_string(feature_expression, is_critique=False, context=None):
+def base_feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None, user_info: UserInformation=None):
     try:
         e = remove_outer_parentheses(feature_expression)
         e = e[1:-1]
@@ -21,10 +23,19 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
 
         orbit_indices = arg_split[0]
         instrument_indices = arg_split[1]
-        numbers = arg_split[2]
 
-        orbit_dataset = problem_specific.get_orbit_dataset(context.problem)
-        instrument_dataset = problem_specific.get_instrument_dataset(context.problem)
+        numbers = None
+        if len(arg_split) == 3:
+            numbers = arg_split[2]
+
+
+        if context:
+            if hasattr(context, 'problem_id'):
+                orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
+                instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
+            elif user_info:
+                orbit_dataset = problem_specific.get_orbit_dataset(user_info.eosscontext.problem_id)
+                instrument_dataset = problem_specific.get_instrument_dataset(user_info.eosscontext.problem_id)
 
         orbit_names = []
         if orbit_indices:
@@ -32,14 +43,20 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         instrument_names = []
         if instrument_indices:
             instrument_names = [instrument_dataset[int(i)]['name'] for i in instrument_indices.split(",")]
-        if numbers:
-            numbers = [int(n) for n in numbers.split(",")]
+
+
+
 
         if feature_type == "present":
             if is_critique:
                 out = "add {}".format(instrument_names[0])
             else:
                 out = "{} is used".format(instrument_names[0])
+        elif feature_type == "numOrbits":
+            if is_critique:
+                out = "try architectures with {} orbits".format(numbers)
+            else:
+                out = "{} orbits are used".format(numbers)
         elif feature_type == "absent":
             if is_critique:
                 out = "remove {}".format(instrument_names[0])
@@ -73,6 +90,11 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
                 out = "no spacecraft should fly in orbit {}".format(orbit_names[0])
             else:
                 out = "no spacecraft flies in orbit {}".format(orbit_names[0])
+        elif feature_type == "numOfInstruments":
+            if is_critique:
+                out = "try architectures with {} instruments".format(numbers)
+            else:
+                out = "{} instruments are used".format(numbers)
         else:
             raise ValueError('Unrecognized feature name: {}'.format(feature_type))
         return out
@@ -84,7 +106,7 @@ def base_feature_expression_to_string(feature_expression, is_critique=False, con
         logger.error(msg)
 
 
-def feature_expression_to_string(feature_expression, is_critique=False, context=None):
+def feature_expression_to_string(feature_expression, is_critique=False, context: EOSSContext=None, user_info: UserInformation=None):
     out = []
     # TODO: Generalize the feature expression parsing.
     # Currently assumes that the feature only contains conjunctions but no disjunction
@@ -93,12 +115,12 @@ def feature_expression_to_string(feature_expression, is_critique=False, context=
         for feat in individual_features:
             if feat == "":
                 continue
-            out.append(base_feature_expression_to_string(feat, is_critique, context))
+            out.append(base_feature_expression_to_string(feat, is_critique, context, user_info))
     elif "||" in feature_expression:
         pass
     else:
         if not feature_expression == "":
-            out.append(base_feature_expression_to_string(feature_expression, is_critique, context))
+            out.append(base_feature_expression_to_string(feature_expression, is_critique, context, user_info))
 
     out = " AND ".join(out)
     out = out[0].upper() + out[1:]
@@ -106,7 +128,7 @@ def feature_expression_to_string(feature_expression, is_critique=False, context=
     return out
 
 
-def get_feature_satisfied(expression, design, context):
+def get_feature_satisfied(expression, design, context: EOSSContext):
     out = []
 
     if type(expression) is list:
@@ -118,10 +140,11 @@ def get_feature_satisfied(expression, design, context):
     else:
         # TODO: Generalize the feature expression parsing.
         # Currently assumes that the feature only contains conjunctions but no disjunction
-        if '&&' in expression:
-            individual_features = expression.split("&&")
+        _expression = remove_outer_parentheses(expression)
+        if '&&' in _expression:
+            individual_features = _expression.split("&&")
         else:
-            individual_features = [expression]
+            individual_features = [_expression]
 
         for feat in individual_features:
             satisfied = apply_preset_filter(feat, design, context)
@@ -130,7 +153,7 @@ def get_feature_satisfied(expression, design, context):
         return "&&".join(out)
 
 
-def get_feature_unsatisfied(expression, design, context):
+def get_feature_unsatisfied(expression, design, context: EOSSContext):
     out = []
 
     if type(expression) is list:
@@ -142,10 +165,11 @@ def get_feature_unsatisfied(expression, design, context):
     else:
         # TODO: Generalize the feature expression parsing.
         # Currently assumes that the feature only contains conjunctions but no disjunction
-        if '&&' in expression:
-            individual_features = expression.split("&&")
+        _expression = remove_outer_parentheses(expression)
+        if '&&' in _expression:
+            individual_features = _expression.split("&&")
         else:
-            individual_features = [expression]
+            individual_features = [_expression]
 
         for feat in individual_features:
             satisfied = apply_preset_filter(feat, design, context)
@@ -154,7 +178,7 @@ def get_feature_unsatisfied(expression, design, context):
         return "&&".join(out)
 
 
-def apply_preset_filter(filter_expression, design, context):
+def apply_preset_filter(filter_expression, design, context: EOSSContext):
     expression = remove_outer_parentheses(filter_expression)
 
     # Preset filter: {presetName[orbits;instruments;numbers]}
@@ -166,15 +190,15 @@ def apply_preset_filter(filter_expression, design, context):
         flip = True
         expression = expression[1:]
 
-    orbit_dataset = problem_specific.get_orbit_dataset(context.problem)
-    instrument_dataset = problem_specific.get_instrument_dataset(context.problem)
+    orbit_dataset = problem_specific.get_orbit_dataset(context.problem_id)
+    instrument_dataset = problem_specific.get_instrument_dataset(context.problem_id)
     num_orbits = len(orbit_dataset)
     num_instruments = len(instrument_dataset)
     feature_type = expression.split("[")[0]
     arguments = expression.split("[")[1]
     arguments = arguments[:-1]
 
-    inputs = json.loads(design.inputs)
+    inputs = design["inputs"]
 
     arg_split = arguments.split(";")
     orbit = arg_split[0]

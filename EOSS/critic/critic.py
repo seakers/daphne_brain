@@ -10,11 +10,12 @@ import EOSS.historian.models as models
 import EOSS.data.problem_specific as problem_specific
 from EOSS.analyst.helpers import get_feature_unsatisfied, get_feature_satisfied, \
     feature_expression_to_string
-from EOSS.data.problem_specific import assignation_problems, partition_problems
+from EOSS.data.problem_helpers import assignation_problems, partition_problems
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture
-from EOSS.models import Design, EOSSContext
+from EOSS.models import EOSSContext
 from EOSS.vassar.api import VASSARClient
 from EOSS.data_mining.api import DataMiningClient
+from daphne_context.models import UserInformation
 
 
 
@@ -39,18 +40,19 @@ def boolean_string_to_boolean_array(boolean_string):
 
 class Critic:
 
-    def __init__(self, context: EOSSContext, session_key):
+    def __init__(self, user_information: UserInformation, session_key):
         # Connect to the CEOS database
         self.engine = models.db_connect()
         self.session = sessionmaker(bind=self.engine)()
-        self.context = context
-        self.instruments_dataset = problem_specific.get_instrument_dataset(context.problem)
-        self.orbits_dataset = problem_specific.get_orbit_dataset(context.problem)
+        self.user_information = user_information
+        self.context = user_information.eosscontext
+        self.instruments_dataset = problem_specific.get_instrument_dataset(self.context.problem_id)
+        self.orbits_dataset = problem_specific.get_orbit_dataset(self.context.problem_id)
         self.session_key = session_key
 
     def get_missions_from_genome(self, problem_type, genome):
         missions = []
-        if problem_type == 'binary':
+        if problem_type == 'assignation':
             missions = self.get_missions_from_bitstring(genome)
         elif problem_type == 'discrete':
             missions = self.get_missions_from_partition(genome)
@@ -86,7 +88,7 @@ class Critic:
             score += 1
         # Score orbit altitude
         if hist_mission.orbit_altitude_num is not None and \
-                                        mission_orbit["altitude"] - 50 < hist_mission.orbit_altitude_num < mission_orbit["altitude"] + 50:
+                                        int(mission_orbit["altitude"]) - 50 < hist_mission.orbit_altitude_num < int(mission_orbit["altitude"]) + 50:
             score += 1
         # Score orbit LST
         if mission_orbit["LST"] == hist_mission.orbit_LST:
@@ -156,14 +158,9 @@ class Critic:
 
     def expert_critic(self, design):
         # Criticize architecture (based on rules)
-        port = self.context.vassar_port
-        problem = self.context.problem
-        client = VASSARClient(port, problem_id=self.context.problem_id)
-        client.start_connection()
-
-        result_list = client.critique_architecture(problem, design)
-
-        client.end_connection()
+        problem_id = self.context.problem_id
+        client = VASSARClient(user_information=self.user_information)
+        result_list = client.critique_architecture(problem_id, design)
 
         result = []
         for advice in result_list:
@@ -210,17 +207,16 @@ class Critic:
             out = out[0].upper() + out[1:]
             return out
 
-        original_outputs = json.loads(design.outputs)
-        original_inputs = json.loads(design.inputs)
-        problem = self.context.problem
-        port = self.context.vassar_port
-        client = VASSARClient(port, problem_id=self.context.problem_id)
-        client.start_connection()
+        original_outputs = design["outputs"]
+        original_inputs = design["inputs"]
+        problem_id = self.context.problem_id
+        client = VASSARClient(user_information=self.user_information)
 
         archs = None
         advices = []
-        if problem in assignation_problems:
-            archs = client.run_local_search(problem, design)
+        problem_type = client.get_problem_type(problem_id)
+        if problem_type == "assignation":
+            archs = client.run_local_search(design["inputs"], problem_id, self.context.vassar_request_queue_url)
 
             for arch in archs:
                 new_outputs = arch["outputs"]
@@ -245,12 +241,10 @@ class Critic:
 
                 advice = "".join(advice)
                 advices.append(advice)
-        elif problem in partition_problems:
-            archs = client.run_local_search(problem, design.inputs)
-
+        elif problem_type == "discrete":
+            archs = client.run_local_search(design["inputs"], problem_id, self.context.vassar_request_queue_url)
             # TODO: Add the delta code for discrete architectures
-
-        client.end_connection()
+        
         result = []
         for advice in advices:
             result.append({
@@ -262,16 +256,12 @@ class Critic:
     def historian_critic(self, design):
         historian_feedback = []
 
-        problem = self.context.problem
-        if problem in assignation_problems:
-            problem_type = 'binary'
-        elif problem in partition_problems:
-            problem_type = 'discrete'
-        else:
-            problem_type = 'unknown'
+        client = VASSARClient(user_information=self.user_information)
+        problem_id = self.context.problem_id
+        problem_type = client.get_problem_type(problem_id)
 
         # Convert architecture format
-        missions = self.get_missions_from_genome(problem_type, json.loads(design.inputs))
+        missions = self.get_missions_from_genome(problem_type, design["inputs"])
 
         # Type 2: Mission by mission
         missions_database = self.session.query(models.Mission)
@@ -309,39 +299,37 @@ class Critic:
 
     def analyst_critic(self, this_design):
         result = []
-        client = DataMiningClient()
+        dm_client = DataMiningClient()
 
-        problem = self.context.problem
-        if problem in assignation_problems:
-            problem_type = 'binary'
-        elif problem in partition_problems:
-            problem_type = 'discrete'
-        else:
-            problem_type = 'unknown'
+        vassar_client = VASSARClient(user_information=self.user_information)
+        problem_id = self.context.problem_id
+        problem_type = vassar_client.get_problem_type(problem_id)
 
         try:
             # Start connection with data_mining
-            client.startConnection()
-
-            support_threshold = 0.02
-            confidence_threshold = 0.2
-            lift_threshold = 1
+            dm_client.startConnection()
 
             behavioral = []
             non_behavioral = []
 
-            dataset = Design.objects.filter(eosscontext_id__exact=self.context.id).all()
+            dataset = vassar_client.get_dataset_architectures(problem_id, self.context.dataset_id)
 
             if len(dataset) < 10:
                 raise ValueError("Could not run data mining: the number of samples is less than 10")
             else:
-                utopiaPoint = [0.26, 0]
+                utopiaPoint = [1, 0]
                 temp = []
+                maxObjectives = [0, 0]
+                # Find the maximum values of all objectives for normalization
+                for design in dataset:
+                    outputs = design["outputs"]
+                    for index, output in enumerate(outputs):
+                        maxObjectives[index] = max(maxObjectives[index], output)
                 # Select the top N% archs based on the distance to the utopia point
                 for design in dataset:
-                    outputs = json.loads(this_design.outputs)
-                    id = design.id
-                    dist = math.sqrt((outputs[0] - utopiaPoint[0]) ** 2 + (outputs[1] - utopiaPoint[1]) ** 2)
+                    outputs = design["outputs"]
+                    id = design["id"]
+                    dist = math.sqrt(((outputs[0] - utopiaPoint[0])/(maxObjectives[0] - utopiaPoint[0])) ** 2 + ((outputs[1] - utopiaPoint[1])/(maxObjectives[1] - utopiaPoint[1])) ** 2)
                     temp.append((id, dist))
 
                 # Sort the list based on the distance to the utopia point
@@ -354,17 +342,17 @@ class Critic:
 
             # Extract feature
             _archs = []
-            if problem_type == "binary":
+            if problem_type == "assignation":
                 for arch in dataset:
-                    _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = client.client.getDrivingFeaturesEpsilonMOEABinary(self.session_key, problem, behavioral,
-                                                                              non_behavioral, _archs)
+                    _archs.append(BinaryInputArchitecture(arch["id"], arch["inputs"], arch["outputs"]))
+                _features = dm_client.client.getDrivingFeaturesEpsilonMOEABinary(self.session_key, problem_id, problem_type, 
+                                                                                    behavioral, non_behavioral, _archs)
 
             elif problem_type == "discrete":
                 for arch in dataset:
-                    _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = client.client.getDrivingFeaturesEpsilonMOEADiscrete(self.session_key, problem, behavioral,
-                                                                                non_behavioral, _archs)
+                    _archs.append(DiscreteInputArchitecture(arch["id"], arch["inputs"], arch["outputs"]))
+                _features = dm_client.client.getDrivingFeaturesEpsilonMOEADiscrete(self.session_key, problem_id, problem_type,
+                                                                                    behavioral, non_behavioral, _archs)
             else:
                 raise ValueError("Problem type not implemented")
 
@@ -400,7 +388,7 @@ class Critic:
                         feature_expression_to_string(exp, is_critique=False, context=self.context))
 
             # End the connection before return statement
-            client.endConnection()
+            dm_client.endConnection()
 
             for i in range(len(advices)):  # Generate answers for the first 5 features
                 advice = advices[i]
@@ -411,6 +399,6 @@ class Critic:
         except Exception as e:
             print("Exc in generating critic from data mining: " + str(e))
             traceback.print_exc(file=sys.stdout)
-            client.endConnection()
+            dm_client.endConnection()
 
         return result

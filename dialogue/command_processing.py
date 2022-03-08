@@ -193,7 +193,7 @@ def command(processed_command, question_type, command_class, condition_name, use
     if information["type"] == "db_query":
         results = qa_pipeline.query(information["query"], data, command_class)
     elif information["type"] == "run_function":
-        results = qa_pipeline.run_function(information["function"], data, daphne_version, context, new_dialogue_contexts)
+        results = qa_pipeline.run_function(information["function"], data, daphne_version, context, new_dialogue_contexts, user_information, session)
     elif information["type"] == "neo4j_query":
         results = qa_pipeline.neo4j_query(information["neo4j_query"], data, command_class)
     else:

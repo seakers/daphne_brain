@@ -4,7 +4,7 @@ import requests
 import json
 import time
 from auth_API.helpers import get_or_create_user_information
-
+from EOSS.aws.utils import graphql_server_address, pprint
 
 
 
@@ -51,12 +51,13 @@ class MissionCostInformation:
         self.cost_budget = cost_budget       # dict
 
 
-
-
 class GraphqlClient:
 
-    def __init__(self, hasura_url='http://graphql:8080/v1/graphql', request=None, problem_id=None, user_info=None):
-        self.hasura_url = hasura_url
+    def __init__(self, hasura_url=None, request=None, problem_id=None, user_info=None):
+        if hasura_url is not None:
+            self.hasura_url = hasura_url
+        else:
+            self.hasura_url = graphql_server_address()
 
         if user_info is not None:
             self.problem_id = user_info.eosscontext.problem_id
@@ -68,21 +69,100 @@ class GraphqlClient:
         else:
             self.problem_id = str(5)
 
+    def get_architecture_from_id(self, arch_id):
+        query = '''
+        query get_architecture_from_id($arch_id: Int!) {
+            architecture: Architecture_by_pk(id: $arch_id) {
+                id
+                input
+                science
+                cost
+            }
+        }'''
+        variables = {
+            "arch_id": arch_id
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["architecture"]
 
-    def get_architectures(self, problem_id=3):
-        problem_id = str(problem_id)
-        query = ' query get_architectures { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}}) { id input cost science eval_status } } '
-        return self.execute_query(query)
+    def get_architectures(self, problem_id=6, dataset_id=-1):
+        query = '''
+        query get_architectures($problem_id: Int!, $dataset_id: Int!) {
+            Architecture(order_by: { id: asc }, where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, _or: [{ga: {_eq: false}}, {ga: {_eq: true}, improve_hv: {_eq: true}}]}) {
+                id
+                input
+                cost
+                science
+                eval_status
+            } 
+        }'''
+        variables = {
+            "problem_id": problem_id,
+            "dataset_id": dataset_id
+        }
+        return self.execute_query(query, variables)
 
-    def get_orbit_list(self, group_id, problem_id):
+    def check_for_existing_arch(self, problem_id, dataset_id, input):
+        query = f'''
+        query ArchitectureCount($problem_id: Int!, $dataset_id: Int!, $input: String!) {{
+            items: Architecture_aggregate(where: {{problem_id: {{_eq: $problem_id}}, dataset_id: {{_eq: $dataset_id}}, input: {{_eq: $input}} }}) 
+            {{
+                aggregate {{
+                    count
+                }}
+                nodes {{
+                    id
+                }}
+            }}
+        }}
+        '''
+        variables = {
+            "problem_id": problem_id,
+            "dataset_id": dataset_id,
+            "input": input
+        }
+        query_result = self.execute_query(query, variables)
+        count = query_result["data"]["items"]["aggregate"]["count"]
+        arch_id = None
+        if count > 0:
+            arch_id = query_result["data"]["items"]["nodes"][0]["id"]
+        return count > 0, arch_id
+
+    def check_dataset_read_only(self, dataset_id):
+        query = f'''
+        query current_dataset($dataset_id: Int!) {{
+            current_dataset: Dataset(where: {{id: {{_eq: $dataset_id}}}}) {{
+                id
+                name
+                user_id
+                Problem {{
+                    id
+                    name
+                }}
+                Group {{
+                    id
+                    name
+                }}
+            }}
+            }}
+        '''
+        variables = {
+            "dataset_id": dataset_id
+        }
+        query_result = self.execute_query(query, variables)
+        current_dataset = query_result["data"]["current_dataset"][0]
+        
+        return current_dataset["user_id"] == None and current_dataset["Group"] == None
+
+    def get_orbit_list(self, problem_id):
         # query = ' query get_orbit_list { Join__Orbit_Attribute(where: {problem_id: {_eq: ' + problem_id + '}}, distinct_on: orbit_id) { Orbit { id name } } } '
-        query = ' query get_orbit_list { Join__Problem_Orbit(where: {problem_id: {_eq: ' + self.problem_id + '}}){ Orbit { id name } } } '
+        query = f'query get_orbit_list {{ Join__Problem_Orbit(where: {{problem_id: {{_eq: {problem_id} }}}}) {{ Orbit {{ id name }} }} }}'
         return self.execute_query(query)
 
-    def get_orbits_and_attributes(self):
+    def get_orbits_and_attributes(self, problem_id):
         query = f'''
             query MyQuery {{
-                items: Join__Problem_Orbit(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                items: Join__Problem_Orbit(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                     orbit: Orbit {{
                       name
                       attributes: Join__Orbit_Attributes {{
@@ -104,15 +184,15 @@ class GraphqlClient:
         query = ' query get_instrument_list { Join__Problem_Instrument(where: {problem_id: {_eq: ' + self.problem_id + '}}) { Instrument { id name } } } '
         return self.execute_query(query)
 
-    def get_instruments_and_attributes(self):
+    def get_instruments_and_attributes(self, problem_id):
         query = f'''
             query MyQuery {{
-                items: Join__Problem_Instrument(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                items: Join__Problem_Instrument(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                     instrument: Instrument {{
                       name
-                      attributes: Join__Instrument_Characteristics(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+                      attributes: Join__Instrument_Characteristics(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                         value
-                        Orbit_Attribute {{
+                        Instrument_Attribute {{
                           name
                         }}
                       }}
@@ -123,7 +203,216 @@ class GraphqlClient:
         instrument_info = self.execute_query(query)['data']['items']
         return instrument_info
 
+    def get_instrument_attributes(self, group_id):
+        query = '''
+        query get_instrument_attributes($group_id: Int!) {
+          attributes: Instrument_Attribute(where: {group_id: {_eq: $group_id}}) {
+            id
+            name
+          }
+        }'''
+        variables = {
+            "group_id": group_id
+        }
+        instrument_attributes = self.execute_query(query, variables)['data']['attributes']
+        return instrument_attributes
 
+    def get_instrument_attribute_value(self, problem_id, instrument, attribute):
+        query = '''
+        query get_instrument_attribute_value($instrument_name: String = "", $attribute_name: String = "", $problem_id: Int = 10) {
+            attribute_value: Join__Instrument_Characteristic(where: { Instrument_Attribute: {name: {_eq: $attribute_name}}, Instrument: {name: {_eq: $instrument_name}}, problem_id: {_eq: $problem_id}}) {
+                value
+                Instrument {
+                    name
+                }
+                problem_id
+                Instrument_Attribute {
+                    name
+                }
+            }
+        }'''
+        variables = {
+            "problem_id": problem_id,
+            "instrument_name": instrument,
+            "attribute_name": attribute
+        }
+        attribute_value = self.execute_query(query, variables)['data']['attribute_value']
+        return attribute_value
+
+    def get_instrument_capability_values(self, group_id, instrument, attribute, measurement=None):
+        query_wo_measurement = '''
+        query get_instrument_capability_value($instrument_name: String = "", $attribute_name: String = "", $group_id: Int = 10) {
+            capability_value: Join__Instrument_Capability(where: {Measurement_Attribute: {name: {_eq: $attribute_name}}, Instrument: {name: {_eq: $instrument_name}}, group_id: {_eq: $group_id}}) {
+                value
+                Instrument {
+                    name
+                }
+                group_id
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+            }
+        }'''
+
+        query_measurement = '''
+        query get_instrument_capability_value($instrument_name: String = "", $attribute_name: String = "", $group_id: Int = 10, $measurement_name: String = "") {
+            capability_value: Join__Instrument_Capability(where: {Measurement_Attribute: {name: {_eq: $attribute_name}}, Instrument: {name: {_eq: $instrument_name}}, group_id: {_eq: $group_id}, Measurement: {name: {_eq: $measurement_name}}}) {
+                value
+                Instrument {
+                    name
+                }
+                group_id
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+            }
+        }'''
+
+        variables = {
+            "group_id": group_id,
+            "instrument_name": instrument,
+            "attribute_name": attribute
+        }
+
+        if measurement is None:
+            capability_value = self.execute_query(query_wo_measurement, variables)['data']['capability_value']
+        else:
+            variables["measurement_name"] = measurement
+            capability_value = self.execute_query(query_measurement, variables)['data']['capability_value']
+        
+        return capability_value
+
+    def get_measurement_requirements(self, problem_id, measurement_name, measurement_attribute, subobjective=None):
+        query_no_stakeholder = '''
+        query MyQuery($measurement_name: String = "", $measurement_attribute: String = "", $problem_id: Int = 10) {
+            requirements: Requirement_Rule_Attribute(where: {Measurement: {name: {_eq: $measurement_name}}, Measurement_Attribute: {name: {_eq: $measurement_attribute}}, problem_id: {_eq: $problem_id}}) {
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+                scores
+                thresholds
+                Stakeholder_Needs_Subobjective {
+                    name
+                }
+            }
+        }'''
+
+        query_stakeholder = '''
+        query MyQuery($measurement_name: String = "", $measurement_attribute: String = "", $problem_id: Int = 10, $subobjective: String = "") {
+            requirements: Requirement_Rule_Attribute(where: {Measurement: {name: {_eq: $measurement_name}}, Measurement_Attribute: {name: {_eq: $measurement_attribute}}, problem_id: {_eq: $problem_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective}}}) {
+                Measurement_Attribute {
+                    name
+                }
+                Measurement {
+                    name
+                }
+                scores
+                thresholds
+                Stakeholder_Needs_Subobjective {
+                    name
+                }
+            }
+        }
+        '''
+
+        variables = {
+            "problem_id": problem_id,
+            "measurement_name": measurement_name,
+            "measurement_attribute": measurement_attribute
+        }
+
+        if subobjective is None:
+            capability_value = self.execute_query(query_no_stakeholder, variables)['data']['requirements']
+        else:
+            variables["subobjective"] = subobjective
+            capability_value = self.execute_query(query_stakeholder, variables)['data']['requirements']
+        
+        return capability_value
+
+    def get_problem_measurements(self, problem_id):
+        query = '''
+        query get_problem_measurements($problem_id: Int!) {
+          measurements: Requirement_Rule_Attribute(distinct_on: [measurement_id] where: {problem_id: {_eq: $problem_id}}) {
+            Measurement {
+              name
+            }
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        problem_measurements = self.execute_query(query, variables)['data']['measurements']
+        return problem_measurements
+
+    def get_measurement_for_subobjective(self, problem_id, subobjective):
+        query = '''
+        query MyQuery($subobjective: String = "", $problem_id: Int = 1) {
+            measurements: Requirement_Rule_Attribute(distinct_on: [measurement_id], where: {Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective}}, problem_id: {_eq: $problem_id}}) {
+                Measurement {
+                    name
+                }
+            }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id,
+            "subobjective": subobjective
+        }
+        problem_measurements = self.execute_query(query, variables)['data']['measurements'][0]['Measurement']['name']
+        return problem_measurements
+
+    def get_stakeholders_list(self, problem_id):
+        query = '''
+        query get_stakeholders_list($problem_id: Int!) {
+          stakeholders: Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}}) {
+            id
+            name
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        stakeholders = self.execute_query(query, variables)['data']['stakeholders']
+        return stakeholders
+
+    def get_objectives_list(self, problem_id):
+        query = '''
+        query get_objectives_list($problem_id: Int!) {
+          objectives: Stakeholder_Needs_Objective(where: {problem_id: {_eq: $problem_id}}) {
+            name
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        objectives = self.execute_query(query, variables)['data']['objectives']
+        return objectives
+
+    def get_subobjectives_list(self, problem_id):
+        query = '''
+        query get_subobjectives_list($problem_id: Int!) {
+          subobjectives: Stakeholder_Needs_Subobjective(where: {problem_id: {_eq: $problem_id}}) {
+            name
+          }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id
+        }
+        subobjectives = self.execute_query(query, variables)['data']['subobjectives']
+        return subobjectives
 
     def get_objective_list(self, group_id, problem_id):
         group_id = str(group_id)
@@ -137,40 +426,57 @@ class GraphqlClient:
         query = ' query get_subobjective_list { Stakeholder_Needs_Subobjective(where: {Problem: {id: {_eq: ' + self.problem_id + '}}})  { id name description problem_id weight} } '
         return self.execute_query(query)
 
-    def get_false_architectures(self, problem_id):
+    def get_false_architectures(self, problem_id, dataset_id):
         problem_id = str(problem_id)
-        query = ' query MyQuery { Architecture(where: {problem_id: {_eq: ' + self.problem_id + '}, eval_status: {_eq: false}}) { id ga eval_status input problem_id user_id } } '
+        dataset_id = str(dataset_id)
+        query = ' query MyQuery { Architecture(order_by: {id: asc}, where: {problem_id: {_eq: ' + problem_id + '}, dataset_id: {_eq: '+ dataset_id + '}}) { id ga eval_status input problem_id user_id } } '
         return self.execute_query(query)
 
-    def get_instrument_from_objective(self, objective):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
+    def get_instrument_from_objective(self, problem_id, objective):
+        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
         return self.execute_query(query)
 
-    def get_instrument_from_panel(self, panel):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + self.problem_id + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}, index_id: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
+    def get_instrument_from_panel(self, problem_id, panel):
+        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
         return self.execute_query(query)
 
-    def get_architecture_score_explanation(self, arch_id):
-        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + self.problem_id + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
+    def get_architecture_score_explanation(self, problem_id, arch_id):
+        query = ' query MyQuery { ArchitectureScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}}}) { satisfaction Stakeholder_Needs_Panel { weight index_id } } }' 
         return self.execute_query(query)
 
-    def get_panel_score_explanation(self, arch_id, panel):
-        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + self.problem_id + '}, Stakeholder_Needs_Panel: {index_id: {_eq: "' + panel + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
+    def get_panel_score_explanation_by_id(self, problem_id, arch_id, panel_id):
+        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {index_id: {_eq: "' + panel_id + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
         return self.execute_query(query)
 
-    def get_objective_score_explanation(self, arch_id, objective):
-        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + self.problem_id + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
+    def get_panel_score_explanation(self, problem_id, arch_id, panel):
+        query = 'query myquery { PanelScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {name: {_eq: "' + panel + '"}}}}) { satisfaction Stakeholder_Needs_Objective { name weight } }  } '
         return self.execute_query(query)
+
+    def get_objective_score_explanation(self, problem_id, arch_id, objective):
+        query = 'query myquery { ObjectiveScoreExplanation(where: {architecture_id: {_eq: ' + str(arch_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, , Stakeholder_Needs_Objective: {name: {_eq: "' + objective + '"}}}}) { satisfaction Stakeholder_Needs_Subobjective { name weight } }  }'
+        return self.execute_query(query)
+
+    def get_subobjective_score_explanation(self, arch_id, subobjective):
+        query = '''query MyQuery($arch_id: Int!, $subobjective_name: String!) {
+            SubobjectiveScoreExplanation(where: { architecture_id: {_eq: $arch_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective_name}}}) {
+                measurement_attribute_values
+                score
+                taken_by
+                justifications
+            }
+        }'''
+        return self.execute_query(query, {"arch_id": arch_id, "subobjective_name": subobjective})
     
-    def get_arch_science_information(self, arch_id):
-        query = f''' query myquery {{
-            panels: Stakeholder_Needs_Panel(where: {{problem_id: {{_eq: {self.problem_id}}}}}) {{
+    def get_arch_science_information(self, problem_id, arch_id):
+        query = f'''
+        query myquery {{
+            panels: Stakeholder_Needs_Panel(where: {{problem_id: {{_eq: {problem_id}}}}}) {{
                 code: index_id
                 description
                 name
                 weight
                 satisfaction: ArchitectureScoreExplanations(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
-                value: satisfaction
+                    value: satisfaction
                 }}
                 objectives: Stakeholder_Needs_Objectives {{
                     code: name
@@ -189,7 +495,6 @@ class GraphqlClient:
                     }}
                 }}
             }}
-
         }}
         '''
         panels = self.execute_query(query)['data']['panels']
@@ -199,13 +504,16 @@ class GraphqlClient:
             for obj in panel['objectives']:
                 subobjective_info = []
                 for subobj in obj['subobjectives']:
-                    subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
-                objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
-            information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
+                    if len(subobj['satisfaction']) > 0:
+                        subobjective_info.append(SubscoreInformation(subobj['code'], subobj['description'], subobj['satisfaction'][0]['value'], subobj['weight']))
+                if len(obj['satisfaction']) > 0:
+                    objective_info.append(SubscoreInformation(obj['code'], obj['description'], obj['satisfaction'][0]['value'], obj['weight'], subobjective_info))
+            if len(panel['satisfaction']) > 0:
+                information.append(SubscoreInformation(panel['code'], panel['description'], panel['satisfaction'][0]['value'], panel['weight'], objective_info))
         print("\n---> all stakeholder info", information)
         return information
 
-    def get_arch_cost_information(self, arch_id):
+    def get_arch_cost_information(self, problem_id, arch_id):
         query = f''' query myquery {{
             cost_info: ArchitectureCostInformation(where: {{architecture_id: {{_eq: {arch_id}}}}}) {{
                 mission_name
@@ -232,7 +540,6 @@ class GraphqlClient:
         cost_info = self.execute_query(query)['data']['cost_info']
         information = []
         for info in cost_info:
-
             # payload
             payloads = []
             for inst in info['payloads']:
@@ -293,25 +600,56 @@ class GraphqlClient:
         
 
     def get_problems(self):
-        query = 'query MyQuery { Problem { id name group_id } }'
+        query = 'query get_problems { Problem { id name group_id } }'
         return self.execute_query(query)['data']['Problem']
+
+
+    def get_default_dataset_id(self, dataset_name, problem_id):
+        query = f'query get_default_dataset_id {{ Dataset(where: {{problem_id: {{_eq: {problem_id} }}, name: {{_eq: "{dataset_name}" }}, user_id: {{_is_null: true }}, group_id: {{_is_null: true }} }}) {{ id name }} }}'
+        return self.execute_query(query)['data']['Dataset'][0]['id']
+
+    def add_new_dataset(self, problem_id, user_id, dataset_name):
+        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dataset_name}", problem_id: {problem_id}, user_id: {user_id} }}) {{ id }} }}'
+        new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
+        return new_dataset_id
+
+    def clone_dataset(self, src_dataset_id, user_id, dst_dataset_name):
+        get_src_dataset_query = f'query default_dataset {{ Dataset(where: {{id: {{_eq: {src_dataset_id} }} }}) {{ id name problem_id }} Architecture(order_by: {{id: asc}}, where: {{dataset_id: {{_eq: {src_dataset_id} }} }}) {{ cost science problem_id eval_status ga improve_hv critique input }}  }}'
+        original_dataset = self.execute_query(get_src_dataset_query)['data']
+        add_new_dataset_query = f'mutation insert_new_dataset {{ insert_Dataset_one(object: {{name: "{dst_dataset_name}", problem_id: {original_dataset["Dataset"][0]["problem_id"]}, user_id: {user_id} }}) {{ id }} }}'
+        new_dataset_id = self.execute_query(add_new_dataset_query)['data']['insert_Dataset_one']['id']
+        for arch in original_dataset["Architecture"]:
+            arch["dataset_id"] = new_dataset_id
+            arch["user_id"] = user_id
+        clone_data_query = f'mutation insert_new_archs($archs: [Architecture_insert_input!]!) {{ insert_Architecture(objects: $archs) {{ affected_rows returning {{ id }} }} }}'
+        self.execute_query(clone_data_query, {"archs": original_dataset["Architecture"]})
+        return new_dataset_id
+
+    def clone_default_dataset(self, origin_dataset_id, user_id):
+        return self.clone_dataset(origin_dataset_id, user_id, "default")
+
 
 
     def insert_user_into_group(self, user_id, group_id=1):
         mutation = 'mutation { insert_Join__AuthUser_Group(objects: {group_id: '+str(group_id)+', user_id: ' + str(user_id) + ', admin: true}) { returning { group_id user_id id }}}'
         return self.execute_query(mutation)
 
-    def execute_query(self, query):
-        r = requests.post(self.hasura_url, json={'query': query })
+    def execute_query(self, query, variables=None):
+        json_body = {'query': query }
+        if variables is not None:
+            json_body['variables'] = variables
+        r = requests.post(self.hasura_url, json=json_body)
         result = json.loads(r.text)
         # print('\n-------- Query Result --------')
-        # print(result)
+        # print('----> URL:', self.hasura_url)
+        # print('--> QUERY:', query)
+        # pprint(result)
         # print('-------------------------\n')
         return result
 
     # Return architecture details after vassar evaluates
-    def subscribe_to_architecture(self, input, problem_id, timeout=1000):
-        query = ' query subscribe_to_architecture { Architecture_aggregate(where: {problem_id: {_eq: ' + str(self.problem_id) + '}, input: {_eq: "' + str(input) + '"}})  {aggregate { count }} } '
+    def subscribe_to_architecture(self, input, problem_id, dataset_id, timeout=1000):
+        query = f'query subscribe_to_architecture {{ Architecture_aggregate(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}}, eval_status: {{_eq: true }} }})  {{ aggregate {{ count }} }} }}'
 
         # Check for an entry every second
         counter = 0
@@ -322,12 +660,27 @@ class GraphqlClient:
             if counter >= timeout:
                 return False
         
-        query = ' query get_architecture { Architecture(where: {problem_id: {_eq: ' + str(self.problem_id) + '}, input: {_eq: "' + str(input) + '"}})  { id input science cost } } '
+        query = f'query get_architecture {{ Architecture(where: {{problem_id: {{_eq: {problem_id} }}, dataset_id: {{_eq: {dataset_id} }}, input: {{_eq: "{input}"}} }})  {{ id input science cost }} }}'
         return self.execute_query(query)
 
+    def get_architecture(self, arch_id: int):
+        query = f'query get_architecture {{ Architecture(where: {{id: {{_eq: {arch_id} }} }}) {{ id input science cost ga }} }}'
+        return self.execute_query(query)["data"]["Architecture"][0]
 
+    def unevaluate_architecture(self, arch_id: int):
+        query = f'''
+        mutation unevaluate_architecture {{
+            result: update_Architecture(where: {{id: {{_eq: {arch_id} }} }}, _set: {{eval_status: false}}) {{
+                affected_rows
+            }}
+        }}'''
+        return self.execute_query(query)["data"]["result"]["affected_rows"] > 0
 
-
-
-
-
+    def insert_architecture(self, problem_id, dataset_id, user_id, inputs, science, cost):
+        query = f'''
+        mutation insert_architecture{{
+            architecture: insert_Architecture_one(object: {{problem_id: {problem_id}, dataset_id: {dataset_id}, user_id: {user_id}, input: "{inputs}", science: {science}, cost: {cost}, ga: false, eval_status: false, improve_hv: false}}) {{
+                id
+            }}
+        }}'''
+        return self.execute_query(query)

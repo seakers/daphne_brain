@@ -3,13 +3,9 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
-from EOSS.models import Design
-
-
 
 from thrift.Thrift import TApplicationException
 
-from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data.design_helpers import add_design
@@ -69,96 +65,54 @@ class GetInstrumentList(APIView):
 
 
 class EvaluateArchitecture(APIView):
+<<<<<<< HEAD
+=======
 
+>>>>>>> master
     def post(self, request, format=None):
-        try:
-            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port, user_info=user_info)
-            # Start connection with VASSAR
-            client.start_connection()
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        client = VASSARClient(user_information=user_info)
 
-            inputs = request.data['inputs']
-            inputs = json.loads(inputs)
+        inputs = request.data['inputs']
+        inputs = json.loads(inputs)
 
-            architecture = client.evaluate_architecture(user_info.eosscontext.problem, inputs)
+        # Make sure the dataset is not read-only
+        is_read_only = client.check_dataset_read_only()
 
-            # Check if the architecture already exists in DB before adding it again
-            is_same = True
-            for old_arch in user_info.eosscontext.design_set.all():
-                is_same = True
-                old_arch_outputs = json.loads(old_arch.outputs)
-                for i in range(len(old_arch_outputs)):
-                    if old_arch_outputs[i] != architecture['outputs'][i]:
-                        is_same = False
-                if is_same:
-                    break
-
-            # if not is_same:
-            #     architecture = add_design(architecture, request.session, request.user, False)
-
-            user_info.save()
-
-            # End the connection before return statement
-            # client.end_connection()
-            return Response({})
-        
-        except TApplicationException as exc:
-            logger.exception('Evaluating an architecture failed')
-            client.end_connection()
+        if is_read_only:
             return Response({
-                "error": "Evaluating an architecture failed",
-                "explanation": str(exc)
+                "status": "Dataset is read only",
+                "code": "read_only_dataset"
             })
 
+        # Check if the architecture already exists in DB before adding it again
+        is_same, arch_id = client.check_for_existing_arch(inputs)
+
+        if not is_same:
+            architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url, block=False, user=request.user, session=request.session)
+            return Response({
+                "status": "Architecture evaluated!",
+                "code": "arch_evaluated"
+            })
+        else:
+            return Response({
+                "status": "Architecture already exists",
+                "code": "arch_repeated",
+                "arch_id": arch_id
+            })
 
 
 class EvaluateFalseArchitecture(APIView):
     def post(self, request, format=None):
-        try:
-            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port, user_info=user_info)
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        client = VASSARClient(user_information=user_info)
 
-            problem_id = request.data['problem_id']
+        problem_id = request.data['problem_id']
+        dataset_id = request.data['dataset_id']
+    
+        client.evaluate_false_architectures(problem_id, dataset_id, user_info.eosscontext.vassar_request_queue_url)
 
-            # Delete all design objects
-            Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).delete()
-        
-            architecture = client.evaluate_false_architectures(problem_id)
-
-
-
-            # # Check if the architecture already exists in DB before adding it again
-            # is_same = True
-            # for old_arch in user_info.eosscontext.design_set.all():
-            #     is_same = True
-            #     old_arch_outputs = json.loads(old_arch.outputs)
-            #     for i in range(len(old_arch_outputs)):
-            #         if old_arch_outputs[i] != architecture['outputs'][i]:
-            #             is_same = False
-            #     if is_same:
-            #         break
-
-            # if not is_same:
-            #     architecture = add_design(architecture, request.session, request.user, False)
-
-            # user_info.save()
-
-            # # End the connection before return statement
-            # client.end_connection()
-            return Response({})
-        
-        except TApplicationException as exc:
-            logger.exception('Evaluating false architectures failed')
-            client.end_connection()
-            return Response({
-                "error": "Evaluating false architectures failed",
-                "explanation": str(exc)
-            })
-
-
-
+        return Response({"status": "Architectures have been reevaluated!"})
 
 
 class RunLocalSearch(APIView):
@@ -197,67 +151,66 @@ class RunLocalSearch(APIView):
 class GetArchDetails(APIView):
 
     def post(self, request, format=None):
-        try:
-            # Start connection with VASSAR
-            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port, user_info=user_info)
-            client.start_connection()
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        eosscontext = user_info.eosscontext
+        client = VASSARClient(user_information=user_info)
 
-            # Get the correct architecture
-            arch_id = int(request.data['arch_id'])
-            problem = request.data['problem']
-            arch = user_info.eosscontext.design_set.get(id__exact=arch_id)
+        # Get the correct architecture
+        arch_id = int(request.data['arch_id'])
+        problem_id = int(request.data['problem_id'])
+        dataset_id = int(request.data['dataset_id'])
 
-            score_explanation = client.get_arch_science_information(problem, arch)
-            cost_explanation = client.get_arch_cost_information(problem, arch)
+        designs = client.get_dataset_architectures(problem_id=problem_id, dataset_id=dataset_id)
+        print([(d["id"],d["db_id"]) for d in designs])
+        arch = None
+        for design in designs:
+            if design["id"] == arch_id:
+                arch = design
 
-            # End the connection before return statement
-            client.end_connection()
+        score_explanation = client.get_arch_science_information(problem_id, arch)
+        cost_explanation = client.get_arch_cost_information(problem_id, arch)
 
-            def score_to_json(explanation):
-                json_list = []
-                for exp in explanation:
-                    json_exp = {
-                        'name': exp.name,
-                        'description': exp.description,
-                        'value': exp.value,
-                        'weight': exp.weight
-                    }
-                    if exp.subscores is not None:
-                        json_exp['subscores'] = score_to_json(exp.subscores)
-                    json_list.append(json_exp)
-                return json_list
+         # If score explanations have not been precomputed
+        if score_explanation == [] or cost_explanation == []:
+            client.reevaluate_architecture(arch, eosscontext.vassar_request_queue_url)
+            score_explanation = client.get_arch_science_information(problem_id, arch)
+            cost_explanation = client.get_arch_cost_information(problem_id, arch)
 
-            def budgets_to_json(explanation):
-                json_list = []
-                for exp in explanation:
-                    json_exp = {
-                        'orbit_name': exp.orbit_name,
-                        'payload': exp.payload,
-                        'launch_vehicle': exp.launch_vehicle,
-                        'total_mass': exp.total_mass,
-                        'total_power': exp.total_power,
-                        'total_cost': exp.total_cost,
-                        'mass_budget': exp.mass_budget,
-                        'power_budget': exp.power_budget,
-                        'cost_budget': exp.cost_budget
-                    }
-                    json_list.append(json_exp)
-                return json_list
+        def score_to_json(explanation):
+            json_list = []
+            for exp in explanation:
+                json_exp = {
+                    'name': exp.name,
+                    'description': exp.description,
+                    'value': exp.value,
+                    'weight': exp.weight
+                }
+                if exp.subscores is not None:
+                    json_exp['subscores'] = score_to_json(exp.subscores)
+                json_list.append(json_exp)
+            return json_list
 
-            return Response({
-                'score': score_to_json(score_explanation),
-                'budgets': budgets_to_json(cost_explanation)
-            })
+        def budgets_to_json(explanation):
+            json_list = []
+            for exp in explanation:
+                json_exp = {
+                    'orbit_name': exp.orbit_name,
+                    'payload': exp.payload,
+                    'launch_vehicle': exp.launch_vehicle,
+                    'total_mass': exp.total_mass,
+                    'total_power': exp.total_power,
+                    'total_cost': exp.total_cost,
+                    'mass_budget': exp.mass_budget,
+                    'power_budget': exp.power_budget,
+                    'cost_budget': exp.cost_budget
+                }
+                json_list.append(json_exp)
+            return json_list
 
-        except TApplicationException as exc:
-            logger.exception('Exception when retrieving information from the current architecture!')
-            client.end_connection()
-            return Response({
-                "error": "Retrieving information from the current architecture failed",
-                "explanation": str(exc)
-            })
+        return Response({
+            'score': score_to_json(score_explanation),
+            'budgets': budgets_to_json(cost_explanation)
+        })
 
 
 class GetMultArchMeas(APIView):
@@ -407,43 +360,31 @@ class DataContinuityTable(APIView):
 class GetSubobjectiveDetails(APIView):
 
     def post(self, request, format=None):
-        try:
-            # Start connection with VASSAR
-            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-            port = user_info.eosscontext.vassar_port
-            client = VASSARClient(port, user_info=user_info)
-            client.start_connection()
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        eosscontext = user_info.eosscontext
+        client = VASSARClient(user_information=user_info)
 
-            # Get the correct architecture
-            arch_id = int(request.data['arch_id'])
-            problem = request.data['problem']
-            arch = user_info.eosscontext.design_set.get(id__exact=arch_id)
+        # Get the correct architecture
+        arch_id = int(request.data['arch_id'])
+        problem_id = int(request.data['problem_id'])
+        dataset_id = int(request.data['dataset_id'])
+        subobjective = request.data['subobjective']
+        designs = client.get_dataset_architectures(problem_id=problem_id, dataset_id=dataset_id)
+        arch = None
+        for design in designs:
+            if design["id"] == arch_id:
+                arch = design
 
-            subobjective_explanation = client.get_subscore_details(problem, arch, request.data['subobjective'])
+        subobjective_explanation = client.get_subobjective_score_explanation(arch, subobjective)
 
-            # End the connection before return statement
-            client.end_connection()
+        print(subobjective_explanation)
+        subobjective_details = {
+            "subobjective": subobjective,
+            "measurement": client.get_measurement_for_subobjective(problem_id, subobjective),
+            "rows": subobjective_explanation,
+        }
 
-            def explanation_to_json(explanation):
-                json_exp = {
-                    'subobjective': request.data['subobjective'],
-                    'param': explanation.param,
-                    'attr_names': explanation.attr_names,
-                    'attr_values': explanation.attr_values,
-                    'scores': explanation.scores,
-                    'taken_by': explanation.taken_by,
-                    'justifications': explanation.justifications
-                }
-                return json_exp
+        return Response({
+            'subobjective': subobjective_details,
+        })
 
-            return Response({
-                'subobjective': explanation_to_json(subobjective_explanation)
-            })
-
-        except TApplicationException as exc:
-            logger.exception('Exception when retrieving information from the current subobjective!')
-            client.end_connection()
-            return Response({
-                "error": "Retrieving information from the current subobjective failed",
-                "explanation": str(exc)
-            })

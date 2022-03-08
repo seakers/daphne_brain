@@ -21,8 +21,9 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
 ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.com', 
-                 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne',
+                 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne', 'daphne_brain'
                  'daphne-at-dev.selva-research.com', 'daphne-at.selva-research.com']
 
 USE_X_FORWARDED_HOST = True
@@ -175,7 +176,7 @@ ASGI_APPLICATION = 'daphne_brain.asgi.application'
 
 # Databases for Daphne
 ALCHEMY_DATABASE = {
-    'drivername': 'postgres',
+    'drivername': 'postgresql+psycopg2',
     'host': os.environ['POSTGRES_HOST'],
     'port': os.environ['POSTGRES_PORT'],
     'username': os.environ['USER'],
@@ -184,7 +185,7 @@ ALCHEMY_DATABASE = {
 }
 
 EDL_DATABASE = {
-    'drivername': 'postgres',
+    'drivername': 'postgresql+psycopg2',
     'host': os.environ['POSTGRES_HOST'],
     'port': os.environ['POSTGRES_PORT'],
     'username': os.environ['USER'],
@@ -211,6 +212,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = 'Daphne Admin <daphne@selva-research.com>'
 
+# AWS
+DEPLOYMENT_TYPE = os.environ['DEPLOYMENT_TYPE']
 
 # Logging
 

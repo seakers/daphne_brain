@@ -10,15 +10,6 @@ from EOSS.vassar.api import VASSARClient
 from daphne_context.models import UserInformation
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index, crop_list
 
-sheet_file = os.path.join(os.getcwd(), "EOSS", "data", "xls", "Climate-centric", "Climate-centric AttributeSet.xls")
-instruments_sheet = pandas.read_excel(sheet_file, sheet_name='Instrument')
-measurements_sheet = pandas.read_excel(sheet_file, sheet_name='Measurement')
-param_names = []
-for row in measurements_sheet.itertuples(index=True, name='Measurement'):
-    if row[2] == 'Parameter':
-        for i in range(6, len(row)):
-            param_names.append(row[i])
-
 
 def extract_mission(processed_question, number_of_features, user_information: UserInformation):
     # Get a list of missions
@@ -65,7 +56,10 @@ def extract_date(processed_question, number_of_features, user_information: UserI
 
 def extract_design_id(processed_question, number_of_features, user_information: UserInformation):
     # Get a list of design ids
-    design_ids = ['d' + str(design.id) for design in user_information.eosscontext.design_set.all()]
+    vassar_client = VASSARClient(user_information=user_information)
+    problem_id = user_information.eosscontext.problem_id
+    dataset_id = user_information.eosscontext.dataset_id
+    design_ids = ['d' + str(design["id"]) for design in vassar_client.get_dataset_architectures(problem_id, dataset_id)]
     extracted_list = []
     for word in processed_question:
         if word.lower_ in design_ids:
@@ -83,45 +77,46 @@ def extract_agent(processed_question, number_of_features, user_information: User
 
 
 def extract_instrument_parameter(processed_question, number_of_features, user_information: UserInformation):
-    instrument_parameters = \
-        problem_specific.get_instruments_sheet('SMAP')['Attributes-for-object-Instrument']
+    vassar_client = VASSARClient(user_information=user_information)
+    group_id = user_information.eosscontext.group_id
+    instrument_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
+    instrument_parameters = [attr["name"] for attr in instrument_parameters]
     return sorted_list_of_features_by_index(processed_question, instrument_parameters, number_of_features)
 
 
 def extract_vassar_instrument(processed_question, number_of_features, user_information: UserInformation):
-    options = [instr["name"] for instr in problem_specific.get_instrument_dataset('SMAP')]
+    problem_id = user_information.eosscontext.problem_id
+    options = [instr["name"] for instr in problem_specific.get_instrument_dataset(problem_id)]
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
 
 def extract_vassar_measurement(processed_question, number_of_features, user_information: UserInformation):
-    param_names = problem_specific.get_param_names('SMAP')
+    vassar_client = VASSARClient(user_information=user_information)
+    problem_id = user_information.eosscontext.problem_id
+    param_names = problem_specific.get_problem_measurements(vassar_client, problem_id)
     return sorted_list_of_features_by_index(processed_question, param_names, number_of_features)
 
 
 def extract_vassar_stakeholder(processed_question, number_of_features, user_information: UserInformation):
-    print("--> extract_vassar_stakeholder", 'SMAP')
-    # options = problem_specific.get_stakeholders_list('SMAP')
-    options = problem_specific.get_stakeholders_list('SMAP')
+    vassar_client = VASSARClient(user_information=user_information)
+    problem_id = user_information.eosscontext.problem_id
+    options = problem_specific.get_stakeholders_list(vassar_client, problem_id)
     return sorted_list_of_features_by_index(processed_question, options, number_of_features)
 
 
 def extract_vassar_objective(processed_question, number_of_features, user_information: UserInformation):
-    port = user_information.eosscontext.vassar_port
-    vassar_client = VASSARClient(port, problem_id=user_information.eosscontext.problem_id)
-    vassar_client.start_connection()
-    objectives = vassar_client.get_objective_list('SMAP')
+    vassar_client = VASSARClient(user_information=user_information)
+    problem_id = user_information.eosscontext.problem_id
+    objectives = problem_specific.get_objectives_list(vassar_client, problem_id)
     objectives = [objective.lower() for objective in objectives]
-    vassar_client.end_connection()
     return sorted_list_of_features_by_index(processed_question, objectives, number_of_features)
 
 
 def extract_vassar_subobjective(processed_question, number_of_features, user_information: UserInformation):
-    port = user_information.eosscontext.vassar_port
-    vassar_client = VASSARClient(port, problem_id=user_information.eosscontext.problem_id)
-    vassar_client.start_connection()
-    subobjectives = vassar_client.get_subobjective_list('SMAP')
+    vassar_client = VASSARClient(user_information=user_information)
+    problem_id = user_information.eosscontext.problem_id
+    subobjectives = problem_specific.get_subobjectives_list(vassar_client, problem_id)
     subobjectives = [subobjective.lower() for subobjective in subobjectives]
-    vassar_client.end_connection()
     return sorted_list_of_features_by_index(processed_question, subobjectives, number_of_features)
 
 
