@@ -1,0 +1,47 @@
+{
+  "type": "run_function",
+  "params": [
+    {
+      "name": "previous_step_pointer",
+      "type": "context",
+      "options": "",
+      "from_context": true,
+      "context_path": ["dialogue", "atdialoguecontext"],
+      "mandatory": true
+    },
+    {
+      "name": "all_steps_from_procedure",
+      "type": "context",
+      "options": "",
+      "from_context": true,
+      "context_path": ["dialogue", "atdialoguecontext"],
+      "mandatory": true
+    }
+  ],
+  "objective": "Read the previous step of a certain procedure from context",
+  "function": {
+    "run_template": "dialogue_functions.get_previous_step_from_context(data['all_steps_from_procedure'], data['previous_step_pointer'], context, new_dialogue_contexts)",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "procedure_step_number": "command_results[0]['label']",
+          "procedure_step_action": "command_results[0]['action']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "Previous step is ${procedure_step_number}, ${procedure_step_action}"
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${procedure_step_number}, ${procedure_step_action}"
+    }
+  ]
+}

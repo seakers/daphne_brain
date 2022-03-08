@@ -25,7 +25,9 @@ class Login(APIView):
         # Try to authorize the user
         username = request.data['username']
         password = request.data['password']
+        daphne_version = request.data['daphneVersion']
         user = authenticate(request, username=username, password=password)
+        request.session.set_expiry(1800)
 
         if user is not None:
             # Try to look for user session object. If it exists, then the session will be changed to that. If not,
@@ -34,12 +36,18 @@ class Login(APIView):
 
             if len(userinfo_qs) == 0:
                 # Try to get or create a session user_info from the session and transfer it to the user
-                userinfo = get_or_create_user_information(request.session, user)
+                userinfo = get_or_create_user_information(request.session, user, daphne_version)
                 userinfo.user = user
                 userinfo.session = None
                 userinfo.save()
             else:
                 userinfo = userinfo_qs.first()
+
+            if len(userinfo_qs) != 0:
+                # Force the user information daphne version to be the one from the login
+                userinfo = userinfo_qs[0]
+                userinfo.daphne_version = daphne_version
+                userinfo.save()
 
             # Log the user in
             login(request, user)
@@ -215,7 +223,6 @@ class GenerateSession(APIView):
         request.session.save()                        # If None, create new session key and save
         return Response("Session generated")
 
-
 # Vassar Problem Editor
 class GetUserPk(APIView):
     """
@@ -276,7 +283,6 @@ def get_user_pk(username):
     else:
         print("---> USER PK ERROR")
         return False
-
 
 class ConfirmGuest(APIView):
     def post(self, request, format=None):

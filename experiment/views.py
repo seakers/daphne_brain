@@ -73,11 +73,21 @@ class StartExperiment(APIView):
 
         # Specific to current experiment
         experiment_context.experimentstage_set.all().delete()
-        experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
+
+        # experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
+        #                                               start_date=datetime.datetime.now(),
+        #                                               end_date=datetime.datetime.now(),
+        #                                               end_state="")
+        # experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
+        #                                               start_date=datetime.datetime.now(),
+        #                                               end_date=datetime.datetime.now(),
+        #                                               end_state="")
+
+        experiment_context.experimentstage_set.create(type='daphne_peer',
                                                       start_date=datetime.datetime.now(),
                                                       end_date=datetime.datetime.now(),
                                                       end_state="")
-        experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
+        experiment_context.experimentstage_set.create(type='daphne_assistant',
                                                       start_date=datetime.datetime.now(),
                                                       end_date=datetime.datetime.now(),
                                                       end_state="")
@@ -131,8 +141,8 @@ class ReloadExperiment(APIView):
         if hasattr(user_info, 'experimentcontext'):
             experiment_context = user_info.experimentcontext
             if experiment_context.is_running:
-                return Response({'is_running': True, 'experiment_data': json.loads(experiment_context.current_state)})
-        return Response({ 'is_running': False })
+                return Response({'experiment_data': json.loads(experiment_context.current_state)})
+        return Response()
         
         
 class FinishExperiment(APIView):

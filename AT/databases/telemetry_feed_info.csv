@@ -1,0 +1,6 @@
+parameter,pressure,void_1,void_2
+low_warning_threshold,450,-20,-20
+low_caution_threshold,470,-10,-10
+nominal,500,0,0
+high_caution_threshold,530,10,10
+high_warning_threshold,550,20,20

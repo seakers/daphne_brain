@@ -11,5 +11,5 @@ urlpatterns = [
     path('generate-session', views.GenerateSession.as_view(), name='generate-session'),
     path('check-status-hasura', views.CheckStatusHasura.as_view(), name='check-status-hasura'),
     path('get-user-pk', views.GetUserPk.as_view(), name='get-user-pk'),
-    path('confirm-guest', views.ConfirmGuest.as_view(), name='confirm-guest')
+    path('confirm-guest', views.ConfirmGuest.as_view(), name='confirm-guest'),
 ]
