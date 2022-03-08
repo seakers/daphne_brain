@@ -118,7 +118,7 @@ class Register(APIView):
             # Create folders in the server structure
             folder_name = os.path.join(os.getcwd(), "EOSS", "data", "datasets", username)
             os.mkdir(folder_name)
-            problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2"]
+            problem_list = ["ClimateCentric", "Decadal2017Aerosols", "SMAP", "SMAP_JPL1", "SMAP_JPL2", "Aerosols_Clouds"]
             for problem in problem_list:
                 subfolder_name = os.path.join(folder_name, problem)
                 os.mkdir(subfolder_name)
