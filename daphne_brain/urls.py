@@ -20,6 +20,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from daphne_brain import settings
 
 urlpatterns = []
+if "example_problem" in settings.ACTIVE_MODULES:
+    urlpatterns.append(path('api/example_problem/', include('example_problem.urls')))
 if "EOSS" in settings.ACTIVE_MODULES:
     urlpatterns.append(path('api/eoss/', include('EOSS.urls')))
 if "EDL" in settings.ACTIVE_MODULES:

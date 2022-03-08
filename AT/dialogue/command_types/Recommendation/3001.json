@@ -1,0 +1,33 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Display the PDF file of a procedure",
+  "function":
+  {
+    "run_template": "dialogue_functions.recommendation.procedure_pdf_name('${procedure}')",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "pdf_name": "command_results[0]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "Displaying PDF for procedure ${procedure}."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "View PDF for procedure ${procedure} <a href=\"api/at/recommendation/procedure?${pdf_name}\" target=\"_blank\">HERE</a>."
+    }
+  ]
+}

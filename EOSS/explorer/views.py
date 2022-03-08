@@ -110,13 +110,13 @@ class StartGA(APIView):
 
                         background_queue_qs = Design.objects.filter(
                             activecontext_id__exact=thread_user_info.eosscontext.activecontext.id)
-                        # if background_queue_qs.count() == 10:
-                        ws_message = generate_background_search_message(thread_user_info)
-                        async_to_sync(channel_layer.send)(thread_user_info.channel_name,
-                                                            {
-                                                                'type': 'active.message',
-                                                                'message': ws_message
-                                                            })
+                        if background_queue_qs.count() == 10:
+                            ws_message = generate_background_search_message(thread_user_info)
+                            async_to_sync(channel_layer.send)(thread_user_info.channel_name,
+                                                              {
+                                                                  'type': 'active.message',
+                                                                  'message': ws_message,
+                                                              })
                         if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
                             back_list = send_archs_from_queue_to_main_dataset(thread_user_info)
                             send_back.extend(back_list)

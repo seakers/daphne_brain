@@ -231,7 +231,6 @@ class GenerateSession(APIView):
         request.session.save()                        # If None, create new session key and save
         return Response("Session generated")
 
-
 # Vassar Problem Editor
 class GetUserPk(APIView):
     """
@@ -292,7 +291,6 @@ def get_user_pk(username):
     else:
         print("---> USER PK ERROR")
         return False
-
 
 class ConfirmGuest(APIView):
     def post(self, request, format=None):
