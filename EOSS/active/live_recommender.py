@@ -98,7 +98,6 @@ def generate_historian_message(user_info, genome, session_key):
            ],
            "writer": "daphne",
         }
-
     DialogueHistory.objects.create(user_information=user_info,
                                    voice_message=message["voice_message"],
                                    visual_message_type=json.dumps(message["visual_message_type"]),

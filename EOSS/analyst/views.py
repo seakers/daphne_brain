@@ -106,16 +106,17 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             session_key = request.session.session_key
-            
+
             # Get selected arch id's
             selected = request.data['selected']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
-            
+
             # Convert strings to ints
             behavioral = []
             for s in selected_arch_ids:
                 behavioral.append(int(s))
+
 
             # Get non-selected arch id's
             non_selected = request.data['non_selected']
@@ -134,17 +135,21 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
             logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
             logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
-        
+
             _archs = []
             if input_type == "binary":
                 for arch in dataset:
                     _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, behavioral, non_behavioral, _archs)
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem,
+                                                                                             behavioral, non_behavioral,
+                                                                                             _archs)
 
             elif input_type == "discrete":
                 for arch in dataset:
                     _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem, behavioral, non_behavioral, _archs)
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem,
+                                                                                               behavioral,
+                                                                                               non_behavioral, _archs)
 
             elif input_type == "continuous":
                 for arch in dataset:
@@ -154,18 +159,19 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
                             pass
                         else:
                             inputs.append(float(i))
-                            
+
                     _archs.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, _archs)
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral,
+                                                                                                 non_behavioral, _archs)
 
             features = []
             for df in _features:
                 features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics})
 
             # End the connection before return statement
-            self.DataMiningClient.endConnection() 
+            self.DataMiningClient.endConnection()
             return Response(features)
-        
+
         except Exception as detail:
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
@@ -793,9 +799,9 @@ class SetProblemParameters(APIView):
                 raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
-            self.DataMiningClient.endConnection() 
+            self.DataMiningClient.endConnection()
             return Response()
-        
+
         except Exception as detail:
             logger.exception('Exception in SetProblemParameters: ' + str(detail))
             self.DataMiningClient.endConnection()
