@@ -39,7 +39,7 @@ class Command(APIView):
                                        voice_message=request.data["command"],
                                        visual_message_type="[\"text\"]",
                                        visual_message="[\"" + request.data["command"] + "\"]",
-                                       writer="user",
+                                       dwriter="user",
                                        date=datetime.datetime.utcnow())
 
         # Experiment-specific code to limit what can be asked to Daphne
@@ -64,7 +64,7 @@ class Command(APIView):
                 choice = choices[2]
             else:
                 choice = choices[0]
-            user_turn = DialogueHistory.objects.filter(writer__exact="user").order_by("-date")[1]
+            user_turn = DialogueHistory.objects.filter(dwriter__exact="user").order_by("-date")[1]
 
             # Preprocess the command
             processed_command = nlp(user_turn.voice_message.strip().lower())
@@ -149,7 +149,7 @@ class Dialogue(APIView):
                 "voice_message": piece.voice_message,
                 "visual_message_type": json.loads(piece.visual_message_type),
                 "visual_message": json.loads(piece.visual_message),
-                "writer": piece.writer
+                "writer": piece.dwriter
             } for piece in last_dialogue
         ]
         dialogue_list.reverse()
