@@ -114,6 +114,7 @@ class Command(APIView):
 
     def get_current_context(self, user_info):
         context = {}
+        context['dialogue'] = ""  # quick patch
         return context
 
     def create_dialogue_contexts(self):
