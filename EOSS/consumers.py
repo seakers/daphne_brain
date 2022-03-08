@@ -1,4 +1,5 @@
 import pika
+import os
 
 from auth_API.helpers import get_user_information
 
@@ -49,7 +50,7 @@ class EOSSConsumer(DaphneConsumer):
                 })
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
             channel = connection.channel()
 
             if user_info.eosscontext.ga_id is not None:
