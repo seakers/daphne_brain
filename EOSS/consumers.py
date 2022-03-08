@@ -8,7 +8,9 @@ from EOSS.active import live_recommender
 
 
 class EOSSConsumer(DaphneConsumer):
-    # WebSocket event handlers
+    daphne_version = "EOSS"
+
+    ##### WebSocket event handlers
     def receive_json(self, content, **kwargs):
         """
         Called when we get a text frame. Channels will JSON-decode the payload
