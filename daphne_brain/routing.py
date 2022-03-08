@@ -2,6 +2,8 @@ from django.urls import path
 
 from daphne_brain import settings
 
+if "example_problem" in settings.ACTIVE_MODULES:
+    from example_problem.consumers import ExampleConsumer
 if "EOSS" in settings.ACTIVE_MODULES:
     from EOSS.consumers import EOSSConsumer
 if "AT" in settings.ACTIVE_MODULES:
@@ -19,6 +21,8 @@ from daphne_ws.consumers import MycroftConsumer
 # For more, see http://channels.readthedocs.io/en/latest/topics/routing.html
 
 ws_routes = []
+if "example_problem" in settings.ACTIVE_MODULES:
+    ws_routes.append(path('api/example_problem/ws', ExampleConsumer))
 if "EOSS" in settings.ACTIVE_MODULES:
     ws_routes.append(path('api/eoss/ws', EOSSConsumer.as_asgi()))
 if "AT" in settings.ACTIVE_MODULES:

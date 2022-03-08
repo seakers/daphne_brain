@@ -25,7 +25,7 @@ ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.
 
 USE_X_FORWARDED_HOST = True
 
-# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT', 'example_problem']
 ACTIVE_MODULES = ['EOSS']
 
 EDL_PATH = '/Users/ssantini/Code/'
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'channels',
     'corsheaders',
     'daphne_context',
+    'example_problem',
     'EOSS',
     'EDL',
     'AT',
