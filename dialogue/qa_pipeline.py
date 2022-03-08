@@ -8,6 +8,7 @@ import numpy as np
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from sqlalchemy import or_
+from neo4j.v1 import GraphDatabase, basic_auth
 
 from dialogue import data_helpers
 from dialogue.errors import ParameterMissingError
@@ -58,6 +59,8 @@ def load_type_info(question_type, daphne_version, module_name):
         information["query"] = type_info["query"]
     elif type_info["type"] == "run_function":
         information["function"] = type_info["function"]
+    elif type_info["type"] == "neo4j_query":
+        information["neo4j_query"] = type_info["neo4j_query"]
     information["voice_response"] = type_info["voice_response"]
     information["visual_response"] = type_info["visual_response"]
     return information
@@ -100,7 +103,6 @@ def extract_data(processed_question, params, user_information: UserInformation, 
     # Count how many non-context params of each type are needed
     for param in params:
         if not param["from_context"]:
-            print(processed_question)
             if param["type"] in number_of_features:
                 number_of_features[param["type"]] += 1
             else:
@@ -159,6 +161,11 @@ def get_query_model(command_class):
         engine = models.db_connect()
         session = sessionmaker(bind=engine)()
         return models, session
+    if command_class == "Diagnosis":
+        import AT.diagnosis.models as models
+        engine = models.db_connect()
+        session = sessionmaker(bind=engine)()
+        return models, session
     return None, None
 
 
@@ -203,6 +210,18 @@ def query(query, data, command_class):
         results.append(result)
 
     return results
+
+
+def neo4j_query(query, data, command_class):
+    #build final query
+    print(query)
+
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    session = driver.session()
+
+    result = session.run(query)
+    result_list = [node[0] for node in result]
+    return result_list
 
 
 def get_dialogue_functions(daphne_version):

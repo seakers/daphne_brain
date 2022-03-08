@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('voice_message', models.TextField()),
                 ('visual_message_type', models.TextField()),
                 ('visual_message', models.TextField()),
-                ('writer', models.CharField(choices=[('user', 'Human'), ('daphne', 'Machine')], max_length=40)),
+                ('dwriter', models.CharField(choices=[('user', 'Human'), ('daphne', 'Machine')], max_length=40)),
                 ('date', models.DateTimeField()),
                 ('user_information', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='daphne_context.UserInformation')),
             ],

@@ -119,7 +119,7 @@ def activate_diversifier(eosscontext: EOSSContext):
                                        voice_message=message["voice_message"],
                                        visual_message_type=json.dumps(message["visual_message_type"]),
                                        visual_message=json.dumps(message["visual_message"]),
-                                       writer="daphne",
+                                       dwriter="daphne",
                                        date=datetime.datetime.utcnow())
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.send)(eosscontext.user_information.channel_name,
