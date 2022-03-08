@@ -4,7 +4,7 @@ from SALib.sample import sobol_sequence
 from EOSS.vassar.api import VASSARClient
 from SALib.test_functions import Ishigami
 from SALib.analyze import sobol
-from pyDOE import lhs
+from pyDOE2 import lhs
 
 
 import numpy as np
