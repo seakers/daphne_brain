@@ -8,10 +8,15 @@ EOSS/engineer/__pycache__/*
 EOSS/analyst/__pycache__/*
 EOSS/analyst/.ipynb_checkpoints/
 EOSS/analyst/data/
+
+EOSS/sensitivities/venv
+EOSS/sensitivities/.idea
+.vscode
 *.pyc
 db.sqlite3
-dialogue/models
 /logs/daphne.log
 static/
 venv/
 venv_linux/
+experiment_at/results
+dialogue/models
