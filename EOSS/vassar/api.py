@@ -53,6 +53,9 @@ class VASSARClient:
         # Close
         self.transport.close()
 
+
+
+    # Move to frontend apollo
     def get_orbit_list(self, problem):
         return self.client.getOrbitList(problem)
 
@@ -65,12 +68,15 @@ class VASSARClient:
     def get_subobjective_list(self, problem):
         return self.client.getSubobjectiveList(problem)
 
+    # Move to frontend later
     def get_instruments_for_objective(self, problem, objective):
         return self.client.getInstrumentsForObjective(problem, objective)
 
     def get_instruments_for_panel(self, problem, panel):
         return self.client.getInstrumentsForPanel(problem, panel)
-    
+
+
+    # VASSAR service
     def evaluate_architecture(self, problem, inputs):
         if problem in assignation_problems:
             arch_formatted = self.client.evalBinaryInputArch(problem, inputs)
@@ -81,6 +87,7 @@ class VASSARClient:
         arch = {'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs}
         return arch
 
+    # Search service
     def run_local_search(self, problem, arch):
         thrift_arch = self.create_thrift_arch(problem, arch)
         if problem in assignation_problems:
@@ -94,6 +101,27 @@ class VASSARClient:
             arch = {'id': arch_formatted.id, 'inputs': arch_formatted.inputs, 'outputs': arch_formatted.outputs}
             archs.append(arch)
         return archs
+
+    # GA service
+    def stop_ga(self, ga_id):
+        return self.client.stopGA(ga_id)
+
+    def is_ga_running(self, ga_id):
+        return self.client.isGARunning(ga_id)
+
+    def start_ga(self, problem, username, thrift_list):
+        if problem in assignation_problems:
+            ga_id = self.client.startGABinaryInput(problem, thrift_list, username)
+        elif problem in partition_problems:
+            ga_id = self.client.startGADiscreteInput(problem, thrift_list, username)
+        else:
+            raise ValueError('Problem {0} not recognized'.format(problem))
+        return ga_id
+
+
+
+
+
 
     def create_thrift_arch(self, problem, arch):
         if problem in assignation_problems:
@@ -151,20 +179,9 @@ class VASSARClient:
         else:
             raise ValueError('Problem {0} not recognized'.format(problem))
 
-    def stop_ga(self, ga_id):
-        return self.client.stopGA(ga_id)
 
-    def is_ga_running(self, ga_id):
-        return self.client.isGARunning(ga_id)
 
-    def start_ga(self, problem, username, thrift_list):
-        if problem in assignation_problems:
-            ga_id = self.client.startGABinaryInput(problem, thrift_list, username)
-        elif problem in partition_problems:
-            ga_id = self.client.startGADiscreteInput(problem, thrift_list, username)
-        else:
-            raise ValueError('Problem {0} not recognized'.format(problem))
-        return ga_id
+
 
     def ping(self):
         self.client.ping()
