@@ -12,7 +12,7 @@ logger = logging.getLogger('EOSS.engineer')
 
 def get_architecture_scores(design_id, designs, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -32,7 +32,7 @@ def get_architecture_scores(design_id, designs, context):
 
 def get_satisfying_data_products(design_id, designs, subobjective, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -53,7 +53,7 @@ def get_satisfying_data_products(design_id, designs, subobjective, context):
 
 def get_unsatisfied_justifications(design_id, designs, subobjective, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -85,7 +85,7 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
 
 def get_panel_scores(design_id, designs, panel, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -108,6 +108,7 @@ def get_panel_scores(design_id, designs, panel, context):
 
         # End the connection before return statement
         client.end_connection()
+        print("--> returning panel scores")
         return panel_scores
 
     except TException:
@@ -118,7 +119,7 @@ def get_panel_scores(design_id, designs, panel, context):
 
 def get_objective_scores(design_id, designs, objective, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -139,7 +140,7 @@ def get_objective_scores(design_id, designs, objective, context):
 
 def get_instruments_for_objective(objective, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -158,7 +159,7 @@ def get_instruments_for_objective(objective, context):
 
 def get_instruments_for_stakeholder(stakeholder, context):
     port = context["screen"]["vassar_port"]
-    client = VASSARClient(port)
+    client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
 
     try:
         # Start connection with VASSAR
@@ -274,7 +275,7 @@ def get_cost_explanation(design_id, designs, context):
     try:
         # Start connection with VASSAR
         port = context["screen"]["vassar_port"]
-        client = VASSARClient(port)
+        client = VASSARClient(port, problem_id=context["screen"]["problem_id"])
         client.start_connection()
 
         # Get the correct architecture

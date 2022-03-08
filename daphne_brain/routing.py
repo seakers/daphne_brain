@@ -1,10 +1,10 @@
-from channels.auth import AuthMiddlewareStack
 from django.urls import path
-from channels.routing import ProtocolTypeRouter, URLRouter
 
 from daphne_brain import settings
 from experiment_at.consumers import ATExperimentConsumer
 
+if "example_problem" in settings.ACTIVE_MODULES:
+    from example_problem.consumers import ExampleConsumer
 if "EOSS" in settings.ACTIVE_MODULES:
     from EOSS.consumers import EOSSConsumer
 if "AT" in settings.ACTIVE_MODULES:
@@ -14,6 +14,7 @@ if "AT" in settings.ACTIVE_MODULES:
     from AT.consumers import ATConsumer
 
 from experiment.consumers import ExperimentConsumer
+from daphne_ws.consumers import MycroftConsumer
 
 # The channel routing defines what connections get handled by what consumers,
 # selecting on either the connection type (ProtocolTypeRouter) or properties
@@ -21,26 +22,18 @@ from experiment.consumers import ExperimentConsumer
 # For more, see http://channels.readthedocs.io/en/latest/topics/routing.html
 
 ws_routes = []
+if "example_problem" in settings.ACTIVE_MODULES:
+    ws_routes.append(path('api/example_problem/ws', ExampleConsumer))
 if "EOSS" in settings.ACTIVE_MODULES:
-    ws_routes.append(path('api/eoss/ws', EOSSConsumer))
+    ws_routes.append(path('api/eoss/ws', EOSSConsumer.as_asgi()))
 if "AT" in settings.ACTIVE_MODULES:
     ws_routes.extend([
-        # path('api/at/SARIMAX_AD', SARIMAX_AD),
-        # path('api/at/adaptiveKNN', adaptiveKNN),
-        # path('api/at/iForest', iForest),
         path('api/at/ws', ATConsumer),
         path('api/at/experiment', ATExperimentConsumer)
     ])
 ws_routes.extend([
-    path('api/experiment', ExperimentConsumer),
+    path('api/experiment', ExperimentConsumer.as_asgi()),
 ])
-
-application = ProtocolTypeRouter({
-    # Route all WebSocket requests to our custom chat handler.
-    # We actually don't need the URLRouter here, but we've put it in for
-    # illustration. Also note the inclusion of the AuthMiddlewareStack to
-    # add users and sessions - see http://channels.readthedocs.io/en/latest/topics/authentication.html
-    'websocket': AuthMiddlewareStack(
-        URLRouter(ws_routes),
-    ),
-})
+ws_routes.extend([
+    path('api/mycroft', MycroftConsumer),
+])
