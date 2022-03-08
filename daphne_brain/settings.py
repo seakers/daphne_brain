@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.selva-research.com', 'selva-rese
 USE_X_FORWARDED_HOST = True
 
 # ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
-ACTIVE_MODULES = ['EDL']
+ACTIVE_MODULES = ['EOSS']
 
 EDL_PATH = '/Users/ssantini/Code/'
 
@@ -95,7 +95,7 @@ WSGI_APPLICATION = 'daphne_brain.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'edldatabase',
+        'NAME': 'daphne',
         'USER': os.environ['USER'],
         'PASSWORD': os.environ['PASSWORD'],
         'HOST': os.environ['POSTGRES_HOST'],
