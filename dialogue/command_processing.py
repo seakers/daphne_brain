@@ -11,6 +11,8 @@ from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation, DialogueHistory, DialogueContext
 from dialogue.nn_models import nn_models
 
+from .mycroft_utils import forward_to_mycroft
+
 
 def classify_command_role(command, daphne_version):
     cleaned_command = data_helpers.clean_str(command)
@@ -108,15 +110,17 @@ def not_allowed_answers():
 def answer_command(processed_command, question_type, command_class, condition_name, user_info: UserInformation,
                    context, new_dialogue_contexts, session):
     # Create a DialogueContext for the user to fill
+
     answer = command(processed_command, question_type, command_class, condition_name, user_info, context,
                      new_dialogue_contexts, session)
     dialogue_history = DialogueHistory.objects.create(user_information=user_info,
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
                                                       visual_message=json.dumps(answer["visual_answer"]),
-                                                      writer="daphne",
+                                                      dwriter="daphne",
                                                       date=datetime.datetime.utcnow())
 
+    forward_to_mycroft(user_info, 'Here is what I have found')
     return dialogue_history
 
 
@@ -141,12 +145,13 @@ def choose_command(command_types, daphne_version, command_role, command_class, c
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
                                                       visual_message=json.dumps(answer["visual_answer"]),
-                                                      writer="daphne",
+                                                      dwriter="daphne",
                                                       date=datetime.datetime.utcnow())
     DialogueContext.objects.create(dialogue_history=dialogue_history,
                                    is_clarifying_input=True,
                                    clarifying_role=command_role,
                                    clarifying_commands=json.dumps(command_types))
+    forward_to_mycroft(context, answer["voice_answer"])
 
 
 def not_answerable(context: UserInformation):
@@ -161,11 +166,12 @@ def not_answerable(context: UserInformation):
                                                       voice_message=answer["voice_answer"],
                                                       visual_message_type=json.dumps(answer["visual_answer_type"]),
                                                       visual_message=json.dumps(answer["visual_answer"]),
-                                                      writer="daphne",
+                                                      dwriter="daphne",
                                                       date=datetime.datetime.utcnow())
 
     DialogueContext.objects.create(dialogue_history=dialogue_history,
                                    is_clarifying_input=False)
+    forward_to_mycroft(context, answer["voice_answer"])
 
 
 def command(processed_command, question_type, command_class, condition_name, user_information: UserInformation, context,

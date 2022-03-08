@@ -60,7 +60,8 @@ class GetDrivingFeatures(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
+
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeatures() called ... ')
@@ -106,16 +107,17 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
             session_key = request.session.session_key
-            
+
             # Get selected arch id's
             selected = request.data['selected']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
-            
+
             # Convert strings to ints
             behavioral = []
             for s in selected_arch_ids:
                 behavioral.append(int(s))
+
 
             # Get non-selected arch id's
             non_selected = request.data['non_selected']
@@ -128,23 +130,28 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
 
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+            print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset))
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesEpsilonMOEA() called ... ')
             logger.debug('b_length:{0}, nb_length:{1}, narchs:{2}'.format(len(behavioral), len(non_behavioral), len(dataset)))
-        
+
             _archs = []
             if input_type == "binary":
                 for arch in dataset:
                     _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, behavioral, non_behavioral, _archs)
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem,
+                                                                                             behavioral, non_behavioral,
+                                                                                             _archs)
 
             elif input_type == "discrete":
                 for arch in dataset:
                     _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem, behavioral, non_behavioral, _archs)
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEADiscrete(session_key, problem,
+                                                                                               behavioral,
+                                                                                               non_behavioral, _archs)
 
             elif input_type == "continuous":
                 for arch in dataset:
@@ -154,18 +161,19 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
                             pass
                         else:
                             inputs.append(float(i))
-                            
+
                     _archs.append(ContinuousInputArchitecture(arch['id'], inputs, arch['outputs']))
-                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral, non_behavioral, _archs)
+                _features = self.DataMiningClient.client.getDrivingFeaturesEpsilonMOEAContinuous(problem, behavioral,
+                                                                                                 non_behavioral, _archs)
 
             features = []
             for df in _features:
                 features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics})
 
             # End the connection before return statement
-            self.DataMiningClient.endConnection() 
+            self.DataMiningClient.endConnection()
             return Response(features)
-        
+
         except Exception as detail:
             logger.exception('Exception in getDrivingFeatures: ' + str(detail))
             self.DataMiningClient.endConnection()
@@ -208,7 +216,7 @@ class GetDrivingFeaturesWithGeneralization(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getDrivingFeaturesWithGeneralization() called ...')
@@ -260,7 +268,7 @@ class GetMarginalDrivingFeatures(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('getMarginalDrivingFeatures() called ... ')
@@ -270,7 +278,7 @@ class GetMarginalDrivingFeatures(APIView):
             if input_type == "binary":
 
                 # Start listening for redis inputs to share through websockets
-                connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+                connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
                 channel = connection.channel()
                 channel.queue_declare(queue=session_key + '_localSearch')
                 channel.queue_purge(queue=session_key + '_localSearch')
@@ -342,7 +350,7 @@ class GeneralizeFeature(APIView):
 
     def post(self, request, format=None):
         # Start listening for redis inputs to share through websockets
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
         channel = connection.channel()
 
         session_key = request.session.session_key
@@ -407,7 +415,7 @@ class GeneralizeFeature(APIView):
             # Load architecture data from the session info
             dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             logger.debug('generalizeFeature() called ... ')
@@ -448,7 +456,7 @@ class SimplifyFeatureExpression(APIView):
             self.DataMiningClient.startConnection()
 
             # Get problem name
-            problem = request.data['problem']
+            problem = 'SMAP'
 
             # Get the expression
             expression = request.data['expression']
@@ -471,7 +479,7 @@ class ClusterData(APIView):
         try:
             param = int(request.data['param'])
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
 
             # Get selected arch id's
@@ -716,7 +724,7 @@ class GetProblemParameters(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
             
-            problem = request.data['problem']
+            problem = 'SMAP'
 
             params = None
             if problem == "ClimateCentric":
@@ -751,7 +759,7 @@ class SetProblemParameters(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         # Start listening for redis inputs to share through websockets
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.environ['RABBITMQ_HOST']))
         channel = connection.channel()
 
         session_key = request.session.session_key
@@ -782,20 +790,24 @@ class SetProblemParameters(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
 
-            problem = request.data['problem']
+            problem = 'SMAP'
             params = json.loads(request.data['params'])
 
-            if problem in problem_specific.assignation_problems:
-                entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
-                self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
+            print("---> SetProblemParameters:", problem, problem_specific.assignation_problems)
+            entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
+            self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
 
-            else:
-                raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
+            # if problem in problem_specific.assignation_problems:
+            #     entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
+            #     self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem, entities)
+            #
+            # else:
+            #     raise NotImplementedError("Unsupported problem formulation: {0}".format(problem))
 
             # End the connection before return statement
-            self.DataMiningClient.endConnection() 
+            self.DataMiningClient.endConnection()
             return Response()
-        
+
         except Exception as detail:
             logger.exception('Exception in SetProblemParameters: ' + str(detail))
             self.DataMiningClient.endConnection()
@@ -815,7 +827,7 @@ class SetProblemGeneralizedConcepts(APIView):
             session_key = request.session.session_key
             logger.debug("SetProblemGeneralizedConcepts (session key: {0})".format(session_key))
             
-            problem = request.data['problem']
+            problem = 'SMAP'
             params = json.loads(request.data['params'])
 
             if problem == "ClimateCentric":
@@ -861,7 +873,7 @@ class GetProblemConceptHierarchy(APIView):
             # Start data mining client
             self.DataMiningClient.startConnection()
             
-            problem = request.data['problem']
+            problem = 'SMAP'
             params = json.loads(request.data['params'])
 
             concept_hierarchy = None
@@ -928,7 +940,7 @@ class ImportTargetSelection(APIView):
 class ExportTargetSelection(APIView):
     def post(self, request, format=None):
         try:
-            problem = request.data['problem']
+            problem = 'SMAP'
             input_type = request.data['input_type']
             filename = request.data['name']
 

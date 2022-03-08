@@ -15,6 +15,11 @@ class EOSSContext(models.Model):
     last_arch_id = models.IntegerField()
     selected_arch_id = models.IntegerField()
 
+    # Default problem and group ID is for SMAP
+    group_id = models.IntegerField(default=1)
+    problem_id = models.IntegerField(default=4)
+
+
     # Counter for manually added designs
     added_archs_count = models.IntegerField()
 
@@ -86,3 +91,18 @@ class Design(models.Model):
     # Special restrictions
     class Meta:
         unique_together = ("eosscontext", "activecontext", "id")
+
+
+
+# --> many-to-one relationship with UserInformation
+class ArchitecturesClicked(models.Model):
+    user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
+    arch_clicked = models.TextField(max_length=500)
+
+class ArchitecturesUpdated(models.Model):
+    user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
+    arch_updated = models.TextField(max_length=500)
+
+class ArchitecturesEvaluated(models.Model):
+    user_information = models.ForeignKey(UserInformation, on_delete=models.CASCADE)
+    arch_evaluated = models.TextField(max_length=500)

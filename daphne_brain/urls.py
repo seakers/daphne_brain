@@ -20,6 +20,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from daphne_brain import settings
 
 urlpatterns = []
+if "example_problem" in settings.ACTIVE_MODULES:
+    urlpatterns.append(path('api/example_problem/', include('example_problem.urls')))
 if "EOSS" in settings.ACTIVE_MODULES:
     urlpatterns.append(path('api/eoss/', include('EOSS.urls')))
 if "EDL" in settings.ACTIVE_MODULES:
@@ -28,9 +30,14 @@ if "AT" in settings.ACTIVE_MODULES:
     urlpatterns.append(path('api/at/', include('AT.urls')))
     urlpatterns.append(path('api/experiment-at/', include('experiment_at.urls')))
 urlpatterns.extend([
+
+    # Vassar Database
+    path('api/vassar_db/', include('vassar_db.urls')),
+    
     path('api/ifeed/', include('iFEED_API.urls')),
     path('api/experiment/', include('experiment.urls')),
     path('api/auth/', include('auth_API.urls')),
+    path('api/mycroft/', include('mycroft.urls')),
 
     path('server/accounts/', include('django.contrib.auth.urls')),
 

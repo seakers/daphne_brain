@@ -213,13 +213,15 @@ def query(query, data, command_class):
 
 
 def neo4j_query(query, data, command_class):
+    #build final query
     print(query)
-    print(data)
+
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
-    results = "result"
-    return results
+    result = session.run(query)
+    result_list = [node[0] for node in result]
+    return result_list
 
 
 def get_dialogue_functions(daphne_version):
