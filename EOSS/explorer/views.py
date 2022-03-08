@@ -111,7 +111,7 @@ class StartGA(APIView):
                             async_to_sync(channel_layer.send)(thread_user_info.channel_name,
                                                               {
                                                                   'type': 'active.message',
-                                                                  'message': ws_message
+                                                                  'message': ws_message,
                                                               })
                         if thread_user_info.eosscontext.activecontext.show_background_search_feedback:
                             back_list = send_archs_from_queue_to_main_dataset(thread_user_info)

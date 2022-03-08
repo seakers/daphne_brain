@@ -126,6 +126,10 @@ class DaphneConsumer(JsonWebsocketConsumer):
     scheduler = schedule.Scheduler()
     sched_stopper = None
     kill_event = None
+    daphne_version = ""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     ##### WebSocket event handlers
     def connect(self):
@@ -134,10 +138,14 @@ class DaphneConsumer(JsonWebsocketConsumer):
         """
         # Accept the connection
         self.accept()
+<<<<<<< HEAD
 
 
         user_info = get_or_create_user_information(self.scope['session'], self.scope['user'])
 
+=======
+        user_info = get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
+>>>>>>> master
         user_info.channel_name = self.channel_name
         user_info.save()
 
