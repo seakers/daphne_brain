@@ -1,15 +1,7 @@
 
 
 def get_scorecard_objects_and_metrics(scorecard, path_scorecard):
-    import os, sys
     import pandas as pd
-    import xlrd
-    import numpy as np
-    from openpyxl import load_workbook
-    import xlsxwriter
-    import itertools
-    import math
-    import json
 
     '''Here we get all lists from all metrics and fields'''
     METRIC_NAMES_BY_SHEET = []
