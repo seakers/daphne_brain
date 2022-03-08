@@ -4,6 +4,9 @@ from daphne_context.models import UserInformation
 from AT.diagnosis.models import ECLSSAnomalies
 from AT.diagnosis import models
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index
+from AT.neo4j_queries.query_functions import retrieve_all_measurements, retrieve_all_anomalies, retrieve_all_procedures, \
+    retrieve_all_measurements_parameter_groups, retrieve_all_components, retrieve_all_procedure_numbers, \
+    retrieve_all_step_numbers
 
 
 def extract_anomaly_ids(processed_question, number_of_features, context: UserInformation):
@@ -15,11 +18,50 @@ def extract_anomaly_ids(processed_question, number_of_features, context: UserInf
 
 
 def extract_procedures(processed_question, number_of_features, context: UserInformation):
-    procedure_list = range(1, 25)
-    procedures = [str(id) for id in procedure_list]
+    # Get a list of procedures
+    procedures = retrieve_all_procedures()
     return sorted_list_of_features_by_index(processed_question, procedures, number_of_features)
+
+
+def extract_measurements(processed_question, number_of_features, context: UserInformation):
+    # Get a list of measurements
+    measurements = retrieve_all_measurements()
+    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+
+
+def extract_measurements_parameter_groups(processed_question, number_of_features, context: UserInformation):
+    # Get a list of measurements
+    measurements = retrieve_all_measurements_parameter_groups()
+    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+
+
+def extract_anomalies(processed_question, number_of_features, context: UserInformation):
+    # Get a list of anomalies
+    measurements = retrieve_all_anomalies()
+    return sorted_list_of_features_by_index(processed_question, measurements, number_of_features)
+
+def extract_components(processed_question, number_of_features, context: UserInformation):
+    # Get a list of components
+    components = retrieve_all_components()
+    return sorted_list_of_features_by_index(processed_question, components, number_of_features)
+
+def extract_procedure_number(processed_question, number_of_features, context: UserInformation):
+    # Get a list of procedure_number
+    procedure_number = retrieve_all_procedure_numbers()
+    return sorted_list_of_features_by_index(processed_question, procedure_number, number_of_features)
+
+def extract_step_number(processed_question, number_of_features, context: UserInformation):
+    # Get a list of procedure_number
+    step_number = retrieve_all_step_numbers()
+    return sorted_list_of_features_by_index(processed_question, step_number, number_of_features)
 
 extract_function = {}
 
 extract_function["anomaly_id"] = extract_anomaly_ids
 extract_function["procedure"] = extract_procedures
+extract_function["measurement"] = extract_measurements
+extract_function["anomaly"] = extract_anomalies
+extract_function["parameter_group"] = extract_measurements_parameter_groups
+extract_function["component"] = extract_components
+extract_function["procedure_number"] = extract_procedure_number
+extract_function["step_number"] = extract_step_number

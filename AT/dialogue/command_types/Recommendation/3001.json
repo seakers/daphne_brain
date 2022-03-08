@@ -4,15 +4,16 @@
   [
     { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Display the PDF file of a procedure",
+  "objective": "Provide the pdf for a certain procedure.",
   "function":
   {
-    "run_template": "dialogue_functions.recommendation.procedure_pdf_name('${procedure}')",
+    "run_template": "dialogue_functions.get_procedure_pdf(data['procedure'])",
     "results": [
       {
         "result_type": "single",
         "result_fields": {
-          "pdf_name": "command_results[0]"
+          "procedure_name": "command_results[0]['procedure_name']",
+          "pdf_link": "command_results[0]['pdf_link']"
         }
       }
     ]
@@ -20,14 +21,14 @@
   "voice_response": [
     {
       "type": "single",
-      "template": "Displaying PDF for procedure ${procedure}."
+      "template": "A link to the ${procedure_name} procedure has been provided."
     }
   ],
   "visual_response": [
     {
       "type": "text",
       "from": "single",
-      "template": "View PDF for procedure ${procedure} <a href=\"api/at/recommendation/procedure?${pdf_name}\" target=\"_blank\">HERE</a>."
+      "template": "See the pdf for <a href=\"api/at/recommendation/procedure?${pdf_link}\" target=\"_blank\">${procedure_name}</a>."
     }
   ]
 }

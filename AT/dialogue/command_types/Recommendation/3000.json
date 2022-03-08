@@ -1,19 +1,19 @@
 {
-  "type": "neo4j_query",
+  "type": "run_function",
   "params":
   [
-    { "name": "procedure", "type": "procedure", "options": "", "from_context": false, "mandatory": true }
+    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
   ],
-  "objective": "Retrieve and display the steps from the specified procedure.",
-  "neo4j_query":
+  "objective": "Provide the procedures for a certain anomaly",
+  "function":
   {
-    "query": "match (p:Procedure)-[:Has]-(s:Step) where p.pNumber={procedure} return s.Action order by s.Step",
+    "run_template": "dialogue_functions.get_anomaly_procedure_without_number(data['anomaly'])",
     "results": [
       {
         "result_type": "list",
         "result_fields": {
-          "step": "item[\"text\"]",
-          "step_id": "item[\"id\"]"
+          "procedure_name": "item['procedure_name']",
+          "pdf_link": "item['pdf_link']"
         }
       }
     ]
@@ -21,16 +21,16 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "Here are the steps for procedure ${procedure}: ",
-      "repeat": "Step ${step_id}: ${step}",
+      "begin": "The procedures for ${anomaly} anomaly are:",
+      "repeat": "${procedure_name}",
       "end": "."
     }
   ],
   "visual_response": [
     {
       "type": "list",
-      "begin": "Here are the steps for procedure ${procedure}: ",
-      "item_template": "Step ${step_id}: ${step}"
+      "begin": "The procedures for ${anomaly} anomaly are:",
+      "item_template": "<a href=\"api/at/recommendation/procedure?${pdf_link}\" target=\"_blank\">${procedure_name}</a>"
     }
   ]
 }

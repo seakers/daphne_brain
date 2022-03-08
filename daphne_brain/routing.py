@@ -1,6 +1,7 @@
 from django.urls import path
 
 from daphne_brain import settings
+from experiment_at.consumers import ATExperimentConsumer
 
 if "example_problem" in settings.ACTIVE_MODULES:
     from example_problem.consumers import ExampleConsumer
@@ -27,7 +28,8 @@ if "EOSS" in settings.ACTIVE_MODULES:
     ws_routes.append(path('api/eoss/ws', EOSSConsumer.as_asgi()))
 if "AT" in settings.ACTIVE_MODULES:
     ws_routes.extend([
-        path('api/at/ws', ATConsumer)
+        path('api/at/ws', ATConsumer),
+        path('api/at/experiment', ATExperimentConsumer)
     ])
 ws_routes.extend([
     path('api/experiment', ExperimentConsumer.as_asgi()),

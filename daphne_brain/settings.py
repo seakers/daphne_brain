@@ -21,7 +21,9 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne']
+ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.com', 
+                 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne',
+                 'daphne-at-dev.selva-research.com', 'daphne-at.selva-research.com']
 
 USE_X_FORWARDED_HOST = True
 
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     'AT',
     'auth_API',
     'experiment',
+    'experiment_at',
     'iFEED_API',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -28,6 +28,7 @@ if "EDL" in settings.ACTIVE_MODULES:
     urlpatterns.append(path('api/edl/', include('EDL.urls')))
 if "AT" in settings.ACTIVE_MODULES:
     urlpatterns.append(path('api/at/', include('AT.urls')))
+    urlpatterns.append(path('api/experiment-at/', include('experiment_at.urls')))
 urlpatterns.extend([
 
     # Vassar Database
