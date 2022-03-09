@@ -21,14 +21,17 @@ SECRET_KEY = 'aaaaa'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.com', 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne', 'daphne_brain']
+
+ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.com', 
+                 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne', 'daphne_brain'
+                 'daphne-at-dev.selva-research.com', 'daphne-at.selva-research.com']
 
 USE_X_FORWARDED_HOST = True
 
-# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT', 'example_problem']
 ACTIVE_MODULES = ['EOSS']
 
-EDL_PATH = '/Users/ssantini/Desktop/'
+EDL_PATH = '/Users/ssantini/Code/'
 
 
 # Application definition
@@ -37,11 +40,13 @@ INSTALLED_APPS = [
     'channels',
     'corsheaders',
     'daphne_context',
+    'example_problem',
     'EOSS',
     'EDL',
     'AT',
     'auth_API',
     'experiment',
+    'experiment_at',
     'iFEED_API',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -186,6 +191,15 @@ EDL_DATABASE = {
     'username': os.environ['USER'],
     'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
+}
+
+ECLSS_DATABASE = {
+    'drivername': 'postgres',
+    'host': 'www.selva-research.com',
+    'port': '5432',
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
+    'database': 'eclss'
 }
 
 

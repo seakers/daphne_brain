@@ -209,31 +209,43 @@ class SaveData(APIView):
                 "error": "This is only available to registered users!"
             })
 
-### DEPRECATED (temporarily)
+
 class DownloadData(APIView):
     """ Download the csv file to the user computer
     """
     def get(self, request, format=None):
         if request.user.is_authenticated:
-            try:
-                user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-                problem = user_info.eosscontext.problem
 
-                # Set the path of the file where the data will be saved
-                user_path = request.user.username
-                filename = request.query_params['filename']
-                file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "datasets", user_path, problem,
-                                         filename)
+            # Get user_info and problem_id
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            problem_id = user_info.eosscontext.problem_id
+            group_id = user_info.eosscontext.group_id
+            dataset_id = user_info.eosscontext.dataset_id
 
-                # Create the HttpResponse object with the appropriate CSV header.
-                csv_data = open(file_path, "r").read()
-                response = HttpResponse(csv_data, content_type='text/csv')
-                response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+            # Get problem architectures
+            dbClient = GraphqlClient(problem_id=problem_id)
+            query = dbClient.get_architectures(problem_id, dataset_id)
 
-                return response
+            # Iterate over architectures
+            import io
 
-            except Exception:
-                raise ValueError("There has been an error when downloading the file")
+            output = io.StringIO()
+            writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+            
+            for arch in query['data']['Architecture']:
+                # If the arch needs to be re-evaluated due to a problem definition change, do not add
+                if not arch['eval_status']:
+                    continue
+
+                # Append design object
+                writer.writerow([arch['input'], float(arch['science']), float(arch['cost']), 0, 0])
+
+            # Create the HttpResponse object with the appropriate CSV header.
+            response = HttpResponse(output.getvalue(), content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="dataset.csv"'
+
+            return response
+
         else:
             return Response({
                 "error": "This is only available to registered users!"
