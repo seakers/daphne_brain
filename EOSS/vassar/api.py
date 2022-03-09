@@ -988,6 +988,41 @@ class VASSARClient:
         return "assignation"
 
     # rewrite
+    def get_measurement_list(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        if problem in assignation_problems:
+            return self.client.getMeasurements(problem, thrift_arch)
+        elif problem in partition_problems:
+            return null
+        else:
+            raise ValueError('Problem {0} not recognized'.format(problem))
+
+    def get_panel_subscores(self, problem, arch):
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        if problem in assignation_problems:
+            return self.client.getPanelScoresFromArch(problem, thrift_arch)
+        elif problem in partition_problems:
+            return null
+        else:
+            raise ValueError('Problem {0} not recognized'.format(problem))
+
+    def get_data_continuity_eval(self, measurements, mission_measurements):
+        return self.client.evaluateDataContinuityScore(measurements, mission_measurements)
+
+    def get_fairness_eval(self, measurements):
+        return self.client.evaluateFairnessScore(measurements, mission_measurements)
+
+    def get_subscore_details(self, problem, arch, subobjective):
+        print("\n\n----> get_subscore_details", problem, arch, subobjective)
+        thrift_arch = self.create_thrift_arch(problem, arch)
+        if problem in assignation_problems:
+            return self.client.getSubscoreDetailsBinaryInput(problem, thrift_arch, subobjective)
+        elif problem in partition_problems:
+            return self.client.getSubscoreDetailsDiscreteInput(problem, thrift_arch, subobjective)
+        else:
+            raise ValueError('Problem {0} not recognized'.format(problem))
+
+    # rewrite
     def is_ga_running(self, ga_id):
         print("\n\n----> is_ga_running", ga_id)
         return self.client.isGARunning(ga_id)

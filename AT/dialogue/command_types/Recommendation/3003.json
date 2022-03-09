@@ -1,0 +1,36 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "anomaly", "type": "anomaly", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "Provide the estimated time of resolution for a certain anomaly.",
+  "function":
+  {
+    "run_template": "dialogue_functions.get_anomaly_etr(data['anomaly'])",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "procedure_name": "item['procedure_name']",
+          "procedure_time": "item['procedure_time']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The ${anomaly} anomaly resolution requires the procedures ",
+      "repeat": "${procedure_name} which takes ${procedure_time}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The ${anomaly} anomaly resolution requires the procedures",
+      "item_template": "${procedure_name} which takes ${procedure_time}"
+    }
+  ]
+}

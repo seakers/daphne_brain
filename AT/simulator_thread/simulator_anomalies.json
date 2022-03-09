@@ -1,0 +1,25 @@
+{
+  "n2_tank_burst": {
+    "ppN2 (L1)": {
+      "pace_in": 10,
+      "pace_out": -10,
+      "max_increment": 70
+    },
+    "ppN2 (L2)": {
+      "pace_in": 10,
+      "pace_out": -10,
+      "max_increment": 70
+    },
+    "Level Cabin Pressure (L1)": {
+      "pace_in": 1,
+      "pace_out": -1,
+      "max_increment": 3
+    },
+    "Level Cabin Pressure (L2)": {
+      "pace_in": 1,
+      "pace_out": -1,
+      "max_increment": 3
+    }
+  }
+}
+

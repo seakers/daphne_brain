@@ -82,6 +82,18 @@ class EOSSConsumer(DaphneConsumer):
             await self.stop_ga(user_info)
         elif content.get('msg_type') == 'rebuild_vassar':
             await self.rebuild_vassar(user_info, content.get('group_id'), content.get('problem_id'), content.get('dataset_id'))
+        elif content.get('msg_type') == 'teacher_clicked_arch':
+            content = content.get('teacher_context')    # --> Dict
+            entry = ArchitecturesClicked(user_information=user_info, arch_clicked=json.dumps(content))
+            entry.save()
+        elif content.get('msg_type') == 'teacher_clicked_arch_update':
+            content = content.get('teacher_context')  # --> List
+            entry = ArchitecturesUpdated(user_information=user_info, arch_updated=json.dumps(content))
+            entry.save()
+        elif content.get('msg_type') == 'teacher_evaluated_arch':
+            content = content.get('teacher_context')  # --> Dict
+            entry = ArchitecturesEvaluated(user_information=user_info, arch_evaluated=json.dumps(content))
+            entry.save()
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             # Only ping vassar and GA if logged in
@@ -121,6 +133,15 @@ class EOSSConsumer(DaphneConsumer):
     async def ga_new_archs(self, event):
         print(event)
         await self.send_json(event)
+
+    def teacher_design_space(self, event):
+        self.send_json(event)
+    def teacher_objective_space(self, event):
+        self.send_json(event)
+    def teacher_sensitivities(self, event):
+        self.send_json(event)
+    def teacher_features(self, event):
+        self.send_json(event)
 
     async def ga_started(self, event):
         print(event)
