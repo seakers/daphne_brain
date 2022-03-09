@@ -10,7 +10,7 @@ logger = logging.getLogger('EOSS.critic')
 def general_call(design_id, designs, session_key, context):
     eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
     critic = Critic(eosscontext.user_information, session_key)
-    print("Critizing arch ", design_id,"in",designs)
+    # print("Critizing arch ", design_id,"in",designs)
 
     try:
         this_design = find_design_by_id(designs, design_id)

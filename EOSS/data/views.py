@@ -6,8 +6,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from EOSS.data.problem_helpers import assignation_problems, partition_problems
-from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
+
+from asgiref.sync import sync_to_async, async_to_sync
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 
 
@@ -38,28 +43,34 @@ class ImportData(APIView):
 
             # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            dataset_client = DatasetGraphqlClient(user_info)
             problem_id = int(request.data['problem_id'])
             group_id = int(request.data['group_id'])
             dataset_id = int(request.data['dataset_id'])
 
             # Get problem architectures
-            dbClient = GraphqlClient(problem_id=problem_id)
+            # dbClient = GraphqlClient(problem_id=problem_id)
 
             print("--> PROBLEM IDER: ", problem_id)
 
             # If dataset_id is -1, copy all architectures in the default set for this problem into a user-specific dataset called 'default' and set that as the main dataset,
             # Else, use the request dataset_id to get architectures
             if dataset_id == -1:
-                default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
-                dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
-            query = dbClient.get_architectures(problem_id, dataset_id)
+                default_dataset_id = async_to_sync(dataset_client.get_default_dataset)(problem_id)['id']
+                dataset_id = async_to_sync(dataset_client.clone_dataset)(default_dataset_id, "default", False)
+                # default_dataset_id = dbClient.get_default_dataset_id("default", problem_id)
+                # dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
+
+            dataset_client = DatasetGraphqlClient(user_info)
+            query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+            # query = dbClient.get_architectures(problem_id, dataset_id)
 
             # Iterate over architectures
             # Create: user context Designs
             # Create: object to send designs to front-end
             architectures_json = []
             counter = 0
-            for arch in query['data']['Architecture']:
+            for arch in query:
 
                 # If the arch needs to be re-evaluated due to a problem definition change, do not add
                 if not arch['eval_status']:
@@ -113,13 +124,15 @@ class CopyData(APIView):
             try:
                 # Get user_info and problem_id
                 user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+                dataset_client = DatasetGraphqlClient(user_info)
                 src_dataset_id = int(request.data['src_dataset_id'])
                 dst_dataset_name = request.data['dst_dataset_name']
                 problem_id = user_info.eosscontext.problem_id
 
                 # Clone dataset
-                dbClient = GraphqlClient(problem_id=problem_id)
-                dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
+                # dbClient = GraphqlClient(problem_id=problem_id)
+                # dst_dataset_id = dbClient.clone_dataset(src_dataset_id, user_info.user.id, dst_dataset_name)
+                dst_dataset_id = async_to_sync(dataset_client.clone_dataset)(src_dataset_id, dst_dataset_name, False, False, False)
 
                 # Return architectures
                 return Response({
@@ -254,14 +267,16 @@ class UploadData(APIView):
 
             # Get user_info and problem_id
             user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+            dataset_client = DatasetGraphqlClient(user_info)
             problem_id = user_info.eosscontext.problem_id
             user_id = user_info.user.id
 
             # Get problem architectures
-            dbClient = GraphqlClient(problem_id=problem_id)
+            # dbClient = GraphqlClient(problem_id=problem_id)
 
             dataset_path = "./EOSS/data/" + request.data["filename"] + ".csv"
-            dataset_id = dbClient.add_new_dataset(problem_id, user_id, request.data["filename"])
+            dataset_id = async_to_sync(dataset_client.new_user_dataset)(request.data["filename"], False)['id']
+            # dataset_id = dbClient.add_new_dataset(problem_id, user_id, request.data["filename"])
 
             with open(dataset_path, newline='') as csvfile:
                 arch_reader = csv.reader(csvfile, delimiter=',')
@@ -269,7 +284,8 @@ class UploadData(APIView):
                     inputs = "".join(["1" if inp == "True" else "0" for inp in row[0:25]])
                     science = row[25]
                     cost = row[26]
-                    result = dbClient.insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost)
+                    async_to_sync(AbstractGraphqlClient.insert_architecture)(problem_id, dataset_id, user_id, inputs, science, cost)
+                    # result = dbClient.insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost)
             return Response({"YAY!"})
 
         except Exception:

@@ -1,6 +1,7 @@
 import timeit
 
 from EOSS.graphql.client.Abstract import AbstractGraphqlClient as Client
+from EOSS.graphql.generation.CloneGenerator import CloneGenerator
 from daphne_context.models import UserInformation
 from gql import gql
 from asgiref.sync import async_to_sync, sync_to_async
@@ -53,22 +54,37 @@ class DatasetGraphqlClient(Client):
         """
         self.info_scores = """
             ArchitectureScoreExplanations {
-              satisfaction
-              panel_id
-              id
-              architecture_id
+                satisfaction
+                panel_id
+                id
+                architecture_id
+                Stakeholder_Needs_Panel {
+                    id
+                    name
+                    index_id
+                    weight
+                    problem_id
+                }
             }
             PanelScoreExplanations {
-              satisfaction
-              objective_id
-              id
-              architecture_id
+                satisfaction
+                objective_id
+                id
+                architecture_id
+                Stakeholder_Needs_Objective { 
+                    name 
+                    weight 
+                }
             }
             ObjectiveScoreExplanations {
-              subobjective_id
-              satisfaction
-              id
-              architecture_id
+                subobjective_id
+                satisfaction
+                id
+                architecture_id
+                Stakeholder_Needs_Subobjective { 
+                    name 
+                    weight 
+                }
             }
             SubobjectiveScoreExplanations {
               taken_by
@@ -79,6 +95,12 @@ class DatasetGraphqlClient(Client):
               id
               architecture_id
             }
+        """
+        self.into_experiment = """
+            data_continuity
+            fairness
+            programmatic_risk
+            eval_idx
         """
 
         # --> Initialization (handles case: dataset_id == -1)
@@ -151,14 +173,17 @@ class DatasetGraphqlClient(Client):
             }
             """ % (used_dataset_id)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Dataset' not in result:
             return None
         if len(result['Dataset']) == 0:
             return None
         return result['Dataset'][0]
 
-    async def get_default_dataset(self):
+    async def get_default_dataset(self, problem_id=None):
+        if problem_id is None:
+            problem_id = self.problem_id
+
         query = await self.wrap_query(
             """
             query dataset_id {
@@ -168,9 +193,9 @@ class DatasetGraphqlClient(Client):
                     id
                 }
             }
-            """ % (self.problem_id)
+            """ % (problem_id)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Dataset' not in result:
             return None
         if len(result['Dataset']) == 0:
@@ -192,7 +217,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (self.problem_id)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Dataset_aggregate' not in result:
             return None
         return int(result['Dataset_aggregate']['aggregate']['count'])
@@ -209,7 +234,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (self.problem_id, self.user_id)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Dataset' not in result:
             return None
         if len(result['Dataset']) == 0:
@@ -231,7 +256,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (self.problem_id, self.user_id)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Dataset_aggregate' not in result:
             return None
         return int(result['Dataset_aggregate']['aggregate']['count'])
@@ -252,7 +277,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (self.group_id, self.problem_id, self.user_id, name)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'insert_Dataset_one' not in result:
             return None
         if save is True:
@@ -275,7 +300,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (self.problem_id)
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'insert_Dataset_one' not in result:
             return None
         if save is True:
@@ -295,8 +320,30 @@ class DatasetGraphqlClient(Client):
             return None
         target_id = new_dataset['id']
 
-        # --> 2. Clone architectures
-        await self.clone_architectures(source_id, target_id, costs=costs, scores=scores)
+        # --> 2. Get architectures from source dataset
+        architectures = await self.get_architectures(dataset_id=source_id, costs=costs, scores=scores)
+
+        # --> 3. Open new process to clone archs
+        arch_strings = await CloneGenerator(self.user_info).architectures(architectures, target_id, costs, scores)
+
+        # --> 4. Build mutation
+        mutation = """
+            mutation insert_architectures {
+                insert_Architecture(
+                    objects: %s
+                ) {
+                    returning {
+                        id
+                    }
+                }
+            }
+        """ % arch_strings
+        # await sync_to_async(self._save)(mutation_string, 'mutation.json')
+
+        # --> 5. Execute mutation and return new dataset id
+        await self._query(mutation)
+
+
         return target_id
 
     #############
@@ -321,9 +368,45 @@ class DatasetGraphqlClient(Client):
      /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|           
     """
 
+    @staticmethod
+    async def _format_input(inputs):
+        ### Inputs could be one of three forms --> convert as necessary
+        # 1. List of bits
+        # 2. List of booleans
+        # 3. String of bits (required for eval)
+        converted_inputs = ''
+        if isinstance(inputs, list):
+            if len(inputs) > 0:
+                if isinstance(inputs[0], int):
+                    for x in inputs:
+                        if x == 0:
+                            converted_inputs += '0'
+                        elif x == 1:
+                            converted_inputs += '1'
+                elif isinstance(inputs[0], bool):
+                    for x in inputs:
+                        if x == False:
+                            converted_inputs += '0'
+                        elif x == True:
+                            converted_inputs += '1'
+            else:
+                print('--> INPUT LIST EMPTY')
+                return None
+        else:
+            converted_inputs = inputs
+        return converted_inputs
+
     ###########
     ### GET ###
     ###########
+
+    async def get_architecture_critique(self, arch_id):
+        architecture = await self.get_architecture_pk(arch_id)
+        if architecture is None or architecture['critique'] is None:
+            return []
+        critique = architecture['critique']
+        critiques = critique.split('|')
+        return critiques[:-1]
 
     async def get_architecture_pk(self, arch_id, costs=False, scores=False):
 
@@ -342,7 +425,7 @@ class DatasetGraphqlClient(Client):
             }
         """ % (int(arch_id), info_list)
 
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'architecture' not in result:
             return None
         return result['architecture']
@@ -364,20 +447,17 @@ class DatasetGraphqlClient(Client):
             info_list += self.info_scores
 
         # --> 3. Build query
-        query_start = """
-                    query get_architectures {
-                        Architecture(
-                            where: {dataset_id: {_eq: %d}, problem_id: {_eq: %d}}
-                        ) { 
-                """ % (dataset_id, problem_id)
-        query_end = """
-                        }
-                    } 
-                """
-        query = await self.wrap_query(query_start + info_list + query_end)
+        query = """
+            query get_architectures {
+                Architecture(where: {dataset_id: {_eq: %d}, problem_id: {_eq: %d}}) {
+                    %s
+                }
+            }
+        """ % (dataset_id, problem_id, info_list)
+
 
         # --> 4. Run query
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         return result['Architecture']
@@ -403,7 +483,7 @@ class DatasetGraphqlClient(Client):
         query = await self.wrap_query(query_start + info_list + query_end)
 
         # --> 4. Run query
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         return result['Architecture']
@@ -433,7 +513,7 @@ class DatasetGraphqlClient(Client):
         query = await self.wrap_query(query_start + info_list + query_end)
 
         # --> 4. Run query
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         return result['Architecture']
@@ -463,7 +543,7 @@ class DatasetGraphqlClient(Client):
         query = await self.wrap_query(query_start + info_list + query_end)
 
         # --> 4. Run query
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         return result['Architecture']
@@ -493,7 +573,7 @@ class DatasetGraphqlClient(Client):
         query = await self.wrap_query(query_start + info_list + query_end)
 
         # --> 4. Run query
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         return result['Architecture']
@@ -523,466 +603,31 @@ class DatasetGraphqlClient(Client):
         query = await self.wrap_query(query_start + info_list + query_end)
 
         # --> 4. Run query
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         return result['Architecture']
 
+    ###########
+    ### SET ###
+    ###########
 
-    #############
-    ### CLONE ###
-    #############
+    async def set_architecture_invalid(self, arch_id):
 
-    async def clone_architectures(self, source_id, target_id, costs=False, scores=False):
-
-        # --> 1. Get architectures from source dataset
-        architectures = await self.get_architectures(dataset_id=source_id, costs=costs, scores=scores)
-
-        # --> 2. Open new process to clone archs
-        arch_strings = await self._proc(self._proc_clone_architecture_strings, architectures, target_id, costs, scores)
-
-        # --> 3. Build mutation
-        mutation_string = """
-                mutation insert_architectures {
-                    insert_Architecture(
-                        objects: %s
-                    ) {
-                        returning {
-                            id
-                        }
-                    }
-                }
-            """ % (arch_strings)
-        # await sync_to_async(self.save_to_file)(mutation_string, 'mutation.json')
-        mutation = await self.wrap_query(mutation_string)
-
-        # --> 4. Execute mutation
-        result = await self._execute(mutation)
-
-    # ---------------------------------------------- SYNC -----------------------------------------------
-    def _proc_clone_architecture_strings(self, architectures, database_id, costs=False, scores=False):
-        arch_list = []
-        for idx, arch in enumerate(architectures):
-            arch_list.append(self._clone_architecture(arch, database_id, costs=costs, scores=scores))
-
-        result = '[' + ','.join(arch_list) + ']'
-        return result
-
-    def _clone_architecture(self, architecture, dataset_id, costs=False, scores=False):
-
-        def convert_bool(input):
-            if bool(input) is True:
-                return "true"
-            else:
-                return "false"
-
-        cost_string = """"""
-        if costs is True:
-            cost_info = self._clone_architecture_cost_info(architecture)
-            cost_string = """ArchitectureCostInformations: {data: %s},""" % cost_info
-
-        score_string = """"""
-        if scores is True:
-            score_info = self._clone_architecture_score_info(architecture)
-            score_string = """
-                ArchitectureScoreExplanations: {data: %s}, 
-                PanelScoreExplanations: {data: %s},
-                ObjectiveScoreExplanations: {data: %s},  
-                SubobjectiveScoreExplanations: {data: %s},
-            """ % (
-                score_info['architecture'],
-                score_info['panel'],
-                score_info['objective'],
-                score_info['subobjective']
-            )
-
-        eval_status = True
-        if costs is False or scores is False:
-            eval_status = False
-
-        clone = """{
-              %s 
-              %s 
-              cost: %f, 
-              critique: "%s", 
-              data_continuity: %f, 
-              dataset_id: %d, 
-              eval_idx: %d, 
-              eval_status: %s, 
-              fairness: %f, 
-              ga: %s, 
-              improve_hv: %s, 
-              input: "%s", 
-              problem_id: %d, 
-              programmatic_risk: %f, 
-              science: %f, 
-              user_id: %d
-            }
-            """ % (
-            cost_string,
-            score_string,
-            float(architecture['cost']),
-            architecture['critique'],
-            architecture['data_continuity'],
-            int(dataset_id),
-            architecture['eval_idx'],
-            convert_bool(eval_status),
-            float(architecture['fairness']),
-            convert_bool(architecture['ga']),
-            convert_bool(architecture['improve_hv']),
-            architecture['input'],
-            architecture['problem_id'],
-            float(architecture['programmatic_risk']),
-            float(architecture['science']),
-            architecture['user_id']
-        )
-
-        return clone
-
-    def _clone_architecture_score_info(self, architecture):
-
-        # --> 1. Create score info
-        score_info = {
-            'architecture': '[',
-            'panel': '[',
-            'objective': '[',
-            'subobjective': '['
-        }
-
-        # --> 2. Clone architecture score info
-        for idx, info in enumerate(architecture['ArchitectureScoreExplanations']):
-            object = """
-                {panel_id: %d, satisfaction: %f}
-            """ % (int(info['panel_id']), float(info['satisfaction']))
-            score_info['architecture'] += object
-            if (idx + 1) != len(architecture['ArchitectureScoreExplanations']):
-                score_info['architecture'] += ', '
-        score_info['architecture'] += ']'
-
-        # --> 3. Clone panel score info
-        for idx, info in enumerate(architecture['PanelScoreExplanations']):
-            object = """
-                {objective_id: %d, satisfaction: %f}
-            """ % (int(info['objective_id']), float(info['satisfaction']))
-            score_info['panel'] += object
-            if (idx + 1) != len(architecture['PanelScoreExplanations']):
-                score_info['panel'] += ', '
-        score_info['panel'] += ']'
-
-        # --> 4. Clone objective score info
-        for idx, info in enumerate(architecture['ObjectiveScoreExplanations']):
-            object = """
-                {subobjective_id: %d, satisfaction: %f}
-            """ % (int(info['subobjective_id']), float(info['satisfaction']))
-            score_info['objective'] += object
-            if (idx + 1) != len(architecture['ObjectiveScoreExplanations']):
-                score_info['objective'] += ', '
-        score_info['objective'] += ']'
-
-        # --> 5. Clone subobjective score info
-        for idx, info in enumerate(architecture['SubobjectiveScoreExplanations']):
-            object = """
-                {taken_by: "%s", subobjective_id: %d, score: %f}
-            """ % (str(info['taken_by']), int(info['subobjective_id']), float(info['score']))
-            score_info['subobjective'] += object
-            if (idx + 1) != len(architecture['SubobjectiveScoreExplanations']):
-                score_info['subobjective'] += ', '
-        score_info['subobjective'] += ']'
-
-        # architecture_score = '{data: {panel_id: 10, satisfaction: ""}}'
-        # panel_score = '{data: {satisfaction: "", objective_id: 10}}'
-        # objective_score = '{data: {subobjective_id: 10, satisfaction: ""}}'
-        # subobjective_score = '{data: {taken_by: "", subobjective_id: 10, score: "", measurement_attribute_values: "", justifications: ""}}'
-
-        return score_info
-
-    def _clone_architecture_cost_info(self, architecture):
-        all_cost_info = '['
-
-        for idx, info in enumerate(architecture['ArchitectureCostInformations']):
-            budget_info = self._clone_architecture_budget_info(info)
-            payload_info = self._clone_architecture_payload_info(info)
-            cost_info = """
-                {
-                    ArchitectureBudgets: {data: %s}, 
-                    ArchitecturePayloads: {data: %s}, 
-                    power: %f, 
-                    others: %f, 
-                    mission_name: "%s", 
-                    mass: %f, 
-                    launch_vehicle: "%s", 
-                    cost: %f
-                }
-            """ % (
-                budget_info,
-                payload_info,
-                float(info['power']),
-                float(info['others']),
-                str(info['mission_name']),
-                float(info['mass']),
-                info['launch_vehicle'],
-                float(info['cost'])
-            )
-            all_cost_info += cost_info
-            if (idx + 1) != len(architecture['ArchitectureCostInformations']):
-                all_cost_info += ', '
-        all_cost_info += ']'
-
-        return all_cost_info
-
-    def _clone_architecture_budget_info(self, cost_info):
-        all_budget_info = '['
-
-        for idx, budget in enumerate(cost_info['ArchitectureBudgets']):
-            budget_info = """
-                {mission_attribute_id: %d, value: %f}
-            """ % (int(budget['mission_attribute_id']), float(budget['value']))
-            all_budget_info += budget_info
-            if (idx + 1) != len(cost_info['ArchitectureBudgets']):
-                all_budget_info += ', '
-        all_budget_info += ']'
-
-        return all_budget_info
-
-    def _clone_architecture_payload_info(self, cost_info):
-        all_payload_info = '['
-
-        for idx, budget in enumerate(cost_info['ArchitecturePayloads']):
-            payload_info = """
-                {instrument_id: %d}
-            """ % (int(budget['instrument_id']))
-            all_payload_info += payload_info
-            if (idx + 1) != len(cost_info['ArchitecturePayloads']):
-                all_payload_info += ', '
-        all_payload_info += ']'
-
-        return all_payload_info
-    # ---------------------------------------------------------------------------------------------------
-
-    # ---------------------------------------------- ASYNC ----------------------------------------------
-    async def clone_architectures_slow(self, source_id, target_id, costs=False, scores=False):
-
-        # --> 1. Get architectures from source dataset
-        architectures = await self.get_architectures(dataset_id=source_id, costs=costs, scores=scores)
-
-        # --> 2. Clone architectures
-        arch_strings = ''
-        for idx, arch in enumerate(architectures):
-            cloned_arch = await self.clone_architecture(arch, target_id, costs=costs, scores=scores)
-            # if idx == 0:
-            #     await sync_to_async(self.save_to_file)(cloned_arch, 'arch.json')
-            arch_strings += cloned_arch
-            if (idx + 1) != len(architectures):
-                arch_strings += ', '
-
-        # --> 3. Build mutation
-        mutation_string = """
-            mutation insert_architectures {
-                insert_Architecture(
-                    objects: [%s]
-                ) {
-                    returning {
-                        id
-                    }
+        # --> 1. Create mutation
+        mutation = """
+            mutation invalidate_architecture {
+                item: update_Architecture(where: {id: {_eq: %d}}, _set: {eval_status: false}) {
+                    affected_rows
                 }
             }
-        """ % (arch_strings)
-        # await sync_to_async(self.save_to_file)(mutation_string, 'mutation.json')
-        mutation = await self.wrap_query(mutation_string)
+        """ % int(arch_id)
 
-        # --> 4. Execute mutation
-        result = await self._execute(mutation)
-
-    async def clone_architecture(self, architecture, dataset_id, costs=False, scores=False):
-
-        async def convert_bool(input):
-            if bool(input) is True:
-                return "true"
-            else:
-                return "false"
-
-        cost_string = """"""
-        if costs is True:
-            cost_info = await self.clone_architecture_cost_info(architecture)
-            cost_string = """ArchitectureCostInformations: {data: %s},""" % cost_info
-
-        score_string = """"""
-        if scores is True:
-            score_info = await self.clone_architecture_score_info(architecture)
-            score_string = """
-                ArchitectureScoreExplanations: {data: %s}, 
-                PanelScoreExplanations: {data: %s},
-                ObjectiveScoreExplanations: {data: %s},  
-                SubobjectiveScoreExplanations: {data: %s},
-            """ % (
-                score_info['architecture'],
-                score_info['panel'],
-                score_info['objective'],
-                score_info['subobjective']
-            )
-
-        eval_status = True
-        if costs is False or scores is False:
-            eval_status = False
-
-        clone = """{
-              %s 
-              %s 
-              cost: %f, 
-              critique: "%s", 
-              data_continuity: %f, 
-              dataset_id: %d, 
-              eval_idx: %d, 
-              eval_status: %s, 
-              fairness: %f, 
-              ga: %s, 
-              improve_hv: %s, 
-              input: "%s", 
-              problem_id: %d, 
-              programmatic_risk: %f, 
-              science: %f, 
-              user_id: %d
-            }
-            """ % (
-            cost_string,
-            score_string,
-            float(architecture['cost']),
-            architecture['critique'],
-            architecture['data_continuity'],
-            int(dataset_id),
-            architecture['eval_idx'],
-            await convert_bool(eval_status),
-            float(architecture['fairness']),
-            await convert_bool(architecture['ga']),
-            await convert_bool(architecture['improve_hv']),
-            architecture['input'],
-            architecture['problem_id'],
-            float(architecture['programmatic_risk']),
-            float(architecture['science']),
-            architecture['user_id']
-        )
-
-        return clone
-
-    async def clone_architecture_score_info(self, architecture):
-
-        # --> 1. Create score info
-        score_info = {
-            'architecture': '[',
-            'panel': '[',
-            'objective': '[',
-            'subobjective': '['
-        }
-
-        # --> 2. Clone architecture score info
-        for idx, info in enumerate(architecture['ArchitectureScoreExplanations']):
-            object = """
-                {panel_id: %d, satisfaction: %f}
-            """ % (int(info['panel_id']), float(info['satisfaction']))
-            score_info['architecture'] += object
-            if (idx + 1) != len(architecture['ArchitectureScoreExplanations']):
-                score_info['architecture'] += ', '
-        score_info['architecture'] += ']'
-
-        # --> 3. Clone panel score info
-        for idx, info in enumerate(architecture['PanelScoreExplanations']):
-            object = """
-                {objective_id: %d, satisfaction: %f}
-            """ % (int(info['objective_id']), float(info['satisfaction']))
-            score_info['panel'] += object
-            if (idx + 1) != len(architecture['PanelScoreExplanations']):
-                score_info['panel'] += ', '
-        score_info['panel'] += ']'
-
-        # --> 4. Clone objective score info
-        for idx, info in enumerate(architecture['ObjectiveScoreExplanations']):
-            object = """
-                {subobjective_id: %d, satisfaction: %f}
-            """ % (int(info['subobjective_id']), float(info['satisfaction']))
-            score_info['objective'] += object
-            if (idx + 1) != len(architecture['ObjectiveScoreExplanations']):
-                score_info['objective'] += ', '
-        score_info['objective'] += ']'
-
-        # --> 5. Clone subobjective score info
-        for idx, info in enumerate(architecture['SubobjectiveScoreExplanations']):
-            object = """
-                {taken_by: "%s", subobjective_id: %d, score: %f}
-            """ % (str(info['taken_by']), int(info['subobjective_id']), float(info['score']))
-            score_info['subobjective'] += object
-            if (idx + 1) != len(architecture['SubobjectiveScoreExplanations']):
-                score_info['subobjective'] += ', '
-        score_info['subobjective'] += ']'
-
-        # architecture_score = '{data: {panel_id: 10, satisfaction: ""}}'
-        # panel_score = '{data: {satisfaction: "", objective_id: 10}}'
-        # objective_score = '{data: {subobjective_id: 10, satisfaction: ""}}'
-        # subobjective_score = '{data: {taken_by: "", subobjective_id: 10, score: "", measurement_attribute_values: "", justifications: ""}}'
-
-        return score_info
-
-    async def clone_architecture_cost_info(self, architecture):
-        all_cost_info = '['
-
-        for idx, info in enumerate(architecture['ArchitectureCostInformations']):
-            budget_info = await self.clone_architecture_budget_info(info)
-            payload_info = await self.clone_architecture_payload_info(info)
-            cost_info = """
-                {
-                    ArchitectureBudgets: {data: %s}, 
-                    ArchitecturePayloads: {data: %s}, 
-                    power: %f, 
-                    others: %f, 
-                    mission_name: "%s", 
-                    mass: %f, 
-                    launch_vehicle: "%s", 
-                    cost: %f
-                }
-            """ % (
-                budget_info,
-                payload_info,
-                float(info['power']),
-                float(info['others']),
-                str(info['mission_name']),
-                float(info['mass']),
-                info['launch_vehicle'],
-                float(info['cost'])
-            )
-            all_cost_info += cost_info
-            if (idx + 1) != len(architecture['ArchitectureCostInformations']):
-                all_cost_info += ', '
-        all_cost_info += ']'
-
-        return all_cost_info
-
-    async def clone_architecture_budget_info(self, cost_info):
-        all_budget_info = '['
-
-        for idx, budget in enumerate(cost_info['ArchitectureBudgets']):
-            budget_info = """
-                {mission_attribute_id: %d, value: %f}
-            """ % (int(budget['mission_attribute_id']), float(budget['value']))
-            all_budget_info += budget_info
-            if (idx + 1) != len(cost_info['ArchitectureBudgets']):
-                all_budget_info += ', '
-        all_budget_info += ']'
-
-        return all_budget_info
-
-    async def clone_architecture_payload_info(self, cost_info):
-        all_payload_info = '['
-
-        for idx, budget in enumerate(cost_info['ArchitecturePayloads']):
-            payload_info = """
-                {instrument_id: %d}
-            """ % (int(budget['instrument_id']))
-            all_payload_info += payload_info
-            if (idx + 1) != len(cost_info['ArchitecturePayloads']):
-                all_payload_info += ', '
-        all_payload_info += ']'
-
-        return all_payload_info
-    # ---------------------------------------------------------------------------------------------------
+        # --> 2. Execute mutation
+        result = await self._query(mutation)
+        if 'item' not in result:
+            return False
+        return int(result['item']['affected_rows']) > 0
 
     #############
     ### CHECK ###
@@ -1005,7 +650,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (used_dataset_id, str(input))
         )
-        result = await self._execute(query)
+        result = await self._query(query)
         if 'Architecture' not in result:
             return None
         if len(result['Architecture']) == 0:
@@ -1033,21 +678,24 @@ class DatasetGraphqlClient(Client):
                 }
             }
         """ % (int(problem_id), int(dataset_id), await self._format_input(input))
-        result = await self._execute(query)
-        if 'items' not in result:
+        result = await self._query(query)
+        if result is None or 'items' not in result:
             return False, None
-        count = result['items']['aggregate']['count']
-        arch_id = None
-        if count > 0:
+        if int(result['items']['aggregate']['count']) > 0:
             arch_id = result["items"]["nodes"][0]["id"]
+            return True, arch_id
+        return False, None
 
     #################
     ### SUBSCRIBE ###
     #################
 
-    async def subscribe_to_architecture(self, input, dataset_id=None):
-        # --> 1. Determine dataset_id
-        used_dataset_id = await self._dataset_id(dataset_id)
+    async def subscribe_to_architecture(self, input, dataset_id=None, problem_id=None):
+        # --> 1. Determine variables
+        if dataset_id is None:
+            dataset_id = self.dataset_id
+        if problem_id is None:
+            problem_id = self.problem_id
 
         # --> 2. Create and run subscription
         subscription = await self.wrap_query(
@@ -1059,13 +707,20 @@ class DatasetGraphqlClient(Client):
                     aggregate {
                       count
                     }
+                    nodes {
+                        %s
+                    }
                 }
             }
-            """ % (used_dataset_id, self.problem_id, input)
+            """ % (dataset_id, problem_id, input, self.info_base)
         )
         return await Client._subscribe(subscription)
 
-
-
-
-
+    async def subscribe_to_critique(self, arch_id):
+        for idx in range(5):
+            query = await self.get_architecture_pk(arch_id)
+            if query['critique'] is not None:
+                critiques = query['critique'].split('|')
+                return critiques[:-1]
+            await asyncio.sleep(2)
+        return []

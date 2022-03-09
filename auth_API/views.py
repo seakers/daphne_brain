@@ -10,8 +10,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import UserInformation, MycroftUser
-from EOSS.graphql.api import GraphqlClient
+from daphne_context.models import UserInformation
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 import requests
 import json
@@ -148,15 +149,15 @@ class Register(APIView):
         user = User.objects.create_user(username, email, password)
         user.save()
 
-        # mycroft_user = MycroftUser(user=user)
-        # mycroft_user.save()
         print("--> USER CREATED ", user.id)
         return user.id
 
     def insert_into_groups(self, user_id):
-        client = GraphqlClient()
-        result = client.insert_user_into_group(user_id)
-        print("--> RESULT", result)
+        # client = GraphqlClient()
+        # result = client.insert_user_into_group(user_id)
+        # print("--> RESULT", result)
+        async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
+
 
 
 

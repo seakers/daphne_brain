@@ -2,7 +2,7 @@ import asyncio
 import concurrent.futures
 import json
 import os
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 import boto3
 import random
 import threading
@@ -17,6 +17,12 @@ from EOSS.aws.utils import get_boto3_client
 from EOSS.aws.EvalQueue import EvalQueue
 from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import sync_to_async_mt
+
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.graphql.client.Admin import AdminGraphqlClient
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 
 ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
@@ -50,6 +56,9 @@ class VASSARClient:
     def __init__(self, user_information: UserInformation):
         self.user_id = user_information.user.id
         self.user_information = user_information
+
+        self.dataset_client = DatasetGraphqlClient(self.user_information)
+        self.problem_client = ProblemGraphqlClient(self.user_information)
 
         # Boto3
         self.queue_name = 'test_queue'
@@ -559,39 +568,45 @@ class VASSARClient:
 
     # working
     def get_orbit_list(self, problem_id):
-        query = self.dbClient.get_orbit_list(problem_id)
-        orbits = [orbit['Orbit']['name'] for orbit in query['data']['Join__Problem_Orbit']]
+        query = async_to_sync(self.problem_client.get_orbits)(problem_id)
+        orbits = [orbit['name'] for orbit in query]
+        # query = self.dbClient.get_orbit_list(problem_id)
         return orbits
 
     # working
     def get_instrument_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_instrument_list(group_id, self.problem_id)
-        instruments = [instrument['Instrument']['name'] for instrument in query['data']['Join__Problem_Instrument']]
+        # query = self.dbClient.get_instrument_list(group_id, self.problem_id)
+        query = async_to_sync(self.problem_client.get_instruments)(self.problem_id)
+        instruments = [instrument['name'] for instrument in query]
         # hardcode = ['SMAP_RAD', 'SMAP_MWR', 'VIIRS', 'CMIS', 'BIOMASS']
         # return hardcode
         return instruments
 
     # working
     def get_objective_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_objective_list(group_id, self.problem_id)
-        print([obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']])
-        return [obj['name'] for obj in query['data']['Stakeholder_Needs_Objective']]
+        # query = self.dbClient.get_objective_list(group_id, self.problem_id)
+        query = async_to_sync(self.problem_client.get_stakeholders)(problem_id, False, True, False)
+        print([obj['name'] for obj in query['objective']])
+        return [obj['name'] for obj in query['objective']]
 
     # working
     def get_subobjective_list(self, problem, group_id=1, problem_id=5):
-        query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
-        print([subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']])
-        return [subobj['name'] for subobj in query['data']['Stakeholder_Needs_Subobjective']]
+        # query = self.dbClient.get_subobjective_list(group_id, self.problem_id)
+        query = async_to_sync(self.problem_client.get_stakeholders)(problem_id, False, False, True)
+        print([subobj['name'] for subobj in query['subobjective']])
+        return [subobj['name'] for subobj in query['subobjective']]
 
     def get_dataset_architectures(self, problem_id, dataset_id):
-        query = self.dbClient.get_architectures(problem_id, dataset_id)
+        query = async_to_sync(self.dataset_client.get_architectures)(dataset_id, problem_id)
+        # query = self.dbClient.get_architectures(problem_id, dataset_id)
+
 
         def boolean_string_to_boolean_array(boolean_string):
             return [b == "1" for b in boolean_string]
 
         architectures_json = []
         counter = 0
-        for arch in query['data']['Architecture']:
+        for arch in query:
             # If the arch needs to be re-evaluated due to a problem definition change, do not add
             if not arch['eval_status']:
                 continue
@@ -606,7 +621,8 @@ class VASSARClient:
         return architectures_json
 
     def get_architecture_from_id(self, arch_id):
-        result_arch = self.dbClient.get_architecture_from_id(arch_id)
+        # result_arch = self.dbClient.get_architecture_from_id(arch_id)
+        result_arch = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id)
         outputs = [result_arch['science'], result_arch['cost']]
         arch = {'id': result_arch['id'], 'inputs': [b == "1" for b in result_arch['input']], 'outputs': outputs}
 
@@ -614,9 +630,11 @@ class VASSARClient:
 
     def reevaluate_architecture(self, design, eval_queue_url):
         # Unevaluate architecture
-        self.dbClient.unevaluate_architecture(design["db_id"])
+        # self.dbClient.unevaluate_architecture(design["db_id"])
+        async_to_sync(self.dataset_client.set_architecture_invalid)(design["db_id"])
         # Find arch in database
-        arch_info = self.dbClient.get_architecture(design["db_id"])
+        # arch_info = self.dbClient.get_architecture(design["db_id"])
+        arch_info = async_to_sync(self.dataset_client.get_architecture_pk)(design["db_id"])
         self.evaluate_architecture(design["inputs"], eval_queue_url, ga=arch_info["ga"], redo=True)
 
 
@@ -663,10 +681,11 @@ class VASSARClient:
         arch = {}
         if block:
             # --> OLD CODE, FOR THE BLOCKING BLOCKHEAD
-            result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
-            if not result:
+            # result = self.dbClient.subscribe_to_architecture(inputs, eosscontext.problem_id, eosscontext.dataset_id)
+            result = async_to_sync(self.dataset_client.subscribe_to_architecture)(inputs, eosscontext.dataset_id, eosscontext.problem_id)
+            if result is None:
                 raise ValueError('---> Evaluation Timeout!!!!')
-            result_formatted = result['data']['Architecture'][0]
+            result_formatted = result[0]
             outputs = [result_formatted['science'], result_formatted['cost']]
             arch = {'id': result_formatted['id'], 'inputs': [b == "1" for b in result_formatted['input']], 'outputs': outputs}
         else:
@@ -679,8 +698,9 @@ class VASSARClient:
         return arch
 
     def subscribe_and_add(self, inputs, problem_id, dataset_id, user, session):
-        result = self.dbClient.subscribe_to_architecture(inputs, problem_id, dataset_id)
-        if result:
+        # result = self.dbClient.subscribe_to_architecture(inputs, problem_id, dataset_id)
+        result = async_to_sync(self.dataset_client.subscribe_to_architecture)(inputs, dataset_id, problem_id)
+        if result is not None:
             EOSS.data.design_helpers.add_design(session, user)
         return
 
@@ -693,17 +713,13 @@ class VASSARClient:
             else:
                 inputs = inputs + '0'
         eosscontext: EOSSContext = self.user_information.eosscontext
-        return self.dbClient.check_for_existing_arch(eosscontext.problem_id, eosscontext.dataset_id, inputs)
-
-    def check_dataset_read_only(self) -> bool:
-        eosscontext: EOSSContext = self.user_information.eosscontext
-        return self.dbClient.check_dataset_read_only(eosscontext.dataset_id)
-
+        return async_to_sync(self.dataset_client.check_existing_architecture_2)(inputs, eosscontext.dataset_id, eosscontext.problem_id)
+        # return self.dbClient.check_for_existing_arch(eosscontext.problem_id, eosscontext.dataset_id, inputs)
 
     # working
     def evaluate_false_architectures(self, problem_id, dataset_id, eval_queue_url):
-        query_info = self.dbClient.get_false_architectures(problem_id, dataset_id)
-        all_archs = query_info['data']['Architecture']
+        all_archs = async_to_sync(self.dataset_client.get_architectures_false)()
+        # query_info = self.dbClient.get_false_architectures(problem_id, dataset_id)
         for arch in all_archs:
             print("--> re-evaluate:", arch['input'])
             self.sqs_client.send_message(QueueUrl=eval_queue_url, MessageBody='boto3', MessageAttributes={
@@ -740,7 +756,8 @@ class VASSARClient:
                 new_inputs = self.random_local_change(inputs)
                 print('---> NEW DESIGN ary: ', new_inputs)
                 # Check if the architecture already exists in DB before adding it again
-                is_same, arch_id = self.check_for_existing_arch(new_inputs)
+                # is_same, arch_id = self.check_for_existing_arch(new_inputs)
+                is_same, arch_id = async_to_sync(self.dataset_client.check_existing_architecture_2)(new_inputs)
                 if not is_same:
                     design_futures.append(executor.submit(self.evaluate_architecture, new_inputs, eval_queue_url, fast=True, ga=False))
                 else:
@@ -852,24 +869,27 @@ class VASSARClient:
     def get_instruments_for_objective(self, problem_id, objective):
         # return self.client.getInstrumentsForObjective(problem, objective)
         print("--> Getting instrument for objective:", objective)
-        query = self.dbClient.get_instrument_from_objective(problem_id, objective)
-        insts = [inst['name'] for inst in query['data']['Instrument']]
+        # query = self.dbClient.get_instrument_from_objective(problem_id, objective)
+        query = async_to_sync(self.problem_client.get_instrument_from_objective)(objective, problem_id)
+        insts = [inst['name'] for inst in query['data']]
         return insts
 
     # working
     def get_instruments_for_panel(self, problem_id, panel):
         # return self.client.getInstrumentsForPanel(problem, panel)
         print("--> Getting instrument for panel:", panel)
-        query = self.dbClient.get_instrument_from_panel(problem_id, panel)
-        insts = [inst['name'] for inst in query['data']['Instrument']]
+        # query = self.dbClient.get_instrument_from_panel(problem_id, panel)
+        query = async_to_sync(self.problem_client.get_instrument_from_panel)(panel, problem_id)
+        insts = [inst['name'] for inst in query['data']]
         return insts
     
     # working
     def get_architecture_score_explanation(self, problem_id, arch):
         print("--> Getting architecture score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['data']['ArchitectureScoreExplanation'] ]
+        # query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['ArchitectureScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -877,8 +897,9 @@ class VASSARClient:
     def get_panel_score_explanation(self, problem_id, arch, panel):
         print("--> get_panel_score_explanation:", arch["id"], arch["inputs"], arch["outputs"], panel)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_panel_score_explanation(problem_id, arch_id, panel)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['data']['PanelScoreExplanation'] ]
+        # query = self.dbClient.get_panel_score_explanation(problem_id, arch_id, panel)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['PanelScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -886,8 +907,9 @@ class VASSARClient:
     def get_objective_score_explanation(self, problem_id, arch, objective):
         print("--> Getting objective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['data']['ObjectiveScoreExplanation'] ]
+        # query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['ObjectiveScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -895,14 +917,16 @@ class VASSARClient:
     def get_subobjective_score_explanation(self, arch, subobjective):
         print("--> Getting subobjective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
-        explanations = [ {
-            "attribute_values": expla["measurement_attribute_values"],
-            "score": expla["score"],
-            "taken_by": expla["taken_by"],
-            "justifications": expla["justifications"],
-        } 
-        for expla in query['data']['SubobjectiveScoreExplanation'] ]
+        # query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
+        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        explanations = []
+        for expla in query['SubobjectiveScoreExplanation']:
+            explanations.append({
+                "attribute_values": expla["measurement_attribute_values"],
+                "score": expla["score"],
+                "taken_by": expla["taken_by"],
+                "justifications": expla["justifications"],
+            })
         print("--> explanations", explanations)
         return explanations
 
@@ -910,31 +934,37 @@ class VASSARClient:
     def get_arch_science_information(self, problem_id, arch):
         print("\n\n----> get_arch_science_information", problem_id, arch)
         arch_id = arch["db_id"]
+        async_to_sync(AbstractGraphqlClient.get_arch_science_info)(problem_id, arch_id)
         return self.dbClient.get_arch_science_information(problem_id, arch_id)
 
     # working
     def get_arch_cost_information(self, problem_id, arch):
         print("\n\n----> get_arch_cost_information", problem_id, arch)
         arch_id = arch["db_id"]
-        return self.dbClient.get_arch_cost_information(problem_id, arch_id)
+        return async_to_sync(AbstractGraphqlClient.get_arch_cost_info)(arch_id)
+        # return self.dbClient.get_arch_cost_information(problem_id, arch_id)
 
     # working
     def get_parameter_value_for_instrument(self, problem_id, parameter, instrument):
         print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
-        return self.dbClient.get_instrument_attribute_value(problem_id, instrument, parameter)
+        return async_to_sync(self.problem_client.get_instrument_attribute_value)(problem_id, instrument, parameter)
+        # return self.dbClient.get_instrument_attribute_value(problem_id, instrument, parameter)
 
     # working
     def get_capability_value_for_instrument(self, group_id, parameter, instrument, measurement=None):
         print("\n\n----> get_parameter_value_for_instrument", parameter, instrument)
-        return self.dbClient.get_instrument_capability_values(group_id, instrument, parameter, measurement)
+        return async_to_sync(self.problem_client.get_instrument_capability_values)(group_id, instrument, parameter, measurement)
+        # return self.dbClient.get_instrument_capability_values(group_id, instrument, parameter, measurement)
 
     # working
     def get_measurement_requirements(self, problem_id, measurement_name, measurement_attribute, subobjective=None):
         print("\n\n----> get_measurement_requirements", measurement_name, measurement_attribute, subobjective)
-        return self.dbClient.get_measurement_requirements(problem_id, measurement_name, measurement_attribute, subobjective)
+        return async_to_sync(self.problem_client.get_measurement_requirements)(problem_id, measurement_name, measurement_attribute, subobjective)
+        # return self.dbClient.get_measurement_requirements(problem_id, measurement_name, measurement_attribute, subobjective)
 
     def get_measurement_for_subobjective(self, problem_id, subobjective):
-        return self.dbClient.get_measurement_for_subobjective(problem_id, subobjective)
+        return async_to_sync(self.problem_client.get_requirement_rule_attribute)(problem_id, None, None, subobjective)
+        # return self.dbClient.get_measurement_for_subobjective(problem_id, subobjective)
 
 
     # working
@@ -942,12 +972,14 @@ class VASSARClient:
         print("\n\n----> critique_architecture", problem_id, arch)
         arch_id = arch['db_id']
         print("---> architecture id", arch_id)
-        critique = self.dbClient.get_arch_critique(arch_id)
+        # critique = self.dbClient.get_arch_critique(arch_id)  # !!!
+        critique = async_to_sync(self.dataset_client.get_architecture_critique)(arch_id)
         if critique == []:
             print("---> Re-evaluating architecture ")
             queue_url = self.user_information.eosscontext.vassar_request_queue_url
             self.evaluate_architecture(arch["inputs"], queue_url, redo=True)
-            critique = self.dbClient.wait_for_critique(arch_id)
+            # critique = self.dbClient.wait_for_critique(arch_id) # !!!
+            critique = async_to_sync(self.dataset_client.subscribe_to_critique)(arch_id)
         print("--> FINAL CRITIQUE ", critique)
         return critique
     

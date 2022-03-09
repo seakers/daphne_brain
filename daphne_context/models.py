@@ -1,19 +1,13 @@
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.db import models
-from .utils import generate_mycroft_session
+from mycroft.utils import generate_mycroft_session
 
 # General user information class
 from rest_framework import serializers
 
 
 
-
-
-class MycroftUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    # Mycroft Code
-    mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)  # four digit session number
 
 
 class UserInformation(models.Model):
@@ -33,7 +27,7 @@ class UserInformation(models.Model):
     channel_name = models.CharField(max_length=120)
 
     # Mycroft information
-    # mycroft_session = models.CharField(max_length=9, unique=False, default=generate_mycroft_session)  # four digit session number
+    mycroft_session = models.CharField(max_length=4, null=True)  # four digit session number
     mycroft_connection = models.BooleanField(default=False)                                           # true if connection established
     mycroft_channel_name = models.CharField(max_length=120, null=True)                                # channel name for talking to Mycroft
 
