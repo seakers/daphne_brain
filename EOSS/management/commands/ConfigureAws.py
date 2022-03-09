@@ -1,11 +1,12 @@
 from django.core.management.base import BaseCommand, CommandError
 import pprint
 
-from EOSS.graphql.api import GraphqlClient
 from EOSS.aws.EvalQueue import EvalQueue
 from EOSS.aws.Cluster import Cluster
 from EOSS.aws.Task import Task
 from EOSS.aws.AutoScalingService import AutoScalingService
+from asgiref.sync import async_to_sync, sync_to_async
+from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 
 class Command(BaseCommand):
@@ -78,8 +79,9 @@ class Command(BaseCommand):
             return
 
         # 1. Get problem ids
-        graphql_client = GraphqlClient()
-        problems = graphql_client.get_problems()
+        problems = async_to_sync(AbstractGraphqlClient.get_problems)()
+        # graphql_client = GraphqlClient()
+        # problems = graphql_client.get_problems()
 
 
         # 2. Delete all cluster services, task definitions, and pre-existing eval queues

@@ -84,7 +84,7 @@ class EOSSClearHistory(ClearHistory):
 
 class CommandList(APIView):
     """
-    Get a list of commands, either for all the system or for a single subsystem
+        Get a list of commands, either for all the system or for a single subsystem
     """
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')

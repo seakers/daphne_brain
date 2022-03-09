@@ -8,6 +8,8 @@ from experiment.models import ExperimentContext
 from daphne_context.models import UserInformation
 from django.contrib.sessions.models import Session
 
+from mycroft.utils import generate_unique_mycroft_session
+
 
 def create_user_information(session_key=None, username=None, version='EOSS'):
     assert session_key is not None or username is not None
@@ -23,6 +25,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
             raise Exception("Unexpected input for create_user_information")
 
         # Save the newly created user information in the database
+        user_info.mycroft_session = generate_unique_mycroft_session()
         user_info.save()
 
         # Create the EOSS Context and its children
@@ -63,7 +66,11 @@ def get_user_information(session, user):
         userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
 
     if len(userinfo_qs) >= 1:
-        return userinfo_qs[0]
+        user_info = userinfo_qs[0]
+        if user_info.mycroft_session is None:
+            user_info.mycroft_session = generate_unique_mycroft_session()
+            user_info.save()
+        return user_info
     elif len(userinfo_qs) == 0:
         raise Exception("Information not already created!")
 
