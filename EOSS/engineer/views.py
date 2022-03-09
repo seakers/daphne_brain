@@ -30,15 +30,10 @@ class GetOrbitList(APIView):
             port = user_info.eosscontext.vassar_port
             client = VASSARClient(port, user_info=user_info)
             client.start_connection()
-<<<<<<< HEAD
             problem_client = ProblemGraphqlClient(user_info)
             orbit_list = async_to_sync(problem_client.get_orbits)()
             # orbit_list = client.get_orbit_list(request.data['problem_name'])
             
-=======
-            orbit_list = client.get_orbit_list(request.data['problem_name'])
-
->>>>>>> main
             # End the connection before return statement
             client.end_connection()
             return Response(orbit_list)
@@ -60,17 +55,11 @@ class GetInstrumentList(APIView):
             port = user_info.eosscontext.vassar_port
             client = VASSARClient(port, user_info=user_info)
             # Start connection with VASSAR
-<<<<<<< HEAD
             problem_client = ProblemGraphqlClient(user_info)
             instrument_list = async_to_sync(problem_client.get_instruments)()
             # client.start_connection()
             # instrument_list = client.get_instrument_list(request.data['problem_name'])
             
-=======
-            client.start_connection()
-            instrument_list = client.get_instrument_list(request.data['problem_name'])
-
->>>>>>> main
             # End the connection before return statement
             client.end_connection()
             return Response(instrument_list)
@@ -85,10 +74,6 @@ class GetInstrumentList(APIView):
 
 
 class EvaluateArchitecture(APIView):
-<<<<<<< HEAD
-=======
-
->>>>>>> master
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
         client = VASSARClient(user_information=user_info)
