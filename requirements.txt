@@ -1,3 +1,4 @@
+aiohttp~=3.8.1
 boto3~=1.21.14
 channels~=3.0.4
 channels-redis~=3.3.1
@@ -7,6 +8,7 @@ django-cors-headers~=3.11.0
 django-filter~=21.1
 djangorestframework~=3.13.1
 Flask~=2.0.3
+gql~=3.0.0
 neo4j~=1.7.6
 neo4j-driver~=1.7.6
 numpy~=1.22.3
@@ -27,3 +29,4 @@ statsmodels~=0.13.2
 SQLAlchemy~=1.4.32
 tensorflow~=2.8.0
 thrift~=0.15.0
+websockets~=10.2
