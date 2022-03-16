@@ -1,10 +1,7 @@
 import EOSS.historian.models as models
 import numpy as np
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
-from EOSS.models import Design, EOSSContext
 from EOSS.vassar.interface.ttypes import MissionMeasurements
-from datetime import datetime
 
 import logging
 

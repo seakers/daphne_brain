@@ -11,8 +11,8 @@ def _get_user_information(session, user) -> UserInformation:
     return get_user_information(session, user)
 
 @sync_to_async
-def _get_or_create_user_information(session, user) -> UserInformation:
-    return get_or_create_user_information(session, user)
+def _get_or_create_user_information(session, user, version='EOSS') -> UserInformation:
+    return get_or_create_user_information(session, user, version)
 
 @sync_to_async
 def _save_subcontext(user_info: UserInformation, subcontext):

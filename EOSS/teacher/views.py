@@ -1,18 +1,19 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 import json
 import threading
 from queue import Queue
-from EOSS.models import Design
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
 from EOSS.sensitivities.api import SensitivitiesClient
+from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
-from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
 from EOSS.explorer.objective_space_evaluator import evaluate_objective_space
 from .teacher_agent import teacher_thread, get_driving_features_epsilon_moea
-from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
+from EOSS.teacher.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
 
 
 class ClearTeacherUserData(APIView):
@@ -100,7 +101,8 @@ class GetSubjectDesignSpace(APIView):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         # --> Get the Problem Name
-        problem = request.data['problem']
+        problem_id = user_info.eosscontext.problem_id
+        dataset_id = user_info.eosscontext.dataset_id
 
         # --> Get the Problem Orbits
         orbits = request.data['orbits']
@@ -117,9 +119,20 @@ class GetSubjectDesignSpace(APIView):
             instruments[x] = (instruments[x])[1:-1]
 
         # --> Get all the architectures that daphne is considering right now
+        
+        # Get problem architectures
+        dbClient = DatasetGraphqlClient(user_info)
+        dataset = async_to_sync(dbClient.get_architectures)(dataset_id, problem_id)
+
+        def boolean_string_2_boolean_array(boolean_string):
+            return [b == "1" for b in boolean_string]
+        
         arch_dict_list = []
-        for arch in user_info.eosscontext.design_set.all():
-            temp_dict = {'id': arch.id, 'inputs': json.loads(arch.inputs), 'outputs': json.loads(arch.outputs)}
+        for arch in dataset:
+            arch_id = arch['id']
+            arch_inputs = boolean_string_2_boolean_array(arch['input'])
+            arch_outputs = [float(arch['science']), float(arch['cost'])]
+            temp_dict = {'id': arch_id, 'inputs': arch_inputs, 'outputs': arch_outputs}
             arch_dict_list.append(temp_dict)
 
         # --> Call the Design Space Evaluator Service API
@@ -140,9 +153,8 @@ class GetSubjectSensitivities(APIView):
 
         # --> Get Daphne user information
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-
-        # Start connection with VASSAR
-        port = user_info.eosscontext.vassar_port
+        problem_id = user_info.eosscontext.problem_id
+        dataset_id = user_info.eosscontext.dataset_id
 
         # --> Get the Problem Name
         # problem = request.data['problem']
@@ -165,17 +177,29 @@ class GetSubjectSensitivities(APIView):
             instruments[x] = (instruments[x])[1:-1]
 
         # --> Get all the architectures that daphne is considering right now
+        # Get problem architectures
+        dbClient = DatasetGraphqlClient(user_info)
+        dataset = async_to_sync(dbClient.get_architectures)(dataset_id, problem_id)
+
+        def boolean_string_2_boolean_array(boolean_string):
+            return [b == "1" for b in boolean_string]
+        
         arch_dict_list = []
-        for arch in user_info.eosscontext.design_set.all():
-            temp_dict = {'id': arch.id, 'inputs': json.loads(arch.inputs), 'outputs': json.loads(arch.outputs)}
+        for arch in dataset:
+            arch_id = arch['id']
+            arch_inputs = boolean_string_2_boolean_array(arch['input'])
+            arch_outputs = [float(arch['science']), float(arch['cost'])]
+            temp_dict = {'id': arch_id, 'inputs': arch_inputs, 'outputs': arch_outputs}
             arch_dict_list.append(temp_dict)
 
         # --> Call the Sensitivity Service API
+        vassar_client = VASSARClient(user_information=user_info)
+        problem_type = vassar_client.get_problem_type(problem_id)
         results = False
-        if problem in assignation_problems:
+        if problem_type == "assignation":
             print("Assignation Problem")
-            results = sensitivities_client.assignation_sensitivities(arch_dict_list, orbits, instruments, port, problem)
-        elif problem in partition_problems:
+            results = sensitivities_client.assignation_sensitivities(arch_dict_list, orbits, instruments, problem)
+        elif problem_type == "partition":
             print("Partition Problem")
             results = sensitivities_client.partition_sensitivities(arch_dict_list, orbits, instruments)
         else:

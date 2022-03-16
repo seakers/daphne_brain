@@ -51,7 +51,7 @@ def format_s2_data(s2_data, orbits, instruments):
     # iterate over every row in the data
     # --> row: index of row being edited
     for row in range(len(s2_list)):
-        if(row is 0):
+        if row == 0:
             continue
         for left_data_index in range(row):
             s2_list[row][left_data_index] = s2_list[left_data_index][row]
@@ -113,9 +113,9 @@ class SensitivitiesClient:
         self.counter = 0
 
 
-    def assignation_sensitivities(self, arch_dict_list, orbits, instruments, vassar_port, problem):
+    def assignation_sensitivities(self, arch_dict_list, orbits, instruments, problem):
         # --> Create the Sensitivity Service
-        analyzer = AssignationAnalysis(arch_dict_list, vassar_port, problem)
+        analyzer = AssignationAnalysis(arch_dict_list, problem)
 
         # --> Get Sensitivity Results
         science_sensitivities, cost_sensitivities = analyzer.sobol_analysis()
