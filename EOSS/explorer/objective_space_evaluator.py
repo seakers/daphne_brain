@@ -1,15 +1,5 @@
-import json
-import random
-
 import numpy as np
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
-from EOSS.explorer.diversifier import compute_pareto_front
 from EOSS.explorer.diversifier import calculate_crowding
-
-from EOSS.models import EOSSContext, Design
-
 
 # --> Objective: (0 --> Science), (1 --> Cost)
 # --> This function will compute a maximum of 10 crowding distance groups for pareto rankings 0 - 10
@@ -69,9 +59,3 @@ def group_architectures(architectures, pareto_rank, objective):
 
 
     return objective_groups
-
-
-
-
-
-

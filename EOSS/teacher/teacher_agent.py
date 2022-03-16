@@ -1,21 +1,20 @@
-import threading
-from queue import Queue
 import json
 import random
 from time import sleep
 import math
 from asgiref.sync import async_to_sync
-from EOSS.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
+from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.teacher.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
 from EOSS.data_mining.interface.ttypes import BinaryInputArchitecture, DiscreteInputArchitecture, ContinuousInputArchitecture, AssigningProblemEntities
 from EOSS.explorer.objective_space_evaluator import evaluate_objective_space
-from EOSS.data.problem_specific import assignation_problems, partition_problems
 from EOSS.sensitivities.api import SensitivitiesClient
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_one
 from EOSS.explorer.design_space_evaluator import evaluate_design_space_level_two
 from EOSS.data_mining.api import DataMiningClient
-from EOSS.models import Design
 import pickle
 import os
+
+from EOSS.vassar.api import VASSARClient
 
 
 
@@ -607,7 +606,10 @@ def get_driving_features_epsilon_moea(request, user_info, pareto=0):
     input_type = request.data['input_type']
 
     # --> All architectures
-    dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
+    problem_id = user_info.eosscontext.problem_id
+    dataset_id = user_info.eosscontext.dataset_id
+    dataset_client = DatasetGraphqlClient(user_info)
+    dataset = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
 
     # --> Get architectures in the pareto front with ranking 5: list of dictionaries
     plotData = request.data['plotData']
@@ -629,12 +631,17 @@ def get_driving_features_epsilon_moea(request, user_info, pareto=0):
             continue
 
 
+    def boolean_string_2_boolean_array(boolean_string):
+        return [b == "1" for b in boolean_string]
 
     _archs = []
     if input_type == 'binary':
         for arch in dataset:
-            _archs.append(BinaryInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
-        _features = client.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem, designs_low_ranking_id, designs_high_ranking_id, _archs)
+            arch_id = arch['id']
+            arch_inputs = boolean_string_2_boolean_array(arch['input'])
+            arch_outputs = [float(arch['science']), float(arch['cost'])]
+            _archs.append(BinaryInputArchitecture(arch_id, arch_inputs, arch_outputs))
+        _features = client.client.getDrivingFeaturesEpsilonMOEABinary(session_key, problem_id, "assignation", designs_low_ranking_id, designs_high_ranking_id, _archs)
     elif input_type == 'discrete':
         for arch in dataset:
             _archs.append(DiscreteInputArchitecture(arch.id, json.loads(arch.inputs), json.loads(arch.outputs)))
@@ -695,7 +702,6 @@ def get_sensitivity_information(user_info, request):
     # --> Sensitivity Information ----------------------------------------------------------------------
     sensitivities_client = SensitivitiesClient()
     problem = user_info.eosscontext.problem
-    port = user_info.eosscontext.vassar_port
 
     orbits = request.data['orbits']
     orbits = orbits[1:-1]
@@ -709,17 +715,30 @@ def get_sensitivity_information(user_info, request):
     for x in range(0, len(instruments)):
         instruments[x] = (instruments[x])[1:-1]
 
+    problem_id = user_info.eosscontext.problem_id
+    dataset_id = user_info.eosscontext.dataset_id
+    dataset_client = DatasetGraphqlClient(user_info)
+    dataset = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+
+    def boolean_string_2_boolean_array(boolean_string):
+        return [b == "1" for b in boolean_string]
+
     arch_dict_list = []
-    for arch in user_info.eosscontext.design_set.all():
-        temp_dict = {'id': arch.id, 'inputs': json.loads(arch.inputs), 'outputs': json.loads(arch.outputs)}
+    for arch in dataset:
+        arch_id = arch['id']
+        arch_inputs = boolean_string_2_boolean_array(arch['input'])
+        arch_outputs = [float(arch['science']), float(arch['cost'])]
+        temp_dict = {'id': arch_id, 'inputs': arch_inputs, 'outputs': arch_outputs}
         arch_dict_list.append(temp_dict)
 
     # --> Call the Sensitivity Service API
+    vassar_client = VASSARClient(user_information=user_info)
+    problem_type = vassar_client.get_problem_type(problem_id)
     sensitivity_results = False
-    if problem in assignation_problems:
+    if problem_type == "assignation":
         print("Assignation Problem")
-        sensitivity_results = sensitivities_client.assignation_sensitivities(arch_dict_list, orbits, instruments, port, problem)
-    elif problem in partition_problems:
+        sensitivity_results = sensitivities_client.assignation_sensitivities(arch_dict_list, orbits, instruments, problem)
+    elif problem_type == "partition":
         print("Partition Problem")
         sensitivity_results = sensitivities_client.partition_sensitivities(arch_dict_list, orbits, instruments)
     else:
