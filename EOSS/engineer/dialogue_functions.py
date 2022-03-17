@@ -21,6 +21,14 @@ def get_definition_2():
 def get_definition_3():
     return "Orbital inclination measures the tilt of a spacecraft's orbit around a celestial body. It is expressed as the angle between a reference plane and the orbital plane or axis of direction of the orbiting object."
 
+def get_definition_4():
+    return "The three main approaches to cost estimation are the following: top-down, bottom-up, and anaology."
+
+def get_definition_5():
+    return "There are four main remote sensor systems types: visible systems, infrared systems, radar systems, and microwave radiometers"
+
+
+
 def find_design_by_id(design_set, design_id):
     for design in design_set:
         if design["id"] == design_id:

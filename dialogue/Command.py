@@ -103,11 +103,15 @@ class Command:
         tokens = []
         for token in command:
             # If stopword or punctuation, ignore token and continue
-            cond1 = token.is_stop
-            cond2 = not (
-                    token.lemma_ == "which" or token.lemma_ == "how" or token.lemma_ == "what" or token.lemma_ == "when" or token.lemma_ == "why")
-            cond3 = token.is_punct
-            if cond1 and cond2 or cond3:
+            # cond1 = token.is_stop
+            # cond2 = not (
+            #         token.lemma_ == "which" or token.lemma_ == "how" or token.lemma_ == "what" or token.lemma_ == "when" or token.lemma_ == "why")
+            # cond3 = token.is_punct
+            # if cond1 and cond2 or cond3:
+            #     continue
+            if (token.is_stop and not (token.lemma_ == "which" or token.lemma_ == "how" or token.lemma_ == "what"
+                                       or token.lemma_ == "when" or token.lemma_ == "why")) \
+                    or token.is_punct:
                 continue
 
             tokens.append(token.lemma_)

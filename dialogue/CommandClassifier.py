@@ -82,7 +82,7 @@ class CommandClassifier:
 
         # --> 3. Map command into vocabulary
         expected_input_length = loaded_model.layers[0].input_shape[0][1]
-        x = tokenizer.texts_to_sequences([self.command.cmd])
+        x = tokenizer.texts_to_sequences([self.command.cmd_clean])
         x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
 
         # --> 4. Classify
@@ -125,7 +125,7 @@ class CommandClassifier:
 
         # --> 3. Map command into vocabulary
         expected_input_length = loaded_model.layers[0].input_shape[0][1]
-        x = tokenizer.texts_to_sequences([self.command.cmd])
+        x = tokenizer.texts_to_sequences([self.command.cmd_clean])
         x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
 
         # --> 4. Classify
