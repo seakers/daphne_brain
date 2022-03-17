@@ -114,6 +114,7 @@ class CommandClassifier:
 
 
     def classify_types(self, role):
+        print('--> CLASSIFYING TYPES FOR ROLE:', role)
 
         # --> 1. Load Model
         loaded_model = self._get_model(role)
@@ -124,9 +125,14 @@ class CommandClassifier:
             tokenizer = pickle.load(handle)
 
         # --> 3. Map command into vocabulary
-        expected_input_length = loaded_model.layers[0].input_shape[0][1]
         x = tokenizer.texts_to_sequences([self.command.cmd_clean])
+        expected_input_length = loaded_model.layers[0].input_shape[0][1]
         x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+
+
+        print(x.shape)
+        print('--> EXPECTED INPUT LENGTH:', expected_input_length)
+
 
         # --> 4. Classify
         self.type_logits = loaded_model.predict(x)
@@ -151,22 +157,11 @@ class CommandClassifier:
         return self.type_logits
 
 
+
     def _get_model(self, role):
-        model_folder_path = os.path.join(os.getcwd(), "dialogue", "models")
-        for file in os.scandir(model_folder_path):
-            if file.is_dir():
-                daphne_version = file.name
-                daphne_model_path = os.path.join(model_folder_path, daphne_version)
-                for role_file in os.scandir(daphne_model_path):
-                    if role_file.is_dir():
-                        if role != role_file.name:
-                            continue
+        model_path = os.path.join(self.models_path, role, "model.h5")
+        return load_model(model_path)
 
-                        daphne_role_path = os.path.join(daphne_model_path, role)
-
-                        # load json and create model
-                        model_path = os.path.join(daphne_role_path, "model.h5")
-                        return load_model(model_path)
 
 
     """

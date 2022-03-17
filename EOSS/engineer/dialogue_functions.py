@@ -27,6 +27,8 @@ def get_definition_4():
 def get_definition_5():
     return "There are four main remote sensor systems types: visible systems, infrared systems, radar systems, and microwave radiometers"
 
+def get_definition_6():
+    return "In the EM spectrum, radar systems operate in the centimeter to millimeter bands."
 
 
 def find_design_by_id(design_set, design_id):

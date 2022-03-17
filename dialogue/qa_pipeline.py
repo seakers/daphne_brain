@@ -34,6 +34,11 @@ def classify(question, daphne_version, module_name):
     x = tokenizer.texts_to_sequences([cleaned_question])
     expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+
+
+    print('--> EXPECTED INPUT LENGTH !!! :', expected_input_length)
+    print(x.shape)
+
     print("\nEvaluating...\n")
 
     # Evaluation
