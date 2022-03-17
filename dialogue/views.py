@@ -56,7 +56,7 @@ class NonBlockingCommand(APIView):
         self.set_allowed_commands(user_info, request)
 
 
-        # --> 4. Process command
+        # --> 4. Process command and return
         frontend_response = self.process_command(user_info, request, context)
         return Response({'response': frontend_response})
 
@@ -91,15 +91,15 @@ class NonBlockingCommand(APIView):
         # --> Determine role, type, and condition for command
         user_choice = request.data['command'].strip().lower()
 
-        types = json.loads(context["dialogue"]["clarifying_commands"])
+        choices = json.loads(context["dialogue"]["clarifying_commands"])
         if user_choice == "first":
-            type = types[0]
+            choice = choices[0]
         elif user_choice == "second":
-            type = types[1]
+            choice = choices[1]
         elif user_choice == "third":
-            type = types[2]
+            choice = choices[2]
         else:
-            type = types[0]
+            choice = choices[0]
 
         # --> Set selected command in command obj
         user_turn = DialogueHistory.objects.filter(dwriter__exact="user").order_by("-date")[1]
@@ -110,7 +110,7 @@ class NonBlockingCommand(APIView):
         condition = self.condition_names[role_index]
 
         # --> Answer command
-        command.answer(role, condition, type)
+        command.answer(role, condition, choice)
 
     def classify(self, command):
         client = CommandClassifier(command)
@@ -200,6 +200,14 @@ class Command(APIView):
                 for command_number in command_list:
                     AllowedCommand.objects.create(user_information=user_info, command_type=command_type,
                                                   command_descriptor=command_number)
+
+
+
+
+
+
+        # ----- CLASSIFICATION START -----
+
 
         # If this a choice between three options, check the one the user chose and go on with that
         if "is_clarifying_input" in context["dialogue"] and context["dialogue"]["is_clarifying_input"]:

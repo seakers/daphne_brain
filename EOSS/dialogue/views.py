@@ -65,8 +65,10 @@ class EOSSCommand(Command):
     def save_dialogue_contexts(self, dialogue_contexts, dialogue_turn):
         dialogue_contexts["dialogue_context"].dialogue_history = dialogue_turn
         dialogue_contexts["dialogue_context"].save()
+
         dialogue_contexts["eossdialogue_context"].dialoguecontext = dialogue_contexts["dialogue_context"]
         dialogue_contexts["eossdialogue_context"].save()
+
         dialogue_contexts["engineer_context"].eossdialoguecontext = dialogue_contexts["eossdialogue_context"]
         dialogue_contexts["engineer_context"].save()
 

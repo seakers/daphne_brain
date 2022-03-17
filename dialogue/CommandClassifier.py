@@ -3,24 +3,41 @@ import pickle
 import os
 from tensorflow.keras.models import load_model
 
+from EOSS.graphql.api import GraphqlClient
 
+classifier_models = {
+    'EOSS': '/app/daphne/daphne_brain/dialogue/models/EOSS',
+    'CA': '/app/daphne/daphne_brain/dialogue/models/CA'
+}
 
-
+classifier_command_types = {
+    'EOSS': '/app/daphne/daphne_brain/EOSS/dialogue/command_types',
+    'CA': '/app/daphne/daphne_brain/CA/dialogue/command_types'
+}
 
 
 
 class CommandClassifier:
 
-    def __init__(self, command):
+    def __init__(self, command, daphne_version='EOSS'):
         self.user_info = command.user_info
         self.command = command
+        self.graphql_client = GraphqlClient()
 
         # --> Classification Variables
         self.role_logits = None
         self.type_logits = None
 
+        # --> Models Paths
+        self.models_path = classifier_models[daphne_version]
+        self.types_path = classifier_command_types[daphne_version]
+
+        # --> Confidence Store
+        self.confidence = []
+
 
     def classify(self, max_role_matches=1):
+        results = []
 
         # --> 1. Classify Roles (e.g. VASSAR)
         self.classify_roles()
@@ -34,6 +51,11 @@ class CommandClassifier:
 
             # --> 3. Add appropriate command intent
             self.command.add_intent(role, types, confidence)  # e.g. ( 'VASSAR', '[ 1001, 1002 ]', 0.94 )
+            results.append('--> ' + str(role) + ' : ' + str(types) + ' : ' + str(confidence))
+
+        # --> 2. Print results
+        for result in results:
+            print(result)
 
 
     """
@@ -54,7 +76,7 @@ class CommandClassifier:
         loaded_model = self._get_model('general')
 
         # --> 2. Get tokenizer vocabulary
-        vocab_path = os.path.join(os.getcwd(), "dialogue", "models", self.command.daphne_version, "general", "tokenizer.pickle")
+        vocab_path = os.path.join(self.models_path, "general", "tokenizer.pickle")
         with open(vocab_path, 'rb') as handle:
             tokenizer = pickle.load(handle)
 
@@ -65,8 +87,29 @@ class CommandClassifier:
 
         # --> 4. Classify
         self.role_logits = loaded_model.predict(x)
+        print('--> ROLE LOGITS:', self.role_logits)
 
-        # --> 5. Return logits
+        # --> 5. Build confidence object
+        self.confidence = []
+        logits_list = np.ndarray.tolist(self.role_logits)[0]
+        for idx, logit in enumerate(logits_list):
+            module_obj = {
+                'name': self.command.daphne_roles[idx],
+                'id': self.graphql_client.get_learning_module_id(self.command.daphne_roles[idx]),
+                'confidence': round(logit, 3),
+                'slides': [],
+            }
+            self.confidence.append(module_obj)
+        self.confidence.sort(key=lambda itenz: itenz['confidence'], reverse=True)
+
+
+
+
+
+
+
+
+        # --> 6. Return logits
         return self.role_logits
 
 
@@ -76,7 +119,7 @@ class CommandClassifier:
         loaded_model = self._get_model(role)
 
         # --> 2. Get tokenizer vocabulary
-        vocab_path = os.path.join(os.getcwd(), "dialogue", "models", self.command.daphne_version, role, "tokenizer.pickle")
+        vocab_path = os.path.join(self.models_path, role, "tokenizer.pickle")
         with open(vocab_path, 'rb') as handle:
             tokenizer = pickle.load(handle)
 
@@ -88,7 +131,23 @@ class CommandClassifier:
         # --> 4. Classify
         self.type_logits = loaded_model.predict(x)
 
-        # --> 5. Return logits
+        # --> 5. Build confidence object
+        slide_list = []
+        logits_list = np.ndarray.tolist(self.type_logits)[0]
+        for idx, logit in enumerate(logits_list):
+            slide_list.append({
+                'id': idx,
+                'confidence': round(logit, 3)
+            })
+        slide_list.sort(key=lambda itenz: itenz['confidence'], reverse=True)
+        for item in self.confidence:
+            if item['name'] == role:
+                item['slides'] = slide_list
+
+
+
+
+        # --> 6. Return logits
         return self.type_logits
 
 
@@ -121,6 +180,8 @@ class CommandClassifier:
                     |___/                                                             |___/     
     """
 
+
+
     def get_prediction_idx(self, logits, top_number=1):
         logits = np.ndarray.tolist(logits)
         predicted_labels = []
@@ -133,18 +194,21 @@ class CommandClassifier:
 
     def get_role_prediction(self, top_number=1):
         roles_idx = self.get_prediction_idx(self.role_logits, top_number)
-        return [self.command.daphne_roles[idx] for idx in roles_idx]
+        roles_list = [self.command.daphne_roles[idx] for idx in roles_idx]
+        return roles_list
 
 
     def get_type_prediction(self, role, top_number=1):
         numerical_labels = self.get_prediction_idx(self.type_logits, top_number)
 
         named_labels = []
-        type_info_folder = os.path.join(os.getcwd(), self.command.daphne_version, "dialogue", "command_types", role)
+        type_info_folder = os.path.join(self.types_path, role)
         for filename in sorted(os.listdir(type_info_folder)):
             specific_label = int(filename.split('.', 1)[0])
             named_labels.append(specific_label)
         command_types = []
+
+
         for label in numerical_labels:
             command_types.append(named_labels[label])
         return command_types
@@ -154,4 +218,5 @@ class CommandClassifier:
         return np.amax(logits)
 
 
-
+    def get_prediction_confidence(self):
+        return self.confidence

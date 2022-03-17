@@ -13,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from EOSS.vassar.api import VASSARClient
 from EOSS.models import EOSSContext
 
-
+from CA.dialogue.context import ContextClient
 
 
 
@@ -57,23 +57,14 @@ class Command:
         self.process_function = process_functions[daphne_version]
         self.daphne_roles = ['iFEED', 'VASSAR', 'Critic', 'Historian', 'Teacher']
         self.daphne_conditions = ['analyst', 'engineer', 'critic', 'historian', 'teacher']
-        self.create_dialogue_contexts = None
-        self.save_dialogue_contexts = None
         self.user_info = None
         self.session = None
         self.current_context = None
+        self.context_client = None
 
 
         # --> Nested dictionary where: self.intent_dict[role][type] = confidence
         self.intent_dict = {}
-
-    def set_create_context_func(self, func):
-        self.create_dialogue_contexts = func
-        return self
-
-    def set_save_context_func(self, func):
-        self.save_dialogue_contexts = func
-        return self
 
     def set_roles(self, daphne_roles):
         self.daphne_roles = daphne_roles
@@ -87,12 +78,13 @@ class Command:
         self.daphne_conditions = daphne_conditions
         return self
 
-    def set_user_info(self, user_info):
-        self.user_info = user_info
+    def set_context_client(self, context_client):
+        self.context_client = context_client
+        self.current_context = self.context_client.context
         return self
 
-    def set_current_context(self, current_context):
-        self.current_context = current_context
+    def set_user_info(self, user_info):
+        self.user_info = user_info
         return self
 
     def set_session(self, session):
@@ -207,12 +199,12 @@ class Command:
     def process_intents(self):
 
         # --> Iterate over intents
-        for role, type_dict in self.intent_dict:
+        for role, type_dict in self.intent_dict.items():
             types = type_dict['types']
             condition = type_dict['condition']
+            confidence = type_dict['confidence']
 
             # --> Check if type classification meets confidence thresholds
-            confidence = type_dict['confidence']
             print('-->', role, 'CONFIDENCE:', confidence)
             if confidence > 0.95:
                 self.answer(role, condition, types)
@@ -232,15 +224,16 @@ class Command:
 
 
     def answer(self, role, condition, types):
+        print('--> ANSWER:', role, condition, types)
 
         # --> 1. Get new dialogue context (type: dict)
-        new_context = self.create_dialogue_contexts()
+        new_context = self.context_client.create_dialogue_contexts()
 
         # --> 2. Formulate response
         response = self.formulate_response(role, condition, types)
 
         # --> 3. Index response into dialogue database and return
-        dialogue_turn = DialogueHistory.objects.create(user_information=self.user_info,
+        dialogue_history = DialogueHistory.objects.create(user_information=self.user_info,
                                                           voice_message=response["voice_answer"],
                                                           visual_message_type=json.dumps(response["visual_answer_type"]),
                                                           visual_message=json.dumps(response["visual_answer"]),
@@ -248,7 +241,7 @@ class Command:
                                                           date=datetime.datetime.utcnow())
 
         # --> 4. Save dialogue contexts
-        self.save_dialogue_contexts(new_context, dialogue_turn)
+        self.context_client.save_dialogue_contexts(new_context, dialogue_history)
 
     def formulate_response(self, role, condition, types):
 
@@ -285,8 +278,8 @@ class Command:
         # Validates command on
         # 1. command condition
         # 2. command type
-        if len(self.user_info.allowedcommand_set.all()) == 0:
-            return False
+        # if len(self.user_info.allowedcommand_set.all()) == 0:
+        #     return False
         for allowed_command in self.user_info.allowedcommand_set.all():
             if condition == allowed_command.command_type and type == str(allowed_command.command_descriptor):
                 return False
@@ -625,7 +618,7 @@ class Command:
                                                           date=datetime.datetime.utcnow())
         DialogueContext.objects.create(dialogue_history=dialogue_history,
                                        is_clarifying_input=True,
-                                       clarifying_role=role,
+                                       clarifying_role=self.daphne_roles.index(role),
                                        clarifying_commands=json.dumps(types))
 
 

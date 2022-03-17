@@ -5,7 +5,8 @@ from tensorflow.keras.models import load_model
 nn_models = {
     "EOSS": {},
     "EDL": {},
-    "AT": {}
+    "AT": {},
+    "CA": {}
 }
 
 model_folder_path = os.path.join(os.getcwd(), "dialogue", "models")
