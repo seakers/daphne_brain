@@ -439,7 +439,7 @@ class AbstractGraphqlClient:
                         code: name
                         description
                         weight
-                        satisfaction: PanelScoreExplanations(where: {architecture_id: {_eq: %d}} {
+                        satisfaction: PanelScoreExplanations(where: {architecture_id: {_eq: %d}}) {
                             value: satisfaction
                         }
                         subobjectives: Stakeholder_Needs_Subobjectives {

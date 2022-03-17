@@ -453,7 +453,7 @@ class DatasetGraphqlClient(Client):
                     %s
                 }
             }
-        """ % (dataset_id, problem_id, info_list)
+        """ % (int(dataset_id), int(problem_id), info_list)
 
 
         # --> 4. Run query
