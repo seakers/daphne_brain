@@ -889,7 +889,8 @@ class VASSARClient:
         arch_id = arch["db_id"]
         # query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
         query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['ArchitectureScoreExplanation'] ]
+        print(query)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['ArchitectureScoreExplanations'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -899,7 +900,7 @@ class VASSARClient:
         arch_id = arch["db_id"]
         # query = self.dbClient.get_panel_score_explanation(problem_id, arch_id, panel)
         query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['PanelScoreExplanation'] ]
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Objective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Objective']['weight']) for expla in query['PanelScoreExplanations'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -909,7 +910,7 @@ class VASSARClient:
         arch_id = arch["db_id"]
         # query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
         query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['ObjectiveScoreExplanation'] ]
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['ObjectiveScoreExplanations'] ]
         print("--> explanations", explanations)
         return explanations
 
@@ -920,9 +921,9 @@ class VASSARClient:
         # query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
         query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
         explanations = []
-        for expla in query['SubobjectiveScoreExplanation']:
+        for expla in query['SubobjectiveScoreExplanations']:
             explanations.append({
-                "attribute_values": expla["measurement_attribute_values"],
+                "attribute_values": expla["attribute_values"],
                 "score": expla["score"],
                 "taken_by": expla["taken_by"],
                 "justifications": expla["justifications"],

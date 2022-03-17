@@ -2,10 +2,7 @@ from string import ascii_uppercase
 
 from EOSS.vassar.api import VASSARClient
 
-from asgiref.sync import async_to_sync, sync_to_async
-from EOSS.graphql.client.Dataset import DatasetGraphqlClient
-from EOSS.graphql.client.Admin import AdminGraphqlClient
-from EOSS.graphql.client.Problem import ProblemGraphqlClient
+from asgiref.sync import async_to_sync
 from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 '''
     Because this functionality is hardcoded, it is not compatible with daphne's new aws architecture. The current issue
