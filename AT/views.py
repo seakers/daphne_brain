@@ -2,18 +2,18 @@ import json
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+# THREADS + QUEUES
+import AT.global_objects as global_obj
 from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly, \
     retrieve_figures_from_procedure, retrieve_references_from_procedure, retrieve_reference_links_from_procedure, \
     get_explanations_from_historical_database
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
-from AT.neo4j_queries.query_functions import retrieve_procedures_fTitle_from_anomaly
+from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
-from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
+from AT.neo4j_queries.query_functions import retrieve_procedures_fTitle_from_anomaly
 from auth_API.helpers import get_or_create_user_information
-
-# THREADS + QUEUES
-import AT.global_objects as global_obj
 
 
 def check_threads_status():
@@ -120,21 +120,6 @@ class RequestDiagnosis(APIView):
         diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list}
 
         return Response(diagnosis_report)
-
-
-class RequestExplanations(APIView):
-    def post(self, request):
-        # Retrieve the symptoms list from the request
-        anomalies_list = json.loads(request.data['anomaliesList'])
-
-        # Query the historical database to get all information
-        # then find the information you need
-        explanations = get_explanations_from_historical_database(anomalies_list)
-
-        # Build the explanations report and send it to frontend
-        explanations_report = {'anomalies_list': anomalies_list, 'explanations': explanations}
-
-        return Response(explanations_report)
 
 
 class LoadAllAnomalies(APIView):

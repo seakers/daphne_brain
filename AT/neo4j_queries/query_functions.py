@@ -199,10 +199,15 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
             else:
                 text_score = "Very likely"
 
+            # Get explanations
+            # Query the historical database to get all information
+            # then find the information you need
+            historical_explanations = get_explanations_from_historical_database(signature[anomaly])
+
             top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score, 'cardinality':
                 cardinality_for_each_anomaly[anomaly], 'containsRequestedSymptoms': anomalyContainsRequestedSymptoms[
-                anomaly], 'signature': signature[anomaly], 'missing_symptoms': missing_anomaly_symptoms[anomaly]})
-
+                anomaly], 'signature': signature[anomaly], 'missing_symptoms': missing_anomaly_symptoms[anomaly],
+                'num_occurrences': historical_explanations['num_occurrences'], 'time': historical_explanations['time']})
     # Return result
     final_diagnosis = top_n_diagnosis
 
@@ -1004,7 +1009,7 @@ def retrieve_step_from_procedure(step_number, procedure):
     return step
 
 
-def get_explanations_from_historical_database(anomalies_list):
+def get_explanations_from_historical_database(signature):
     historical_binary_signatures = []
     working_directory = os.getcwd()
     filename = working_directory + '/AT/databases/Historical_Database.csv'
@@ -1014,8 +1019,8 @@ def get_explanations_from_historical_database(anomalies_list):
         anomaly_id = df.iloc[:, 0]
         start_date = df.iloc[:, 1]
         start_time = df.iloc[:, 2]
-        anomaly_description: df.iloc[:, 3]
-        signature = df.iloc[:, range(4, 55)]
+        anomaly_description = df.iloc[:, 3]
+        anomaly_signature = df.iloc[:, range(4, 56)]
         signature_text = df.iloc[:, 56]
         root_cause = df.iloc[:, 57]
         risks = df.iloc[:, 58]
@@ -1024,45 +1029,42 @@ def get_explanations_from_historical_database(anomalies_list):
         end_time = df.iloc[:, 61]
         affected_systems = df.iloc[:, 62]
 
-        signature_header = signature.columns.values
+        signature_header = anomaly_signature.columns.values
 
-        for row in signature.values:
+        for row in anomaly_signature.values:
             values = "".join(row)
             historical_binary_signatures.append(values)
 
-    explanation_report = []
-    for anomaly in anomalies_list:
-        binary_signature = get_binary_signatures(anomaly['signature'], signature_header)
+    binary_signature = get_binary_signatures(signature, signature_header)
 
-        # Number of times occurred in the past
-        # First convert everything to numpy array
-        # Then do transpose because 'where' method returns a tuple of 1 element
-        historical_binary_signatures = numpy.array(historical_binary_signatures)
-        binary_signature = numpy.array(binary_signature)
-        all_occurrences_in_past = numpy.where(historical_binary_signatures == binary_signature)
-        transposed_occurrences = numpy.transpose(all_occurrences_in_past)
-        numOfOccurrences = len(transposed_occurrences)
+    # Number of times occurred in the past
+    # First convert everything to numpy array
+    # Then do transpose because 'where' method returns a tuple of 1 element
+    historical_binary_signatures = numpy.array(historical_binary_signatures)
+    binary_signature = numpy.array(binary_signature)
+    all_occurrences_in_past = numpy.where(historical_binary_signatures == binary_signature)
+    transposed_occurrences = numpy.transpose(all_occurrences_in_past)
+    numOfOccurrences = len(transposed_occurrences)
 
-        # show all occurrences, resolution, root cause
-        time_stamps = []
-        for occurrence in transposed_occurrences:
-            time_stamps.append({'start_date': start_date.values[occurrence[0]],
-                                'start_time': start_time.values[occurrence[0]],
-                                'end_date': end_date.values[occurrence[0]],
-                                'end_time': end_time.values[occurrence[0]],
-                                'actions_taken': actions_taken.values[occurrence[0]],
-                                'root_cause': root_cause.values[occurrence[0]]})
+    # show all occurrences, resolution, root cause
+    time_stamps = []
+    for occurrence in transposed_occurrences:
+        time_stamps.append({'start_date': start_date.values[occurrence[0]],
+                            'start_time': start_time.values[occurrence[0]],
+                            'end_date': end_date.values[occurrence[0]],
+                            'end_time': end_time.values[occurrence[0]],
+                            'actions_taken': actions_taken.values[occurrence[0]],
+                            'root_cause': root_cause.values[occurrence[0]]})
 
-            # Build the explanation report and send it to the frontend
-        explanation_report.append({'name': anomaly['name'], 'signature': anomaly['signature'], 'num_occurrences':
-            numOfOccurrences, 'time': time_stamps})
+    # Build the explanation report and send it to the frontend
+    explanation_report = {'num_occurrences': numOfOccurrences, 'time': time_stamps}
 
     return explanation_report
 
 
-def get_binary_signatures(anomaly, header):
+def get_binary_signatures(signature, header):
     arr = numpy.zeros(len(header), dtype='<U256')
-    for symptom in anomaly:
+    for symptom in signature:
         measurement = symptom.split(' Exceeds ')[0]
         threshold = symptom.split(' Exceeds ')[1]
         try:

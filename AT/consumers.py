@@ -5164,3 +5164,9 @@ class ATConsumer(DaphneConsumer):
 
     def turn_off_alarms(self, event):
         self.send(json.dumps(event))
+
+    def situational_awareness(self, event):
+        self.send(json.dumps(event))
+
+    def after_anomaly_survey(self, event):
+        self.send(json.dumps(event))

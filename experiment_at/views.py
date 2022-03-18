@@ -118,6 +118,46 @@ class ReloadExperiment(APIView):
         return Response({'is_running': False})
 
 
+class SituationalAwareness(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and channel layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
+
+            # Build and send a command to the frontend
+            command = {'type': 'situational_awareness',
+                       'content': ''}
+            async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
+
+
+class AfterAnomalySurvey(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and channel layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
+
+            # Build and send a command to the frontend
+            command = {'type': 'after_anomaly_survey',
+                       'content': ''}
+            async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
+
+
 class FinishExperiment(APIView):
 
     def get(self, request, format=None):
