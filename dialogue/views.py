@@ -6,8 +6,6 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from daphne_brain.nlp_object import nlp
-from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, DialogueContext
@@ -67,7 +65,7 @@ class Command(APIView):
             user_turn = DialogueHistory.objects.filter(dwriter__exact="user").order_by("-date")[1]
 
             # Preprocess the command
-            processed_command = nlp(user_turn.voice_message.strip().lower())
+            processed_command = user_turn.voice_message.strip()
 
             role_index = context["dialogue"]["clarifying_role"]
             command_class = self.command_options[role_index]
@@ -81,7 +79,7 @@ class Command(APIView):
 
         else:
             # Preprocess the command
-            processed_command = nlp(request.data['command'].strip())
+            processed_command = request.data['command'].strip()
 
             # Classify the command, obtaining a command type
             command_roles = command_processing.classify_command_role(processed_command, self.daphne_version)
