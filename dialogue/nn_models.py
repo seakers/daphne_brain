@@ -1,6 +1,6 @@
 import os
-
-from tensorflow.keras.models import load_model
+from pathlib import Path
+from transformers import AutoModelForSequenceClassification
 
 nn_models = {
     "EOSS": {},
@@ -8,17 +8,15 @@ nn_models = {
     "AT": {}
 }
 
-model_folder_path = os.path.join(os.getcwd(), "dialogue", "models")
+model_folder_path = Path("./dialogue/models/")
 for file in os.scandir(model_folder_path):
     if file.is_dir():
         daphne_version = file.name
-        daphne_model_path = os.path.join(model_folder_path, daphne_version)
+        daphne_model_path = model_folder_path / daphne_version
         for role_file in os.scandir(daphne_model_path):
             if role_file.is_dir():
                 role = role_file.name
-                daphne_role_path = os.path.join(daphne_model_path, role)
+                daphne_role_path = daphne_model_path / role
 
-                # load json and create model
-                model_path = os.path.join(daphne_role_path, "model.h5")
-                loaded_model = load_model(model_path)
+                loaded_model = AutoModelForSequenceClassification.from_pretrained(daphne_role_path)
                 nn_models[daphne_version][role] = loaded_model
