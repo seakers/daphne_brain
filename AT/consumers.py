@@ -5170,3 +5170,6 @@ class ATConsumer(DaphneConsumer):
 
     def after_anomaly_survey(self, event):
         self.send(json.dumps(event))
+
+    def workload(self, event):
+        self.send(json.dumps(event))
