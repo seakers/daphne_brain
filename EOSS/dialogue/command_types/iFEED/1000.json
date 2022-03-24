@@ -27,7 +27,7 @@
     {
       "type": "list",
       "begin": "The driving features of the target designs are: ",
-      "item_template": "<b>${advice}"
+      "item_template": "${advice}"
     }
   ]
 }
