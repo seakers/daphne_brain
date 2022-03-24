@@ -36,20 +36,20 @@ def active_engineer_response(user_info: UserInformation, inputs, session_key):
     return suggestion_list
 
 
-def generate_engineer_message(user_info, genome, session_key):
+def generate_engineer_message(user_info: UserInformation, genome, session_key):
     message = {}
-    if user_info.eosscontext.activecontext.show_arch_suggestions:
+    if user_info.eosscontext.activecontext.show_engineer_suggestions:
         suggestion_list = active_engineer_response(user_info, genome, session_key)
         if len(suggestion_list) == 0:
             return {}
         suggestion_list = parse_suggestions_list(suggestion_list)
         message = {
-            'voice_message': 'The Live Recommender System has the following suggestions for your modified '
+            'voice_message': 'The Engineer has the following suggestions for your modified '
                              'architecture.',
             'visual_message_type': ['list'],
             'visual_message': [
                 {
-                    'begin': 'The Live Recommender System has the following suggestions for your modified '
+                    'begin': 'The Engineer has the following suggestions for your modified '
                              'architecture: ',
                     'list': suggestion_list
                 }
@@ -58,14 +58,14 @@ def generate_engineer_message(user_info, genome, session_key):
         }
     else:
         message = {
-            'voice_message': 'The Live Recommender System has some suggestions for your modified architecture, '
+            'voice_message': 'The Engineer has some suggestions for your modified architecture, '
                              'but you have chosen to not show them. Do you want to see them now?',
             'visual_message_type': ['active_message'],
             'visual_message': [
                 {
-                    'message': 'The Live Recommender System has some suggestions for your modified architecture, '
+                    'message': 'The Engineer has some suggestions for your modified architecture, '
                                'but you have chosen to not show them. Do you want to see them now?',
-                    'setting': 'show_arch_suggestions'
+                    'setting': 'show_engineer_suggestions'
                 }
             ],
             "writer": "daphne",
@@ -87,20 +87,20 @@ def active_historian_response(user_info: UserInformation, inputs, session_key):
     return suggestion_list
 
 
-def generate_historian_message(user_info, genome, session_key):
+def generate_historian_message(user_info: UserInformation, genome, session_key):
     message = {}
-    if user_info.eosscontext.activecontext.show_arch_suggestions:
+    if user_info.eosscontext.activecontext.show_historian_suggestions:
         suggestion_list = active_historian_response(user_info, genome, session_key)
         if len(suggestion_list) == 0:
             return {}
         suggestion_list = parse_suggestions_list(suggestion_list)
         message = {
-            'voice_message': 'The Live Recommender System has the following suggestions for your modified '
+            'voice_message': 'The Historian has the following suggestions for your modified '
                              'architecture.',
             'visual_message_type': ['list'],
             'visual_message': [
                 {
-                    'begin': 'The Live Recommender System has the following suggestions for your modified '
+                    'begin': 'The Historian has the following suggestions for your modified '
                              'architecture: ',
                     'list': suggestion_list
                 }
@@ -108,15 +108,15 @@ def generate_historian_message(user_info, genome, session_key):
             "writer": "daphne",
         }
     else:
-       message = {
-           'voice_message': 'The Live Recommender System has some suggestions for your modified architecture, '
+        message = {
+           'voice_message': 'The Historian has some suggestions for your modified architecture, '
                             'but you have chosen to not show them. Do you want to see them now?',
            'visual_message_type': ['active_message'],
            'visual_message': [
                {
-                   'message': 'The Live Recommender System has some suggestions for your modified architecture, '
+                   'message': 'The Historian has some suggestions for your modified architecture, '
                               'but you have chosen to not show them. Do you want to see them now?',
-                   'setting': 'show_arch_suggestions'
+                   'setting': 'show_historian_suggestions'
                }
            ],
            "writer": "daphne",
@@ -221,26 +221,41 @@ def active_analyst_response(user_info: UserInformation, session_key):
     return result
 
 
-def generate_analyst_message(user_info, session_key):
+def generate_analyst_message(user_info: UserInformation, session_key):
     message = {}
-    features_list = active_analyst_response(user_info, session_key)[:20]
-    random.shuffle(features_list)
-    features_list = features_list[:3]
-    if len(features_list) == 0:
-        return {}
-    features_list = [feature["advice"] for feature in features_list]
-    message = {
-        'voice_message': 'According to the Analyst, designs on the Pareto front consistently show these features.',
-        'visual_message_type': ['list'],
-        'visual_message': [
-            {
-                'begin': 'According to the Analyst, designs on the Pareto front consistently show these features:',
-                'list': features_list
-            }
-        ],
-        "writer": "daphne",
-    }
-
+    if user_info.eosscontext.activecontext.show_analyst_suggestions:
+        features_list = active_analyst_response(user_info, session_key)[:20]
+        random.shuffle(features_list)
+        features_list = features_list[:3]
+        if len(features_list) == 0:
+            return {}
+        features_list = [feature["advice"] for feature in features_list]
+        message = {
+            'voice_message': 'According to the Analyst, designs on the Pareto front consistently show these features.',
+            'visual_message_type': ['list'],
+            'visual_message': [
+                {
+                    'begin': 'According to the Analyst, designs on the Pareto front consistently show these features:',
+                    'list': features_list
+                }
+            ],
+            "writer": "daphne",
+        }
+    else:
+        message = {
+           'voice_message': 'The Analyst has some suggestions for your modified architecture, '
+                            'but you have chosen to not show them. Do you want to see them now?',
+           'visual_message_type': ['active_message'],
+           'visual_message': [
+               {
+                   'message': 'The Analyst has some suggestions for your modified architecture, '
+                              'but you have chosen to not show them. Do you want to see them now?',
+                   'setting': 'show_analyst_suggestions'
+               }
+           ],
+           "writer": "daphne",
+        }
+    
     DialogueHistory.objects.create(user_information=user_info,
                                    voice_message=message["voice_message"],
                                    visual_message_type=json.dumps(message["visual_message_type"]),
