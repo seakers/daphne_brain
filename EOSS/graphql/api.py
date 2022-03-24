@@ -433,8 +433,35 @@ class GraphqlClient:
         return self.execute_query(query)
 
     def get_instrument_from_objective(self, problem_id, objective):
-        query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(objective) + '}}}}}}}) { id name } } '
-        return self.execute_query(query)
+        query = '''
+        query get_instrument_from_objective($problem_id: Int!, $objective: String!) {
+            Instrument(where: {
+                Join__Instrument_Measurements: {
+                    problem_id: { _eq: $problem_id },
+                    Measurement: {
+                        Requirement_Rule_Attributes: {
+                            problem_id: {_eq: $problem_id},
+                            Stakeholder_Needs_Subobjective: {
+                                problem_id: {_eq: $problem_id},
+                                Stakeholder_Needs_Objective: {
+                                    problem_id: {_eq: $problem_id},
+                                    name: {_eq: $objective}
+                                }
+                            }
+                        }
+                    }
+                }
+            }) {
+                id
+                name
+            }
+        }
+        '''
+        variables = {
+            "problem_id": problem_id,
+            "objective": objective
+        }
+        return self.execute_query(query, variables)
 
     def get_instrument_from_panel(self, problem_id, panel):
         query = ' query MyQuery { Instrument(where: {Join__Instrument_Measurements: {problem_id: {_eq: ' + str(problem_id) + '}, Measurement: {Requirement_Rule_Attributes: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Subobjective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Objective: {problem_id: {_eq: ' + str(problem_id) + '}, Stakeholder_Needs_Panel: {problem_id: {_eq: ' + str(problem_id) + '}, name: {_eq: ' + str(panel) + '}}}}}}}}) { id name } }'
