@@ -34,6 +34,9 @@ class UserInformation(models.Model):
     # Experiment
     is_experiment_user = models.BooleanField(default=False)
 
+    # Expertise
+    is_domain_expert = models.BooleanField(default=False)
+
     # Special restrictions
     class Meta:
         unique_together = ("session", "user")

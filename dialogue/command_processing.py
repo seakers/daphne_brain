@@ -168,7 +168,7 @@ def command(processed_command, question_type, command_class, condition_name, use
         return error_answers(information["objective"], error.missing_param)
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, user_information, session)
-    # Query the database
+    # Query the database / run a function
     if information["type"] == "db_query":
         results = qa_pipeline.query(information["query"], data, command_class)
     elif information["type"] == "run_function":
@@ -178,7 +178,7 @@ def command(processed_command, question_type, command_class, condition_name, use
     else:
         raise ValueError("JSON format not supported!")
     # Construct the response from the database query and the response format
-    answers = qa_pipeline.build_answers(information["voice_response"], information["visual_response"], results, data)
+    answers = qa_pipeline.build_answers(information["voice_response"], information["visual_response"], user_information, results, data)
 
     # Return the answer to the client
     return answers
