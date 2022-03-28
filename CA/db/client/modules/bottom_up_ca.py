@@ -1,3 +1,19 @@
+from client.modules.AbstractBuilder import AbstractBuilder
+
+
+
+def get_module():
+    builder = AbstractBuilder('mdi-tag-arrow-up', ['Work Breakdown Structure'], 'Cost Estimation')
+
+    builder.add_slide('AERO401Slide6')
+    builder.add_slide('AERO401Slide7')
+    builder.add_slide('AERO401Slide30')
+
+    return builder.get_module()
+
+
+
+
 slides = [
     {
         'type': 'info',

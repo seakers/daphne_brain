@@ -32,6 +32,18 @@ class AbstractBuilder:
             'idx': len(self.slides)
         })
 
+    def add_quiz_start_slide(self):
+        self.slides.append({
+            'type': 'quiz_start',
+            'idx': len(self.slides)
+        })
+
+    def add_quiz_end_slide(self):
+        self.slides.append({
+            'type': 'quiz_end',
+            'idx': len(self.slides)
+        })
+
     def add_tf_question(self, text, answer, explanation, topics):
 
         # --> Question Info

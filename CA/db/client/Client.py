@@ -127,6 +127,19 @@ class Client:
         self.session.commit()
         return entry.id
 
+    def index_quiz_start_slide(self, module_id, type, user_id, idx):
+        entry = Slide(module_id=module_id, type=type, user_id=user_id, idx=idx)
+        self.session.add(entry)
+        self.session.commit()
+        return entry.id
+
+    def index_quiz_end_slide(self, module_id, type, user_id, idx):
+        entry = Slide(module_id=module_id, type=type, user_id=user_id, idx=idx)
+        self.session.add(entry)
+        self.session.commit()
+        return entry.id
+
+
 
 
     def index_message(self, user_id, text, sender, more_info=None):

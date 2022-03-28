@@ -1,3 +1,28 @@
+from client.modules.AbstractBuilder import AbstractBuilder
+
+
+
+def get_module():
+    builder = AbstractBuilder('mdi-tag-arrow-down', ['Cost Estimating Relationships'], 'Cost Estimation')
+
+    builder.add_slide('AERO401Slide8')
+    builder.add_slide('AERO401Slide9')
+    builder.add_slide('AERO401Slide10')
+    builder.add_slide('AERO401Slide11')
+
+    builder.add_quiz_start_slide()
+
+    
+    builder.add_quiz_end_slide()
+
+
+    return builder.get_module()
+
+
+
+
+
+
 slides = [
     {
         'type': 'info',
