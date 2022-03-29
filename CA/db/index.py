@@ -76,8 +76,6 @@ demo_accounts = [dani_account, jennifer_account, bryan_account, greg_account, de
 
 def main():
 
-
-
     client = Client()
 
     # DROP / CREATE TABLES
@@ -88,8 +86,8 @@ def main():
 
     # Index learning content
     Excel(client).index()
-    Topic(client).index()
     LearningModule(client).index()
+    Topic(client).index()
     Message(client).index()
 
 

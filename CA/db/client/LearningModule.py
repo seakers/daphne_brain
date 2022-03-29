@@ -54,6 +54,7 @@ class LearningModule:
                                                  question['guessing'], question['topics'], question['explanation'])
 
         # --> 2. Index slide for each user
+        graded = slide['graded']
         users = self.client.get_users()
         user_ids = [None]
         for user in users:
@@ -61,7 +62,7 @@ class LearningModule:
         for user_id in user_ids:
             # (self, module_id, type, question_id, answered, correct, choice_id, user_id, idx)
             self.client.index_question_slide(module_id, slide['type'], question_id, slide['answered'], slide['correct'],
-                                             slide['choice_id'], user_id, slide['idx'])
+                                             slide['choice_id'], user_id, slide['idx'], graded)
 
     def index_quiz_start_slide(self, slide, module_id):
 

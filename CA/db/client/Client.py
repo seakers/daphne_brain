@@ -57,6 +57,10 @@ class Client:
         topic_id = topics[0]
         return topic_id
 
+    def get_all_topics(self):
+        topics = self.session.query(Topic.id, Topic.name).all()
+        return topics
+
 
 
     def index_excel_exercise(self, name):
@@ -121,8 +125,8 @@ class Client:
         self.session.commit()
         return entry.id
 
-    def index_question_slide(self, module_id, type, question_id, answered, correct, choice_id, user_id, idx):
-        entry = Slide(module_id=module_id, type=type, question_id=question_id, answered=answered, correct=correct, choice_id=choice_id, user_id=user_id, idx=idx, attempts=0)
+    def index_question_slide(self, module_id, type, question_id, answered, correct, choice_id, user_id, idx, graded):
+        entry = Slide(module_id=module_id, type=type, question_id=question_id, answered=answered, correct=correct, choice_id=choice_id, user_id=user_id, idx=idx, attempts=0, graded=graded)
         self.session.add(entry)
         self.session.commit()
         return entry.id
@@ -359,3 +363,4 @@ class Slide(DeclarativeBase):
     user_id = Column('user_id', Integer, ForeignKey('auth_user.id'))
     idx = Column('idx', Integer)
     attempts = Column('attempts', Integer, nullable=True, default=None)
+    graded = Column('graded', Boolean, default=False)

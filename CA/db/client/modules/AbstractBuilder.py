@@ -44,7 +44,7 @@ class AbstractBuilder:
             'idx': len(self.slides)
         })
 
-    def add_tf_question(self, text, answer, explanation, topics):
+    def add_tf_question(self, text, answer, explanation, topics, difficulty=0.0, discrimination=0.0, graded=False):
 
         # --> Question Info
         question_info = {
@@ -53,6 +53,7 @@ class AbstractBuilder:
             'correct': False,
             'choice_id': -1,
             'idx': len(self.slides),
+            'graded': graded
         }
 
         # --> Question
@@ -72,8 +73,8 @@ class AbstractBuilder:
             'text': q_text,
             'choices': choices,
             'explanation': explanation,
-            'difficulty': 0.0,
-            'discrimination': 0.0,
+            'difficulty': difficulty,
+            'discrimination': discrimination,
             'guessing': 0.5
         }
 
@@ -82,7 +83,9 @@ class AbstractBuilder:
 
 
 
-    def add_mc_question(self, text, choices, explanation, topics):
+    def add_mc_question(self, text, choices, explanation, topics, difficulty=0.0, discrimination=0.0, graded=False):
+
+
 
         # --> Question Info
         question_info = {
@@ -91,6 +94,7 @@ class AbstractBuilder:
             'correct': False,
             'choice_id': -1,
             'idx': len(self.slides),
+            'graded': graded
         }
 
         # --> Question
@@ -102,9 +106,9 @@ class AbstractBuilder:
             'text': q_text,
             'choices': choices,
             'explanation': explanation,
-            'difficulty': 0.0,
-            'discrimination': 0.0,
-            'guessing': 0.5
+            'difficulty': difficulty,
+            'discrimination': discrimination,
+            'guessing': float(1.0 / float(len(choices)))
         }
 
         question_info['question'] = question

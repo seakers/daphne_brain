@@ -90,6 +90,90 @@ class GraphqlClient:
             print('query not found!', query_result)
             return 0
 
+
+
+    def get_ca_question_topics(self, question_id):
+        query = '''
+            query get_ca_question_topics($question_id: Int!) {
+                question: Question_by_pk(id: $question_id) {
+                    difficulty
+                    discrimination
+                    guessing
+                    topics: Join__Question_Topics {
+                        topic: Topic {
+                            name
+                            id
+                        }
+                    }
+                }
+            }
+        '''
+        variables = {
+            "question_id": question_id
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["question"]
+
+    def get_ca_graded_slide_questions(self, user_id, topic_id):
+        query = '''
+            query get_ca_graded_slide_questions($user_id: Int!, $topic_id: Int!) {
+                question: Question(where: {Slides: {user_id: {_eq: $user_id}, graded: {_eq: true}, answered: {_eq: true}}, Join__Question_Topics: {topic_id: {_eq: $topic_id}}}) {
+                    id
+                    guessing
+                    discrimination
+                    difficulty
+                    slides: Slides(where: {user_id: {_eq: $user_id}, graded: {_eq: true}, answered: {_eq: true}}) {
+                        answered
+                        correct
+                    }
+                }
+            }
+        '''
+        variables = {
+            'user_id': user_id,
+            'topic_id': topic_id
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["question"]
+
+    def get_ca_graded_test_questions(self, user_id, topic_id):
+        query = '''
+            query get_ca_graded_test_questions($user_id: Int!, $topic_id: Int!) {
+                question: Question(where: {TestQuestions: {Test: {user_id: {_eq: $user_id}}, answered: {_eq: true}}, Join__Question_Topics: {topic_id: {_eq: $topic_id}}}) {
+                    id
+                    guessing
+                    discrimination
+                    difficulty
+                    test: TestQuestions(where: {answered: {_eq: true}}) {
+                        correct
+                    }
+                }
+            }
+        '''
+        variables = {
+            'user_id': user_id,
+            'topic_id': topic_id
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["question"]
+
+    def set_user_ability_parameters(self, user_id, topic_id, parameter):
+        query = '''
+            mutation set_ability_parameter($user_id: Int!, $topic_id: Int!, $parameter: float8!) {
+                update_AbilityParameter(where: {user_id: {_eq: $user_id}, topic_id: {_eq: $topic_id}}, _set: {value: $parameter}) {
+                    affected_rows
+                }
+            }
+        '''
+        variables = {
+            'user_id': user_id,
+            'topic_id': topic_id,
+            'parameter': parameter
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result
+
+
     def get_architecture_from_id(self, arch_id):
         query = '''
         query get_architecture_from_id($arch_id: Int!) {
@@ -99,7 +183,8 @@ class GraphqlClient:
                 science
                 cost
             }
-        }'''
+        }
+        '''
         variables = {
             "arch_id": arch_id
         }

@@ -1,6 +1,17 @@
 from client.modules.AbstractBuilder import AbstractBuilder
 
 
+ex_choices = [
+    {'text': 'A. text',
+     'correct': False, 'id': 0},
+    {'text': 'B. text',
+     'correct': False, 'id': 1},
+    {'text': 'C. text',
+     'correct': False, 'id': 2},
+    {'text': 'D. text', 'correct': True, 'id': 3}
+]
+
+
 
 def get_module():
     builder = AbstractBuilder('mdi-tag-arrow-down', ['Cost Estimating Relationships'], 'Cost Estimation')
@@ -12,7 +23,37 @@ def get_module():
 
     builder.add_quiz_start_slide()
 
-    
+    builder.add_mc_question(
+        'Parametric cost estimation question 1',
+        ex_choices,
+        'Explanation',
+        ['Parametric Cost Estimation'],
+        difficulty=0.5,
+        discrimination=4,
+        graded=True
+    )
+
+    builder.add_mc_question(
+        'Parametric cost estimation question 2',
+        ex_choices,
+        'Explanation',
+        ['Parametric Cost Estimation'],
+        difficulty=0.6,
+        discrimination=5,
+        graded=True
+    )
+
+    builder.add_mc_question(
+        'Parametric cost estimation question 3',
+        ex_choices,
+        'Explanation',
+        ['Parametric Cost Estimation'],
+        difficulty=0.7,
+        discrimination=6,
+        graded=True
+    )
+
+
     builder.add_quiz_end_slide()
 
 
