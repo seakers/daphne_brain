@@ -164,27 +164,65 @@ class Critic:
 
         result = []
         for advice in result_list:
-            result.append({
-                "type": "Expert",
-                "advice": advice
-            })
-
+            is_relevant = False
+            is_cut = False
+            if advice[0:2] == "E:":
+                if self.user_information.is_domain_expert:
+                    is_relevant = True
+                    is_cut = True
+            elif advice[0:2] == "N:":
+                if not self.user_information.is_domain_expert:
+                    is_relevant = True
+                    is_cut = True
+            else:
+                is_relevant = True
+            if is_relevant:
+                if is_cut:
+                    advice = advice[2:]
+                result.append({
+                    "type": "Expert",
+                    "advice": advice
+                })
         return result
 
     def explorer_critic(self, design):
 
-        def get_advices_from_bit_string_diff(difference):
+        def get_advices_from_bit_string_diff(difference, has_expertise):
             out = []
             ninstr = len(self.instruments_dataset)
 
             for i in range(len(difference)):
                 advice = []
-                if difference[i] == 1:
-                    advice.append("add")
-                elif difference[i] == -1:
-                    advice.append("remove")
+                if not has_expertise:
+                    if difference[i] == 1:
+                        advice.append("Add")
+                    elif difference[i] == -1:
+                        advice.append("Remove")
+                    else:
+                        continue
                 else:
-                    continue
+                    advice.append("I found a similar but better design: By")
+                    if difference[i] == 1:
+                        advice.append("adding")
+                    elif difference[i] == -1:
+                        advice.append("removing")
+                    else:
+                        continue
+
+                orbit_index = i // ninstr  # Floor division
+                instr_index = i % ninstr  # Get the remainder
+                advice.append("instrument {}".format(self.instruments_dataset[instr_index]['name']))
+
+                if difference[i] == 1:
+                    advice.append("to")
+                elif difference[i] == -1:
+                    advice.append("from")
+
+                advice.append("orbit {}".format(self.orbits_dataset[orbit_index]['name']))
+
+                advice = " ".join(advice)
+                out.append(advice)
+            
 
                 orbit_index = i // ninstr  # Floor division
                 instr_index = i % ninstr  # Get the remainder
@@ -224,18 +262,21 @@ class Critic:
                 new_design_inputs = arch["inputs"]
                 print("--> explorer_critic diff:", new_design_inputs, original_inputs)
                 diff = [a - b for a, b in zip(new_design_inputs, original_inputs)]
-                advice = [get_advices_from_bit_string_diff(diff)]
+                advice = [get_advices_from_bit_string_diff(diff, self.user_information.is_domain_expert)]
                 costdiff = abs(round(new_outputs[0] - original_outputs[0], 3))
                 sciencediff = abs(round(new_outputs[1] - original_outputs[0], 3))
 
                 # TODO: Generalize the code for comparing each metric. Currently it assumes two metrics: science and cost
                 if new_outputs[0] > original_outputs[0] and new_outputs[1] < original_outputs[1]:
                     # New solution dominates the original solution
-                    advice.append(" to increase the science benefit and lower the cost.")
-                elif new_outputs[0] > original_outputs[0]:
-                    advice.append(" to increase the science benefit by "+str(sciencediff)+", but the cost would go up by about $"+str(costdiff)+"M.")
-                elif new_outputs[1] < original_outputs[1]:
-                    advice.append(" to lower the cost by $"+str(costdiff)+"M but decrease science by "+str(sciencediff)+".")
+                    if self.user_information.is_domain_expert:
+                        advice.append("performance increases and cost decreases.")
+                    else:
+                        advice.append("to increase performance while also lowering the cost.")
+                # elif new_outputs[0] > original_outputs[0]:
+                #     advice.append(" to increase the science benefit by "+str(sciencediff)+", but the cost would go up by about $"+str(costdiff)+"M.")
+                # elif new_outputs[1] < original_outputs[1]:
+                #     advice.append(" to lower the cost by $"+str(costdiff)+"M but decrease science by "+str(sciencediff)+".")
                 else:
                     continue
 
@@ -376,16 +417,26 @@ class Critic:
                 for exp in unsatisfied:
                     if exp == "":
                         continue
-                    advices.append(
-                        "Based on the data mining result, I advise you to make the following change: " +
-                        feature_expression_to_string(exp, is_critique=True, context=self.context))
+                    if self.user_information.is_domain_expert:
+                        advices.append(
+                            "Based on my analysis of the best designs explored so far, I advise you to make the following changes: " +
+                            feature_expression_to_string(exp, is_critique=True, context=self.context))
+                    else:
+                        advices.append(
+                            "My analysis of the best designs explored so far revealed the following patterns: " +
+                            feature_expression_to_string(exp, is_critique=False, context=self.context))
 
                 for exp in satisfied:
                     if exp == "":
                         continue
-                    advices.append(
-                        "Based on the data mining result, these are the good features. Consider keeping them: " +
-                        feature_expression_to_string(exp, is_critique=False, context=self.context))
+                    if self.user_information.is_domain_expert:
+                        advices.append(
+                            "Based on my analysis of the best designs explored so far, I advise you to make the following changes: " +
+                            feature_expression_to_string(exp, is_critique=True, context=self.context))
+                    else:
+                        advices.append(
+                            "My analysis of the best designs explored so far revealed the following patterns: " +
+                            feature_expression_to_string(exp, is_critique=False, context=self.context))
 
             # End the connection before return statement
             dm_client.endConnection()

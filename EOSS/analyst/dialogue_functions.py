@@ -75,18 +75,11 @@ def data_mining_run(context, user_information, session):
 
 
         advices = []
-        if len(features) > 3:
-            for x in range(3):
-                advices.append(
-                        "Based on the data mining result, I advise you to make the following change: " +
-                        feature_expression_to_string(features[x]['name'], context=context, user_info=user_information)
-                )
-        else:
-            for feature in features:
-                advices.append(
-                    "Based on the data mining result, I advise you to make the following change: " +
-                    feature_expression_to_string(feature['name'], context=context, user_info=user_information)
-                )
+        is_expert = user_information.is_domain_expert
+        for feature in features[0:3]:
+            advices.append(
+                feature_expression_to_string(feature['name'], is_critique=not is_expert, context=context, user_info=user_information)
+            )
 
         result = []
         for advice in advices:

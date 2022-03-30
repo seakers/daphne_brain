@@ -2,13 +2,13 @@
   "type": "run_function",
   "params":
   [
-    { "name": "instrument_parameter", "type": "instrument_parameter", "options": "", "from_context": false, "mandatory": true },
+    { "name": "measurement_parameter", "type": "measurement_parameter", "options": "", "from_context": false, "mandatory": true },
     { "name": "vassar_measurement", "type": "vassar_measurement", "options": "", "from_context": false, "mandatory": true }
   ],
   "objective": "get information about the requirements for a measurement",
   "function":
   {
-    "run_template": "dialogue_functions.engineer.get_measurement_requirement('${vassar_measurement}', '${instrument_parameter}', context, new_dialogue_contexts)",
+    "run_template": "dialogue_functions.engineer.get_measurement_requirement('${vassar_measurement}', '${measurement_parameter}', context, new_dialogue_contexts)",
     "results": [
       {
         "result_type": "single",

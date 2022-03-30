@@ -31,7 +31,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The reasons for the score of the selected panel (${selected_arch_id}) are: ",
+      "begin": "The stakeholder score is a weighted average of objective scores. Objective scores for stakeholder ${vassar_stakeholder} are: ",
       "item_template": "Objective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
     }
   ]

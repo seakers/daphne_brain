@@ -75,6 +75,7 @@ class EngineerContext(models.Model):
     # Context that is used for those questions related with the engineer skill
     vassar_instrument = models.TextField(null=True)
     instrument_parameter = models.TextField(null=True)
+    measurement_parameter = models.TextField(null=True)
     vassar_measurement = models.TextField(null=True)
 
 

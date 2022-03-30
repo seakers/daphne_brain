@@ -23,11 +23,20 @@
       "end": "."
     }
   ],
-  "visual_response": [
-    {
-      "type": "list",
-      "begin": "The driving features of the target designs are: ",
-      "item_template": "<b>${advice}"
-    }
-  ]
+  "visual_response": {
+    "novice": [
+      {
+        "type": "list",
+        "begin": "Based on my analysis of the best designs explored so far, I advise you to make the following changes: ",
+        "item_template": "${advice}"
+      }
+    ],
+    "expert": [
+      {
+        "type": "list",
+        "begin": "My analysis of the best designs explored so far revealed the following patterns: ",
+        "item_template": "${advice}"
+      }
+    ]
+  }
 }
