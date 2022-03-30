@@ -221,6 +221,24 @@ class ProblemGraphqlClient(GQLClient):
             return None
         return result['capability_value']
 
+    async def get_measurement_attributes(self, group_id=None):
+        if group_id is None:
+            group_id = self.group_id
+
+        query = """
+            query get_measurement_attributes {
+                attributes: Measurement_Attribute(where: {group_id: {_eq: %d}}) {
+                    id
+                    name
+                }
+            }
+        """ % int(group_id)
+
+        result = await self._query(query)
+        if 'attributes' not in result:
+            return None
+        return result['attributes']
+
     async def get_measurement_requirements(self, problem_id=None, measurement_name=None, measurement_attribute=None, subobjective=None, distinct=None):
         if problem_id is None:
             problem_id = self.problem_id

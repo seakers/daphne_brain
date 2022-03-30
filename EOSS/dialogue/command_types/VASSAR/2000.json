@@ -27,11 +27,20 @@
       "end": "."
     }
   ],
-  "visual_response": [
-    {
-      "type": "list",
-      "begin": "The reasons for the score of design ${design_id} are: ",
-      "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
-    }
-  ]
+  "visual_response": {
+    "novice": [
+      {
+        "type": "list",
+        "begin": "The science benefit score is a weighted average of stakeholder satisfaction scores. Stakeholder satisfaction scores for design ${design_id} are: ",
+        "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+      }
+    ],
+    "expert": [
+      {
+        "type": "list",
+        "begin": "The science benefit score is a weighted average of stakeholder satisfaction scores. Stakeholder satisfaction scores for design ${design_id} are: ",
+        "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
+      }
+    ]
+  }
 }

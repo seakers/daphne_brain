@@ -146,13 +146,13 @@ def get_instrument_parameter_followup(vassar_instrument, instrument_parameter, i
            instrument_measurement + ' is ' + measurement_attribute_value[0]["value"]
 
 
-def get_measurement_requirement(vassar_measurement, instrument_parameter, context, new_dialogue_contexts):
+def get_measurement_requirement(vassar_measurement, measurement_parameter, context, new_dialogue_contexts):
     new_dialogue_contexts["engineer_context"].vassar_measurement = vassar_measurement
-    new_dialogue_contexts["engineer_context"].instrument_parameter = instrument_parameter
+    new_dialogue_contexts["engineer_context"].measurement_parameter = measurement_parameter
 
     eosscontext = EOSSContext.objects.get(id=context["screen"]["id"])
     client = VASSARClient(user_information=eosscontext.user_information)
-    requirements = client.get_measurement_requirements(eosscontext.problem_id, vassar_measurement, instrument_parameter)
+    requirements = client.get_measurement_requirements(eosscontext.problem_id, vassar_measurement, measurement_parameter)
 
     requirement_found = len(requirements) > 0
 
@@ -165,7 +165,7 @@ def get_measurement_requirement(vassar_measurement, instrument_parameter, contex
             threshold = requirements[0]["thresholds"][-1]
             target_value = requirements[0]["thresholds"][0]
             subobjective = requirements[0]["Stakeholder_Needs_Subobjective"]["name"]
-            return 'The threshold for ' + instrument_parameter + ' for ' + vassar_measurement + ' (subobjective ' + \
+            return 'The threshold for ' + measurement_parameter + ' for ' + vassar_measurement + ' (subobjective ' + \
                    subobjective + ') is ' + threshold + ' and its target value is ' + \
                    target_value + '.'
     else:

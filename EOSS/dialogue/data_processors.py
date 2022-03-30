@@ -34,6 +34,7 @@ process_function["design_id"] = process_design
 process_function["agent"] = not_processed
 process_function["instrument_parameter"] = not_processed
 process_function["vassar_instrument"] = not_processed
+process_function["measurement_parameter"] = not_processed
 process_function["vassar_measurement"] = not_processed
 process_function["vassar_stakeholder"] = not_processed
 process_function["objective"] = not_processed

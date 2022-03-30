@@ -83,13 +83,21 @@ def extract_agent(processed_question, number_of_features, user_information: User
 
 
 def extract_instrument_parameter(processed_question, number_of_features, user_information: UserInformation):
-    vassar_client = VASSARClient(user_information=user_information)
     group_id = user_information.eosscontext.group_id
     problem_client = ProblemGraphqlClient(user_information)
     instrument_parameters = async_to_sync(problem_client.get_instrument_attributes)(group_id)
     # instrument_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
     instrument_parameters = [attr["name"] for attr in instrument_parameters]
     return sorted_list_of_features_by_index(processed_question, instrument_parameters, number_of_features)
+
+
+def extract_measurement_parameter(processed_question, number_of_features, user_information: UserInformation):
+    group_id = user_information.eosscontext.group_id
+    problem_client = ProblemGraphqlClient(user_information)
+    measurement_parameters = async_to_sync(problem_client.get_measurement_attributes)(group_id)
+    # instrument_parameters = vassar_client.dbClient.get_instrument_attributes(group_id)
+    measurement_parameters = [attr["name"] for attr in measurement_parameters]
+    return sorted_list_of_features_by_index(processed_question, measurement_parameters, number_of_features)
 
 
 def extract_vassar_instrument(processed_question, number_of_features, user_information: UserInformation):
@@ -138,6 +146,7 @@ extract_function["design_id"] = extract_design_id
 extract_function["agent"] = extract_agent
 extract_function["instrument_parameter"] = extract_instrument_parameter
 extract_function["vassar_instrument"] = extract_vassar_instrument
+extract_function["measurement_parameter"] = extract_measurement_parameter
 extract_function["vassar_measurement"] = extract_vassar_measurement
 extract_function["vassar_stakeholder"] = extract_vassar_stakeholder
 extract_function["objective"] = extract_vassar_objective

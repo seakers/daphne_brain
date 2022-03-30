@@ -22,7 +22,7 @@
   "voice_response": [
     {
       "type": "list",
-      "begin": "The reasons for the score of the selected design (${selected_arch_id}) are: ",
+      "begin": "The science benefit score is a weighted average of stakeholder satisfaction scores. Stakeholder satisfaction scores for design ${selected_arch_id} are: ",
       "repeat": "stakeholder ${obj_name} has a value of ${obj_value} out of 1 and a weight of ${obj_weight}",
       "end": "."
     }
@@ -30,7 +30,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The reasons for the score of the selected design (${selected_arch_id}) are: ",
+      "begin": "The science benefit score is a weighted average of stakeholder satisfaction scores. Stakeholder satisfaction scores for design ${selected_arch_id} are: ",
       "item_template": "Stakeholder ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
     }
   ]

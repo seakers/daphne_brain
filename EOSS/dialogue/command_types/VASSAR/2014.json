@@ -31,7 +31,7 @@
   "visual_response": [
     {
       "type": "list",
-      "begin": "The reasons for the score of the selected objective (${selected_arch_id}) are: ",
+      "begin": "The objective score is a weighted average of subobjective scores. Subobjective scores for the objective ${objective} are: ",
       "item_template": "Subobjective ${obj_name} has a value of ${obj_value}/1.0 and a weight of ${obj_weight}"
     }
   ]
