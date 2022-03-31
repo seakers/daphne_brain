@@ -7,6 +7,7 @@ from client.Excel import Excel
 from client.Topic import Topic
 from client.LearningModule import LearningModule
 from client.Message import Message
+from client.Questions import Questions
 
 
 # --> Setup django for standalone use
@@ -87,6 +88,7 @@ def main():
     # Index learning content
     Excel(client).index()
     LearningModule(client).index()
+    Questions(client).index()
     Topic(client).index()
     Message(client).index()
 

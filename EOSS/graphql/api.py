@@ -213,6 +213,23 @@ class GraphqlClient:
         query_result = self.execute_query(query, variables)
         return query_result["data"]["Question"]
 
+    def get_previously_asked_questions(self, user_id):
+        query = '''
+            query get_previously_asked_questions($user_id: Int!) {
+                test: Test(where: {user_id: {_eq: $user_id}, in_progress: {_eq: true}}) {
+                    questions: TestQuestions {
+                        question_id
+                    }
+                    id
+                }
+            }
+        '''
+        variables = {
+            'user_id': user_id,
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["test"]
+
 
 
     def get_architecture_from_id(self, arch_id):

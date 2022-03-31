@@ -96,19 +96,34 @@ class StatsClient:
         current_estimate = sorter_parameters[0]['value']
 
         # --> 2. Get set of potential questions for topic (that have not been seen before)
-        questions = self.graphql_client.get_topic_questions(lowest_topic_id)
+        all_questions = self.graphql_client.get_topic_questions(lowest_topic_id)
 
-        # --> 3. Get previous answers for finding question contribution
+        # --> 3. Get ids of questions that have already been asked
+        repeat_ids = []
+        exam_list = self.graphql_client.get_previously_asked_questions(self.user_id)
+        if len(exam_list) > 0:
+            already_asked = exam_list[0]
+            for q in already_asked['questions']:
+                repeat_ids.append(int(q['question_id']))
+
+        # --> 4. Remove repeat questions
+        questions = []
+        for question in all_questions:
+            if int(question['id']) not in repeat_ids:
+                questions.append(question)
+        print('--> ALL QUESTIONS:', len(all_questions), len(questions))
+
+        # --> 5. Get previous answers for finding question contribution
         previous_answers = self.get_answered_questions(lowest_topic_id)
 
-        # --> 4. Iterate over questions to find the highest contributing one
+        # --> 6. Iterate over questions to find the highest contributing one
         contributions = []
         for question in questions:
             contribution = self.calculate_contribution(current_estimate, question, previous_answers)
             contributions.append(contribution)
         question = questions[contributions.index(max(contributions))]
 
-        # --> 5. Correctly format selected question and return
+        # --> 7. Correctly format selected question and return
         q_return = {
             'text': str(question['text']),
             'choices': str(question['choices']),

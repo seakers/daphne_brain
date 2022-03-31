@@ -7,7 +7,7 @@ def get_module():
         'text': 'beta'
     }
 
-    builder = AbstractBuilder('mdi-telescope', ['Remote Sensing'], 'Space Training 101', status)
+    builder = AbstractBuilder('mdi-telescope', ['Remote Sensing'], 'Space Training 101', None)
 
     builder.add_slide('DODS_0')
     builder.add_slide('DODS_1')

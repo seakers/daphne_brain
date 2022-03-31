@@ -57,7 +57,7 @@ class AbstractBuilder:
         }
 
         # --> Question
-        q_text = 'Q' + str(self.q_counter) + '. ' + text
+        q_text = '(T/F) ' + text
         self.q_counter += 1
         choices = [
             {'text': 'A. True', 'correct': True, 'id': 0},
@@ -98,7 +98,7 @@ class AbstractBuilder:
         }
 
         # --> Question
-        q_text = 'Q' + str(self.q_counter) + '. ' + text
+        q_text = text
         self.q_counter += 1
 
         question = {

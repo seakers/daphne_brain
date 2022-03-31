@@ -7,7 +7,7 @@ def get_module():
         'text': 'beta'
     }
 
-    builder = AbstractBuilder('mdi-satellite-variant', ['Spacecraft Subsystems'], 'Space Training 101', status)
+    builder = AbstractBuilder('mdi-satellite-variant', ['Spacecraft Subsystems'], 'Space Training 101', None)
 
     builder.add_slide('DODS_15')  # Spacecraft bus
     builder.add_slide('DODS_16')
