@@ -115,7 +115,6 @@ class StatsClient:
             'topic_ids': json.dumps([int(x['topic_id']) for x in question['topics']]),
             'question_id': question['id']
         }
-        print('--> RETURN QUESTION', q_return)
         return q_return
 
 
@@ -136,12 +135,16 @@ class StatsClient:
         del previous_answers[-1]
 
         # --> 3. Get estimate if question answered correctly
-        previous_answers.append((0, q_model))
+        previous_answers.append((1, q_model))
         correct_estimate = MAP_Estimator(previous_answers).estimate().x
 
         # --> 4. Find question contribution
         contribution = float(abs(current_estimate - incorrect_estimate) + abs(current_estimate - correct_estimate))
-        print('--> QUESTION CONTRIBUTION:', contribution, question['text'])
+
+        print('\n--> CALCULATING CONTRIBUTION:', question['text'])
+        print('--> RANGES:', incorrect_estimate, current_estimate, correct_estimate, '-->', contribution)
+
+
         return contribution
 
 
