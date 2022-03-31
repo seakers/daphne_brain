@@ -112,6 +112,8 @@ class StatsClient:
             if int(question['id']) not in repeat_ids:
                 questions.append(question)
         print('--> ALL QUESTIONS:', len(all_questions), len(questions))
+        if len(questions) == 0:
+            questions = all_questions
 
         # --> 5. Get previous answers for finding question contribution
         previous_answers = self.get_answered_questions(lowest_topic_id)
