@@ -202,6 +202,7 @@ class CommandClassifier:
             specific_label = int(filename.split('.', 1)[0])
             named_labels.append(specific_label)
         command_types = []
+        print('--> ROLE:', role, type_info_folder, named_labels)
 
 
         for label in numerical_labels:

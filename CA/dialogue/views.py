@@ -155,8 +155,8 @@ class CACommand(APIView):
 class LMCommand(APIView):
 
     daphne_version = "CA"
-    command_options = ['Basics', 'Spacecraft Bus', 'Mission Payloads']
-    condition_names = ['Basics', 'Spacecraft Bus', 'Mission Payloads']
+    command_options = ['Spacecraft Bus', 'Mission Payloads', 'Parametric Estimation', 'Lifecycle Cost']
+    condition_names = ['Spacecraft Bus', 'Mission Payloads', 'Parametric Estimation', 'Lifecycle Cost']
 
 
     def post(self, request, format=None):
