@@ -173,6 +173,47 @@ class GraphqlClient:
         query_result = self.execute_query(query, variables)
         return query_result
 
+    def get_user_ability_parameters(self, user_id):
+        query = '''
+            query get_user_ability_parameters($user_id: Int!) {
+                AbilityParameter(where: {user_id: {_eq: $user_id}, value: {_is_null: false}}, order_by: {value: asc}) {
+                    Topic {
+                        id
+                        name
+                    }
+                    value
+                }
+            }
+        '''
+        variables = {
+            'user_id': user_id,
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["AbilityParameter"]
+
+    def get_topic_questions(self, topic_id):
+        query = '''
+            query get_topic_questions($topic_id: Int!) {
+                Question(where: {Join__Question_Topics: {topic_id: {_eq: $topic_id}}}) {
+                    id
+                    text
+                    choices
+                    topics: Join__Question_Topics {
+                        topic_id
+                    }
+                    difficulty
+                    discrimination
+                    guessing
+                }
+            }
+        '''
+        variables = {
+            'topic_id': topic_id,
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["Question"]
+
+
 
     def get_architecture_from_id(self, arch_id):
         query = '''

@@ -32,6 +32,35 @@ class UpdateModel(APIView):
         for topic_id in topic_ids:
             stats_client.update_model(topic_id)
 
+        return Response({})
 
+class UpdateModelTID(APIView):
+
+    def post(self, request, format=None):
+
+        user_info = get_or_create_user_information(request.session, request.user)
+        stats_client = StatsClient(user_info)
+        topic_ids = json.loads(request.data['topic_ids'])
+
+        print('--> UPDAING CA MODEL', topic_ids)
+        for topic_id in topic_ids:
+            stats_client.update_model(topic_id)
 
         return Response({})
+
+
+
+
+
+class AdaptiveQuestion(APIView):
+
+    def post(self, request, format=None):
+        print('--> GETTING ADAPTIVE QUESTION')
+
+        user_info = get_or_create_user_information(request.session, request.user)
+        stats_client = StatsClient(user_info)
+        topics = json.loads(request.data['topics'])
+
+        question = stats_client.select_question()
+
+        return Response(question)

@@ -29,7 +29,7 @@ def get_module():
         'Explanation',
         ['Parametric Cost Estimation'],
         difficulty=0.5,
-        discrimination=4,
+        discrimination=10,
         graded=True
     )
 
