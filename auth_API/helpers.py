@@ -29,8 +29,10 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                    added_archs_count=0, group_id=1, problem_id=1)
         eoss_context.save()
 
-        active_context = ActiveContext(eosscontext=eoss_context, show_background_search_feedback=False,
-                                       check_for_diversity=False, show_arch_suggestions=False)
+        active_context = ActiveContext(eosscontext=eoss_context, check_for_diversity=False, show_engineer_suggestions=True,
+                                       engineer_suggestions_frequency=3, show_historian_suggestions=True,
+                                       historian_suggestions_frequency=3, show_analyst_suggestions=True,
+                                       analyst_suggestions_frequency=45)
         active_context.save()
 
         experiment_context = ExperimentContext(user_information=user_info, is_running=False, experiment_id=-1,
