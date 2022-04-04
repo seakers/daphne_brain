@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
 from auth_API.helpers import get_or_create_user_information
-from daphne_context.models import UserInformation, MycroftUser
+from daphne_context.models import UserInformation
 from EOSS.graphql.api import GraphqlClient
 
 import requests
