@@ -48,7 +48,12 @@ class ActiveFeedbackSettings(APIView):
 
             return Response({
                 'check_for_diversity': user_info.eosscontext.activecontext.check_for_diversity,
-                'show_arch_suggestions': user_info.eosscontext.activecontext.show_arch_suggestions,
+                'show_engineer_suggestions': user_info.eosscontext.activecontext.show_engineer_suggestions,
+                'engineer_suggestions_frequency': user_info.eosscontext.activecontext.engineer_suggestions_frequency,
+                'show_historian_suggestions': user_info.eosscontext.activecontext.show_historian_suggestions,
+                'historian_suggestions_frequency': user_info.eosscontext.activecontext.historian_suggestions_frequency,
+                'show_analyst_suggestions': user_info.eosscontext.activecontext.show_analyst_suggestions,
+                'analyst_suggestions_frequency': user_info.eosscontext.activecontext.analyst_suggestions_frequency,
             })
         else:
             return Response({
@@ -60,9 +65,27 @@ class ActiveFeedbackSettings(APIView):
         if 'check_for_diversity' in request.data:
             check_for_diversity = request.data['check_for_diversity'] == 'true'
             user_info.eosscontext.activecontext.check_for_diversity = check_for_diversity
-        if 'show_arch_suggestions' in request.data:
-            show_arch_suggestions = request.data['show_arch_suggestions'] == 'true'
-            user_info.eosscontext.activecontext.show_arch_suggestions = show_arch_suggestions
+
+        if 'show_engineer_suggestions' in request.data:
+            show_engineer_suggestions = request.data['show_engineer_suggestions'] == 'true'
+            user_info.eosscontext.activecontext.show_engineer_suggestions = show_engineer_suggestions
+        if 'engineer_suggestions_frequency' in request.data:
+            engineer_suggestions_frequency = int(request.data['engineer_suggestions_frequency'])
+            user_info.eosscontext.activecontext.engineer_suggestions_frequency = engineer_suggestions_frequency
+
+        if 'show_historian_suggestions' in request.data:
+            show_historian_suggestions = request.data['show_historian_suggestions'] == 'true'
+            user_info.eosscontext.activecontext.show_historian_suggestions = show_historian_suggestions
+        if 'historian_suggestions_frequency' in request.data:
+            historian_suggestions_frequency = int(request.data['historian_suggestions_frequency'])
+            user_info.eosscontext.activecontext.historian_suggestions_frequency = historian_suggestions_frequency
+
+        if 'show_analyst_suggestions' in request.data:
+            show_analyst_suggestions = request.data['show_analyst_suggestions'] == 'true'
+            user_info.eosscontext.activecontext.show_analyst_suggestions = show_analyst_suggestions
+        if 'analyst_suggestions_frequency' in request.data:
+            analyst_suggestions_frequency = int(request.data['analyst_suggestions_frequency'])
+            user_info.eosscontext.activecontext.analyst_suggestions_frequency = analyst_suggestions_frequency
 
         user_info.eosscontext.activecontext.save()
         user_info.save()
