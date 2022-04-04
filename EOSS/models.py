@@ -40,12 +40,17 @@ class EOSSContextSerializer(serializers.ModelSerializer):
 class ActiveContext(models.Model):
     eosscontext = models.OneToOneField(EOSSContext, on_delete=models.CASCADE)
 
-    # Settings for the Active Context
-    show_background_search_feedback = models.BooleanField(default=False)
+    # Settings for the Proactive Feedback
     check_for_diversity = models.BooleanField(default=True)
-    show_arch_suggestions = models.BooleanField(default=True)
 
-    # The list of designs in the queue is contained in model Design
+    show_engineer_suggestions = models.BooleanField(default=True)
+    engineer_suggestions_frequency = models.IntegerField(default=3) # 3 modifications/minute
+    
+    show_historian_suggestions = models.BooleanField(default=True)
+    historian_suggestions_frequency = models.IntegerField(default=3) # 3 modifications/minute
+
+    show_analyst_suggestions = models.BooleanField(default=True)
+    analyst_suggestions_frequency = models.IntegerField(default=45) # 1 notif/45s
 
 
 class ActiveContextSerializer(serializers.ModelSerializer):
@@ -70,6 +75,7 @@ class EngineerContext(models.Model):
     # Context that is used for those questions related with the engineer skill
     vassar_instrument = models.TextField(null=True)
     instrument_parameter = models.TextField(null=True)
+    measurement_parameter = models.TextField(null=True)
     vassar_measurement = models.TextField(null=True)
 
 
