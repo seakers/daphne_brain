@@ -1,14 +1,10 @@
 import hashlib
-from channels.generic.websocket import AsyncJsonWebsocketConsumer, JsonWebsocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from daphne_ws.async_db_methods import _get_or_create_user_information, _save_subcontext, _save_user_info
 import schedule
-from auth_API.helpers import get_user_information, get_or_create_user_information
 from daphne_context.models import UserInformation
-
-
-from daphne_context.models import MycroftUser
 
 
 class MycroftConsumer(AsyncJsonWebsocketConsumer):
