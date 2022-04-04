@@ -597,7 +597,7 @@ class VASSARClient:
         return [subobj['name'] for subobj in query['subobjective']]
 
     def get_dataset_architectures(self, problem_id, dataset_id):
-        query = async_to_sync(self.dataset_client.get_architectures)(dataset_id, problem_id)
+        query = async_to_sync(self.dataset_client.get_architectures)(dataset_id, problem_id, scores=False, costs=False)
         # query = self.dbClient.get_architectures(problem_id, dataset_id)
 
 

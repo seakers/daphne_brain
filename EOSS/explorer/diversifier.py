@@ -28,7 +28,7 @@ def activate_diversifier(user_info: UserInformation):
 
     # 1. Compute the pareto front
     dataset_client = DatasetGraphqlClient(user_info)
-    query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+    query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id, costs=False, scores=False)
     # query = dbClient.get_architectures(problem_id, dataset_id)
     json_dataset = []
     for design in query:

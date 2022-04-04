@@ -135,7 +135,7 @@ class GetDrivingFeaturesEpsilonMOEA(APIView):
             # Load architecture data from the session info
             # old: dataset = Design.objects.filter(eosscontext_id__exact=user_info.eosscontext.id).all()
             dataset_client = DatasetGraphqlClient(user_info)
-            dataset = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+            dataset = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id, costs=False, scores=False)
             # dataset = db_client.get_architectures(problem_id, dataset_id)
             print("---> GetDrivingFeaturesEpsilonMOEA len(dataset):", len(dataset))
 
