@@ -449,11 +449,11 @@ class DatasetGraphqlClient(Client):
         # --> 3. Build query
         query = """
             query get_architectures {
-                Architecture(where: {dataset_id: {_eq: %d}, problem_id: {_eq: %d}}) {
+                Architecture(order_by: { id: asc }, where: {problem_id: {_eq: %s}, dataset_id: {_eq: %s}, _or: [{ga: {_eq: false}}, {ga: {_eq: true}, improve_hv: {_eq: true}}]}) {
                     %s
                 }
             }
-        """ % (int(dataset_id), int(problem_id), info_list)
+        """ % (int(problem_id), int(dataset_id), info_list)
 
 
         # --> 4. Run query
