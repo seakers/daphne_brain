@@ -62,7 +62,7 @@ class ImportData(APIView):
                 # dataset_id = dbClient.clone_default_dataset(default_dataset_id, user_info.user.id)
 
             dataset_client = DatasetGraphqlClient(user_info)
-            query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id)
+            query = async_to_sync(dataset_client.get_architectures)(dataset_id, problem_id, costs=False, scores=False)
             # query = dbClient.get_architectures(problem_id, dataset_id)
 
             # Iterate over architectures
