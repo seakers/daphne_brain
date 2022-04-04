@@ -164,11 +164,25 @@ class Critic:
 
         result = []
         for advice in result_list:
-            result.append({
-                "type": "Expert",
-                "advice": advice
-            })
-
+            is_relevant = False
+            is_cut = False
+            if advice[0:2] == "E:":
+                if self.user_information.is_domain_expert:
+                    is_relevant = True
+                    is_cut = True
+            elif advice[0:2] == "N:":
+                if not self.user_information.is_domain_expert:
+                    is_relevant = True
+                    is_cut = True
+            else:
+                is_relevant = True
+            if is_relevant:
+                if is_cut:
+                    advice = advice[2:]
+                result.append({
+                    "type": "Expert",
+                    "advice": advice
+                })
         return result
 
     def explorer_critic(self, design):
