@@ -50,7 +50,7 @@ class ActiveContext(models.Model):
     historian_suggestions_frequency = models.IntegerField(default=3) # 3 modifications/minute
 
     show_analyst_suggestions = models.BooleanField(default=True)
-    analyst_suggestions_frequency = models.BooleanField(default=45) # 1 notif/45s
+    analyst_suggestions_frequency = models.IntegerField(default=45) # 1 notif/45s
 
 
 class ActiveContextSerializer(serializers.ModelSerializer):

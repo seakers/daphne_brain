@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='activecontext',
             name='analyst_suggestions_frequency',
-            field=models.BooleanField(default=45),
+            field=models.IntegerField(default=45),
         ),
         migrations.AddField(
             model_name='activecontext',
