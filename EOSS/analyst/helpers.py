@@ -1,4 +1,3 @@
-import json
 import logging
 import sys
 import traceback
@@ -6,11 +5,6 @@ import traceback
 from EOSS.data import problem_specific
 from EOSS.models import EOSSContext
 from daphne_context.models import UserInformation
-
-from asgiref.sync import async_to_sync, sync_to_async
-from EOSS.graphql.client.Dataset import DatasetGraphqlClient
-from EOSS.graphql.client.Admin import AdminGraphqlClient
-from EOSS.graphql.client.Problem import ProblemGraphqlClient
 
 logger = logging.getLogger('VASSAR')
 
@@ -115,17 +109,18 @@ def feature_expression_to_string(feature_expression, is_critique=False, context:
     out = []
     # TODO: Generalize the feature expression parsing.
     # Currently assumes that the feature only contains conjunctions but no disjunction
-    if "&&" in feature_expression:
-        individual_features = feature_expression.split("&&")
+    no_par_fe  = remove_outer_parentheses(feature_expression)
+    if "&&" in no_par_fe:
+        individual_features = no_par_fe.split("&&")
         for feat in individual_features:
             if feat == "":
                 continue
             out.append(base_feature_expression_to_string(feat, is_critique, context, user_info))
-    elif "||" in feature_expression:
+    elif "||" in no_par_fe:
         pass
     else:
-        if not feature_expression == "":
-            out.append(base_feature_expression_to_string(feature_expression, is_critique, context, user_info))
+        if not no_par_fe == "":
+            out.append(base_feature_expression_to_string(no_par_fe, is_critique, context, user_info))
 
     out = " AND ".join(out)
     out = out[0].upper() + out[1:]
