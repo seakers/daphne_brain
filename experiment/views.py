@@ -13,27 +13,17 @@ logger = logging.getLogger('experiment')
 
 
 def stage_type(id, stage_num):
-    stage_config = id % 4 
+    stage_config = id % 2 
     if stage_config == 0:
         if stage_num == 0:
-            return 'daphne_classic'
+            return 'daphne_novice'
         else:
-            return 'daphne_hypothesis'
+            return 'daphne_expert'
     elif stage_config == 1:
         if stage_num == 0:
-            return 'daphne_hypothesis'
+            return 'daphne_expert'
         else:
-            return 'daphne_classic'
-    elif stage_config == 2:
-        if stage_num == 0:
-            return 'daphne_classic'
-        else:
-            return 'daphne_dm'
-    elif stage_config == 3:
-        if stage_num == 0:
-            return 'daphne_dm'
-        else:
-            return 'daphne_classic'
+            return 'daphne_novice'
 
 
 # Create your views here.
