@@ -166,11 +166,11 @@ class Critic:
         for advice in result_list:
             is_relevant = False
             is_cut = False
-            if advice[0:2] == "E:":
+            if advice[0:1] == "E:":
                 if self.user_information.is_domain_expert:
                     is_relevant = True
                     is_cut = True
-            elif advice[0:2] == "N:":
+            elif advice[0:1] == "N:":
                 if not self.user_information.is_domain_expert:
                     is_relevant = True
                     is_cut = True
