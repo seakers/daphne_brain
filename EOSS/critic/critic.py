@@ -221,17 +221,6 @@ class Critic:
 
                 advice.append("orbit {}".format(self.orbits_dataset[orbit_index]['name']))
 
-                orbit_index = i // ninstr  # Floor division
-                instr_index = i % ninstr  # Get the remainder
-                advice.append("instrument {}".format(self.instruments_dataset[instr_index]['name']))
-
-                if difference[i] == 1:
-                    advice.append("to")
-                elif difference[i] == -1:
-                    advice.append("from")
-
-                advice.append("orbit {}".format(self.orbits_dataset[orbit_index]['name']))
-
                 advice = " ".join(advice)
                 out.append(advice)
 
