@@ -714,7 +714,7 @@ class DatasetGraphqlClient(Client):
             }
             """ % (dataset_id, problem_id, input, self.info_base)
         )
-        return await Client._subscribe(subscription)
+        return await Client._subscribe(subscription, tries=30, sleep_time=2)
 
     async def subscribe_to_critique(self, arch_id):
         for idx in range(5):
