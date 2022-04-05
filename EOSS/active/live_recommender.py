@@ -22,7 +22,7 @@ def active_engineer_response(user_info: UserInformation, inputs, session_key):
 
     # Check Vassar Status
     vassar_status = async_to_sync(vassar_client.check_status)(user_info.eosscontext.vassar_request_queue_url, user_info.eosscontext.vassar_response_queue_url)
-    if vassar_status != 'ready':
+    if vassar_status[0] != 'ready':
         print('--> INVALID VASSAR STATUS:', vassar_status)
         return []
 
