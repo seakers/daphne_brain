@@ -752,7 +752,7 @@ class VASSARClient:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             design_futures = []
             designs = []
-            for _ in range(4):
+            for _ in range(2):
                 new_inputs = self.random_local_change(inputs)
                 print('---> NEW DESIGN ary: ', new_inputs)
                 # Check if the architecture already exists in DB before adding it again
