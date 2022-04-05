@@ -164,13 +164,14 @@ class Critic:
 
         result = []
         for advice in result_list:
+            advice = advice.strip()
             is_relevant = False
             is_cut = False
-            if advice[0:1] == "E:":
+            if advice[0:2] == "E:":
                 if self.user_information.is_domain_expert:
                     is_relevant = True
                     is_cut = True
-            elif advice[0:1] == "N:":
+            elif advice[0:2] == "N:":
                 if not self.user_information.is_domain_expert:
                     is_relevant = True
                     is_cut = True
