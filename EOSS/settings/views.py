@@ -80,3 +80,28 @@ class ActiveFeedbackSettings(APIView):
         return Response({
             "status": "Settings have been updated"
         })
+
+class ExpertiseSettings(APIView):
+    """ Returns the values for the different active daphne settings
+    """
+    def get(self, request, format=None):
+        if request.user.is_authenticated:
+            user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+
+            return Response({
+                'is_domain_expert': user_info.is_domain_expert
+            })
+        else:
+            return Response({
+                'error': 'User not logged in!'
+            })
+
+    def post(self, request, format=None):
+        user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
+        if 'is_domain_expert' in request.data:
+            is_domain_expert = request.data['is_domain_expert'] == 'true'
+            user_info.is_domain_expert = is_domain_expert
+        user_info.save()
+        return Response({
+            "status": "Settings have been updated"
+        })
