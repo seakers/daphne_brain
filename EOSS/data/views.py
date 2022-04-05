@@ -281,9 +281,9 @@ class UploadData(APIView):
             with open(dataset_path, newline='') as csvfile:
                 arch_reader = csv.reader(csvfile, delimiter=',')
                 for row in arch_reader:
-                    inputs = "".join(["1" if inp == "True" else "0" for inp in row[0:25]])
-                    science = row[25]
-                    cost = row[26]
+                    inputs = "".join(["1" if inp == "True" else "0" for inp in row[0:60]])
+                    science = row[60]
+                    cost = row[61]
                     async_to_sync(AbstractGraphqlClient.insert_architecture)(problem_id, dataset_id, user_id, inputs, science, cost)
                     # result = dbClient.insert_architecture(problem_id, dataset_id, user_id, inputs, science, cost)
             return Response({"YAY!"})
