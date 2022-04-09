@@ -16,14 +16,14 @@ def stage_type(id, stage_num):
     stage_config = id % 2 
     if stage_config == 0:
         if stage_num == 0:
-            return 'daphne_novice'
+            return 'daphne_baseline'
         else:
-            return 'daphne_expert'
+            return 'daphne_group'
     elif stage_config == 1:
         if stage_num == 0:
-            return 'daphne_expert'
+            return 'daphnne_group'
         else:
-            return 'daphne_novice'
+            return 'daphne_baseline'
 
 
 # Create your views here.
@@ -64,20 +64,11 @@ class StartExperiment(APIView):
         # Specific to current experiment
         experiment_context.experimentstage_set.all().delete()
 
-        # experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
-        #                                               start_date=datetime.datetime.now(),
-        #                                               end_date=datetime.datetime.now(),
-        #                                               end_state="")
-        # experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
-        #                                               start_date=datetime.datetime.now(),
-        #                                               end_date=datetime.datetime.now(),
-        #                                               end_state="")
-
-        experiment_context.experimentstage_set.create(type='daphne_peer',
+        experiment_context.experimentstage_set.create(type=stage_type(new_id, 0),
                                                       start_date=datetime.datetime.now(),
                                                       end_date=datetime.datetime.now(),
                                                       end_state="")
-        experiment_context.experimentstage_set.create(type='daphne_assistant',
+        experiment_context.experimentstage_set.create(type=stage_type(new_id, 1),
                                                       start_date=datetime.datetime.now(),
                                                       end_date=datetime.datetime.now(),
                                                       end_state="")
