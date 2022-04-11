@@ -608,6 +608,19 @@ class DatasetGraphqlClient(Client):
             return None
         return result['Architecture']
 
+    async def get_objective_score_explanation(self, problem_id, arch_id, objective):
+        query = '''query myquery($arch_id: Int!, $problem_id: Int!, $objective: String!) {
+            ObjectiveScoreExplanation(where: { architecture_id: {_eq: $arch_id}, Stakeholder_Needs_Subobjective: { problem_id: {_eq: $problem_id}, Stakeholder_Needs_Objective: {name: {_eq: $objective}} } }) {
+                satisfaction
+                Stakeholder_Needs_Subobjective {
+                    name
+                    weight
+                }
+            }
+        }'''
+        result = await self._query(query, {"arch_id": arch_id, "problem_id": problem_id, "objective": objective})
+        return result
+
     async def get_subobjective_score_explanation(self, arch_id, subobjective):
         query = '''query MyQuery($arch_id: Int!, $subobjective_name: String!) {
             SubobjectiveScoreExplanation(where: { architecture_id: {_eq: $arch_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective_name}}}) {
