@@ -608,6 +608,18 @@ class DatasetGraphqlClient(Client):
             return None
         return result['Architecture']
 
+    async def get_subobjective_score_explanation(self, arch_id, subobjective):
+        query = '''query MyQuery($arch_id: Int!, $subobjective_name: String!) {
+            SubobjectiveScoreExplanation(where: { architecture_id: {_eq: $arch_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective_name}}}) {
+                measurement_attribute_values
+                score
+                taken_by
+                justifications
+            }
+        }'''
+        result = await self._query(query, {"arch_id": arch_id, "subobjective_name": subobjective})
+        return result
+
     ###########
     ### SET ###
     ###########

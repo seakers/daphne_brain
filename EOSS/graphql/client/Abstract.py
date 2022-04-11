@@ -136,9 +136,12 @@ class AbstractGraphqlClient:
         return result
 
     @staticmethod
-    async def _query(query):
+    async def _query(query, variables=None):
         async with aiohttp.ClientSession() as session:
-            async with session.post(graphql_server_address(), json={'query': query}) as response:
+            request_body = {'query': query}
+            if variables is not None:
+                request_body['variables'] = variables
+            async with session.post(graphql_server_address(), json=request_body) as response:
                 result = json.loads(await response.text())
                 if 'data' not in result:
                     return dict()
