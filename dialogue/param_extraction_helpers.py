@@ -5,13 +5,13 @@ import Levenshtein as lev
 def feature_list_by_ratio(processed_question, feature_list, case_sensitive=False):
     """ Obtain a list of all the features in the list sorted by partial similarity to the question"""
     ratio_ordered = []
-    length_question = len(processed_question.text)
+    length_question = len(processed_question)
     for feature in feature_list:
         length_feature = len(feature)
         if length_feature > length_question:
             ratio_ordered.append((feature, 0, -1))
         else:
-            substrings = [processed_question.text[i:i+length_feature] for i in range(length_question-length_feature+1)]
+            substrings = [processed_question[i:i+length_feature] for i in range(length_question-length_feature+1)]
             if case_sensitive:
                 ratios = [lev.ratio(substrings[i], feature) for i in range(length_question-length_feature+1)]
             else:
