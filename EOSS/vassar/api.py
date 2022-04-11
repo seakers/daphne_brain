@@ -918,8 +918,7 @@ class VASSARClient:
     def get_subobjective_score_explanation(self, arch, subobjective):
         print("--> Getting subobjective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        # query = self.dbClient.get_subobjective_score_explanation(arch_id, subobjective)
-        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
+        query = async_to_sync(self.dataset_client.get_subobjective_score_explanation)(arch_id, subobjective)
         explanations = []
         for expla in query['SubobjectiveScoreExplanations']:
             explanations.append({
