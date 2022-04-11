@@ -7,6 +7,7 @@ import EOSS.historian.models as earth_models
 from EOSS.data import problem_specific
 from EOSS.models import EOSSContext
 from EOSS.vassar.api import VASSARClient
+from daphne_brain.nlp_object import nlp
 from daphne_context.models import UserInformation
 from dialogue.param_extraction_helpers import sorted_list_of_features_by_index, crop_list
 
@@ -53,7 +54,7 @@ def extract_space_agency(processed_question, number_of_features, user_informatio
 def extract_date(processed_question, number_of_features, user_information: UserInformation):
     # For now just pick the years
     extracted_list = []
-    for word in processed_question:
+    for word in nlp(processed_question):
         if len(word) == 4 and word.like_num:
             extracted_list.append(word.text)
 
@@ -67,7 +68,7 @@ def extract_design_id(processed_question, number_of_features, user_information: 
     dataset_id = user_information.eosscontext.dataset_id
     design_ids = ['d' + str(design["id"]) for design in vassar_client.get_dataset_architectures(problem_id, dataset_id)]
     extracted_list = []
-    for word in processed_question:
+    for word in nlp(processed_question):
         if word.lower_ in design_ids:
             extracted_list.append(word.text)
     return crop_list(extracted_list, number_of_features)
@@ -76,7 +77,7 @@ def extract_design_id(processed_question, number_of_features, user_information: 
 def extract_agent(processed_question, number_of_features, user_information: UserInformation):
     agents = ["expert", "historian", "analyst", "explorer"]
     extracted_list = []
-    for word in processed_question:
+    for word in nlp(processed_question):
         if word.lower_ in agents:
             extracted_list.append(word.lower_)
     return crop_list(extracted_list, number_of_features)
