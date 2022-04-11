@@ -922,7 +922,7 @@ class VASSARClient:
         explanations = []
         for expla in query['SubobjectiveScoreExplanation']:
             explanations.append({
-                "attribute_values": expla["attribute_values"],
+                "attribute_values": expla["measurement_attribute_values"],
                 "score": expla["score"],
                 "taken_by": expla["taken_by"],
                 "justifications": expla["justifications"],
