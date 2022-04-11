@@ -935,8 +935,7 @@ class VASSARClient:
     def get_arch_science_information(self, problem_id, arch):
         print("\n\n----> get_arch_science_information", problem_id, arch)
         arch_id = arch["db_id"]
-        async_to_sync(AbstractGraphqlClient.get_arch_science_info)(problem_id, arch_id)
-        return self.dbClient.get_arch_science_information(problem_id, arch_id)
+        return async_to_sync(AbstractGraphqlClient.get_arch_science_info)(problem_id, arch_id)
 
     # working
     def get_arch_cost_information(self, problem_id, arch):
