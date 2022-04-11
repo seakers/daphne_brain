@@ -920,7 +920,7 @@ class VASSARClient:
         arch_id = arch["db_id"]
         query = async_to_sync(self.dataset_client.get_subobjective_score_explanation)(arch_id, subobjective)
         explanations = []
-        for expla in query['SubobjectiveScoreExplanations']:
+        for expla in query['SubobjectiveScoreExplanation']:
             explanations.append({
                 "attribute_values": expla["attribute_values"],
                 "score": expla["score"],
