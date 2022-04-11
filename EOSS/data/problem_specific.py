@@ -1,4 +1,5 @@
 from string import ascii_uppercase
+from EOSS.graphql.client.Problem import ProblemGraphqlClient
 
 from EOSS.vassar.api import VASSARClient
 
@@ -142,6 +143,12 @@ def get_problem_measurements(vassar_client: VASSARClient, problem_id: int):
     problem_measurements = async_to_sync(AbstractGraphqlClient.get_measurements)(problem_id)
     # problem_measurements = vassar_client.dbClient.get_problem_measurements(problem_id)
     return [meas["Measurement"]["name"] for meas in problem_measurements]
+
+
+def get_measurement_parameters(vassar_client: VASSARClient, group_id):
+    problem_client = ProblemGraphqlClient(vassar_client.user_information)
+    measurement_parameters = async_to_sync(problem_client.get_measurement_attributes)(group_id)
+    return [attr["name"] for attr in measurement_parameters]
 
 
 def get_stakeholders_list(vassar_client: VASSARClient, problem_id: int):

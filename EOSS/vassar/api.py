@@ -890,7 +890,7 @@ class VASSARClient:
         # query = self.dbClient.get_architecture_score_explanation(problem_id, arch_id)
         query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
         print(query)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['index_id'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['ArchitectureScoreExplanations'] ]
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Panel']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Panel']['weight']) for expla in query['ArchitectureScoreExplanations'] ]
         print("--> explanations", explanations)
         return explanations
 

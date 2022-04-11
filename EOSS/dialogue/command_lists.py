@@ -25,7 +25,7 @@ engineer_commands = [
     ('2001', 'How does ${design_id} satisfy ${subobjective}?'),
     ('2002', 'Why does ${design_id} not satisfy ${subobjective}?'),
     ('2008', 'What is the ${engineer_instrument_parameter} of ${engineer_instrument}?'),
-    ('2010', 'What is the requirement for ${engineer_instrument_parameter} for ${engineer_measurement}?'),
+    ('2010', 'What is the requirement for ${engineer_measurement_parameter} for ${engineer_measurement}?'),
     ('2013', 'Explain the stakeholder ${engineer_stakeholder} science benefit for this design.'),
     ('2014', 'Explain the objective ${engineer_objective} science benefit for this design.'),
     ('2016', 'Which instruments improve the science score for stakeholder ${engineer_stakeholder}?'),
@@ -114,7 +114,7 @@ def engineer_measurement_list(vassar_client: VASSARClient, problem_id: int):
 
 def engineer_stakeholder_list(vassar_client: VASSARClient, problem_id: int):
     result = async_to_sync(AbstractGraphqlClient.get_stakeholders)(problem_id, True, False, False)
-    return result['panel']
+    return [stake['name'] for stake in result['panel']]
     # return problem_specific.get_stakeholders_list(vassar_client, problem_id)
 
 
@@ -129,14 +129,14 @@ def engineer_subobjectives_list(vassar_client: VASSARClient, problem_id: int):
 def historian_measurements_list():
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    measurements = [measurement.name.strip() for measurement in session.query(models.Measurement).all()]
+    measurements = [measurement.name.strip() for measurement in session.query(models.Measurement).order_by(models.Measurement.name).all()]
     return measurements
 
 
 def historian_missions_list():
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    missions = [mission.name.strip() for mission in session.query(models.Mission).all()]
+    missions = [mission.name.strip() for mission in session.query(models.Mission).order_by(models.Mission.nam).all()]
     return missions
 
 
@@ -144,14 +144,14 @@ def historian_technologies_list():
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
     technologies = [technology for technology in models.technologies]
-    technologies = technologies + [type.name.strip() for type in session.query(models.InstrumentType).all()]
+    technologies = technologies + [type.name.strip() for type in session.query(models.InstrumentType).order_by(models.InstrumentType.name).all()]
     return technologies
 
 
 def historian_agencies_list():
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    agencies = [agency.name.strip() for agency in session.query(models.Agency).all()]
+    agencies = [agency.name.strip() for agency in session.query(models.Agency).order_by(models.Agency.name).all()]
     return agencies
 
 

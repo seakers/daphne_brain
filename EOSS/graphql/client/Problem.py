@@ -227,7 +227,7 @@ class ProblemGraphqlClient(GQLClient):
 
         query = """
             query get_measurement_attributes {
-                attributes: Measurement_Attribute(where: {group_id: {_eq: %d}}) {
+                attributes: Measurement_Attribute(order_by: {name: asc}, where: {group_id: {_eq: %d}}) {
                     id
                     name
                 }

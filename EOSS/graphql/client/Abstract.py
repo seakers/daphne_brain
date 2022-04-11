@@ -326,6 +326,7 @@ class AbstractGraphqlClient:
         if attribute_name is not None:
             statements['name'] = {'type': str, 'logic': '_eq', 'value': str(attribute_name)}
         where_str = await WhereGenerator.from_dict(statements)
+        where_str = '(order_by: {name: asc}, ' + where_str[1:]
 
         # --> 2. Return statements
         return_str = """
@@ -354,6 +355,7 @@ class AbstractGraphqlClient:
         if problem_id is not None:
             statements['problem_id'] = {'type': int, 'logic': '_eq', 'value': problem_id}
         where_str = await WhereGenerator.from_dict(statements)
+        where_str = '(order_by: {Measurement: {name: asc}}, ' + where_str[1:]
 
         # --> 2. Return statements
         return_str = """
@@ -374,7 +376,13 @@ class AbstractGraphqlClient:
         result = await AbstractGraphqlClient._query(query)
         if 'measurements' not in result:
             return None
-        return result['measurements']
+        seen = set()
+        no_repeats = []
+        for item in result['measurements']:
+            if item not in seen:
+                seen.add(item)
+                no_repeats.append(item)
+        return no_repeats
 
     @staticmethod
     async def get_stakeholders(problem_id, panel=False, objective=False, subobjective=False):
@@ -382,7 +390,8 @@ class AbstractGraphqlClient:
         panel_str = ''
         if panel is True:
             panel_str = """
-                        panel :Stakeholder_Needs_Panel(
+                        panel: Stakeholder_Needs_Panel(
+                            order_by: {name: asc},
                             where: {problem_id: {_eq: %d}}
                         ) {
                             id
@@ -393,7 +402,8 @@ class AbstractGraphqlClient:
         objective_str = ''
         if objective is True:
             objective_str = """
-                        objective :Stakeholder_Needs_Objective(
+                        objective: Stakeholder_Needs_Objective(
+                            order_by: {name: asc},
                             where: {problem_id: {_eq: %d}}
                         ) {
                             id
@@ -404,7 +414,8 @@ class AbstractGraphqlClient:
         subobjective_str = ''
         if subobjective is True:
             subobjective_str = """
-                        subobjective :Stakeholder_Needs_Subobjective(
+                        subobjective: Stakeholder_Needs_Subobjective(
+                            order_by: {name: asc},
                             where: {problem_id: {_eq: %d}}
                         ) {
                             id
