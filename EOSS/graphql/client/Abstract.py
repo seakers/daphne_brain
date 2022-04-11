@@ -379,8 +379,8 @@ class AbstractGraphqlClient:
         seen = set()
         no_repeats = []
         for item in result['measurements']:
-            if item not in seen:
-                seen.add(item)
+            if item["Measurement"]["name"] not in seen:
+                seen.add(item["Measurement"]["name"])
                 no_repeats.append(item)
         return no_repeats
 
