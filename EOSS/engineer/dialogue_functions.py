@@ -65,6 +65,7 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
             } for i, dp in enumerate(unsatisfied_data_products)
         ][:5]
     else:
+        explanations = []
         unsatisfied_justifications = []
 
     return explanations
