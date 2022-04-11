@@ -391,7 +391,7 @@ class GetSubobjectiveDetails(APIView):
 
         subobjective_details = {
             "subobjective": subobjective,
-            "measurement": client.get_measurement_for_subobjective(problem_id, subobjective),
+            "measurement": client.get_measurement_for_subobjective(problem_id, subobjective)[0]["Measurement"]["name"],
             "rows": subobjective_explanation,
         }
 
