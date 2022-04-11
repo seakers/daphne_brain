@@ -871,7 +871,7 @@ class VASSARClient:
         print("--> Getting instrument for objective:", objective)
         # query = self.dbClient.get_instrument_from_objective(problem_id, objective)
         query = async_to_sync(self.problem_client.get_instrument_from_objective)(objective, problem_id)
-        insts = [inst['name'] for inst in query['data']]
+        insts = [inst['name'] for inst in query]
         return insts
 
     # working
@@ -880,7 +880,7 @@ class VASSARClient:
         print("--> Getting instrument for panel:", panel)
         # query = self.dbClient.get_instrument_from_panel(problem_id, panel)
         query = async_to_sync(self.problem_client.get_instrument_from_panel)(panel, problem_id)
-        insts = [inst['name'] for inst in query['data']]
+        insts = [inst['name'] for inst in query]
         return insts
     
     # working
