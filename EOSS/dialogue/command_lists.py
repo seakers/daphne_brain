@@ -140,7 +140,7 @@ def historian_measurements_list():
 def historian_missions_list():
     engine = models.db_connect()
     session = sessionmaker(bind=engine)()
-    missions = [mission.name.strip() for mission in session.query(models.Mission).order_by(models.Mission.nam).all()]
+    missions = [mission.name.strip() for mission in session.query(models.Mission).order_by(models.Mission.name).all()]
     return missions
 
 
