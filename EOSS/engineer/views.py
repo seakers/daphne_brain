@@ -388,9 +388,7 @@ class GetSubobjectiveDetails(APIView):
 
 
         subobjective_explanation = client.get_subobjective_score_explanation(arch, subobjective)
-        subobjective_explanation = subobjective_explanation['SubobjectiveScoreExplanation']
 
-        print(subobjective_explanation)
         subobjective_details = {
             "subobjective": subobjective,
             "measurement": client.get_measurement_for_subobjective(problem_id, subobjective),

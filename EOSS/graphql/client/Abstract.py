@@ -457,14 +457,14 @@ class AbstractGraphqlClient:
                             code: name
                             description
                             weight
-                            satisfaction: ObjectiveScoreExplanations {
+                            satisfaction: ObjectiveScoreExplanations(where: {architecture_id: {_eq: %d}}) {
                                 value: satisfaction
                             }
                         }
                     }
                 }
             }
-        """ % (int(problem_id), int(arch_id), int(arch_id))
+        """ % (int(problem_id), int(arch_id), int(arch_id), int(arch_id))
         results = await AbstractGraphqlClient._query(query)
         panels = results['panels']
         information = SubscoreWrapper(panels).get_info()
