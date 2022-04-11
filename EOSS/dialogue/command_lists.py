@@ -112,6 +112,10 @@ def engineer_measurement_list(vassar_client: VASSARClient, problem_id: int):
     return problem_specific.get_problem_measurements(vassar_client, problem_id)
 
 
+def engineer_measurement_parameter_list(vassar_client: VASSARClient, problem_id: int):
+    return problem_specific.get_measurement_parameters(vassar_client, problem_id)
+
+
 def engineer_stakeholder_list(vassar_client: VASSARClient, problem_id: int):
     result = async_to_sync(AbstractGraphqlClient.get_stakeholders)(problem_id, True, False, False)
     return [stake['name'] for stake in result['panel']]
