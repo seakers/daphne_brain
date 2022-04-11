@@ -121,6 +121,8 @@ class CommandList(APIView):
             command_list = command_lists.engineer_instrument_parameter_list(vassar_client, group_id)
         elif command_list_request == 'engineer_measurements':
             command_list = command_lists.engineer_measurement_list(vassar_client, problem_id)
+        elif command_list_request == 'engineer_measurement_parameters':
+            command_list = command_lists.engineer_measurement_parameter_list(vassar_client, group_id)
         elif command_list_request == 'engineer_stakeholders':
             command_list = command_lists.engineer_stakeholder_list(vassar_client, problem_id)
         elif command_list_request == 'engineer_objectives':
