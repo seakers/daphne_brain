@@ -908,9 +908,8 @@ class VASSARClient:
     def get_objective_score_explanation(self, problem_id, arch, objective):
         print("--> Getting objective score explanation for arch id:", arch)
         arch_id = arch["db_id"]
-        # query = self.dbClient.get_objective_score_explanation(problem_id, arch_id, objective)
-        query = async_to_sync(self.dataset_client.get_architecture_pk)(arch_id, False, True)
-        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'],  expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['ObjectiveScoreExplanations'] ]
+        query = async_to_sync(self.dataset_client.get_objective_score_explanation)(problem_id, arch_id, objective)
+        explanations = [ ObjectiveSatisfaction(expla['Stakeholder_Needs_Subobjective']['name'], expla['satisfaction'], expla['Stakeholder_Needs_Subobjective']['weight']) for expla in query['ObjectiveScoreExplanation'] ]
         print("--> explanations", explanations)
         return explanations
 
