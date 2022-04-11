@@ -399,9 +399,12 @@ class ProblemGraphqlClient(GQLClient):
             'Measurement': {'statements': {
                 'Requirement_Rule_Attributes': {'statements': {
                     'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
-                    'Stakeholder_Needs_Objective': {'statements': {
+                    'Stakeholder_Needs_Subobjective': {'statements': {
                         'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
-                        'name': {'type': str, 'logic': '_eq', 'value': objective},
+                        'Stakeholder_Needs_Objective': {'statements': {
+                            'problem_id': {'type': int, 'logic': '_eq', 'value': problem_id},
+                            'name': {'type': str, 'logic': '_eq', 'value': objective},
+                        }}
                     }}
                 }}
             }}
