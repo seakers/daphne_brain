@@ -54,7 +54,7 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
         client.reevaluate_architecture(this_design, eosscontext.vassar_request_queue_url)
         subobjective_explanations = client.get_subobjective_score_explanation(this_design, subobjective.upper())
 
-    if max([explanation["score"] for explanation in subobjective_explanations]) < 1.:
+    if len(subobjective_explanations) > 0 and max([explanation["score"] for explanation in subobjective_explanations]) < 1.:
         unsatisfied_data_products = [explanation["taken_by"] for explanation in subobjective_explanations if explanation["score"] < 1.0]
         unsatisfied_justifications = [explanation["justifications"] for explanation in subobjective_explanations if explanation["score"] < 1.0]
         # Only show the first 4 explanations
@@ -65,6 +65,7 @@ def get_unsatisfied_justifications(design_id, designs, subobjective, context):
             } for i, dp in enumerate(unsatisfied_data_products)
         ][:5]
     else:
+        explanations = []
         unsatisfied_justifications = []
 
     return explanations
