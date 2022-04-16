@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from EOSS.data.problem_helpers import assignation_problems, partition_problems
+from EOSS.graphql.api import GraphqlClient
 from auth_API.helpers import get_or_create_user_information
 
 from asgiref.sync import sync_to_async, async_to_sync
