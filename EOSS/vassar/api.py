@@ -124,7 +124,8 @@ class VASSARClient:
                     ecs_client = get_boto3_client('ecs')
                     cluster_arn = os.environ["CLUSTER_ARN"]
                     service_arn = os.environ["VASSAR_SERVICE_ARN"]
-                    current_count = await sync_to_async_mt(ecs_client.describe_services)(cluster=cluster_arn, services=[service_arn])["services"][0]["desiredCount"]
+                    current_count = await sync_to_async_mt(ecs_client.describe_services)(cluster=cluster_arn, services=[service_arn])
+                    current_count = current_count["services"][0]["desiredCount"]
                     if current_count < 30:
                         await sync_to_async_mt(ecs_client.update_service)(cluster=cluster_arn, service=service_arn, desiredCount=current_count+1)
                         # Wait for a while for instance to start before trying to connect again
