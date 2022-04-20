@@ -148,20 +148,25 @@ class StatsClient:
 
         # --> 2. Get estimate if question answered incorrectly
         previous_answers.append((0, q_model))
+        incorrect_prob = q_model.prob_incorrect(current_estimate)
         incorrect_estimate = MAP_Estimator(previous_answers).estimate().x
+        incorrect_delta = abs(current_estimate - incorrect_estimate)
+        incorrect_contribution = incorrect_delta * incorrect_prob
         del previous_answers[-1]
 
         # --> 3. Get estimate if question answered correctly
         previous_answers.append((1, q_model))
+        correct_prob = q_model.prob_correct(current_estimate)
         correct_estimate = MAP_Estimator(previous_answers).estimate().x
+        correct_delta = abs(current_estimate - correct_estimate)
+        correct_contribution = correct_delta * correct_prob
 
         # --> 4. Find question contribution
-        contribution = float(abs(current_estimate - incorrect_estimate) + abs(current_estimate - correct_estimate))
+        contribution = float(incorrect_contribution + correct_contribution)
 
         print('\n--> CALCULATING CONTRIBUTION:', question['text'])
         print('--> RANGES:', incorrect_estimate, current_estimate, correct_estimate, '-->', contribution)
-
-
+        
         return contribution
 
 

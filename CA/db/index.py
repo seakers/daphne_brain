@@ -36,6 +36,12 @@ greg_account = {
     'password': 'EP9fAq3PpFW6gKLc'
 }
 
+gabe_account = {
+    'username': 'gapaza',
+    'email': 'gapaza@seaklab.com',
+    'password': '29tLzDN3AE7B5h5C'
+}
+
 dani_account = {
     'username': 'dselva',
     'email': 'dselva@seaklab.com',
@@ -69,7 +75,7 @@ demo_user_5 = {
 }
 
 
-demo_accounts = [dani_account, jennifer_account, bryan_account, greg_account, demo_user_1, demo_user_2, demo_user_3, demo_user_4, demo_user_5]
+demo_accounts = [dani_account, jennifer_account, bryan_account, greg_account, gabe_account, demo_user_1, demo_user_2, demo_user_3, demo_user_4, demo_user_5]
 
 
 

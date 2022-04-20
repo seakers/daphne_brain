@@ -48,6 +48,9 @@ class IIIPL:
         # 3. Scale for guessing and return
         return self.scale_guessing(logistic)
 
+    def prob_incorrect(self, theta):
+        return float(1 - self.prob_correct(theta))
+
     def find_logit(self, theta):
         return self.a * (theta - self.b)
 
