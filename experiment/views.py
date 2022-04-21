@@ -40,7 +40,10 @@ class StartExperiment(APIView):
         new_id = len(os.listdir(results_dir))
 
         # Create File so ID does not get repeated
-        open(os.path.join(results_dir, str(new_id) + '.json'), 'w')
+        file_path = os.path.join(results_dir, str(new_id) + '.json')
+        if os.path.exists(file_path):
+            file_path = os.path.join(results_dir, str(new_id) + '_1.json')
+        open(file_path, 'w')
 
         # Save experiment start info
         
