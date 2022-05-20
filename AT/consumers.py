@@ -5170,3 +5170,12 @@ class ATConsumer(DaphneConsumer):
 
     def workload(self, event):
         self.send(json.dumps(event))
+
+    def confidence(self, event):
+        self.send(json.dumps(event))
+
+    def send_msg_correct(self, event):
+        self.send(json.dumps(event))
+
+    def send_msg_incorrect(self, event):
+        self.send(json.dumps(event))

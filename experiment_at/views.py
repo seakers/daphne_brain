@@ -158,6 +158,63 @@ class Workload(APIView):
         return Response()
 
 
+class Confidence(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and channel layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
+
+            # Build and send a command to the frontend
+            command = {'type': 'confidence'}
+            async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
+
+
+class SendMsgCorrect(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and channel layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
+
+            # Build and send a command to the frontend
+            command = {'type': 'send_msg_correct'}
+            async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
+
+
+class SendMsgIncorrect(APIView):
+
+    def post(self, request, format=None):
+        # Retrieve the user from the user id
+        state_query = UserInformation.objects.filter(id__exact=int(request.data["user_id"]))
+
+        # If found
+        if len(state_query) > 0:
+            # Retrieve the channel name and channel layer
+            channel_name = state_query[0].channel_name
+            channel_layer = get_channel_layer()
+
+            # Build and send a command to the frontend
+            command = {'type': 'send_msg_incorrect'}
+            async_to_sync(channel_layer.send)(channel_name, command)
+
+        return Response()
+
+
 class FinishExperiment(APIView):
 
     def get(self, request, format=None):
