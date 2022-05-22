@@ -4,7 +4,7 @@
   "objective": "return a definition",
   "function":
   {
-    "run_template": "dialogue_functions.definitions.get_definition_2024()",
+    "run_template": "dialogue_functions.definitions.get_definition_2029()",
     "results": [
       {
         "result_type": "single",
