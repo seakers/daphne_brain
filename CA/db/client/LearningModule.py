@@ -3,7 +3,7 @@ import json
 
 
 from client.modules.basics import get_module as get_basic_module
-from client.modules.remote_sensing import get_module as get_rms_module
+from client.modules.mission_payloads import get_module as get_rms_module
 from client.modules.spacecraft_bus import get_module as get_sb_module
 from client.modules.bottom_up_ca import get_module as get_buca_module
 from client.modules.eoc_learning_curve import get_module as get_eocl_module

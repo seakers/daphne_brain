@@ -289,7 +289,7 @@ class Question(DeclarativeBase):
     difficulty = Column('difficulty', Float)
     discrimination = Column('discrimination', Float)
     guessing = Column('guessing', Float)
-    explanation = Column('explanation', String)
+    explanation = Column('explanation', String, nullable=True, default=None)
 
 
 

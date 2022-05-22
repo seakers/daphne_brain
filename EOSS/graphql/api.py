@@ -213,7 +213,7 @@ class GraphqlClient:
         query_result = self.execute_query(query, variables)
         return query_result["data"]["Question"]
 
-    def get_previously_asked_questions(self, user_id):
+    def get_previously_asked_test_questions(self, user_id):
         query = '''
             query get_previously_asked_questions($user_id: Int!) {
                 test: Test(where: {user_id: {_eq: $user_id}, in_progress: {_eq: true}}) {
@@ -229,6 +229,26 @@ class GraphqlClient:
         }
         query_result = self.execute_query(query, variables)
         return query_result["data"]["test"]
+
+
+    def get_previously_asked_module_questions(self, user_id, topic_id):
+        query = '''
+            query get_previously_asked_module_questions($user_id: Int!, $topic_id: Int!) {
+                slide: Slide(where: {user_id: {_eq: $user_id}, type: {_eq: "question"}, Question: {Join__Question_Topics: {topic_id: {_eq: $topic_id}}}, answered: {_eq: true}}) {
+                    id
+                    question: Question {
+                        id
+                        text
+                    }
+                }
+            }
+        '''
+        variables = {
+            'user_id': user_id,
+            'topic_id': topic_id
+        }
+        query_result = self.execute_query(query, variables)
+        return query_result["data"]["slide"]
 
 
 

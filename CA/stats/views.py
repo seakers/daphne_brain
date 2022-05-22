@@ -55,7 +55,7 @@ class UpdateModelTID(APIView):
 class AdaptiveQuestion(APIView):
 
     def post(self, request, format=None):
-        print('--> GETTING ADAPTIVE QUESTION')
+        print('\n----- GETTING ADAPTIVE QUESTION -----')
 
         user_info = get_or_create_user_information(request.session, request.user)
         stats_client = StatsClient(user_info)
