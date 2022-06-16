@@ -14,8 +14,8 @@ from dialogue.views import Command, Dialogue, ClearHistory
 
 class EOSSCommand(Command):
     daphne_version = "EOSS"
-    command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian']
-    condition_names = ['analyst', 'engineer', 'critic', 'historian']
+    command_options = ['iFEED', 'VASSAR', 'Critic', 'Historian', 'Teacher']
+    condition_names = ['analyst', 'engineer', 'critic', 'historian', 'teacher']
 
     def get_current_context(self, user_info: UserInformation):
         context = {}

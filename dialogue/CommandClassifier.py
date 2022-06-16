@@ -102,13 +102,6 @@ class CommandClassifier:
             self.confidence.append(module_obj)
         self.confidence.sort(key=lambda itenz: itenz['confidence'], reverse=True)
 
-
-
-
-
-
-
-
         # --> 6. Return logits
         return self.role_logits
 
@@ -128,11 +121,6 @@ class CommandClassifier:
         x = tokenizer.texts_to_sequences([self.command.cmd_clean])
         expected_input_length = loaded_model.layers[0].input_shape[0][1]
         x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-
-
-        print(x.shape)
-        print('--> EXPECTED INPUT LENGTH:', expected_input_length)
-
 
         # --> 4. Classify
         self.type_logits = loaded_model.predict(x)
