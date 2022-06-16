@@ -178,10 +178,7 @@ class Command(APIView):
         # Obtain the merged context
         context = self.get_current_context(user_info)
 
-        print("------------ TESTING")
-        print(request.data['command'])
-        print(request.data)
-        print(request)
+        print("------------ PROCESSING DAPHNE TEXTUAL COMMAND -----------")
 
         # Save user input as part of the dialogue history
         DialogueHistory.objects.create(user_information=user_info,
@@ -254,7 +251,7 @@ class Command(APIView):
                 # If highest value prediction is over 95%, take that question. If over 90%, ask the user to make sure
                 # that is correct by choosing over 3. If less, call BS
                 max_value = np.amax(command_predictions)
-                if max_value > 0.95:
+                if max_value > 0.90:
                     command_type = command_processing.get_top_types(command_predictions, self.daphne_version,
                                                                     command_class, top_number=1)[0]
                     new_dialogue_contexts = self.create_dialogue_contexts()
@@ -262,11 +259,11 @@ class Command(APIView):
                                                                       condition_name, user_info, context,
                                                                       new_dialogue_contexts, request.session)
                     self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
-                elif max_value > 0.90:
-                    command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
-                                                                     command_class, top_number=3)
-                    command_processing.choose_command(command_types, self.daphne_version, command_role, command_class,
-                                                      user_info)
+                # elif max_value > 0.90:
+                #     command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
+                #                                                      command_class, top_number=3)
+                #     command_processing.choose_command(command_types, self.daphne_version, command_role, command_class,
+                #                                       user_info)
                 else:
                     command_processing.not_answerable(user_info)
 
