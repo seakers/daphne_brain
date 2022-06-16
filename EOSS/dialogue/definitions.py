@@ -6,10 +6,10 @@ def get_definition_5000():
     return "Delta-V is the total change in spacecraft velocity over a mission lifecycle"
 
 def get_definition_5001():
-    return "Eccentricity is the deviation of a spacecraft's orbit from circularity"
+    return "Eccentricity is the deviation of an orbit from circularity"
 
 def get_definition_5002():
-    return "Orbital inclination measures the tilt of a spacecraft's orbit around a celestial body. It is expressed as the angle between a reference plane and the orbital plane or axis of direction of the orbiting object."
+    return "Orbital inclination measures the tilt of a spacecraft\'s orbit around a celestial body. It is expressed as the angle between a reference plane and the orbital plane or axis of direction of the orbiting object."
 
 def get_definition_5003():
     return "The three main approaches to cost estimation are the following: top-down, bottom-up, and anaology."

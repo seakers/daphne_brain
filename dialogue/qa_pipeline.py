@@ -121,9 +121,9 @@ def get_dialogue_functions(daphne_version):
 
 
 def load_type_info(question_type, daphne_version, module_name):
-    print('--> LOAD TYPE INFO:', daphne_version, module_name, question_type)
     type_info_file = os.path.join(os.getcwd(), daphne_version, "dialogue", "command_types", module_name,
                                   str(question_type) + '.json')
+    print('--> LOAD TYPE INFO:', daphne_version, module_name, type_info_file)
     with open(type_info_file, 'r') as file:
         type_info = json.load(file)
     information = {}

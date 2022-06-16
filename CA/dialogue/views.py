@@ -164,12 +164,12 @@ class LMCommand(APIView):
         user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
 
         # --> 1. Save command into DialogueHistory entry
-        DialogueHistory.objects.create(user_information=user_info,
-                                       voice_message=request.data["command"],
-                                       visual_message_type="[\"text\"]",
-                                       visual_message="[\"" + request.data["command"] + "\"]",
-                                       dwriter="user",
-                                       date=datetime.datetime.utcnow())
+        # DialogueHistory.objects.create(user_information=user_info,
+        #                                voice_message=request.data["command"],
+        #                                visual_message_type="[\"text\"]",
+        #                                visual_message="[\"" + request.data["command"] + "\"]",
+        #                                dwriter="user",
+        #                                date=datetime.datetime.utcnow())
 
 
         # --> 2. Process command and return
@@ -201,11 +201,10 @@ class LMCommand(APIView):
 
         # --> 2. Classify command (no need to process intents)
         client = CommandClassifier(command, daphne_version='CA')
-        client.classify(max_role_matches=3)
+        client.classify(max_role_matches=4)
 
         # --> 3. Return confidence levels for learning modules and slides
         confidence = client.get_prediction_confidence()
-        print('--> CONFIDENCE', confidence)
         return confidence
 
 

@@ -178,7 +178,7 @@ class Command(APIView):
         # Obtain the merged context
         context = self.get_current_context(user_info)
 
-        print("------------ PROCESSING DAPHNE TEXTUAL COMMAND -----------")
+        print("\n\n------------ PROCESSING DAPHNE TEXTUAL COMMAND -----------")
 
         # Save user input as part of the dialogue history
         DialogueHistory.objects.create(user_information=user_info,
@@ -208,6 +208,7 @@ class Command(APIView):
 
         # If this a choice between three options, check the one the user chose and go on with that
         if "is_clarifying_input" in context["dialogue"] and context["dialogue"]["is_clarifying_input"]:
+            print('--> CLARIFYING')
             user_choice = request.data['command'].strip().lower()
             choices = json.loads(context["dialogue"]["clarifying_commands"])
             if user_choice == "first":
@@ -234,6 +235,7 @@ class Command(APIView):
             self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
 
         else:
+            print('--> HANDLING')
             # Preprocess the command
             processed_command = nlp(request.data['command'].strip())
 
@@ -251,6 +253,7 @@ class Command(APIView):
                 # If highest value prediction is over 95%, take that question. If over 90%, ask the user to make sure
                 # that is correct by choosing over 3. If less, call BS
                 max_value = np.amax(command_predictions)
+                print('--> MAX CONFIDENCE:', max_value)
                 if max_value > 0.90:
                     command_type = command_processing.get_top_types(command_predictions, self.daphne_version,
                                                                     command_class, top_number=1)[0]
@@ -259,15 +262,14 @@ class Command(APIView):
                                                                       condition_name, user_info, context,
                                                                       new_dialogue_contexts, request.session)
                     self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
-                # elif max_value > 0.90:
-                #     command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
-                #                                                      command_class, top_number=3)
-                #     command_processing.choose_command(command_types, self.daphne_version, command_role, command_class,
-                #                                       user_info)
                 else:
+                    print('--> COMMAND NOT ANSWERABLE')
                     command_processing.not_answerable(user_info)
 
+
         frontend_response = command_processing.think_response(user_info)
+        print('--> FINAL RESPONSE')
+        print(frontend_response)
 
         return Response({'response': frontend_response})
 

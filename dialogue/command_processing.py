@@ -29,10 +29,7 @@ def classify_command_role(command, daphne_version):
     expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
 
-    print(x.shape)
-    print('--> EXPECTED INPUT LENGTH EOSS ROLES:', expected_input_length)
-
-    print("\nEvaluating...\n")
+    print("--> Evaluating roles...")
 
     # Evaluation
     # ==================================================
@@ -58,10 +55,7 @@ def command_type_predictions(processed_command, daphne_version, module_name):
     expected_input_length = loaded_model.layers[0].input_shape[0][1]
     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
 
-    print(x.shape)
-    print('--> EXPECTED INPUT LENGTH EOSS TYPES:', expected_input_length)
-
-    print("\nEvaluating...\n")
+    print("--> Evaluating types...")
 
     # Evaluation
     # ==================================================
@@ -212,13 +206,21 @@ def command(processed_command, question_type, command_class, condition_name, use
     # Load list of required and optional parameters from question, query and response format for question type
     information = qa_pipeline.load_type_info(question_type, daphne_version, command_class)
     # Extract required and optional parameters
+
+    print('--> COMMAND INFO')
+    print(information)
+
     try:
         data = qa_pipeline.extract_data(processed_command, information["params"], user_information, context)
     except ParameterMissingError as error:
         print(error)
         return error_answers(information["objective"], error.missing_param)
+
+
     # Add extra parameters to data
     data = qa_pipeline.augment_data(data, user_information, session)
+
+
     # Query the database
     if information["type"] == "db_query":
         results = qa_pipeline.query(information["query"], data, command_class)
@@ -226,8 +228,14 @@ def command(processed_command, question_type, command_class, condition_name, use
         results = qa_pipeline.run_function(information["function"], data, daphne_version, context, new_dialogue_contexts, user_information, session)
     else:
         raise ValueError("JSON format not supported!")
+
+    print('--> RESULTS')
+    print(results)
     # Construct the response from the database query and the response format
     answers = qa_pipeline.build_answers(information["voice_response"], information["visual_response"], results, data)
+
+    print('--> ANSWERS')
+    print(answers)
 
     # Return the answer to the client
     return answers
