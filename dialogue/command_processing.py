@@ -146,9 +146,9 @@ def not_answerable(context: UserInformation):
     #     'visual_answer': ['I don\'t understand your command. Please rephrase it.']
     # }
     answer = {
-        'voice_answer': 'I can\'t identify an answer to this question. Please rephrase it or refer to the Recommended Material section',
+        'voice_answer': 'I can\'t identify an answer to this question. Please rephrase it or refer to the recommended material below',
         'visual_answer_type': ['text'],
-        'visual_answer': ['I can\'t identify an answer to this question. Please rephrase it or refer to the Recommended Material section']
+        'visual_answer': ['I can\'t identify an answer to this question. Please rephrase it or refer to the recommended material below']
     }
 
     dialogue_history = DialogueHistory.objects.create(user_information=context,
