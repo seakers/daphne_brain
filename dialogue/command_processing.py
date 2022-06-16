@@ -140,10 +140,15 @@ def choose_command(command_types, daphne_version, command_role, command_class, c
 
 def not_answerable(context: UserInformation):
     # Load information on the three commands
+    # answer = {
+    #     'voice_answer': 'I don\'t understand your command. Please rephrase it.',
+    #     'visual_answer_type': ['text'],
+    #     'visual_answer': ['I don\'t understand your command. Please rephrase it.']
+    # }
     answer = {
-        'voice_answer': 'I don\'t understand your command. Please rephrase it.',
+        'voice_answer': 'I can\'t identify an answer to this question. Please rephrase it or refer to the Recommended Material section',
         'visual_answer_type': ['text'],
-        'visual_answer': ['I don\'t understand your command. Please rephrase it.']
+        'visual_answer': ['I can\'t identify an answer to this question. Please rephrase it or refer to the Recommended Material section']
     }
 
     dialogue_history = DialogueHistory.objects.create(user_information=context,
