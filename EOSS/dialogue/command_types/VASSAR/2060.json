@@ -1,0 +1,30 @@
+{
+  "type": "run_function",
+  "params": [],
+  "objective": "return a definition",
+  "function":
+  {
+    "run_template": "dialogue_functions.definitions.get_definition_2060()",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "text_response": "command_results[0]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${text_response}"
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${text_response}"
+    }
+  ]
+}
