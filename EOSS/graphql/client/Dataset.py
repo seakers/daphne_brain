@@ -435,7 +435,6 @@ class DatasetGraphqlClient(Client):
         return result['architecture']
 
     async def get_architectures(self, dataset_id=None, problem_id=None, costs=True, scores=True):
-        print('--> GETTING ARCHITECTURES')
 
         # --> 1. Determine dataset_id
         if dataset_id is None:

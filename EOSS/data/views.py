@@ -19,17 +19,16 @@ from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 class ImportData(APIView):
     """
-        Imports problem data based on problem_id
-    """
+    Description:
+        Imports dataset from database
 
-    def boolean_string_to_boolean_array(self, boolean_string):
-        return [b == "1" for b in boolean_string]
+    Request Args:
+        group_id
+        problem_id
+        dataset_id
 
-    
-    """
-        Request fields
-        - problem_id
-        - group_id
+    Returns:
+        List of dataset architectures
     """
     def post(self, request, format=None):
         try:
@@ -40,11 +39,10 @@ class ImportData(APIView):
             problem_id = int(request.data['problem_id'])
             group_id = int(request.data['group_id'])
             dataset_id = int(request.data['dataset_id'])
+            print('--> DATASET ID', dataset_id, 'PROBLEM ID', problem_id)
 
             # Get problem architectures
             # dbClient = GraphqlClient(problem_id=problem_id)
-
-            print("--> PROBLEM IDERRR: ", problem_id)
 
             # If dataset_id is -1, copy all architectures in the default set for this problem into a user-specific dataset called 'default' and set that as the main dataset,
             # Else, use the request dataset_id to get architectures
@@ -93,22 +91,19 @@ class ImportData(APIView):
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")
 
+    def boolean_string_to_boolean_array(self, boolean_string):
+        return [b == "1" for b in boolean_string]
+
+
 class CopyData(APIView):
     """ Copies a dataset into another dataset
 
     Request Args:
-        src_dataset_id: Id of source dataset
+        src_dataset_id: id of source dataset
         dst_dataset_name: Name of new dataset
 
     Returns:
-        dst_dataset_id: Id of the new dataset.
-
-    """
-    """
-        Rquest Fields
-        - problem_id
-        - group_id
-        - load_user_files
+        dst_dataset_id: id of the new dataset.
 
     """
     def post(self, request, format=None):
@@ -137,6 +132,11 @@ class CopyData(APIView):
             return Response({
                 "error": "This is only available to registered users!"
             })
+
+
+
+
+
 
 
 
