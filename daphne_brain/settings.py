@@ -22,39 +22,52 @@ SECRET_KEY = 'aaaaa'
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['3.128.235.245', 'localhost', '127.0.0.1', 'www.selva-research.com', 
-                 'selva-research.engr.tamu.edu', 'dev.selva-research.com', 'daphne', 'daphne_brain'
-                 'daphne-at-dev.selva-research.com', 'daphne-at.selva-research.com']
+ALLOWED_HOSTS = [
+    '3.128.235.245',
+    '127.0.0.1',
+    'localhost',
+    'daphne',
+    'daphne_brain',
+    'www.selva-research.com',
+    'dev.selva-research.com',
+    'prod.selva-research.com',
+    'selva-research.engr.tamu.edu',
+    'daphne-at-dev.selva-research.com',
+    'daphne-at.selva-research.com'
+]
 
 USE_X_FORWARDED_HOST = True
 
-# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT', 'example_problem']
+# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
 ACTIVE_MODULES = ['EOSS']
 
 EDL_PATH = '/Users/ssantini/Code/'
 
 
-# Application definition
-
 INSTALLED_APPS = [
+
+    # Installed Packages
     'channels',
     'corsheaders',
-    'daphne_context',
-    'example_problem',
-    'EOSS',
-    'EDL',
-    'AT',
     'auth_API',
-    'experiment',
-    'experiment_at',
-    'iFEED_API',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework'
+    'rest_framework',
+
+    # Seaklab APIs
+    'daphne_context',
+    'example_problem',
+    'EOSS',
+    'EDL',
+    'AT',
+    'experiment',
+    'experiment_at',
+    'iFEED_API',
+
 ]
 
 MIDDLEWARE = [
@@ -74,8 +87,7 @@ ROOT_URLCONF = 'daphne_brain.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -98,8 +110,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'daphne',
-        'USER': os.environ['SQL_USER'],
-        'PASSWORD': os.environ['SQL_PASSWORD'],
+        'USER': os.environ['USER'],
+        'PASSWORD': os.environ['PASSWORD'],
         'HOST': os.environ['POSTGRES_HOST'],
         'PORT': os.environ['POSTGRES_PORT'],
     }
@@ -129,7 +141,8 @@ AUTH_PASSWORD_VALIDATORS = [
 CORS_ORIGIN_WHITELIST = (
     'http://daphne.engr.tamu.edu',
     'http://localhost:8080',
-    'http://dev.selva-research.com'
+    'http://dev.selva-research.com',
+    'http://prod.selva-research.com'
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -138,7 +151,8 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = (
     'http://daphne.engr.tamu.edu',
     'http://localhost:8080',
-    'http://dev.selva-research.com'
+    'http://dev.selva-research.com',
+    'http://prod.selva-research.com'
 )
 
 
@@ -179,8 +193,8 @@ ALCHEMY_DATABASE = {
     'drivername': 'postgresql+psycopg2',
     'host': os.environ['POSTGRES_HOST'],
     'port': os.environ['POSTGRES_PORT'],
-    'username': os.environ['SQL_USER'],
-    'password': os.environ['SQL_PASSWORD'],
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
     'database': 'daphne'
 }
 
@@ -188,8 +202,8 @@ EDL_DATABASE = {
     'drivername': 'postgresql+psycopg2',
     'host': os.environ['POSTGRES_HOST'],
     'port': os.environ['POSTGRES_PORT'],
-    'username': os.environ['SQL_USER'],
-    'password': os.environ['SQL_PASSWORD'],
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
     'database': 'edldatabase'
 }
 
@@ -197,8 +211,8 @@ ECLSS_DATABASE = {
     'drivername': 'postgres',
     'host': 'www.selva-research.com',
     'port': '5432',
-    'username': os.environ['SQL_USER'],
-    'password': os.environ['SQL_PASSWORD'],
+    'username': os.environ['USER'],
+    'password': os.environ['PASSWORD'],
     'database': 'eclss'
 }
 

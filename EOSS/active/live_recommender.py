@@ -79,6 +79,10 @@ def generate_engineer_message(user_info: UserInformation, genome, session_key):
     return message
 
 
+
+
+
+
 def active_historian_response(user_info: UserInformation, inputs, session_key):
     input_str = boolean_array_2_boolean_string(inputs)
     design = {'inputs': input_str}
@@ -128,6 +132,10 @@ def generate_historian_message(user_info: UserInformation, genome, session_key):
                                    dwriter="daphne",
                                    date=datetime.datetime.utcnow())
     return message
+
+
+
+
 
 
 def active_analyst_response(user_info: UserInformation, session_key):
@@ -263,6 +271,10 @@ def generate_analyst_message(user_info: UserInformation, session_key):
                                    dwriter="daphne",
                                    date=datetime.datetime.utcnow())
     return message
+
+
+
+
 
 
 def parse_suggestions_list(raw_list):
