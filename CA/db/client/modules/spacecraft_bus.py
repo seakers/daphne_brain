@@ -18,27 +18,27 @@ def get_module():
     builder.add_slide('DODS_20')  # Satellite Bus image
     builder.add_slide('DODS_21')  # Satellite Bus functions
 
-    # builder.add_tf_question(
-    #     'One function of the satellite bus is to point the onboard payload.',
-    #     True,
-    #     'This is true',
-    #     ['Spacecraft Subsystems']
-    # )
-    #
-    # builder.add_mc_question(
-    #     'Which of the following are considered functions of the spacecraft bus?',
-    #     [
-    #         {'text': 'A. Maintains temperature',
-    #          'correct': False, 'id': 0},
-    #         {'text': 'B. Provides power',
-    #          'correct': False, 'id': 1},
-    #         {'text': 'C. Transmits mission and tracking data to ground',
-    #          'correct': False, 'id': 2},
-    #         {'text': 'D. All of the above', 'correct': True, 'id': 3}
-    #     ],
-    #     'The spacecraft bus is responsible for all of these functions',
-    #     ['Spacecraft Subsystems']
-    # )
+    builder.add_tf_question(
+        'One function of the satellite bus is to point the onboard payload.',
+        True,
+        'Oftentimes it is the case that a ground point of interest is not located directly on the satellite\'s nadir. Thus, it is necessary to be able to point the payload.',
+        ['Spacecraft Subsystems']
+    )
+
+    builder.add_mc_question(
+        'Which of the following are considered functions of the spacecraft bus?',
+        [
+            {'text': 'A. Maintains temperature',
+             'correct': False, 'id': 0},
+            {'text': 'B. Provides power',
+             'correct': False, 'id': 1},
+            {'text': 'C. Transmits mission and tracking data to ground',
+             'correct': False, 'id': 2},
+            {'text': 'D. All of the above', 'correct': True, 'id': 3}
+        ],
+        'The spacecraft bus is responsible for all of these functions',
+        ['Spacecraft Subsystems']
+    )
 
 
 

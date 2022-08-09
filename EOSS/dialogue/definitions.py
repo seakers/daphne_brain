@@ -140,13 +140,31 @@ def get_definition_5038():
 ### --- START LIFECYCLE COST --- ###
 
 def get_definition_5039():
-    return "Economy of scale refers to a proportionate saving in costs gained by an increased level of production."
+    return "Lifecycle cost is the total mission cost from planning through end-of-life"
 
 def get_definition_5040():
-    return "For spacecraft, slew and slewing refers to a spacecraft's change in attitude in reference to a fixed position."
+    return "The three phases of lifecycle cost are: 1) Research, Development, Test, and Evaluation, 2) Production, and 3) Operations and Maintenance."
 
 def get_definition_5041():
-    return "Technology readiness levels (TRLs) are a method for estimating the maturity of technologies. The use of TRLs enables consistent, uniform discussions of technical maturity across different types of technology."
+    return "Qualification units are used in qualification testing to verify the design and requirements."
 
 def get_definition_5042():
-    return "A power law is a functional relationship between two quantities, where a relative change in one quantity results in a proportional relative change in the other quantity (one quantity varies as a power of another). Ex: the area of a square in terms of the length of a side."
+    return "Brassboards are experimental or demonstration test models following an earlier prototyping stage called breadboards."
+
+def get_definition_5043():
+    return "Theoretical first units represent the first flight-qualified satellite off the production line."
+
+def get_definition_5044():
+    return "The learning curve is a factor multiplied by the theoretical first unit cost to determine the production cost of subsequent satellites."
+
+def get_definition_5045():
+    return "Space mission final operating capability represents the full compliment of on-orbit satellites."
+
+def get_definition_5046():
+    return "A satellite constellation is a group of satellites working together as a system."
+
+def get_definition_5047():
+    return "A satellite\'s orbit has implications on many factors such as delta-v budget (low altitude orbits need more station-keeping maneuvers), optical payload (spacial resolution), and revisit time for example."
+
+def get_definition_5048():
+    return "Satellite slewing agility determines the satellite\'s ability to change its attitude."

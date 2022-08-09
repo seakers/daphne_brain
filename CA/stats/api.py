@@ -129,21 +129,36 @@ class StatsClient:
 
         # --> 6. Iterate over questions to find the highest contributing one
         contributions = []
+        difficulties = []
         for question in questions:
             contribution = self.calculate_contribution(current_estimate, question, previous_answers)
+            ideal_theta = self.calculate_ideal_theta(current_estimate, question)
+            difficulties.append(float(question['difficulty']))
             contributions.append(contribution)
+            print('--> ID:', question['id'], current_estimate, ideal_theta, contribution)
+
         question = questions[contributions.index(max(contributions))]
+        question_close = questions[self.find_closest_difficulty_idx(current_estimate, difficulties)]
 
         # --> 7. Correctly format selected question and return
         q_return = {
-            'text': str(question['text']),
-            'choices': str(question['choices']),
-            'topic_ids': json.dumps([int(x['topic_id']) for x in question['topics']]),
-            'question_id': question['id']
+            'text': str(question_close['text']),
+            'choices': str(question_close['choices']),
+            'topic_ids': json.dumps([int(x['topic_id']) for x in question_close['topics']]),
+            'question_id': question_close['id']
         }
         return q_return
 
 
+    def find_closest_difficulty_idx(self, current_estimation, difficulties):
+        closest_idx = 0
+        min_distance = 100
+        for idx, difficulty in enumerate(difficulties):
+            q_distance = abs(current_estimation - difficulty)
+            if q_distance < min_distance:
+                min_distance = q_distance
+                closest_idx = idx
+        return closest_idx
 
 
     def calculate_contribution(self, current_estimate, question, previous_answers):
@@ -183,7 +198,27 @@ class StatsClient:
         return contribution
 
 
+    def calculate_ideal_theta(self, current_estimate, question):
+        a = float(question['discrimination'])
+        b = float(question['difficulty'])
+        c = float(question['guessing'])
 
+        print('--> QUESTION PARAMETERS:', a, b, c)
+
+
+        # --> 1. Get question model
+        q_model = IIIPL(a, b, c)
+
+        # --> 2. Get probability user get question correct / incorrect
+        correct_prob = q_model.prob_correct(current_estimate)
+        incorrect_prob = q_model.prob_incorrect(current_estimate)
+
+        # --> 3. Calculate ideal theta for question
+        lhs = (a * a) * (incorrect_prob / correct_prob)
+        rhs = ((correct_prob - c) * (correct_prob - c)) / ((1 - c) * (1 - c))
+        ideal_theta = lhs * rhs
+
+        return ideal_theta
 
 
 
