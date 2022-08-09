@@ -12,24 +12,30 @@ class CloneGenerator:
         self.init = 0
         self.user_info = user_info
 
-        #####################
-        ### EXAMPLE USAGE ###
-        #####################
+        # --> User ID
+        self.user_id = None
+        if self.user_info.user:
+            self.user_id = self.user_info.user.id
+
+
+
 
     ####################
     ### ARCHITECTURE ###
     ####################
 
     async def architectures(self, architectures, dataset_id, costs=False, scores=False):
-        return await _proc(self._clone_architecture_strings, architectures, dataset_id, costs, scores)
+        return await _proc(CloneGenerator._clone_architecture_strings, architectures, dataset_id, self.user_id, costs, scores)
 
-    def _clone_architecture_strings(self, architectures, dataset_id, costs=False, scores=False):
+    @staticmethod
+    def _clone_architecture_strings(architectures, dataset_id, user_id, costs=False, scores=False):
         arch_list = []
         for idx, arch in enumerate(architectures):
-            arch_list.append(self._clone_architecture(arch, dataset_id, costs=costs, scores=scores))
+            arch_list.append(CloneGenerator._clone_architecture(arch, dataset_id, user_id, costs=costs, scores=scores))
         return '[' + ','.join(arch_list) + ']'
 
-    def _clone_architecture(self, architecture, dataset_id, costs=False, scores=False):
+    @staticmethod
+    def _clone_architecture(architecture, dataset_id, user_id, costs=False, scores=False):
 
         def convert_bool(input):
             if bool(input) is True:
@@ -40,13 +46,13 @@ class CloneGenerator:
         # --> 1. Build cost string
         cost_string = """"""
         if costs is True:
-            cost_info = self._clone_architecture_cost_info(architecture)
+            cost_info = CloneGenerator._clone_architecture_cost_info(architecture)
             cost_string = """ArchitectureCostInformations: {data: %s},""" % cost_info
 
         # --> 2. Build score string
         score_string = """"""
         if scores is True:
-            score_info = self._clone_architecture_score_info(architecture)
+            score_info = CloneGenerator._clone_architecture_score_info(architecture)
             score_string = """
                 ArchitectureScoreExplanations: {data: %s}, 
                 PanelScoreExplanations: {data: %s},
@@ -60,12 +66,10 @@ class CloneGenerator:
             )
 
         # --> 3. Ensure correct if user id is None
-        user_id = architecture['user_id']
-        if user_id is None:
-            if self.user_info is not None:
-                user_id = self.user_info.user.id
-        else:
-            user_id = int(user_id)
+        if not isinstance(user_id, int):
+            user_id = architecture['user_id']
+            if user_id is None:
+                user_id = int(user_id)
 
         # --> 4. Set eval status to false when cloning an arch without cost or score info
         eval_status = convert_bool(architecture['eval_status'])
@@ -108,7 +112,8 @@ class CloneGenerator:
 
         return clone
 
-    def _clone_architecture_score_info(self, architecture):
+    @staticmethod
+    def _clone_architecture_score_info(architecture):
 
         # --> 1. Create score info
         score_info = {
@@ -165,12 +170,13 @@ class CloneGenerator:
 
         return score_info
 
-    def _clone_architecture_cost_info(self, architecture):
+    @staticmethod
+    def _clone_architecture_cost_info(architecture):
         all_cost_info = '['
 
         for idx, info in enumerate(architecture['ArchitectureCostInformations']):
-            budget_info = self._clone_architecture_budget_info(info)
-            payload_info = self._clone_architecture_payload_info(info)
+            budget_info = CloneGenerator._clone_architecture_budget_info(info)
+            payload_info = CloneGenerator._clone_architecture_payload_info(info)
             cost_info = """
                 {
                     ArchitectureBudgets: {data: %s}, 
@@ -199,7 +205,8 @@ class CloneGenerator:
 
         return all_cost_info
 
-    def _clone_architecture_budget_info(self, cost_info):
+    @staticmethod
+    def _clone_architecture_budget_info(cost_info):
         all_budget_info = '['
 
         for idx, budget in enumerate(cost_info['ArchitectureBudgets']):
@@ -213,7 +220,8 @@ class CloneGenerator:
 
         return all_budget_info
 
-    def _clone_architecture_payload_info(self, cost_info):
+    @staticmethod
+    def _clone_architecture_payload_info(cost_info):
         all_payload_info = '['
 
         for idx, budget in enumerate(cost_info['ArchitecturePayloads']):
