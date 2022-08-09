@@ -195,7 +195,11 @@ class DatasetGraphqlClient(Client):
             }
             """ % (problem_id)
         )
+
+
+
         result = await self._query(query)
+        print('--> QUERY RESULT', result, query)
         if 'Dataset' not in result:
             return None
         if len(result['Dataset']) == 0:
@@ -323,26 +327,26 @@ class DatasetGraphqlClient(Client):
         # --> 2. Get architectures from source dataset
         architectures = await self.get_architectures(dataset_id=source_id, costs=costs, scores=scores)
 
-        # --> 3. Open new process to clone archs
-        arch_strings = await CloneGenerator(self.user_info).architectures(architectures, target_id, costs, scores)
+        # --> 3. Open new process to clone architectures
+        if len(architectures) > 0:
+            arch_strings = await CloneGenerator(self.user_info).architectures(architectures, target_id, costs, scores)
 
-        # --> 4. Build mutation
-        mutation = """
-            mutation insert_architectures {
-                insert_Architecture(
-                    objects: %s
-                ) {
-                    returning {
-                        id
+            # --> 4. Build mutation
+            mutation = """
+                mutation insert_architectures {
+                    insert_Architecture(
+                        objects: %s
+                    ) {
+                        returning {
+                            id
+                        }
                     }
                 }
-            }
-        """ % arch_strings
-        # await sync_to_async(self._save)(mutation_string, 'mutation.json')
+            """ % arch_strings
+            # await sync_to_async(self._save)(mutation_string, 'mutation.json')
 
-        # --> 5. Execute mutation and return new dataset id
-        await self._query(mutation)
-
+            # --> 5. Execute mutation and return new dataset id
+            await self._query(mutation)
 
         return target_id
 

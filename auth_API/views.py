@@ -17,18 +17,18 @@ from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 import requests
 import json
 
+
 class Login(APIView):
     """
     Login a user
     """
-
     def post(self, request, format=None):
-        # Try to authorize the user
+
+        # --> Authenticate user from request
         username = request.data['username']
         password = request.data['password']
         daphne_version = request.data['daphneVersion']
         user = authenticate(request, username=username, password=password)
-        #request.session.set_expiry(1800)
 
         if user is not None:
             # Try to look for user session object. If it exists, then the session will be changed to that. If not,
@@ -65,10 +65,9 @@ class Login(APIView):
                 'permissions': []
             })
         else:
-            # TODO: Get different messages based on auth error
             return Response({
                 'status': 'auth_error',
-                'login_error': 'This combination of username and password is not valid!'
+                'login_error': 'Invalid Login!'
             })
 
 
@@ -77,6 +76,7 @@ class Logout(APIView):
     Logout a user -> Important!! When the frontend logs out it needs to start fresh
     """
     def post(self, request, format=None):
+
         # Log the user out
         logout(request)
         # Return the logout response
@@ -86,23 +86,35 @@ class Logout(APIView):
 
 
 class Register(APIView):
+    username_blacklist = ['default']
     """
     Register a user
     """
     def post(self, request, format=None):
-        print("--> REGISTERING USER")
+
+        # --> Extract fields
         username = request.data["username"]
         email = request.data["email"]
         password1 = request.data["password1"]
         password2 = request.data["password2"]
 
-        # Validate all fields against our rules
-        if not password1 or not password2 or password1 != password2:
-            return Response({
-                'status': 'registration_error',
-                'registration_error': 'The passwords do not match.'
-            })
+        # --> Validate fields
+        validation = self.validate(username, email, password1, password2)
+        if validation is not None:
+            return validation
 
+        # --> Create user and insert into default group: (all users are admins)
+        try:
+            user_id = self.create_user(username, email, password1)
+            async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
+        except ValueError:
+            return Response({'status': 'registration_error',
+                             'registration_error': 'Error creating user!'})
+        return Response({'status': 'registered'})
+
+    def validate(self, username, email, password1, password2):
+
+        # --> Validate email
         try:
             validate_email(email)
         except ValidationError:
@@ -111,54 +123,31 @@ class Register(APIView):
                 'registration_error': 'Email has an incorrect format.'
             })
 
-        if username in ["default"]:
+        # --> Validate password
+        if not password1 or not password2 or password1 != password2:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'The passwords do not match.'
+            })
+
+        # --> Validate username isn't blacklisted
+        if username in self.username_blacklist:
             return Response({
                 'status': 'registration_error',
                 'registration_error': 'This username is already in use.'
             })
 
+        # --> Validate username uniqueness
         if User.objects.filter(username=username).exists():
             return Response({
                 'status': 'registration_error',
                 'registration_error': 'This username is already in use.'
             })
 
-        print("---> PASSED TESTS")
-        # Do the registration procedure which includes creating folders for all problems
-        try:
-            # Create user
-            user_id = self.create_user(username, email, password1)
-
-            # We must give the user access to the default group: seakers (default) - all users will be admins
-            self.insert_into_groups(user_id)
-            print("--> USER INSERTED INTO GROUP")
-
-
-        except ValueError:
-            return Response({
-                'status': 'registration_error',
-                'registration_error': 'Please write a username.'
-            })
-
-        print("--> FINISHED REGISTRATION")
-        return Response({
-            'status': 'registered'
-        })
-
     def create_user(self, username, email, password):
         user = User.objects.create_user(username, email, password)
         user.save()
-
-        print("--> USER CREATED ", user.id)
         return user.id
-
-    def insert_into_groups(self, user_id):
-        # client = GraphqlClient()
-        # result = client.insert_user_into_group(user_id)
-        # print("--> RESULT", result)
-        async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
-
-
 
 
 class ResetPassword(APIView):
@@ -184,6 +173,7 @@ class CheckStatus(APIView):
     Check if a user is logged in
     """
     def get(self, request, format=None):
+
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
 
         problem_id = user_info.eosscontext.problem_id
@@ -212,19 +202,19 @@ class CheckStatus(APIView):
         return Response(response)
 
 
-
 class GenerateSession(APIView):
     """
     Simply generate a session for the user (solves a ton of bugs)
     """
     def post(self, request, format=None):
+
         # Is this the first visit for this cookie?
         if request.session.session_key is None:
             request.session['is_guest'] = False
         request.session.save()                        # If None, create new session key and save
         return Response("Session generated")
 
-# Vassar Problem Editor
+
 class GetUserPk(APIView):
     """
     Simply generate a session for the user (solves a ton of bugs)
@@ -276,16 +266,16 @@ class CheckStatusHasura(APIView):
         # return Response(response)
 
 
-def get_user_pk(username):
-    users = User.objects.filter(username__exact=username)
-    if len(users) == 1:
-        print("---> USER FOUND", users[0].id)
-        return users[0].id
-    else:
-        print("---> USER PK ERROR")
-        return False
-
 class ConfirmGuest(APIView):
     def post(self, request, format=None):
         request.session['is_guest'] = True
         request.session.save()
+
+
+def get_user_pk(username):
+    users = User.objects.filter(username__exact=username)
+    if len(users) == 1:
+        return users[0].id
+    else:
+        print("---> USER PK ERROR")
+        return False

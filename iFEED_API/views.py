@@ -157,13 +157,6 @@ class SetTargetRegion(APIView):
             selected = request.data['selected_db']
             selected = selected[1:-1]
             selected_arch_ids = selected.split(',')
-            
-            # Convert strings to ints
-            behavioral = []
-            if selected_arch_ids:
-                for s in selected_arch_ids:
-                    if not len(s)==0:
-                        behavioral.append(int(s))
 
             # Get non-selected arch id's
             # non_selected = request.data['non_selected']
@@ -172,8 +165,15 @@ class SetTargetRegion(APIView):
             non_selected_arch_ids = non_selected.split(',')
 
             # Convert strings to ints
+            behavioral = []
+            if selected_arch_ids and selected != 'null':
+                for s in selected_arch_ids:
+                    if not len(s)==0:
+                        behavioral.append(int(s))
+
+            # Convert strings to ints
             non_behavioral = []
-            if non_selected_arch_ids:
+            if non_selected_arch_ids and non_selected != 'null':
                 for s in non_selected_arch_ids:
                     if not len(s)==0:
                         non_behavioral.append(int(s))

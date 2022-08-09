@@ -18,14 +18,8 @@ from EOSS.graphql.client.Abstract import AbstractGraphqlClient
 
 
 class ImportData(APIView):
-    """ Imports data from a csv file.
-
-    Request Args:
-        path: Relative path to a csv file residing inside Daphne project folder
-
-    Returns:
-        architectures: a list of python dict containing the basic architecture information.
-
+    """
+        Imports problem data based on problem_id
     """
 
     def boolean_string_to_boolean_array(self, boolean_string):
@@ -33,11 +27,9 @@ class ImportData(APIView):
 
     
     """
-        Rquest Fields
+        Request fields
         - problem_id
         - group_id
-        - load_user_files
-
     """
     def post(self, request, format=None):
         try:
@@ -52,7 +44,7 @@ class ImportData(APIView):
             # Get problem architectures
             # dbClient = GraphqlClient(problem_id=problem_id)
 
-            print("--> PROBLEM IDER: ", problem_id)
+            print("--> PROBLEM IDERRR: ", problem_id)
 
             # If dataset_id is -1, copy all architectures in the default set for this problem into a user-specific dataset called 'default' and set that as the main dataset,
             # Else, use the request dataset_id to get architectures
@@ -101,7 +93,6 @@ class ImportData(APIView):
         except Exception:
             raise ValueError("There has been an error when parsing the architectures")
 
-
 class CopyData(APIView):
     """ Copies a dataset into another dataset
 
@@ -146,6 +137,10 @@ class CopyData(APIView):
             return Response({
                 "error": "This is only available to registered users!"
             })
+
+
+
+
 
 """ Save current dataset to a new csv file in the user folder
 """
