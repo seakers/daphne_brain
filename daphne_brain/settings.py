@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     # Installed Packages
     'channels',
     'corsheaders',
-    'auth_API',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,6 +58,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     # Seaklab APIs
+    'auth_API',
     'daphne_context',
     'example_problem',
     'EOSS',
