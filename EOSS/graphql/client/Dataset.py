@@ -199,7 +199,6 @@ class DatasetGraphqlClient(Client):
 
 
         result = await self._query(query)
-        print('--> QUERY RESULT', result, query)
         if 'Dataset' not in result:
             return None
         if len(result['Dataset']) == 0:

@@ -39,7 +39,6 @@ class ImportData(APIView):
             problem_id = int(request.data['problem_id'])
             group_id = int(request.data['group_id'])
             dataset_id = int(request.data['dataset_id'])
-            print('--> DATASET ID', dataset_id, 'PROBLEM ID', problem_id)
 
             # Get problem architectures
             # dbClient = GraphqlClient(problem_id=problem_id)
