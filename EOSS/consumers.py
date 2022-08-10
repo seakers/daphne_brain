@@ -2,17 +2,22 @@ import asyncio
 import os
 import threading
 
+
 from asgiref.sync import sync_to_async, async_to_sync
 from channels.layers import get_channel_layer
+
+
+from daphne_context.models import UserInformation
+from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info
+from daphne_ws.consumers import DaphneConsumer
+
+
 from EOSS.aws.utils import get_boto3_client
 from EOSS.data.design_helpers import add_design
-from auth_API.helpers import get_user_information
-from daphne_context.models import UserInformation
-from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info, sync_to_async_mt
-from daphne_ws.consumers import DaphneConsumer
 from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
 from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+
 
 class EOSSConsumer(DaphneConsumer):
     # WebSocket event handlers
