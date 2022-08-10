@@ -12,6 +12,10 @@ from django.conf import settings
 
 from EOSS.models import EOSSContext
 
+from EOSS.utils.helpers import boolean_string_to_boolean_array
+
+from EOSS.vassar.ObjectiveSatisfaction import ObjectiveSatisfaction
+
 from EOSS.graphql.api import GraphqlClient
 from EOSS.aws.utils import get_boto3_client
 from EOSS.aws.EvalQueue import EvalQueue
@@ -20,35 +24,10 @@ from daphne_ws.async_db_methods import sync_to_async_mt
 
 from asgiref.sync import async_to_sync, sync_to_async
 from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+
 from EOSS.graphql.client.Admin import AdminGraphqlClient
 from EOSS.graphql.client.Problem import ProblemGraphqlClient
 from EOSS.graphql.client.Abstract import AbstractGraphqlClient
-
-
-ACCESS_KEY = 'AKIAJVM34C5MCCWRJCCQ'
-SECRET_KEY = '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'
-
-def bool_list_to_string(bool_list_str):
-    bool_list = json.loads(bool_list_str)
-    print("--> bool_list_to_string", bool_list)
-    return_str = ''
-    for bool_pos in bool_list:
-        if bool_pos:
-            return_str = return_str + '1'
-        else:
-            return_str = return_str + '0'
-    return return_str
-
-def boolean_string_to_boolean_array(boolean_string):
-    return [b == "1" for b in boolean_string]
-
-
-class ObjectiveSatisfaction:
-    def __init__(self, objective_name, satisfaction, weight):
-        self.objective_name = objective_name
-        self.satisfaction = satisfaction
-        self.weight = weight
-
 
 
 class VASSARClient:
@@ -600,10 +579,6 @@ class VASSARClient:
     def get_dataset_architectures(self, problem_id, dataset_id):
         query = async_to_sync(self.dataset_client.get_architectures)(dataset_id, problem_id, scores=False, costs=False)
         # query = self.dbClient.get_architectures(problem_id, dataset_id)
-
-
-        def boolean_string_to_boolean_array(boolean_string):
-            return [b == "1" for b in boolean_string]
 
         architectures_json = []
         counter = 0
