@@ -69,19 +69,6 @@ def check_threads_status():
     return
 
 
-def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
-    relationship = ''
-    if threshold_tag == 'LowerWarningLimit' or threshold_tag == 'LowerCautionLimit':
-        relationship = 'Exceeds_LowerCautionLimit'
-    elif threshold_tag == 'UpperWarningLimit' or threshold_tag == 'UpperCautionLimit':
-        relationship = 'Exceeds_UpperCautionLimit'
-    else:
-        print('Invalid threshold tag')
-        raise
-
-    return relationship
-
-
 class SeclssFeed(APIView):
     def post(self, request):
         if 'habitatStatus' in request.data:
@@ -132,19 +119,9 @@ class RequestDiagnosis(APIView):
         # Retrieve the symptoms list from the request
         symptoms_list = json.loads(request.data['symptomsList'])
 
-        # Parse the symptoms list to meet the neo4j query function requirements
-        parsed_symptoms_list = []
-        for item in symptoms_list:
-            threshold_tag = item['threshold_tag']
-            relationship = convert_threshold_tag_to_neo4j_relationship(threshold_tag)
-            symptom = {'measurement': item['measurement'],
-                       'display_name': item['display_name'],
-                       'relationship': relationship}
-            parsed_symptoms_list.append(symptom)
-
         # Query the neo4j graph (do not delete first line until second one is tested)
         # diagnosis_list = diagnose_symptoms_by_subset_of_anomaly(parsed_symptoms_list)
-        diagnosis_list = diagnose_symptoms_by_intersection_with_anomaly(parsed_symptoms_list)
+        diagnosis_list = diagnose_symptoms_by_intersection_with_anomaly(symptoms_list)
 
         # Build the diagnosis report and send it to the frontend
         diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list}
