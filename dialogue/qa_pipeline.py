@@ -383,7 +383,7 @@ def query(query, data, command_class):
 def neo4j_query(query, data, command_class):
     print(query)
     print(data)
-    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://172.31.51.186:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     results = "result"
