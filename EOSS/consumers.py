@@ -1,6 +1,7 @@
 import asyncio
 import os
 import threading
+import json
 
 
 from asgiref.sync import sync_to_async, async_to_sync
@@ -17,31 +18,52 @@ from EOSS.data.design_helpers import add_design
 from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
 from EOSS.graphql.client.Dataset import DatasetGraphqlClient
+from EOSS.teacher.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
+from EOSS.vassar.scaling import EvaluationScaling
 
 
 class EOSSConsumer(DaphneConsumer):
     # WebSocket event handlers
     async def receive_json(self, content, **kwargs):
         """
-        Called when we get a text frame. Channels will JSON-decode the payload
-        for us and pass it as the first argument.
+            Called when we get a text frame. Channels will JSON-decode the payload
+            for us and pass it as the first argument.
         """
-        # First call function from base class
-        await super(EOSSConsumer, self).receive_json(content, **kwargs)
-        # Then add new behavior
-        key = self.scope['path'].lstrip('api/')
 
-        # Get an updated session store
+        # --> 1. Call parent function
+        await super(EOSSConsumer, self).receive_json(content, **kwargs)
+
+        # --> 2. Get user_info
         user_info: UserInformation = await _get_user_information(self.scope['session'], self.scope['user'])
 
-        # Update context to SQL one
-        if content.get('msg_type') == 'context_add':
-            for subcontext_name, subcontext in content.get('new_context').items():
-                for key, value in subcontext.items():
-                    setattr(getattr(user_info, subcontext_name), key, value)
-                await _save_subcontext(user_info, subcontext_name)
-            _save_user_info(user_info)
-        elif content.get('msg_type') == 'active_engineer':
+
+
+
+        """ Message Types                
+                
+                1.  active_engineer
+                2.  active_historian
+                3.  active_analyst
+                
+                
+                4.  connect_services
+                5.  connect_vassar
+                6.  connect_ga
+                
+                
+                7.  start_ga
+                8.  apply_feature
+                9.  stop_ga
+                
+                10. rebuild_vassar
+                
+                11. teacher_clicked_arch
+                12. teacher_clicked_arch_update
+                13. teacher_evaluated_arch
+                
+                14. ping
+        """
+        if content.get('msg_type') == 'active_engineer':
             message = await sync_to_async(live_recommender.generate_engineer_message)(
                 user_info,
                 content.get('genome'),
@@ -71,22 +93,29 @@ class EOSSConsumer(DaphneConsumer):
                     'type': 'active.message',
                     'message': message
                 })
+
+
         elif content.get('msg_type') == 'connect_services':
             await self.connect_services(user_info)
         elif content.get('msg_type') == 'connect_vassar':
             await self.connect_vassar(user_info, skip_check=True)
         elif content.get('msg_type') == 'connect_ga':
             await self.connect_ga(user_info, skip_check=True)
+
+
         elif content.get('msg_type') == 'start_ga':
             await self.start_ga(user_info)
         elif content.get('msg_type') == 'apply_feature':
-            # Also check for hypothesis being tested
             tested_feature = content.get("featureExpression")
             await self.apply_ga_feature(user_info, tested_feature)
         elif content.get('msg_type') == 'stop_ga':
             await self.stop_ga(user_info)
+
+
         elif content.get('msg_type') == 'rebuild_vassar':
             await self.rebuild_vassar(user_info, content.get('group_id'), content.get('problem_id'), content.get('dataset_id'))
+
+
         elif content.get('msg_type') == 'teacher_clicked_arch':
             content = content.get('teacher_context')    # --> Dict
             entry = ArchitecturesClicked(user_information=user_info, arch_clicked=json.dumps(content))
@@ -99,6 +128,8 @@ class EOSSConsumer(DaphneConsumer):
             content = content.get('teacher_context')  # --> Dict
             entry = ArchitecturesEvaluated(user_information=user_info, arch_evaluated=json.dumps(content))
             entry.save()
+
+
         elif content.get('msg_type') == 'ping':
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             # Only ping vassar and GA if logged in
@@ -131,14 +162,17 @@ class EOSSConsumer(DaphneConsumer):
         #         'message': 'mycroft test'
         #     })
 
-    async def mycroft_message(self, event):
+
+
+
+    #############
+    ### Roles ###
+    #############
+
+    # --> Out Messages
+    async def active_message(self, event):
         print(event)
         await self.send_json(event)
-
-    async def ga_new_archs(self, event):
-        print(event)
-        await self.send_json(event)
-
     def teacher_design_space(self, event):
         self.send_json(event)
     def teacher_objective_space(self, event):
@@ -148,50 +182,46 @@ class EOSSConsumer(DaphneConsumer):
     def teacher_features(self, event):
         self.send_json(event)
 
-    async def ga_started(self, event):
-        print(event)
-        await self.send_json(event)
 
-    async def ga_finished(self, event):
-        print(event)
-        await self.send_json(event)
-
-    async def services_ga_status(self, event):
-        print(event)
-        await self.send_json(event)
-
-    async def active_message(self, event):
-        print(event)
-        await self.send_json(event)
-
-    async def data_mining_problem_entities(self, event):
-        print(event)
-        await self.send_json(event)
-
-    async def data_mining_search_started(self, event):
-        print(event)
-        await self.send_json(event)
-
-    async def data_mining_search_finished(self, event):
-        # print(event)
-        await self.send_json(event)
-
-    async def services_ga_running_status(self, event):
-        await self.send_json(event)
+    
 
 
+    ################
+    ### Services ###
+    ################
+
+    # --> Functions
     async def connect_services(self, user_info: UserInformation):
         vassar_success = await self.connect_vassar(user_info)
         if vassar_success:
             await self.connect_ga(user_info)
 
-    async def connect_vassar(self, user_info: UserInformation, skip_check: bool=False):
+
+
+    ##############
+    ### Vassar ###
+    ##############
+
+    async def connect_vassar_2(self, user_info: UserInformation, skip_check: bool = False):
+
+        # 1. Initialize instances
+        vassar_instances = 1
+
+        # 2. Create scaling client
+        scaling = await sync_to_async(EvaluationScaling)(user_info, vassar_instances, user_req=True, fast=False)
+        await scaling.initialize()
+
+        return 0
+
+
+    # --> Functions
+    async def connect_vassar(self, user_info: UserInformation, skip_check: bool = False):
         vassar_client = VASSARClient(user_info)
 
         max_retries_vassar_ack = 5
         max_retries_vassar_build = 5
         vassar_connection_success = False
-        
+
         # Obtain queue urls from environment and ensure they exist
         request_queue_url = os.environ["VASSAR_REQUEST_URL"]
         response_queue_url = os.environ["VASSAR_RESPONSE_URL"]
@@ -203,9 +233,11 @@ class EOSSConsumer(DaphneConsumer):
         request_create_task = None
         response_create_task = None
         if not await vassar_client.queue_exists(request_queue_url):
-            request_create_task = asyncio.create_task(vassar_client.create_queue(request_queue_url.split("/")[-1], dead_letter_arn))
+            request_create_task = asyncio.create_task(
+                vassar_client.create_queue(request_queue_url.split("/")[-1], dead_letter_arn))
         if not await vassar_client.queue_exists(response_queue_url):
-            response_create_task = asyncio.create_task(vassar_client.create_queue(response_queue_url.split("/")[-1], dead_letter_arn))
+            response_create_task = asyncio.create_task(
+                vassar_client.create_queue(response_queue_url.split("/")[-1], dead_letter_arn))
         if request_create_task is not None:
             await request_create_task
         if response_create_task is not None:
@@ -218,17 +250,18 @@ class EOSSConsumer(DaphneConsumer):
         if not skip_check:
             if user_info.eosscontext.vassar_request_queue_url is not None and await vassar_client.queue_exists(
                     user_info.eosscontext.vassar_request_queue_url):
-                vassar_status, vassar_uuid = await vassar_client.check_status(user_info.eosscontext.vassar_request_queue_url,
-                                                                 user_info.eosscontext.vassar_response_queue_url)
+                vassar_status, vassar_uuid = await vassar_client.check_status(
+                    user_info.eosscontext.vassar_request_queue_url,
+                    user_info.eosscontext.vassar_response_queue_url)
             else:
                 vassar_status = "waiting_for_user"
                 vassar_uuid = None
         else:
             vassar_status = "waiting_for_user"
             vassar_uuid = None
-        
+
         if vassar_uuid is not None:
-            # Save information to database 
+            # Save information to database
             await sync_to_async(vassar_client._initialize_vassar)(user_info.eosscontext.vassar_request_queue_url,
                                                                   user_info.eosscontext.vassar_response_queue_url,
                                                                   vassar_uuid)
@@ -248,29 +281,31 @@ class EOSSConsumer(DaphneConsumer):
 
             # 2.1. Send connectionRequest to eval queue and update front-end
             print("----> Sending connection message")
-            await vassar_client.send_connect_message(request_queue_url, user_info.eosscontext.group_id, user_info.eosscontext.problem_id)
+            await vassar_client.send_connect_message(request_queue_url, user_info.eosscontext.group_id,
+                                                     user_info.eosscontext.problem_id)
 
             vassar_status = "waiting_for_ack"
             await self.send_json({
-                    'type': 'services.vassar_status',
-                    'status': vassar_status
-                })
+                'type': 'services.vassar_status',
+                'status': vassar_status
+            })
 
             # 2.2. Wait for initialized design-evaluator to return parameters
-            user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = await vassar_client.connect_to_vassar(request_queue_url, response_queue_url, max_retries_vassar_ack)
+            user_request_queue_url, user_response_queue_url, vassar_container_uuid, vassar_connection_success = await vassar_client.connect_to_vassar(
+                request_queue_url, response_queue_url, max_retries_vassar_ack)
 
             if vassar_connection_success:
                 vassar_status = "ready"
                 await self.send_json({
-                        'type': 'services.vassar_status',
-                        'status': vassar_status
-                    })
+                    'type': 'services.vassar_status',
+                    'status': vassar_status
+                })
             else:
                 vassar_status = "ack_error"
                 await self.send_json({
-                        'type': 'services.vassar_status',
-                        'status': vassar_status
-                    })
+                    'type': 'services.vassar_status',
+                    'status': vassar_status
+                })
         return vassar_connection_success
 
     async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
@@ -278,20 +313,32 @@ class EOSSConsumer(DaphneConsumer):
         response_received = await vassar_client.rebuild_vassar(group_id, problem_id, dataset_id)
         if response_received:
             await self.send_json({
-                        'type': 'services.vassar_rebuild',
-                        'status': "success"
-                    })
+                'type': 'services.vassar_rebuild',
+                'status': "success"
+            })
         else:
             await self.send_json({
-                        'type': 'services.vassar_rebuild',
-                        'status': "failure"
-                    })
-       
+                'type': 'services.vassar_rebuild',
+                'status': "failure"
+            })
+
+
+
+
+
+
+    ##########
+    ### GA ###
+    ##########
+
+
+
+    # --> Functions
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
 
         max_retries_ga_ack = 5
-        
+
         # Obtain queue urls from environment and ensure they exist
         ga_request_queue_url = os.environ["GA_REQUEST_URL"]
         ga_response_queue_url = os.environ["GA_RESPONSE_URL"]
@@ -304,9 +351,11 @@ class EOSSConsumer(DaphneConsumer):
         request_create_task = None
         response_create_task = None
         if not await vassar_client.queue_exists(ga_request_queue_url):
-            request_create_task = asyncio.create_task(vassar_client.create_queue(ga_request_queue_url.split("/")[-1], dead_letter_arn))
+            request_create_task = asyncio.create_task(
+                vassar_client.create_queue(ga_request_queue_url.split("/")[-1], dead_letter_arn))
         if not await vassar_client.queue_exists(ga_response_queue_url):
-            response_create_task = asyncio.create_task(vassar_client.create_queue(ga_response_queue_url.split("/")[-1], dead_letter_arn))
+            response_create_task = asyncio.create_task(
+                vassar_client.create_queue(ga_response_queue_url.split("/")[-1], dead_letter_arn))
         if request_create_task is not None:
             await request_create_task
         if response_create_task is not None:
@@ -314,8 +363,10 @@ class EOSSConsumer(DaphneConsumer):
 
         # Check if there is an existing GA connection
         if not skip_check:
-            if user_info.eosscontext.ga_request_queue_url is not None and await vassar_client.queue_exists(user_info.eosscontext.ga_request_queue_url):
-                ga_status, ga_uuid = await vassar_client.check_status(user_info.eosscontext.ga_request_queue_url, user_info.eosscontext.ga_response_queue_url)
+            if user_info.eosscontext.ga_request_queue_url is not None and await vassar_client.queue_exists(
+                    user_info.eosscontext.ga_request_queue_url):
+                ga_status, ga_uuid = await vassar_client.check_status(user_info.eosscontext.ga_request_queue_url,
+                                                                      user_info.eosscontext.ga_response_queue_url)
             else:
                 ga_status = "waiting_for_user"
                 ga_uuid = None
@@ -324,15 +375,15 @@ class EOSSConsumer(DaphneConsumer):
             ga_uuid = None
 
         if ga_uuid is not None:
-            # Save information to database 
+            # Save information to database
             await sync_to_async(vassar_client._initialize_ga)(user_info.eosscontext.ga_request_queue_url,
                                                               user_info.eosscontext.ga_response_queue_url,
                                                               ga_uuid)
 
         await self.send_json({
-                    'type': 'services.ga_status',
-                    'status': ga_status
-                })
+            'type': 'services.ga_status',
+            'status': ga_status
+        })
         print("Initial GA status", ga_status)
 
         if ga_status == "waiting_for_user":
@@ -345,15 +396,16 @@ class EOSSConsumer(DaphneConsumer):
 
             ga_status = "waiting_for_ack"
             await self.send_json({
-                    'type': 'services.ga_status',
-                    'status': ga_status
-                })
+                'type': 'services.ga_status',
+                'status': ga_status
+            })
 
         if ga_status == "waiting_for_ack":
             # 2. Wait for an answer to the connectionRequest and connect to responsive containers
             print("----> Connecting to services")
             vassar_user_request_queue_url = user_info.eosscontext.vassar_request_queue_url
-            user_ga_request_queue_url, user_ga_response_queue_url, ack_success = await vassar_client.connect_to_ga(ga_request_queue_url, ga_response_queue_url, vassar_user_request_queue_url, max_retries_ga_ack)
+            user_ga_request_queue_url, user_ga_response_queue_url, ack_success = await vassar_client.connect_to_ga(
+                ga_request_queue_url, ga_response_queue_url, vassar_user_request_queue_url, max_retries_ga_ack)
             print(user_ga_request_queue_url, user_ga_response_queue_url)
 
             if ack_success:
@@ -361,15 +413,15 @@ class EOSSConsumer(DaphneConsumer):
             else:
                 ga_status = "ack_error"
                 await self.send_json({
-                        'type': 'services.ga_status',
-                        'status': ga_status
-                    })
-        
-        if ga_status == "ready":
-            await self.send_json({
                     'type': 'services.ga_status',
                     'status': ga_status
                 })
+
+        if ga_status == "ready":
+            await self.send_json({
+                'type': 'services.ga_status',
+                'status': ga_status
+            })
         print("Initial GA status", ga_status)
 
     async def start_ga(self, user_info: UserInformation):
@@ -397,7 +449,7 @@ class EOSSConsumer(DaphneConsumer):
                     ga_algorithm_queue_url = await vassar_client.create_queue(ga_algorithm_queue_name, dead_letter_arn)
                 else:
                     ga_algorithm_queue_url = await vassar_client.get_queue_url(ga_algorithm_queue_name)
-                
+
                 # Start GA in container
                 await vassar_client.start_ga(ga_algorithm_queue_url)
 
@@ -411,9 +463,12 @@ class EOSSConsumer(DaphneConsumer):
                     while not is_done:
                         user_info.refresh_from_db()
                         channel_name = user_info.channel_name
-                        response = sqs_client.receive_message(QueueUrl=ga_algorithm_queue_url, MaxNumberOfMessages=5, WaitTimeSeconds=1, AttributeNames=["All"], MessageAttributeNames=["All"])
+                        response = sqs_client.receive_message(QueueUrl=ga_algorithm_queue_url, MaxNumberOfMessages=5,
+                                                              WaitTimeSeconds=1, AttributeNames=["All"],
+                                                              MessageAttributeNames=["All"])
                         if "Messages" in response:
-                            sorted_messages = sorted(response["Messages"], key=lambda msg: int(msg["Attributes"]["SentTimestamp"]))
+                            sorted_messages = sorted(response["Messages"],
+                                                     key=lambda msg: int(msg["Attributes"]["SentTimestamp"]))
                             # Send message back to frontend that GA is working fine
                             for message in sorted_messages:
                                 if message["MessageAttributes"]["msgType"]["StringValue"] == "gaStarted":
@@ -425,9 +480,10 @@ class EOSSConsumer(DaphneConsumer):
                                     })
                                     is_ga_running = True
                                     is_done = False
-                                    #TODO: Add a new field to eosscontext on GA thread status
+                                    # TODO: Add a new field to eosscontext on GA thread status
                                     print("--> GA Thread: GA Started!")
-                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url,
+                                                              ReceiptHandle=message["ReceiptHandle"])
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "gaEnded":
                                     if is_ga_running:
                                         channel_layer = get_channel_layer()
@@ -438,13 +494,15 @@ class EOSSConsumer(DaphneConsumer):
                                         })
                                         is_done = True
                                         print('--> GA Thread: Ending the thread!')
-                                    #TODO: Add a new field to eosscontext on GA thread status
-                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    # TODO: Add a new field to eosscontext on GA thread status
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url,
+                                                              ReceiptHandle=message["ReceiptHandle"])
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "newGaArch":
                                     print('--> GA Thread: Processing a new arch!')
                                     # Keeping up for proactive
                                     add_design(self.scope["session"], self.scope["user"])
-                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url,
+                                                              ReceiptHandle=message["ReceiptHandle"])
                                 elif message["MessageAttributes"]["msgType"]["StringValue"] == "ping":
                                     print('--> GA Thread: Ping received!')
                                     channel_layer = get_channel_layer()
@@ -453,10 +511,13 @@ class EOSSConsumer(DaphneConsumer):
                                         'status': 'started',
                                         'message': "Ping back"
                                     })
-                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"])
+                                    sqs_client.delete_message(QueueUrl=ga_algorithm_queue_url,
+                                                              ReceiptHandle=message["ReceiptHandle"])
                                 else:
                                     # Return message to queue
-                                    sqs_client.change_message_visibility(QueueUrl=ga_algorithm_queue_url, ReceiptHandle=message["ReceiptHandle"], VisibilityTimeout=0)
+                                    sqs_client.change_message_visibility(QueueUrl=ga_algorithm_queue_url,
+                                                                         ReceiptHandle=message["ReceiptHandle"],
+                                                                         VisibilityTimeout=0)
 
                     print('--> GA Thread: Thread done!')
 
@@ -464,17 +525,17 @@ class EOSSConsumer(DaphneConsumer):
                 thread.start()
 
                 await self.send_json({
-                        'type': 'services.ga_running_status',
-                        'status': 'start_requested',
-                        'message': "GA start has been requested"
-                    })
+                    'type': 'services.ga_running_status',
+                    'status': 'start_requested',
+                    'message': "GA start has been requested"
+                })
 
             except Exception as exc:
                 await self.send_json({
-                        'type': 'services.ga_running_status',
-                        'status': 'start_error',
-                        'message': "Error starting the GA: " + str(exc)
-                    })
+                    'type': 'services.ga_running_status',
+                    'status': 'start_error',
+                    'message': "Error starting the GA: " + str(exc)
+                })
 
         else:
             await self.send_json({
@@ -482,7 +543,7 @@ class EOSSConsumer(DaphneConsumer):
                 'status': 'auth_error',
                 'message': "This is only available to registered users!"
             })
-    
+
     async def apply_ga_feature(self, user_info: UserInformation, feature_expression):
         vassar_client = VASSARClient(user_info)
         await vassar_client.apply_feature(feature_expression)
@@ -514,3 +575,63 @@ class EOSSConsumer(DaphneConsumer):
                 'status': 'auth_error',
                 'message': "This is only available to registered users!"
             })
+    
+
+
+
+
+    # --> Out Messages
+    async def services_ga_status(self, event):
+        print(event)
+        await self.send_json(event)
+
+    async def ga_started(self, event):
+        print(event)
+        await self.send_json(event)
+
+    async def ga_finished(self, event):
+        print(event)
+        await self.send_json(event)
+
+    async def ga_new_archs(self, event):
+        print(event)
+        await self.send_json(event)
+        
+        
+        
+
+    ###################
+    ### Data-Mining ###
+    ###################
+
+    # --> Out Messages
+    async def data_mining_problem_entities(self, event):
+        print(event)
+        await self.send_json(event)
+
+    async def data_mining_search_started(self, event):
+        print(event)
+        await self.send_json(event)
+
+    async def data_mining_search_finished(self, event):
+        # print(event)
+        await self.send_json(event)
+
+    async def services_ga_running_status(self, event):
+        await self.send_json(event)
+
+
+
+
+
+
+    ###############
+    ### Mycroft ###
+    ###############
+
+    # --> Out Messages
+    async def mycroft_message(self, event):
+        print(event)
+        await self.send_json(event)
+
+       
