@@ -1,7 +1,16 @@
 import boto3
 import os
+import asyncio
+import random
 
 from django.conf import settings
+
+
+
+async def exponential_backoff_sleep(x):
+    backoff_seconds = 1
+    sleep_time = (backoff_seconds * 2 ** x + random.uniform(0, 1))
+    await asyncio.sleep(sleep_time)
 
 
 def pprint(to_print):

@@ -1,6 +1,7 @@
 from asgiref.sync import SyncToAsync, sync_to_async
 from auth_API.helpers import get_or_create_user_information, get_user_information
 from daphne_context.models import UserInformation
+from EOSS.models import EOSSContext
 
 # Only use this function when your sync function does not do Django ORM calls! Or any other Django stuff
 def sync_to_async_mt(func):
@@ -17,6 +18,10 @@ def _get_or_create_user_information(session, user, version='EOSS') -> UserInform
 @sync_to_async
 def _save_subcontext(user_info: UserInformation, subcontext):
     getattr(user_info, subcontext).save()
+
+@sync_to_async
+def _save_eosscontext(eosscontext: EOSSContext):
+    eosscontext.save()
 
 @sync_to_async
 def _save_user_info(user_info: UserInformation):
