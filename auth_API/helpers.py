@@ -3,7 +3,7 @@ from django.db import transaction
 
 from EDL.models import EDLContext
 from EOSS.models import EOSSContext, ActiveContext
-from EOSS.aws.clients.EcsClient import EcsClient
+# from EOSS.aws.clients.EcsClient import EcsClient
 from AT.models import ATContext, ActiveATContext
 from experiment.models import ExperimentContext
 from daphne_context.models import UserInformation
@@ -69,8 +69,8 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                    added_archs_count=0, group_id=1, problem_id=1)
 
 
-        ecs_client = EcsClient(user_info)
-        async_to_sync(ecs_client.initialize)()
+        # ecs_client = EcsClient(user_info)
+        # async_to_sync(ecs_client.initialize)()
 
 
         # --> ActiveContext
