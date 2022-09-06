@@ -33,7 +33,8 @@ ALLOWED_HOSTS = [
     'prod.selva-research.com',
     'selva-research.engr.tamu.edu',
     'daphne-at-dev.selva-research.com',
-    'daphne-at.selva-research.com'
+    'daphne-at.selva-research.com',
+    'brain'
 ]
 
 USE_X_FORWARDED_HOST = True

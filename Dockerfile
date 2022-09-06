@@ -9,9 +9,10 @@ RUN apt-get -y update &&\
 WORKDIR /app
 COPY ./. /app
 
-# --> 2. Create Logs
+# --> 2. Create Logs / Models
 WORKDIR /app/logs
 RUN touch /app/logs/daphne.logs
+WORKDIR /app/dialogue/models
 
 # --> 3. Install Requirements + Environment
 WORKDIR /app
@@ -31,6 +32,8 @@ ENV VASSAR_RESPONSE_URL="https://sqs.us-east-2.amazonaws.com/923405430231/vassar
 ENV GA_REQUEST_URL="https://sqs.us-east-2.amazonaws.com/923405430231/ga_request"
 ENV GA_RESPONSE_URL="https://sqs.us-east-2.amazonaws.com/923405430231/ga_response"
 ENV DEPLOYMENT_TYPE="aws"
+ENV AWS_SECRET_ACCESS_KEY="xxx"
+ENV AWS_ACCESS_KEY_ID="xxx"
 
 
 # --> DBs
@@ -65,7 +68,7 @@ ENV GA_SERVICE_ARN="arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/ge
 
 
 # --> 4. Ensure Django Migrations are Applied
-#RUN python3 manage.py migrate --run-syncdb
+RUN python3 manage.py migrate --run-syncdb
 
 
-#CMD daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
+CMD daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
