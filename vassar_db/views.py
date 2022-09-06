@@ -7,8 +7,8 @@ import vassar_db.tables as tb
 import vassar_db.queries as qs
 import os
 
-user = os.environ['USER']
-password = os.environ['PASSWORD']
+user = os.environ['SQL_USER']
+password = os.environ['SQL_PASSWORD']
 postgres_host = os.environ['POSTGRES_HOST']
 postgres_port = os.environ['POSTGRES_PORT']
 vassar_db_name = 'daphne'

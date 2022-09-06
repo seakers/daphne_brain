@@ -3,7 +3,7 @@ from django.db import transaction
 
 from EDL.models import EDLContext
 from EOSS.models import EOSSContext, ActiveContext
-# from EOSS.aws.clients.EcsClient import EcsClient
+from EOSS.aws.clients.EcsClient import EcsClient
 from AT.models import ATContext, ActiveATContext
 from experiment.models import ExperimentContext
 from daphne_context.models import UserInformation
@@ -13,14 +13,14 @@ from asgiref.sync import async_to_sync
 from mycroft.utils import generate_unique_mycroft_session
 
 def get_or_create_user_information(session, user, version='EOSS'):
-    try:
-        userinfo = get_user_information(session, user)
+    userinfo = get_user_information(session, user)
+    if userinfo is not None:
         return userinfo
-    except Exception:
-        if user.is_authenticated:
-            return create_user_information(username=user.username, version=version)
-        else:
-            return create_user_information(session_key=session.session_key, version=version)
+    if user.is_authenticated:
+        return create_user_information(username=user.username, version=version)
+    else:
+        return create_user_information(session_key=session.session_key, version=version)
+
 
 def get_user_information(session, user):
 
@@ -39,7 +39,7 @@ def get_user_information(session, user):
         user_info = userinfo_qs[0]
         return user_info
     elif len(userinfo_qs) == 0:
-        raise Exception("Information not already created!")
+        return None
 
 
 
@@ -68,9 +68,10 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         eoss_context = EOSSContext(user_information=user_info, dataset_id=-1, last_arch_id=0, selected_arch_id=-1,
                                    added_archs_count=0, group_id=1, problem_id=1)
 
-
+        eoss_context.save()
         # ecs_client = EcsClient(user_info)
         # async_to_sync(ecs_client.initialize)()
+
 
 
         # --> ActiveContext
@@ -79,6 +80,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                        historian_suggestions_frequency=3, show_analyst_suggestions=True,
                                        analyst_suggestions_frequency=45)
         active_context.save()
+
 
 
         # --> ExperimentContext

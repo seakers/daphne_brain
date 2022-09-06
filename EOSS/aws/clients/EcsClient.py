@@ -8,9 +8,7 @@ from EOSS.aws.utils import get_boto3_client, exponential_backoff_sleep
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.tasks.design_evaluator import task_definition as design_evaluator_task_definition
 from EOSS.aws.tasks.design_evaluator import task_instance as design_evaluator_task
-
-# --> WS Tools
-from daphne_ws.async_db_methods import sync_to_async_mt, _save_eosscontext
+from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt
 
 
 

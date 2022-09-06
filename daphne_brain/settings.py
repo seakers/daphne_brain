@@ -111,8 +111,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'daphne',
-        'USER': os.environ['USER'],
-        'PASSWORD': os.environ['PASSWORD'],
+        'USER': os.environ['SQL_USER'],
+        'PASSWORD': os.environ['SQL_PASSWORD'],
         'HOST': os.environ['POSTGRES_HOST'],
         'PORT': os.environ['POSTGRES_PORT'],
     }
@@ -194,8 +194,8 @@ ALCHEMY_DATABASE = {
     'drivername': 'postgresql+psycopg2',
     'host': os.environ['POSTGRES_HOST'],
     'port': os.environ['POSTGRES_PORT'],
-    'username': os.environ['USER'],
-    'password': os.environ['PASSWORD'],
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
     'database': 'daphne'
 }
 
@@ -203,8 +203,8 @@ EDL_DATABASE = {
     'drivername': 'postgresql+psycopg2',
     'host': os.environ['POSTGRES_HOST'],
     'port': os.environ['POSTGRES_PORT'],
-    'username': os.environ['USER'],
-    'password': os.environ['PASSWORD'],
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
     'database': 'edldatabase'
 }
 
@@ -212,8 +212,8 @@ ECLSS_DATABASE = {
     'drivername': 'postgres',
     'host': 'www.selva-research.com',
     'port': '5432',
-    'username': os.environ['USER'],
-    'password': os.environ['PASSWORD'],
+    'username': os.environ['SQL_USER'],
+    'password': os.environ['SQL_PASSWORD'],
     'database': 'eclss'
 }
 

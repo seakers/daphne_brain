@@ -24,8 +24,6 @@ services:
       # --> DBs
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
-      - USER=${USER}
-      - PASSWORD=${PASSWORD}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
 

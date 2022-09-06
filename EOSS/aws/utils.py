@@ -2,8 +2,22 @@ import boto3
 import os
 import asyncio
 import random
-
+from asgiref.sync import SyncToAsync, sync_to_async
 from django.conf import settings
+from EOSS.models import EOSSContext
+
+
+
+def sync_to_async_mt(func):
+    return SyncToAsync(func, thread_sensitive=False)
+
+
+@sync_to_async
+def _save_eosscontext(eosscontext: EOSSContext):
+    eosscontext.save()
+
+
+
 
 
 

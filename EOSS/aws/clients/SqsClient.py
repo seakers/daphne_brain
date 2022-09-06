@@ -1,8 +1,9 @@
 from EOSS.aws.utils import get_boto3_client
-from daphne_ws.async_db_methods import sync_to_async_mt, _save_eosscontext
 import json
 import random
 import botocore
+import asyncio
+from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt
 
 
 
@@ -13,11 +14,6 @@ class SqsClient:
         self.user_id = user_info.user.id
         self.eoss_context = user_info.eoss_context
         self.sqs_client = get_boto3_client('sqs')
-
-
-
-
-
 
         # --> Queue Info: user eval queues
         self.design_evaluator_request_queue_name = self.eoss_context.design_evaluator_request_queue_name
@@ -39,9 +35,6 @@ class SqsClient:
             4. user-1-genetic-algorithm-1-response-queue
         """
 
-
-
-
     # --> This is called to ensure all user-specific queues are created
     async def initialize(self):
 
@@ -49,9 +42,10 @@ class SqsClient:
         if self.design_evaluator_request_queue_name is None:
             self.design_evaluator_request_queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
         if self.design_evaluator_request_queue_url is None:
-            self.design_evaluator_request_queue_url = await self.create_queue_name(self.design_evaluator_request_queue_name)
+            self.design_evaluator_request_queue_url = await self.create_queue_name(
+                self.design_evaluator_request_queue_name)
         self.design_evaluator_request_queue_arn = await self.get_queue_arn(self.design_evaluator_request_queue_url)
-        
+
         if self.design_evaluator_response_queue_name is None:
             self.design_evaluator_response_queue_name = 'user-' + str(self.user_id) + '-design-evaluator-response-queue'
         if self.design_evaluator_response_queue_url is None:
@@ -60,7 +54,6 @@ class SqsClient:
         self.design_evaluator_response_queue_arn = await self.get_queue_arn(self.design_evaluator_response_queue_url)
 
         return await self.commit_db()
-
 
     async def commit_db(self):
         self.eoss_context.design_evaluator_request_queue_name = self.design_evaluator_request_queue_name
@@ -72,11 +65,6 @@ class SqsClient:
         self.eoss_context.design_evaluator_response_queue_arn = self.design_evaluator_response_queue_arn
 
         await _save_eosscontext(self.eoss_context)
-
-
-
-
-
 
     ####################
     ### Queue Exists ###
@@ -98,11 +86,9 @@ class SqsClient:
                 return True
         return False
 
-
     ####################
     ### Create Queue ###
     ####################
-
 
     async def create_queue_name_unique(self, queue_name):
         salt_name = ""
@@ -123,7 +109,6 @@ class SqsClient:
             print('--> ERROR', error)
             return None
 
-
     async def create_queue_name(self, queue_name):
         if not await self.queue_exists_name(queue_name):
             response = await sync_to_async_mt(self.sqs_client.create_queue)(QueueName=queue_name)
@@ -140,11 +125,9 @@ class SqsClient:
         else:
             return queue_url
 
-
     ####################
     ### Delete Queue ###
     ####################
-
 
     async def delete_queue_url(self, queue_url):
         try:
@@ -153,12 +136,9 @@ class SqsClient:
             print('--> ERROR DELETING QUEUE', error)
             return None
 
-
-
     ###################
     ### Queue Facts ###
     ###################
-
 
     async def get_queue_url(self, queue_name):
         try:
@@ -168,16 +148,14 @@ class SqsClient:
             print('--> ERROR', error)
             return None
 
-
     async def get_queue_arn(self, queue_url):
         try:
-            response = await sync_to_async_mt(self.sqs_client.get_queue_attributes)(QueueUrl=queue_url, AttributeNames=["QueueArn"])
+            response = await sync_to_async_mt(self.sqs_client.get_queue_attributes)(QueueUrl=queue_url,
+                                                                                    AttributeNames=["QueueArn"])
             return response["Attributes"]["QueueArn"]
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)
             return None
-
-
 
     ###############
     ### Helpers ###
@@ -186,7 +164,3 @@ class SqsClient:
     @staticmethod
     async def get_queue_name_from_url(queue_url):
         return queue_url.split("/")[-1]
-
-
-
-
