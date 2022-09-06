@@ -64,6 +64,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         user_info.save()
 
 
+
         # --> 2. EOSSContext
         eoss_context = EOSSContext(user_information=user_info, dataset_id=-1, last_arch_id=0, selected_arch_id=-1,
                                    added_archs_count=0, group_id=1, problem_id=1)

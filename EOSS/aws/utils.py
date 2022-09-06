@@ -19,8 +19,6 @@ def _save_eosscontext(eosscontext: EOSSContext):
 
 
 
-
-
 async def exponential_backoff_sleep(x):
     backoff_seconds = 1
     sleep_time = (backoff_seconds * 2 ** x + random.uniform(0, 1))

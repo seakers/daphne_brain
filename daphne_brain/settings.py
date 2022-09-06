@@ -43,8 +43,6 @@ USE_X_FORWARDED_HOST = True
 ACTIVE_MODULES = ['EOSS']
 
 EDL_PATH = '/Users/ssantini/Code/'
-
-
 INSTALLED_APPS = [
 
     # Installed Packages
