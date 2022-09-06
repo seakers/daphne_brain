@@ -17,7 +17,7 @@ services:
       - VASSAR_RESPONSE_URL=https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response
       - GA_REQUEST_URL=https://sqs.us-east-2.amazonaws.com/923405430231/ga_request
       - GA_RESPONSE_URL=https://sqs.us-east-2.amazonaws.com/923405430231/ga_response
-      - DEPLOYMENT_TYPE=aws
+      - DEPLOYMENT_TYPE=local
 
       # --> DBs
       - SQL_USER=daphne
@@ -49,3 +49,8 @@ services:
       - 8000:8000
     tty: true
     container_name: brain
+    command: bash
+networks:
+  default:
+    name: daphne-network
+    external: true
