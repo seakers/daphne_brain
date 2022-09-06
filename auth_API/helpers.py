@@ -68,12 +68,13 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         # --> 2. EOSSContext
         eoss_context = EOSSContext(user_information=user_info, dataset_id=-1, last_arch_id=0, selected_arch_id=-1,
                                    added_archs_count=0, group_id=1, problem_id=1)
+        eoss_context.save()
 
-        eoss_context.save()
         print('--> Creating EOSS Context')
-        ecs_client = EcsClient(user_info)
-        async_to_sync(ecs_client.initialize)()
-        eoss_context.save()
+        if user_info.user is not None:
+            ecs_client = EcsClient(user_info)
+            async_to_sync(ecs_client.initialize)()
+            eoss_context.save()
 
 
 

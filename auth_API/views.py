@@ -144,6 +144,8 @@ class Register(APIView):
                 'registration_error': 'This username is already in use.'
             })
 
+        return True
+
     def create_user(self, username, email, password):
         user = User.objects.create_user(username, email, password)
         user.save()

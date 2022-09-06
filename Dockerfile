@@ -66,10 +66,10 @@ RUN spacy download en_core_web_sm
 
 
 
+# --> 4. Ensure Django Migrations are Applied (DEPRECATED)
+#RUN python3 manage.py migrate --run-syncdb
 
 
-# --> 4. Ensure Django Migrations are Applied
-RUN python3 manage.py migrate --run-syncdb
-
-
+RUN echo "alias runapp='daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application'" >> ~/.profile
+RUN source ~/.profile
 CMD daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
