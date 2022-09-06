@@ -1,24 +1,6 @@
 FROM python:3.8-slim-buster
 
 
-# --> 0. Preliminary Updates
-RUN apt-get -y update &&\
-    apt-get -y install build-essential manpages-dev
-
-# --> 1. Copy Brain
-WORKDIR /app
-COPY ./. /app
-
-# --> 2. Create Logs / Models
-WORKDIR /app/logs
-RUN touch /app/logs/daphne.logs
-WORKDIR /app/dialogue/models
-
-# --> 3. Install Requirements + Environment
-WORKDIR /app
-RUN pip3 install --no-cache-dir -r ./requirements.txt
-RUN spacy download en_core_web_sm
-
 
 # --> Config
 ENV DAPHNEVERSION="EOSS"
@@ -32,8 +14,8 @@ ENV VASSAR_RESPONSE_URL="https://sqs.us-east-2.amazonaws.com/923405430231/vassar
 ENV GA_REQUEST_URL="https://sqs.us-east-2.amazonaws.com/923405430231/ga_request"
 ENV GA_RESPONSE_URL="https://sqs.us-east-2.amazonaws.com/923405430231/ga_response"
 ENV DEPLOYMENT_TYPE="aws"
-ENV AWS_SECRET_ACCESS_KEY="xxx"
-ENV AWS_ACCESS_KEY_ID="xxx"
+ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
 
 
 # --> DBs
@@ -64,6 +46,35 @@ ENV HASURA_HOST_WS="ws://3.16.50.181:8080/v1/graphql"
 ENV CLUSTER_ARN="arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster"
 ENV VASSAR_SERVICE_ARN="arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service"
 ENV GA_SERVICE_ARN="arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/genetic-algorithm"
+
+
+
+
+
+
+
+
+
+
+# --> 0. Preliminary Updates
+RUN apt-get -y update &&\
+    apt-get -y install build-essential manpages-dev
+
+# --> 1. Copy Brain
+WORKDIR /app
+COPY ./. /app
+
+# --> 2. Create Logs / Models
+WORKDIR /app/logs
+RUN touch /app/logs/daphne.logs
+WORKDIR /app/dialogue/models
+
+# --> 3. Install Requirements + Environment
+WORKDIR /app
+RUN pip3 install --no-cache-dir -r ./requirements.txt
+RUN spacy download en_core_web_sm
+
+
 
 
 

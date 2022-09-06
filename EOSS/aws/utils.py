@@ -26,12 +26,6 @@ def user_input(yes_no_message):
     else:
         return True
 
-def get_secret_access_key_env():
-    return os.environ['AWS_SECRET_ACCESS_KEY']
-
-def get_access_key_id_env():
-    return os.environ['AWS_ACCESS_KEY_ID']
-
 def dev_access_key():
     return 'AKIAJVM34C5MCCWRJCCQ'
 
@@ -72,7 +66,8 @@ def prod_client(client_type, region_name='us-east-2'):
     return boto3.client(client_type, region_name=region_name, endpoint_url=f"https://sqs.{region_name}.amazonaws.com")
 
 def get_boto3_client(client_type,  region_name='us-east-2'):
-    if settings.DEPLOYMENT_TYPE == "local":
-        return dev_client(client_type, region_name)
-    else:
-        return prod_client(client_type, region_name)
+    return prod_client(client_type, region_name)
+    # if settings.DEPLOYMENT_TYPE == "local":
+    #     return dev_client(client_type, region_name)
+    # else:
+    #     return prod_client(client_type, region_name)
