@@ -202,6 +202,15 @@ class EOSSConsumer(DaphneConsumer):
     ### Vassar ###
     ##############
 
+    # --> Functions
+    async def connect_vassar(self, user_info: UserInformation, skip_check: bool = False):
+        print('--> REBUILD VASSAR (PLACEHOLDER)')
+        await self.send_json({
+            'type': 'services.vassar_status',
+            'status': "success"
+        })
+        return 0
+
     async def connect_vassar_2(self, user_info: UserInformation, skip_check: bool = False):
 
         # 1. Initialize instances
@@ -213,9 +222,16 @@ class EOSSConsumer(DaphneConsumer):
 
         return 0
 
+    async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
+        print('--> REBUILD VASSAR (PLACEHOLDER)')
+        await self.send_json({
+            'type': 'services.vassar_rebuild',
+            'status': "success"
+        })
+        return 0
 
-    # --> Functions
-    async def connect_vassar(self, user_info: UserInformation, skip_check: bool = False):
+
+    async def connect_vassar_old(self, user_info: UserInformation, skip_check: bool = False):
         vassar_client = VASSARClient(user_info)
 
         max_retries_vassar_ack = 5
@@ -308,7 +324,7 @@ class EOSSConsumer(DaphneConsumer):
                 })
         return vassar_connection_success
 
-    async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
+    async def rebuild_vassar_old(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
         vassar_client = VASSARClient(user_info)
         response_received = await vassar_client.rebuild_vassar(group_id, problem_id, dataset_id)
         if response_received:
@@ -335,6 +351,34 @@ class EOSSConsumer(DaphneConsumer):
 
     # --> Functions
     async def connect_ga(self, user_info: UserInformation, skip_check=False):
+        print('--> CONNECTING GA (PLACEHOLDER)')
+        await self.send_json({
+            'type': 'services.ga_status',
+            'status': 'ready'
+        })
+        return 0
+
+    async def start_ga(self, user_info: UserInformation):
+        print('--> STARTING GA (PLACEHOLDER)')
+        await self.send_json({
+            'type': 'services.ga_status',
+            'status': 'ready'
+        })
+        return 0
+
+    async def stop_ga(self, user_info: UserInformation):
+        print('--> STOPPING GA (PLACEHOLDER)')
+        await self.send_json({
+            'type': 'services.ga_status',
+            'status': 'stop_requested'
+        })
+        return 0
+    async def apply_ga_feature(self, user_info: UserInformation, feature_expression):
+        return 0
+
+
+
+    async def connect_ga_old(self, user_info: UserInformation, skip_check=False):
         vassar_client = VASSARClient(user_info)
 
         max_retries_ga_ack = 5
@@ -424,7 +468,7 @@ class EOSSConsumer(DaphneConsumer):
             })
         print("Initial GA status", ga_status)
 
-    async def start_ga(self, user_info: UserInformation):
+    async def start_ga_old(self, user_info: UserInformation):
         vassar_client = VASSARClient(user_info)
         dataset_client = DatasetGraphqlClient(user_info)
 
@@ -544,17 +588,6 @@ class EOSSConsumer(DaphneConsumer):
                 'message': "This is only available to registered users!"
             })
 
-    async def apply_ga_feature(self, user_info: UserInformation, feature_expression):
-        vassar_client = VASSARClient(user_info)
-        await vassar_client.apply_feature(feature_expression)
-
-
-
-    async def stop_ga(self, user_info: UserInformation):
-        print('--> STOPPING GA')
-        return 0
-
-
     async def stop_ga_old(self, user_info: UserInformation):
         vassar_client = VASSARClient(user_info)
 
@@ -582,9 +615,10 @@ class EOSSConsumer(DaphneConsumer):
                 'status': 'auth_error',
                 'message': "This is only available to registered users!"
             })
-    
 
-
+    async def apply_ga_feature_old(self, user_info: UserInformation, feature_expression):
+        vassar_client = VASSARClient(user_info)
+        await vassar_client.apply_feature(feature_expression)
 
 
     # --> Out Messages
