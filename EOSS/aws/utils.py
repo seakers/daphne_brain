@@ -1,5 +1,6 @@
 import boto3
 import os
+import time
 import asyncio
 import random
 from asgiref.sync import SyncToAsync, sync_to_async
@@ -17,12 +18,6 @@ def _save_eosscontext(eosscontext: EOSSContext):
     eosscontext.save()
 
 
-
-
-async def exponential_backoff_sleep(x):
-    backoff_seconds = 1
-    sleep_time = (backoff_seconds * 2 ** x + random.uniform(0, 1))
-    await asyncio.sleep(sleep_time)
 
 
 def pprint(to_print):
@@ -83,3 +78,107 @@ def get_boto3_client(client_type,  region_name='us-east-2'):
     #     return dev_client(client_type, region_name)
     # else:
     #     return prod_client(client_type, region_name)
+
+
+##############
+### SEARCH ###
+##############
+
+async def find_obj(objs, key_name, key_value):
+    for obj in objs:
+        if key_name not in obj:
+            continue
+        if obj[key_name] == key_value:
+            return obj
+    return None
+
+async def find_obj_and_set(objs, key_name, key_value, set_name, set_value):
+    obj = await find_obj(objs, key_name, key_value)
+    if obj is not None:
+        obj[set_name] = set_value
+    return obj
+
+
+
+#######################
+### REQUEST BACKOFF ###
+#######################
+
+
+async def exponential_backoff_sleep(x):
+    backoff_seconds = 1
+    sleep_time = (backoff_seconds * 2 ** x + random.uniform(0, 1))
+    await asyncio.sleep(sleep_time)
+
+
+def exponential_backoff(func, attempts=5, backoff='EXPONENTIAL', dne=False):
+    result = return_flipper(func, dne)
+    x = 0
+    while result is None:
+        if backoff == 'EXPONENTIAL':
+            _exponential_sleep(x)
+        if backoff == 'LINEAR':
+            _linear_sleep(x)
+        result = return_flipper(func, dne)
+        x += 1
+        if x > attempts:
+            break
+    return result
+
+async def exponential_backoff_async(func, attempts=5, backoff='EXPONENTIAL', dne=False):
+    result = await return_flipper_async(func, dne)
+    x = 0
+    while result is None:
+        if backoff == 'EXPONENTIAL':
+            await _exponential_sleep_async(x)
+        if backoff == 'LINEAR':
+            await _linear_sleep_async(x)
+        result = await return_flipper_async(func, dne)
+        x += 1
+        if x > attempts:
+            break
+    return result
+
+
+
+
+def _exponential_sleep(x):
+    backoff_seconds = 1
+    sleep_time = (backoff_seconds * 2 ** x + random.uniform(0, 1))
+    time.sleep(sleep_time)
+
+def _linear_sleep(x):
+    time.sleep(1)
+
+async def _exponential_sleep_async(x):
+    backoff_seconds = 1
+    sleep_time = (backoff_seconds * 2 ** x + random.uniform(0, 1))
+    await asyncio.sleep(sleep_time)
+
+async def _linear_sleep_async(x):
+    await asyncio.sleep(1)
+
+def return_flipper(func, dne=False):
+    if dne is False:
+        return func()
+    result = func()
+    if result is None:
+        return {}
+    return None
+
+async def return_flipper_async(func, dne=False):
+    if dne is False:
+        return await func()
+    result = await func()
+    if result is None:
+        return {}
+    return None
+
+
+
+
+
+
+
+
+

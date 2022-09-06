@@ -1,5 +1,6 @@
 import copy
 import botocore
+import json
 import asyncio
 
 
@@ -8,7 +9,7 @@ from EOSS.aws.utils import get_boto3_client, exponential_backoff_sleep
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.tasks.design_evaluator import task_definition as design_evaluator_task_definition
 from EOSS.aws.tasks.design_evaluator import task_instance as design_evaluator_task
-from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt
+from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, find_obj_and_set
 
 
 
@@ -80,8 +81,8 @@ class EcsClient:
 
 
         # --> 3. Run requested number of user tasks
-        de_response = await self.regulate_design_evaluator_tasks()
-        ga_response = await self.regulate_genetic_algorithm_tasks()
+        # de_response = await self.regulate_design_evaluator_tasks()
+        # ga_response = await self.regulate_genetic_algorithm_tasks()
 
 
         # --> 3. Validate user specific services exist
@@ -198,41 +199,28 @@ class EcsClient:
     async def register_design_evaluator_task_definition(self, task_name):
 
         # --> 1. Configure task definition
-        task_config = copy.deepcopy(design_evaluator_task_definition)
-        task_config.family = task_name
-        task_config.containerDefinitions[0]['name'] = task_name
-        task_config.containerDefinitions[0]['environment'] = [
-            {'name': 'DEPLOYMENT_TYPE', 'value': 'AWS'},
-
-            {'name': 'APOLLO_URL',    'value': 'http://graphql.daphne.local:8080/v1/graphql'},
-            {'name': 'APOLLO_URL_WS', 'value': 'ws://graphql.daphne.local:8080/v1/graphql'},
-
-            {'name': 'PING_REQUEST_URL', 'value': 'NULL'},      # Override
-            {'name': 'PING_RESPONSE_URL', 'value': 'NULL'},     # Override
-            {'name': 'PRIVATE_REQUEST_URL', 'value': 'NULL'},   # Override
-            {'name': 'PRIVATE_RESPONSE_URL', 'value': 'NULL'},  # Override
-
-            {'name': 'EVAL_REQUEST_URL', 'value': self.eoss_context.design_evaluator_request_queue_url},
-            {'name': 'EVAL_RESPONSE_URL', 'value': self.eoss_context.design_evaluator_response_queue_url},
-
-            {'name': 'CLUSTER_ARN', 'value': self.cluster_arn},
-
-            {'name': 'JAVA_OPTS', 'value': '-Xmx3840m'},
-        ]
+        task_config = json.load(open('/app/EOSS/aws/tasks/design-evaluator.json'))
+        task_config['family'] = task_name
+        task_config['containerDefinitions'][0]['name'] = task_name
+        await find_obj_and_set(
+            task_config['containerDefinitions'][0]['environment'],
+            'name', 'EVAL_REQUEST_URL',
+            'value', self.eoss_context.design_evaluator_request_queue_url
+        )
+        await find_obj_and_set(
+            task_config['containerDefinitions'][0]['environment'],
+            'name', 'EVAL_RESPONSE_URL',
+            'value', self.eoss_context.design_evaluator_response_queue_url
+        )
+        await find_obj_and_set(
+            task_config['containerDefinitions'][0]['environment'],
+            'name', 'CLUSTER_ARN',
+            'value', self.cluster_arn
+        )
 
         # --> 2. Register task
         try:
-            response = await sync_to_async_mt(self.ecs_client.register_task_definition)(
-                family=task_config.family,
-                taskRoleArn=task_config.taskRoleArn,
-                executionRoleArn=task_config.executionRoleArn,
-                networkMode=task_config.networkMode,
-                containerDefinitions=task_config.containerDefinitions,
-                volumes=task_config.volumes,
-                requiresCompatibilities=task_config.requiresCompatibilities,
-                cpu=task_config.cpu,
-                memory=task_config.memory
-            )
+            response = await sync_to_async_mt(self.ecs_client.register_task_definition)(**task_config)
             return response['taskDefinition']['taskDefinitionArn']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR REGISTERING TASK DEFINITION', error)

@@ -1,0 +1,148 @@
+{
+    "task_definition": {
+        "family":  "user-n-design-evaluator-task",
+        "executionRoleArn":  "arn:aws:iam::923405430231:role/ecsTaskExecutionRole",
+        "taskRoleArn":  "arn:aws:iam::923405430231:role/DaphneEvaluatorTaskRole",
+        "cpu":  "1024",
+        "memory":  "4096",
+        "memoryReservation":  "2048",
+        "networkMode":  "awsvpc",
+        "containerDefinitions":  [
+            {
+                "name": "user-n-design-evaluator-task-definition",
+                "image": "923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest",
+                "cpu": 1024,
+                "memory": 4096,
+                "memoryReservation": 2048,
+                "essential": true,
+                "command": [
+                    "/app/evaluator/bin/evaluator"
+                ],
+                "environment": [
+                    {"name": "DEPLOYMENT_TYPE", "value": "AWS"},
+
+                    {"name": "APOLLO_URL", "value": "http://graphql.daphne.dev:8080/v1/graphql"},
+                    {"name": "APOLLO_URL_WS", "value": "ws://graphql.daphne.dev:8080/v1/graphql"},
+
+                    {"name": "PING_REQUEST_URL", "value": "NULL"},
+                    {"name": "PING_RESPONSE_URL", "value": "NULL"},
+                    {"name": "PRIVATE_REQUEST_URL", "value": "NULL"},
+                    {"name": "PRIVATE_RESPONSE_URL", "value": "NULL"},
+                    {"name": "EVAL_REQUEST_URL", "value": "NULL"},
+                    {"name": "EVAL_RESPONSE_URL", "value": "NULL"},
+
+                    {"name": "CLUSTER_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:cluster/daphne-dev-cluster"},
+                    {"name": "SERVICE_ARN", "value": "NULL"},
+
+                    {"name": "JAVA_OPTS", "value": "-Xmx3840m"}
+                ],
+                "mountPoints": [
+                    {
+                        "sourceVolume": "vassar_resources",
+                        "containerPath": "/resources",
+                        "readOnly": false
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                      "awslogs-group": "daphne-evaluator",
+                      "awslogs-region": "us-east-2",
+                      "awslogs-create-group": "true",
+                      "awslogs-stream-prefix": "daphne"
+                    }
+                }
+            }
+        ],
+        "requiresCompatibilities":  [
+            "FARGATE"
+        ],
+        "volumes":  [
+            {
+                "name": "vassar_resources",
+                "efsVolumeConfiguration": {
+                    "fileSystemId": "fs-d3977da8",
+                    "rootDirectory": "/VASSAR_resources",
+                    "transitEncryption": "ENABLED"
+                }
+            }
+        ]
+    },
+
+
+
+
+    "task_instance": {
+        
+
+        "cluster": "daphne-dev-cluster",
+        "serviceName": "user-n-design-evaluator-service",
+        "taskDefinition": "user-1-design-evaluator-task",
+        "desiredCount": 0,
+        "launchType": "FARGATE",
+        "networkConfiguration": {
+            "awsvpcConfiguration": {
+                "subnets": [
+                    "subnet-05cc334fd084cb66c",
+                    "subnet-0131f6edbbd6f6bbd"
+                ],
+                "securityGroups": [
+                    "sg-03871503ca9368508"
+                ],
+                "assignPublicIp": "DISABLED"
+            }
+        },
+        "healthCheckGracePeriodSeconds": 0,
+        "schedulingStrategy": "REPLICA",
+        "deploymentController": {
+            "type": "EXTERNAL"
+        },
+        "enableECSManagedTags": true,
+        "propagateTags": "TASK_DEFINITION",
+        "placementConstraints": [
+            {
+                "type": "distinctInstance"
+            }
+        ],
+        "overrides" :  {
+            "containerOverrides": [
+                {
+                    "name": "design-evaluator",
+                    "environment": [
+                        {"name": "PING_REQUEST_URL", "value": "NULL"},
+                        {"name": "PING_RESPONSE_URL", "value": "NULL"},
+                        {"name": "PRIVATE_REQUEST_URL", "value": "NULL"},
+                        {"name": "PRIVATE_RESPONSE_URL", "value": "NULL"}
+                    ]
+                }
+            ]
+        },
+        "tags" :  [
+            {"key": "PING_REQUEST_URL", "value": "NULL"},
+            {"key": "PING_RESPONSE_URL", "value": "NULL"},
+            {"key": "PRIVATE_REQUEST_URL", "value": "NULL"},
+            {"key": "PRIVATE_RESPONSE_URL", "value": "NULL"}
+        ],
+        "capacityProviderStrategy": [
+            {
+                "capacityProvider": "string",
+                "weight": 123,
+                "base": 123
+            }
+        ],
+        "clientToken": "string",
+        "deploymentConfiguration": {
+            "deploymentCircuitBreaker": {
+                "enable": true,
+                "rollback": true
+            },
+            "maximumPercent": 123,
+            "minimumHealthyPercent": 123
+        },
+        "enableExecuteCommand": true
+
+
+
+
+    }
+}
