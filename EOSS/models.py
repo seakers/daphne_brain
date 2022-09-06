@@ -46,7 +46,7 @@ class EOSSContext(models.Model):
     ########################
 
     # --> Cluster
-    cluster_name = models.TextField(default='daphne-cluster')
+    cluster_name = models.TextField(default='daphne-dev-cluster')
     cluster_arn = models.TextField(null=True)
 
     # --> Tasks
