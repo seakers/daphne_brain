@@ -548,7 +548,14 @@ class EOSSConsumer(DaphneConsumer):
         vassar_client = VASSARClient(user_info)
         await vassar_client.apply_feature(feature_expression)
 
+
+
     async def stop_ga(self, user_info: UserInformation):
+        print('--> STOPPING GA')
+        return 0
+
+
+    async def stop_ga_old(self, user_info: UserInformation):
         vassar_client = VASSARClient(user_info)
 
         if self.scope["user"].is_authenticated:
