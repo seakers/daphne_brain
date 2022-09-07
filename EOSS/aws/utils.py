@@ -80,6 +80,35 @@ def get_boto3_client(client_type,  region_name='us-east-2'):
     #     return prod_client(client_type, region_name)
 
 
+
+
+################
+### AIOBOTO3 ###
+################
+import asyncio
+import aioboto3
+
+async def call_boto3_client_async(client_type, func_name, params=None):
+    print('--> ATTEMPTING ASYNC AWS CALL:', client_type, func_name)
+    result = None
+    session = aioboto3.Session()
+    async with session.client(client_type, region_name='us-east-2') as client:
+        try:
+            func = getattr(client, func_name)
+            if params is None:
+                result = await func()
+            else:
+                result = await func(**params)
+        except Exception as ex:
+            print('--> COULD NOT GET ASYNC CLIENT:', ex)
+    return result
+
+
+
+
+
+
+
 ##############
 ### SEARCH ###
 ##############

@@ -9,13 +9,14 @@ from EOSS.aws.utils import get_boto3_client, exponential_backoff_sleep
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.tasks.design_evaluator import task_definition as design_evaluator_task_definition
 from EOSS.aws.tasks.design_evaluator import task_instance as design_evaluator_task
-from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, find_obj_and_set
+from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, find_obj_and_set, call_boto3_client_async
 
 
 
 class EcsClient:
 
     def __init__(self, user_info):
+        print('--> CREATING ECS CLIENT')
         self.user_info = user_info
         self.user_id = self.user_info.user.id
         self.eoss_context = user_info.eoss_context
@@ -135,24 +136,24 @@ class EcsClient:
 
     async def get_or_create_cluster(self, cluster_name):
         cluster_arn = await self.cluster_exists(cluster_name)
-        if cluster_arn is None:
-            response = await sync_to_async_mt(self.ecs_client.create_cluster)(
-                clusterName=cluster_name,
-                capacityProviders=['FARGATE'],
-                tags=[
-                    {'key': 'name', 'value': cluster_name}
-                ]
-            )
+        if cluster_arn is None:            
+            response = await call_boto3_client_async('ecs', 'create_cluster', {
+                "clusterName": cluster_name,
+                "capacityProviders":  ['FARGATE'],
+                "tags":  [{'key': 'name', 'value': cluster_name}]
+            })
+            
             return response['cluster']['clusterArn']
         else:
             return cluster_arn
 
     async def cluster_exists(self, cluster_name):
-        list_cluster_response = await sync_to_async_mt(self.ecs_client.list_clusters)()
+        list_cluster_response = await call_boto3_client_async('ecs', 'list_clusters')
         if 'clusterArns' not in list_cluster_response:
             return None
         cluster_arns = list_cluster_response['clusterArns']
-        clusters = await sync_to_async_mt(self.ecs_client.describe_clusters)(clusters=cluster_arns, include=['ATTACHMENTS', 'SETTINGS'])['clusters']
+        response = await call_boto3_client_async('ecs', 'describe_clusters', {'clusters': cluster_arns, 'include': ['ATTACHMENTS', 'SETTINGS']})
+        clusters = response['clusters']
         for cluster in clusters:
             if cluster['clusterName'] == cluster_name:
                 return cluster['clusterArn']
@@ -186,7 +187,11 @@ class EcsClient:
 
     async def task_definition_exists(self, task_name):
         try:
-            response = await sync_to_async_mt(self.ecs_client.describe_task_definition)(taskDefinition=task_name)
+            response = await call_boto3_client_async('ecs', 'describe_task_definition', {
+                "taskDefinition": task_name
+            })
+            if response is None or 'taskDefinition' not in response:
+                return None
             return response['taskDefinition']['taskDefinitionArn']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)
@@ -199,7 +204,7 @@ class EcsClient:
     async def register_design_evaluator_task_definition(self, task_name):
 
         # --> 1. Configure task definition
-        task_config = json.load(open('/app/EOSS/aws/tasks/design-evaluator.json'))
+        task_config = (json.load(open('/app/EOSS/aws/tasks/design-evaluator.json')))['task_definition']
         task_config['family'] = task_name
         task_config['containerDefinitions'][0]['name'] = task_name
         await find_obj_and_set(
@@ -220,7 +225,9 @@ class EcsClient:
 
         # --> 2. Register task
         try:
-            response = await sync_to_async_mt(self.ecs_client.register_task_definition)(**task_config)
+            response = await call_boto3_client_async('ecs', 'register_task_definition', task_config)
+            if response is None or 'taskDefinition' not in response:
+                return None
             return response['taskDefinition']['taskDefinitionArn']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR REGISTERING TASK DEFINITION', error)
@@ -241,11 +248,11 @@ class EcsClient:
 
     async def describe_task(self, task_arn):
         try:
-            response = await sync_to_async_mt(self.ecs_client.describe_tasks)(
-                cluster=self.cluster_arn,
-                tasks=[task_arn],
-                include=['TAGS']
-            )
+            response = await call_boto3_client_async('ecs', 'describe_tasks', {
+                "cluster": self.cluster_arn,
+                "tasks": [task_arn],
+                "include": ['TAGS']
+            })
             return response['tasks'][0]
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)
@@ -253,10 +260,10 @@ class EcsClient:
 
     async def get_task_arns(self, task_definition_arn):
         try:
-            response = await sync_to_async_mt(self.ecs_client.list_tasks)(
-                cluster=self.cluster_arn,
-                family=task_definition_arn
-            )
+            response = await call_boto3_client_async('ecs', 'list_tasks', {
+                "cluster": self.cluster_arn,
+                "family": task_definition_arn
+            })
             return response['taskArns']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)

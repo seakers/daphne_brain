@@ -106,6 +106,7 @@ class Register(APIView):
         # --> Create user and insert into default group: (all users are admins)
         try:
             user_id = self.create_user(username, email, password1)
+            print('--> ADDING USER TO GROUP')
             async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
         except ValueError:
             return Response({'status': 'registration_error',
@@ -143,8 +144,6 @@ class Register(APIView):
                 'status': 'registration_error',
                 'registration_error': 'This username is already in use.'
             })
-
-        return True
 
     def create_user(self, username, email, password):
         user = User.objects.create_user(username, email, password)

@@ -3,12 +3,13 @@ import json
 import random
 import botocore
 import asyncio
-from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt
+from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, call_boto3_client_async
 
 
 class SqsClient:
 
     def __init__(self, user_info):
+        print('--> CREATING SQS CLIENT')
         self.user_info = user_info
         self.user_id = user_info.user.id
         self.eoss_context = user_info.eoss_context
@@ -69,7 +70,7 @@ class SqsClient:
     ####################
 
     async def queue_exists_name(self, queue_name):
-        list_response = await sync_to_async_mt(self.sqs_client.list_queues)()
+        list_response = await call_boto3_client_async('sqs', 'list_queues')
         if 'QueueUrls' in list_response:
             queue_names = [url.split("/")[-1] for url in list_response['QueueUrls']]
             if queue_name in queue_names:
@@ -77,7 +78,7 @@ class SqsClient:
         return False
 
     async def queue_exists_url(self, queue_url):
-        list_response = await sync_to_async_mt(self.sqs_client.list_queues)()
+        list_response = await call_boto3_client_async('sqs', 'list_queues')
         if 'QueueUrls' in list_response:
             queue_urls = list_response['QueueUrls']
             if queue_url in queue_urls:
@@ -103,7 +104,9 @@ class SqsClient:
 
         # --> 2. Create queue and return url
         try:
-            response = await sync_to_async_mt(self.sqs_client.create_queue)(QueueName=salt_name)
+            response = await call_boto3_client_async('sqs', 'create_queue', {
+                "QueueName": salt_name
+            })
             return response['QueueUrl']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)
@@ -112,7 +115,9 @@ class SqsClient:
 
     async def create_queue_name(self, queue_name):
         if not await self.queue_exists_name(queue_name):
-            response = await sync_to_async_mt(self.sqs_client.create_queue)(QueueName=queue_name)
+            response = await call_boto3_client_async('sqs', 'create_queue', {
+                "QueueName": queue_name
+            })
             queue_url = response['QueueUrl']
             return queue_url
         else:
@@ -121,7 +126,9 @@ class SqsClient:
     async def create_queue_url(self, queue_url):
         if not await self.queue_exists_url(queue_url):
             queue_name = SqsClient.get_queue_name_from_url(queue_url)
-            response = await sync_to_async_mt(self.sqs_client.create_queue)(QueueName=queue_name)
+            response = await call_boto3_client_async('sqs', 'create_queue', {
+                "QueueName": queue_name
+            })
             return response['QueueUrl']
         else:
             return queue_url
@@ -134,7 +141,9 @@ class SqsClient:
 
     async def delete_queue_url(self, queue_url):
         try:
-            await sync_to_async_mt(self.sqs_client.delete_queue)(QueueUrl=queue_url)
+            await call_boto3_client_async('sqs', 'delete_queue', {
+                "QueueUrl": queue_url
+            })
         except botocore.exceptions.ClientError as error:
             print('--> ERROR DELETING QUEUE', error)
             return None
@@ -148,6 +157,9 @@ class SqsClient:
     async def get_queue_url(self, queue_name):
         try:
             response = await sync_to_async_mt(self.sqs_client.get_queue_url)(QueueName=queue_name)
+            response = await call_boto3_client_async('sqs', 'get_queue_url', {
+                "QueueName": queue_name
+            })
             return response["QueueUrl"]
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)
@@ -155,9 +167,10 @@ class SqsClient:
 
     async def get_queue_arn(self, queue_url):
         try:
-            response = await sync_to_async_mt(self.sqs_client.get_queue_attributes)(QueueUrl=queue_url,
-                                                                                    AttributeNames=["QueueArn"])
-
+            response = await call_boto3_client_async('sqs', 'get_queue_attributes', {
+                "QueueUrl": queue_url,
+                "AttributeNames": ["QueueArn"]
+            })
             return response["Attributes"]["QueueArn"]
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)

@@ -5,7 +5,6 @@
         "taskRoleArn":  "arn:aws:iam::923405430231:role/DaphneEvaluatorTaskRole",
         "cpu":  "1024",
         "memory":  "4096",
-        "memoryReservation":  "2048",
         "networkMode":  "awsvpc",
         "containerDefinitions":  [
             {
@@ -32,7 +31,6 @@
                     {"name": "EVAL_RESPONSE_URL", "value": "NULL"},
 
                     {"name": "CLUSTER_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:cluster/daphne-dev-cluster"},
-                    {"name": "SERVICE_ARN", "value": "NULL"},
 
                     {"name": "JAVA_OPTS", "value": "-Xmx3840m"}
                 ],
@@ -68,13 +66,7 @@
             }
         ]
     },
-
-
-
-
     "task_instance": {
-        
-
         "cluster": "daphne-dev-cluster",
         "serviceName": "user-n-design-evaluator-service",
         "taskDefinition": "user-1-design-evaluator-task",
@@ -140,9 +132,5 @@
             "minimumHealthyPercent": 123
         },
         "enableExecuteCommand": true
-
-
-
-
     }
 }
