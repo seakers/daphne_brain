@@ -19,20 +19,17 @@
                 ],
                 "environment": [
                     {"name": "DEPLOYMENT_TYPE", "value": "AWS"},
+                    {"name": "JAVA_OPTS", "value": "-Xmx3840m"},
 
                     {"name": "APOLLO_URL", "value": "http://graphql.daphne.dev:8080/v1/graphql"},
                     {"name": "APOLLO_URL_WS", "value": "ws://graphql.daphne.dev:8080/v1/graphql"},
 
-                    {"name": "PING_REQUEST_URL", "value": "NULL"},
-                    {"name": "PING_RESPONSE_URL", "value": "NULL"},
-                    {"name": "PRIVATE_REQUEST_URL", "value": "NULL"},
-                    {"name": "PRIVATE_RESPONSE_URL", "value": "NULL"},
-                    {"name": "EVAL_REQUEST_URL", "value": "NULL"},
-                    {"name": "EVAL_RESPONSE_URL", "value": "NULL"},
-
-                    {"name": "CLUSTER_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:cluster/daphne-dev-cluster"},
-
-                    {"name": "JAVA_OPTS", "value": "-Xmx3840m"}
+                    {"name": "PING_REQUEST_URL", "value": "OVERRIDE"},
+                    {"name": "PING_RESPONSE_URL", "value": "OVERRIDE"},
+                    {"name": "PRIVATE_REQUEST_URL", "value": "OVERRIDE"},
+                    {"name": "PRIVATE_RESPONSE_URL", "value": "OVERRIDE"},
+                    {"name": "EVAL_REQUEST_URL", "value": "OVERRIDE"},
+                    {"name": "EVAL_RESPONSE_URL", "value": "OVERRIDE"}
                 ],
                 "mountPoints": [
                     {
@@ -53,7 +50,7 @@
             }
         ],
         "requiresCompatibilities":  [
-            "FARGATE"
+            "EC2"
         ],
         "volumes":  [
             {

@@ -207,21 +207,6 @@ class EcsClient:
         task_config = (json.load(open('/app/EOSS/aws/tasks/design-evaluator.json')))['task_definition']
         task_config['family'] = task_name
         task_config['containerDefinitions'][0]['name'] = task_name
-        await find_obj_and_set(
-            task_config['containerDefinitions'][0]['environment'],
-            'name', 'EVAL_REQUEST_URL',
-            'value', self.eoss_context.design_evaluator_request_queue_url
-        )
-        await find_obj_and_set(
-            task_config['containerDefinitions'][0]['environment'],
-            'name', 'EVAL_RESPONSE_URL',
-            'value', self.eoss_context.design_evaluator_response_queue_url
-        )
-        await find_obj_and_set(
-            task_config['containerDefinitions'][0]['environment'],
-            'name', 'CLUSTER_ARN',
-            'value', self.cluster_arn
-        )
 
         # --> 2. Register task
         try:
@@ -329,6 +314,8 @@ class EcsClient:
         # --> 2. Create task configuration object
         task_config = copy.deepcopy(design_evaluator_task)
         task_config.overrides['containerOverrides'][0]['environment'] = [
+            {'name': 'EVAL_REQUEST_URL', 'value': self.eoss_context.design_evaluator_request_queue_url},
+            {'name': 'EVAL_RESPONSE_URL', 'value': self.eoss_context.design_evaluator_response_queue_url},
             {'name': 'PRIVATE_REQUEST_URL', 'value': instance_private_request_queue_url},
             {'name': 'PRIVATE_RESPONSE_URL', 'value': instance_private_response_queue_url},
             {'name': 'PING_REQUEST_URL', 'value': instance_ping_request_queue_url},

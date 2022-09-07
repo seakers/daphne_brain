@@ -43,10 +43,7 @@ def instance_priv_ipv4():
     return '172.31.63.4'
 
 def graphql_server_address(dev=False):
-    if settings.DEPLOYMENT_TYPE == "local":
-        return 'http://graphql:8080/v1/graphql'
-    else:
-        return os.environ['HASURA_HOST']
+    return os.environ['HASURA_HOST']
 
 def graphql_server_address_ws(dev=False):
     if settings.DEPLOYMENT_TYPE == "local":

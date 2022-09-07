@@ -112,17 +112,14 @@ class AbstractGraphqlClient:
     @property
     def schema(self):
         schema_content = ""
-        with open('/app/daphne/daphne_brain/EOSS/graphql/schema.graphql') as f:
+        with open('/app/EOSS/graphql/schema.graphql') as f:
             schema_content = f.read()
         schema_parsed = parse(schema_content)
         return build_ast_schema(schema_parsed)
 
-
-
-
     @staticmethod
     def _save(input, file_name):
-        file_path = '/app/daphne/daphne_brain/EOSS/graphql/output/' + file_name
+        file_path = '/app/EOSS/graphql/output/' + file_name
         f = open(file_path, "w+")
         f.write(input)
         f.close()
@@ -141,7 +138,7 @@ class AbstractGraphqlClient:
             request_body = {'query': query}
             if variables is not None:
                 request_body['variables'] = variables
-            async with session.post(graphql_server_address(), json=request_body) as response:
+            async with session.post(graphql_server_address(), json=request_body, headers={'X-Hasura-Admin-Secret': 'daphne'}) as response:
                 result = json.loads(await response.text())
                 if 'data' not in result:
                     return dict()
@@ -152,7 +149,7 @@ class AbstractGraphqlClient:
         async with aiohttp.ClientSession() as session:
             for attempt in range(tries):
                 # --> 1. Check to see if the obj exists
-                async with session.post(graphql_server_address(), json={'query': subscription}) as response:
+                async with session.post(graphql_server_address(), json={'query': subscription}, headers={'X-Hasura-Admin-Secret': 'daphne'}) as response:
                     result = json.loads(await response.text())
                     if 'data' not in result:
                         print('--> DATA FIELD NOT FOUND IN SUB REQUEST', result)
@@ -193,6 +190,7 @@ class AbstractGraphqlClient:
 
     @staticmethod
     async def add_user_to_group(user_id, group_id):
+        print('--> ADDING USER TO GROUP')
         if group_id is None:
             group_id = 1
 
@@ -208,6 +206,7 @@ class AbstractGraphqlClient:
             }
         """ % (int(user_id), int(group_id))
         result = await AbstractGraphqlClient._query(mutation)
+        print('--> USER ADDED:', json.dumps(result, indent=4, default=str))
         if 'insert_Join__AuthUser_Group_one' not in result:
             return None
         return result['insert_Join__AuthUser_Group_one']
