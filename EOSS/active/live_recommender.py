@@ -139,7 +139,16 @@ def generate_historian_message(user_info: UserInformation, genome, session_key):
 
 
 def active_analyst_response(user_info: UserInformation, session_key):
+    print('--> ACTIVE ANALYST (PLACEHOLDER)')
+
     result = []
+    result.append({
+        "type": "Analyst",
+        "advice": 'PLACEHOLDER ADVICE'
+    })
+    if len(result) != 0:
+        return result
+
     dm_client = DataMiningClient()
     vassar_client = VASSARClient(user_information=user_info)
 
