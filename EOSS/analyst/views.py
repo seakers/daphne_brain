@@ -803,7 +803,7 @@ class SetProblemParameters(APIView):
 
             print("---> SetProblemParameters:", problem_id)
             entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])
-            self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem_id, entities)
+            # self.DataMiningClient.client.setAssigningProblemEntities(session_key, problem_id, entities)
 
             # if problem in problem_specific.assignation_problems:
             #     entities = AssigningProblemEntities(params['instrument_list'], params['orbit_list'])

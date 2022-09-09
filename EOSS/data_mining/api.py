@@ -16,28 +16,34 @@ class DataMiningClient():
     def __init__(self):
         port = config['data-mining']['port']
 
-        # Make socket
-        self.transport = TSocket.TSocket(os.environ['DATAMINING_HOST'], os.environ['DATAMINING_PORT'])
-    
-        # Buffering is critical. Raw sockets are very slow
-        self.transport = TTransport.TBufferedTransport(self.transport)
+        # # Make socket
+        # self.transport = TSocket.TSocket(os.environ['DATAMINING_HOST'], os.environ['DATAMINING_PORT'])
+        #
+        # # Buffering is critical. Raw sockets are very slow
+        # self.transport = TTransport.TBufferedTransport(self.transport)
+        self.transport = None
     
         # Wrap in a protocol
-        self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
+        # self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
+        self.protocol = None
         
         # Create a client to use the protocol encoder
-        self.client = DataMiningInterface.Client(self.protocol)
+        # self.client = DataMiningInterface.Client(self.protocol)
+        self.client = None
     
     def startConnection(self):
-        # Connect
-        self.transport.open()
+        print('--> DATAMINING (PLACEHOLDER): startConnection')
+        # # Connect
+        # self.transport.open()
 
     def endConnection(self):
-        # Close
-        self.transport.close()
+        print('--> DATAMINING (PLACEHOLDER): endConnection')
+        # # Close
+        # self.transport.close()
         
     def ping(self):
-        self.client.ping()
-        print('ping()')
+        print('--> DATAMINING (PLACEHOLDER): ping')
+        # self.client.ping()
+        # print('ping()')
 
 

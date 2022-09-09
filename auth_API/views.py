@@ -208,6 +208,7 @@ class GenerateSession(APIView):
     Simply generate a session for the user (solves a ton of bugs)
     """
     def post(self, request, format=None):
+        print('--> ENV CHECK:', os.environ['POSTGRES_HOST'])
 
         # Is this the first visit for this cookie?
         if request.session.session_key is None:

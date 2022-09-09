@@ -1,6 +1,29 @@
 # Daphne Brain
 
-The server which serves all of the Daphne interfaces
+The api which serves all of the Daphne interfaces
+
+## AWS Deployment
+
+- Registry `923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
+
+
+#### Commands
+
+- Build Command `docker build -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain .`
+- Build Command `docker-compose build `
+- Run Locally `docker run --network=daphne-network --name=brain 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
+- Push ECR `docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
+- Docker Login `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 923405430231.dkr.ecr.us-east-2.amazonaws.com
+`
+
+#### Notes
+
+1. When building the Dockerfile, uncomment the lines adding the .env_build file
+2. 
+
+
+
+
 
 ## Installation Instructions
 
