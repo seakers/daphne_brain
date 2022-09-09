@@ -8,18 +8,23 @@ The api which serves all of the Daphne interfaces
 
 
 #### Commands
+`aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 923405430231.dkr.ecr.us-east-2.amazonaws.com`
 
-- Build Command `docker build -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain .`
-- Build Command `docker-compose build `
-- Run Locally `docker run --network=daphne-network --name=brain 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
-- Push ECR `docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
-- Docker Login `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 923405430231.dkr.ecr.us-east-2.amazonaws.com
-`
+##### Local
+`docker-compose build`
+`docker-compose up -d`
 
-#### Notes
+##### Dev
+`docker build -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain .`
+`docker run --network=daphne-network --name=brain 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
 
-1. When building the Dockerfile, uncomment the lines adding the .env_build file
-2. 
+##### Prod
+`docker build -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain .`
+`docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
+
+
+
+
 
 
 
