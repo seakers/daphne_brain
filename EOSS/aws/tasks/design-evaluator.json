@@ -20,23 +20,8 @@
                 "environment": [
                     {"name": "DEPLOYMENT_TYPE", "value": "AWS"},
                     {"name": "JAVA_OPTS", "value": "-Xmx3840m"},
-
                     {"name": "APOLLO_URL", "value": "http://graphql.daphne.dev:8080/v1/graphql"},
-                    {"name": "APOLLO_URL_WS", "value": "ws://graphql.daphne.dev:8080/v1/graphql"},
-
-                    {"name": "PING_REQUEST_URL", "value": "OVERRIDE"},
-                    {"name": "PING_RESPONSE_URL", "value": "OVERRIDE"},
-                    {"name": "PRIVATE_REQUEST_URL", "value": "OVERRIDE"},
-                    {"name": "PRIVATE_RESPONSE_URL", "value": "OVERRIDE"},
-                    {"name": "EVAL_REQUEST_URL", "value": "OVERRIDE"},
-                    {"name": "EVAL_RESPONSE_URL", "value": "OVERRIDE"}
-                ],
-                "mountPoints": [
-                    {
-                        "sourceVolume": "vassar_resources",
-                        "containerPath": "/resources",
-                        "readOnly": false
-                    }
+                    {"name": "APOLLO_URL_WS", "value": "ws://graphql.daphne.dev:8080/v1/graphql"}
                 ],
                 "logConfiguration": {
                     "logDriver": "awslogs",
@@ -50,24 +35,12 @@
             }
         ],
         "requiresCompatibilities":  [
-            "EC2"
-        ],
-        "volumes":  [
-            {
-                "name": "vassar_resources",
-                "efsVolumeConfiguration": {
-                    "fileSystemId": "fs-d3977da8",
-                    "rootDirectory": "/VASSAR_resources",
-                    "transitEncryption": "ENABLED"
-                }
-            }
+            "FARGATE"
         ]
     },
     "task_instance": {
         "cluster": "daphne-dev-cluster",
-        "serviceName": "user-n-design-evaluator-service",
-        "taskDefinition": "user-1-design-evaluator-task",
-        "desiredCount": 0,
+        "count": 1,
         "launchType": "FARGATE",
         "networkConfiguration": {
             "awsvpcConfiguration": {
@@ -81,53 +54,28 @@
                 "assignPublicIp": "DISABLED"
             }
         },
-        "healthCheckGracePeriodSeconds": 0,
-        "schedulingStrategy": "REPLICA",
-        "deploymentController": {
-            "type": "EXTERNAL"
-        },
-        "enableECSManagedTags": true,
-        "propagateTags": "TASK_DEFINITION",
-        "placementConstraints": [
-            {
-                "type": "distinctInstance"
-            }
-        ],
-        "overrides" :  {
+        "overrides": {
             "containerOverrides": [
                 {
-                    "name": "design-evaluator",
+                    "name": "user-n-design-evaluator-task",
                     "environment": [
-                        {"name": "PING_REQUEST_URL", "value": "NULL"},
-                        {"name": "PING_RESPONSE_URL", "value": "NULL"},
-                        {"name": "PRIVATE_REQUEST_URL", "value": "NULL"},
-                        {"name": "PRIVATE_RESPONSE_URL", "value": "NULL"}
+                        {"name": "PING_REQUEST_URL", "value": "OVERRIDE"},
+                        {"name": "PING_RESPONSE_URL", "value": "OVERRIDE"},
+                        {"name": "PRIVATE_REQUEST_URL", "value": "OVERRIDE"},
+                        {"name": "PRIVATE_RESPONSE_URL", "value": "OVERRIDE"},
+                        {"name": "EVAL_REQUEST_URL", "value": "OVERRIDE"},
+                        {"name": "EVAL_RESPONSE_URL", "value": "OVERRIDE"}
                     ]
                 }
             ]
         },
+        "propagateTags": "TASK_DEFINITION",
         "tags" :  [
-            {"key": "PING_REQUEST_URL", "value": "NULL"},
-            {"key": "PING_RESPONSE_URL", "value": "NULL"},
-            {"key": "PRIVATE_REQUEST_URL", "value": "NULL"},
-            {"key": "PRIVATE_RESPONSE_URL", "value": "NULL"}
+            {"key": "PING_REQUEST_URL", "value": "OVERRIDE"},
+            {"key": "PING_RESPONSE_URL", "value": "OVERRIDE"},
+            {"key": "PRIVATE_REQUEST_URL", "value": "OVERRIDE"},
+            {"key": "PRIVATE_RESPONSE_URL", "value": "OVERRIDE"}
         ],
-        "capacityProviderStrategy": [
-            {
-                "capacityProvider": "string",
-                "weight": 123,
-                "base": 123
-            }
-        ],
-        "clientToken": "string",
-        "deploymentConfiguration": {
-            "deploymentCircuitBreaker": {
-                "enable": true,
-                "rollback": true
-            },
-            "maximumPercent": 123,
-            "minimumHealthyPercent": 123
-        },
-        "enableExecuteCommand": true
+        "taskDefinition": "user-1-design-evaluator-task"
     }
 }

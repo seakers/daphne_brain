@@ -9,7 +9,7 @@ from EOSS.aws.utils import get_boto3_client, exponential_backoff_sleep
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.tasks.design_evaluator import task_definition as design_evaluator_task_definition
 from EOSS.aws.tasks.design_evaluator import task_instance as design_evaluator_task
-from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, find_obj_and_set, call_boto3_client_async
+from EOSS.aws.utils import _save_eosscontext, find_obj_and_set, call_boto3_client_async
 
 
 
@@ -82,26 +82,8 @@ class EcsClient:
 
 
         # --> 3. Run requested number of user tasks
-        # de_response = await self.regulate_design_evaluator_tasks()
+        de_response = await self.regulate_design_evaluator_tasks()
         # ga_response = await self.regulate_genetic_algorithm_tasks()
-
-
-        # --> 3. Validate user specific services exist
-        # if self.design_evaluator_service_name is None:
-        #     self.design_evaluator_service_name = 'user-' + str(self.user_id) + '-design-evaluator-service'
-        # self.design_evaluator_service_arn = await self.get_or_create_service(
-        #     self.design_evaluator_service_name,
-        #     'design-evaluator',
-        #     self.design_evaluator_task_arn
-        # )
-
-        # if self.genetic_algorithm_service_name is None:
-        #     self.genetic_algorithm_service_name = 'user-' + str(self.user_id) + '-genetic-algorithm-service'
-        # self.genetic_algorithm_service_arn = await self.get_or_create_service(
-        #     self.genetic_algorithm_service_name,
-        #     'genetic-algorithm',
-        #     self.genetic_algorithm_task_arn
-        # )
         
         return await self.commit_db()
 
@@ -264,6 +246,7 @@ class EcsClient:
 
     # --> Regulate: design-evaluator
     async def regulate_design_evaluator_tasks(self):
+        print('--> REGULATING DESIGN EVALUATOR TASKS')
 
         # --> 1. Determine number of current tasks
         task_arns = await self.get_task_arns(self.design_evaluator_task_name)
@@ -312,8 +295,11 @@ class EcsClient:
 
 
         # --> 2. Create task configuration object
-        task_config = copy.deepcopy(design_evaluator_task)
-        task_config.overrides['containerOverrides'][0]['environment'] = [
+        task_config = (json.load(open('/app/EOSS/aws/tasks/design-evaluator.json')))['task_instance']
+        task_config['cluster'] = self.cluster_arn
+
+        task_config['overrides']['containerOverrides'][0]['name'] = self.design_evaluator_task_name
+        task_config['overrides']['containerOverrides'][0]['environment'] = [
             {'name': 'EVAL_REQUEST_URL', 'value': self.eoss_context.design_evaluator_request_queue_url},
             {'name': 'EVAL_RESPONSE_URL', 'value': self.eoss_context.design_evaluator_response_queue_url},
             {'name': 'PRIVATE_REQUEST_URL', 'value': instance_private_request_queue_url},
@@ -321,24 +307,20 @@ class EcsClient:
             {'name': 'PING_REQUEST_URL', 'value': instance_ping_request_queue_url},
             {'name': 'PING_RESPONSE_URL', 'value': instance_ping_response_queue_url},
         ]
-        task_config.tags = [
+        task_config['tags'] = [
             {'key': 'PRIVATE_REQUEST_URL', 'value': instance_private_request_queue_url},
             {'key': 'PRIVATE_RESPONSE_URL', 'value': instance_private_response_queue_url},
             {'key': 'PING_REQUEST_URL', 'value': instance_ping_request_queue_url},
             {'key': 'PING_RESPONSE_URL', 'value': instance_ping_response_queue_url},
         ]
+        task_config['taskDefinition'] = self.design_evaluator_task_arn
+
 
         try:
-            response = await sync_to_async_mt(self.sqs_client.run_task)(
-                cluster=self.cluster_arn,
-                count=1,
-                launchType='FARGATE',
-                networkConfiguration=task_config.networkConfiguration,
-                overrides=task_config.overrides,
-                propagateTags='TASK_DEFINITION',
-                tags=task_config.tags,
-                taskDefinition=self.design_evaluator_task_arn
-            )
+            response = await call_boto3_client_async('ecs', 'run_task', task_config)
+            if response is None or 'tasks' not in response:
+                print('--> ERROR: could not start service')
+                return None
             return response['tasks'][0]['taskArn']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR', error)
@@ -410,10 +392,10 @@ class EcsClient:
 
     async def stop_task(self, task_arn):
         try:
-            response = await sync_to_async_mt(self.ecs_client.stop_task)(
-                cluster=self.cluster_arn,
-                task=task_arn
-            )
+            response = await call_boto3_client_async('ecs', 'stop_task', {
+                "cluster": self.cluster_arn,
+                "task": task_arn
+            })
             return response['task']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR STOPPING TASK', error, task_arn)
@@ -425,6 +407,15 @@ class EcsClient:
     # --> Regulate: genetic-algorithm
     async def regulate_genetic_algorithm_tasks(self):
         return None
+
+
+
+
+
+
+
+
+
 
 
 
@@ -451,16 +442,18 @@ class EcsClient:
     async def service_exists(self, service_name):
 
         # --> 1. List cluster service arns
-        response = await sync_to_async_mt(self.ecs_client.list_services)(cluster=self.cluster_name)
+        response = await call_boto3_client_async('ecs', 'list_services', {
+            "cluster": self.cluster_name
+        })
         if 'serviceArns' not in response:
             return None
         service_arns = response['serviceArns']
 
         # --> 2. Describe services by arn
-        response = await sync_to_async_mt(self.ecs_client.describe_services)(
-            cluster='daphne-cluster',
-            services=service_arns
-        )
+        response = await call_boto3_client_async('ecs', 'describe_services', {
+            "cluster": self.cluster_name,
+            "services": service_arns
+        })
 
         # --> 3. Match the service by name
         for service in response['services']:
@@ -482,16 +475,16 @@ class EcsClient:
 
         # --> Create service
         try:
-            response = await sync_to_async_mt(self.ecs_client.create_service)(
-                cluster=service_config.cluster,
-                serviceName=service_config.serviceName,
-                desiredCount=service_config.desiredCount,
-                schedulingStrategy=service_config.schedulingStrategy,
-                deploymentController=service_config.deploymentController,
-                enableECSManagedTags=service_config.enableECSManagedTags,
-                propagateTags=service_config.propagateTags,
-                placementConstraints=service_config.placementConstraints
-            )
+            response = await call_boto3_client_async('ecs', 'create_service', {
+                "cluster": service_config.cluster,
+                "serviceName": service_config.serviceName,
+                "desiredCount": service_config.desiredCount,
+                "schedulingStrategy": service_config.schedulingStrategy,
+                "deploymentController": service_config.deploymentController,
+                "enableECSManagedTags": service_config.enableECSManagedTags,
+                "propagateTags": service_config.propagateTags,
+                "placementConstraints": service_config.placementConstraints
+            })
             return response['service']['serviceArn']
         except botocore.exceptions.ClientError as error:
             print('--> ERROR CREATING SERVICE', error)

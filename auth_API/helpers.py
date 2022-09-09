@@ -81,9 +81,9 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
 
 
         # --> ActiveContext
-        active_context = ActiveContext(eosscontext=eoss_context, check_for_diversity=False, show_engineer_suggestions=True,
-                                       engineer_suggestions_frequency=3, show_historian_suggestions=True,
-                                       historian_suggestions_frequency=3, show_analyst_suggestions=True,
+        active_context = ActiveContext(eosscontext=eoss_context, check_for_diversity=False, show_engineer_suggestions=False,
+                                       engineer_suggestions_frequency=3, show_historian_suggestions=False,
+                                       historian_suggestions_frequency=3, show_analyst_suggestions=False,
                                        analyst_suggestions_frequency=45)
         active_context.save()
 

@@ -12,7 +12,7 @@ from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info
 from daphne_ws.consumers import DaphneConsumer
 
-
+from EOSS.aws.clients.EcsClient import EcsClient
 from EOSS.aws.utils import get_boto3_client
 from EOSS.data.design_helpers import add_design
 from EOSS.active import live_recommender
@@ -46,7 +46,7 @@ class EOSSConsumer(DaphneConsumer):
                 3.  active_analyst
                 
                 
-                4.  connect_services
+                4.  connect_services / regulate_services
                 5.  connect_vassar
                 6.  connect_ga
                 
@@ -96,18 +96,12 @@ class EOSSConsumer(DaphneConsumer):
 
 
         elif content.get('msg_type') == 'connect_services':
-            await self.connect_services(user_info)
-        elif content.get('msg_type') == 'connect_vassar':
-            await self.connect_vassar(user_info, skip_check=True)
-        elif content.get('msg_type') == 'connect_ga':
-            await self.connect_ga(user_info, skip_check=True)
-
-
+            if user_info.user is not None:
+                await self.connect_services(user_info, content)
         elif content.get('msg_type') == 'start_ga':
             await self.start_ga(user_info)
         elif content.get('msg_type') == 'apply_feature':
-            tested_feature = content.get("featureExpression")
-            await self.apply_ga_feature(user_info, tested_feature)
+            await self.apply_ga_feature(user_info, content.get("featureExpression"))
         elif content.get('msg_type') == 'stop_ga':
             await self.stop_ga(user_info)
 
@@ -134,28 +128,31 @@ class EOSSConsumer(DaphneConsumer):
             # Send keep-alive signal to continuous jobs (GA, Analyst, etc)
             # Only ping vassar and GA if logged in
             if user_info.user is not None:
-                vassar_client = VASSARClient(user_info)
-                container_statuses = await vassar_client.send_ping_message()
-                for uuid, still_alive in container_statuses["vassar"].items():
-                    if still_alive:
-                        status = "ready"
-                    else:
-                        status = "missed_ping"
-                    await self.send_json({
-                        'type': 'services.vassar_status',
-                        'uuid': uuid,
-                        'status': status
-                    })
-                for uuid, still_alive in container_statuses["ga"].items():
-                    if still_alive:
-                        status = "ready"
-                    else:
-                        status = "missed_ping"
-                    await self.send_json({
-                        'type': 'services.ga_status',
-                        'uuid': uuid,
-                        'status': status
-                    })
+                await self.ping_services(user_info, content)
+
+            # if user_info.user is not None:
+            #     vassar_client = VASSARClient(user_info)
+            #     container_statuses = await vassar_client.send_ping_message()
+            #     for uuid, still_alive in container_statuses["vassar"].items():
+            #         if still_alive:
+            #             status = "ready"
+            #         else:
+            #             status = "missed_ping"
+            #         await self.send_json({
+            #             'type': 'services.vassar_status',
+            #             'uuid': uuid,
+            #             'status': status
+            #         })
+            #     for uuid, still_alive in container_statuses["ga"].items():
+            #         if still_alive:
+            #             status = "ready"
+            #         else:
+            #             status = "missed_ping"
+            #         await self.send_json({
+            #             'type': 'services.ga_status',
+            #             'uuid': uuid,
+            #             'status': status
+            #         })
         # elif content.get('msg_type') == 'mycroft':
         #     self.send_json({
         #         'type': 'mycroft.message',
@@ -190,11 +187,23 @@ class EOSSConsumer(DaphneConsumer):
     ### Services ###
     ################
 
+    async def ping_services(self, user_info: UserInformation, content):
+        print('--> PING SERVICES (PLACEHOLDER)')
+
     # --> Functions
-    async def connect_services(self, user_info: UserInformation):
-        vassar_success = await self.connect_vassar(user_info)
-        if vassar_success:
-            await self.connect_ga(user_info)
+    async def connect_services(self, user_info: UserInformation, content):
+        print('--> CONNECTING SERVICES')
+
+        # --> 1. Set desired number of services
+        if 'num_eval' in content:
+            user_info.eosscontext.design_evaluator_task_count = int(content.get('num_eval'))
+        if 'num_ga' in content:
+            user_info.eosscontext.genetic_algorithm_task_count = int(content.get('num_ga'))
+        _save_user_info(user_info)
+
+        # --> 2. Validate desired services
+        ecs_client = EcsClient(user_info)
+        await ecs_client.initialize()
 
 
 
@@ -203,25 +212,6 @@ class EOSSConsumer(DaphneConsumer):
     ##############
 
     # --> Functions
-    async def connect_vassar(self, user_info: UserInformation, skip_check: bool = False):
-        print('--> REBUILD VASSAR (PLACEHOLDER)')
-        await self.send_json({
-            'type': 'services.vassar_status',
-            'status': "success"
-        })
-        return 0
-
-    async def connect_vassar_2(self, user_info: UserInformation, skip_check: bool = False):
-
-        # 1. Initialize instances
-        vassar_instances = 1
-
-        # 2. Create scaling client
-        scaling = await sync_to_async(EvaluationScaling)(user_info, vassar_instances, user_req=True, fast=False)
-        await scaling.initialize()
-
-        return 0
-
     async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
         print('--> REBUILD VASSAR (PLACEHOLDER)')
         await self.send_json({
@@ -350,14 +340,6 @@ class EOSSConsumer(DaphneConsumer):
 
 
     # --> Functions
-    async def connect_ga(self, user_info: UserInformation, skip_check=False):
-        print('--> CONNECTING GA (PLACEHOLDER)')
-        await self.send_json({
-            'type': 'services.ga_status',
-            'status': 'ready'
-        })
-        return 0
-
     async def start_ga(self, user_info: UserInformation):
         print('--> STARTING GA (PLACEHOLDER)')
         await self.send_json({

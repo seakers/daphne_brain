@@ -190,7 +190,6 @@ class AbstractGraphqlClient:
 
     @staticmethod
     async def add_user_to_group(user_id, group_id):
-        print('--> ADDING USER TO GROUP')
         if group_id is None:
             group_id = 1
 
@@ -206,7 +205,6 @@ class AbstractGraphqlClient:
             }
         """ % (int(user_id), int(group_id))
         result = await AbstractGraphqlClient._query(mutation)
-        print('--> USER ADDED:', json.dumps(result, indent=4, default=str))
         if 'insert_Join__AuthUser_Group_one' not in result:
             return None
         return result['insert_Join__AuthUser_Group_one']

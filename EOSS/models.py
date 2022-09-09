@@ -52,7 +52,7 @@ class EOSSContext(models.Model):
     # --> Tasks
     design_evaluator_task_name = models.TextField(null=True)  # user-1-design-evaluator-task (task family)
     design_evaluator_task_arn = models.TextField(null=True)
-    design_evaluator_task_count = models.IntegerField(default=0)
+    design_evaluator_task_count = models.IntegerField(default=1)
 
     genetic_algorithm_task_name = models.TextField(null=True)  # user-1-genetic-algorithm-task (task family)
     genetic_algorithm_task_arn = models.TextField(null=True)
@@ -112,15 +112,15 @@ class ActiveContext(models.Model):
     eosscontext = models.OneToOneField(EOSSContext, on_delete=models.CASCADE)
 
     # Settings for the Proactive Feedback
-    check_for_diversity = models.BooleanField(default=True)
+    check_for_diversity = models.BooleanField(default=False)
 
-    show_engineer_suggestions = models.BooleanField(default=True)
+    show_engineer_suggestions = models.BooleanField(default=False)
     engineer_suggestions_frequency = models.IntegerField(default=3) # 3 modifications/minute
     
-    show_historian_suggestions = models.BooleanField(default=True)
+    show_historian_suggestions = models.BooleanField(default=False)
     historian_suggestions_frequency = models.IntegerField(default=3) # 3 modifications/minute
 
-    show_analyst_suggestions = models.BooleanField(default=True)
+    show_analyst_suggestions = models.BooleanField(default=False)
     analyst_suggestions_frequency = models.IntegerField(default=45) # 1 notif/45s
 
 
