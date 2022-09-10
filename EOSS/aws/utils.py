@@ -118,6 +118,12 @@ async def find_obj(objs, key_name, key_value):
             return obj
     return None
 
+async def find_obj_value(objs, key_name, key_value, set_name):
+    obj = await find_obj(objs, key_name, key_value)
+    if set_name not in obj:
+        return None
+    return obj[set_name]
+
 async def find_obj_and_set(objs, key_name, key_value, set_name, set_value):
     obj = await find_obj(objs, key_name, key_value)
     if obj is not None:

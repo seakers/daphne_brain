@@ -77,5 +77,16 @@
             {"key": "PRIVATE_RESPONSE_URL", "value": "OVERRIDE"}
         ],
         "taskDefinition": "user-1-design-evaluator-task"
+    },
+    "bottlerocket": {
+        "ImageId": "ami-06a14133d3bf45cbc",
+        "InstanceType": "t2.medium",
+        "MaxCount": 1,
+        "MinCount": 1,
+        "SecurityGroupIds": [
+            "some-id"
+        ],
+        "SubnetId": "subnet-05cc334fd084cb66c",
+        "UserData": "empty for bottlerocket"
     }
 }
