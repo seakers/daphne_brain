@@ -41,7 +41,7 @@ class InstanceManager:
 
         # --> Cluster Info: daphne-cluster
         self.cluster_name = self.eosscontext.cluster_name
-        self.cluster_arn = self.eosscontext.cluster_name
+        self.cluster_arn = self.eosscontext.cluster_arn
 
         # --> Initialization Data (async init)
         self.vassar_containers = []
@@ -50,7 +50,7 @@ class InstanceManager:
 
     async def initialize(self):
 
-        # --> Init Queues
+        # --> Init Queues (eval request)
         await self.sqs_client.initialize()
 
         # --> Gather the currently running containers
@@ -61,66 +61,40 @@ class InstanceManager:
 
     async def gather_resources(self):
 
-
         # --> 1. Gather existing instances
-        de_request = await call_boto3_client_async('ec2', 'describe_instances', {
-            "Filters": [
-                {
-                    'Name': 'vpc-id',
-                    'Values': [
-                        'vpc-0167d66edf8eebc3c',
-                    ]
-                },
-                {
-                    'Name': 'tag:USER_ID',
-                    'Values': [
-                        str(self.user_id),
-                    ]
-                },
-                {
-                    'Name': 'tag:RESOURCE_TYPE',
-                    'Values': [
-                        'design-evaluator'
-                    ]
-                },
-            ]
-        })
-        de_instances = []
-        if 'Reservations' in de_request:
-            de_instances = [item['Instances'][0] for item in de_request['Reservations']]
-
-        ga_request = await call_boto3_client_async('ec2', 'describe_instances', {
-            "Filters": [
-                {
-                    'Name': 'vpc-id',
-                    'Values': [
-                        'vpc-0167d66edf8eebc3c',
-                    ]
-                },
-                {
-                    'Name': 'tag:USER_ID',
-                    'Values': [
-                        str(self.user_id),
-                    ]
-                },
-                {
-                    'Name': 'tag:RESOURCE_TYPE',
-                    'Values': [
-                        'design-evaluator'
-                    ]
-                },
-            ]
-        })
-        ga_instances = []
-        if 'Reservations' in ga_request:
-            ga_instances = [item['Instances'][0] for item in ga_request['Reservations']]
+        de_instances = await self.gather_instances('design-evaluator')
+        ga_instances = await self.gather_instances('genetic-algorithm')
 
 
         return 0
 
 
-
-
+    async def gather_instances(self, instance_type):
+        request = await call_boto3_client_async('ec2', 'describe_instances', {
+            "Filters": [
+                {
+                    'Name': 'vpc-id',
+                    'Values': [
+                        'vpc-0167d66edf8eebc3c',
+                    ]
+                },
+                {
+                    'Name': 'tag:USER_ID',
+                    'Values': [
+                        str(self.user_id),
+                    ]
+                },
+                {
+                    'Name': 'tag:RESOURCE_TYPE',
+                    'Values': [
+                        instance_type
+                    ]
+                },
+            ]
+        })
+        if 'Reservations' in request:
+            return [item['Instances'][0] for item in request['Reservations']]
+        return []
 
 
 

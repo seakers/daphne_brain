@@ -2,7 +2,7 @@ import os
 import boto3
 import random
 import string
-from EOSS.aws.utils import call_boto3_client_async, find_obj_value
+from EOSS.aws.utils import call_boto3_client_async, find_obj_value, _linear_sleep_async
 from EOSS.aws.clients.SqsClient import SqsClient
 
 
@@ -66,7 +66,7 @@ class AbstractInstance:
 
         # --> Container Data
         self.identifier = None
-        self.container_type = None
+        self.instance_type = None
         self.private_request_queue = None
         self.private_response_queue = None
         self.ping_request_queue = None
@@ -127,6 +127,92 @@ class AbstractInstance:
         self.ping_request_queue = await find_obj_value(tags, 'Key', 'PING_REQUEST_QUEUE', 'Value')
         self.ping_response_queue = await find_obj_value(tags, 'Key', 'PING_RESPONSE_QUEUE', 'Value')
         self.identifier = await find_obj_value(tags, 'Key', 'IDENTIFIER', 'Value')
+
+
+
+
+
+    async def get_instance(self):
+        request = await call_boto3_client_async('ec2', 'describe_instances', {
+            "Filters": [
+                {
+                    'Name': 'vpc-id',
+                    'Values': [
+                        'vpc-0167d66edf8eebc3c',
+                    ]
+                },
+                {
+                    'Name': 'tag:USER_ID',
+                    'Values': [
+                        str(self.user_id),
+                    ]
+                },
+                {
+                    'Name': 'tag:IDENTIFIER',
+                    'Values': [
+                        self.identifier
+                    ]
+                },
+            ]
+        })
+        if 'Reservations' in request:
+            self.instance = request['Reservations'][0]['Instances'][0]
+        return self.instance
+
+
+
+
+    async def wait_on_state(self, target_state='running', seconds=60):
+        iter = 0
+        iter_max = int(seconds/2)
+        curr_state = None
+        while curr_state != target_state:
+            instance = await self.get_instance()
+            if instance is not None:
+                curr_state = instance['State']['Name']
+            iter += 1
+            if iter >= iter_max:
+                return False
+            await _linear_sleep_async(2)
+        return True
+
+
+
+
+
+
+        instance = self.get_instance()
+
+
+
+
+
+        # -->
+        request = await call_boto3_client_async('ec2', 'describe_instances', {
+            "Filters": [
+                {
+                    'Name': 'vpc-id',
+                    'Values': [
+                        'vpc-0167d66edf8eebc3c',
+                    ]
+                },
+                {
+                    'Name': 'tag:USER_ID',
+                    'Values': [
+                        str(self.user_id),
+                    ]
+                },
+                {
+                    'Name': 'tag:IDENTIFIER',
+                    'Values': [
+                        self.identifier
+                    ]
+                },
+            ]
+        })
+
+
+        return 0
 
 
 

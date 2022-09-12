@@ -23,7 +23,7 @@ class DesignEvaluatorInstance(AbstractInstance):
 
     def __init__(self, user_info, instance=None):
         super().__init__(user_info, instance)
-        self.container_type = 'design-evaluator'
+        self.instance_type = 'design-evaluator'
 
     async def initialize(self):
         if self.instance is None:
@@ -36,11 +36,14 @@ class DesignEvaluatorInstance(AbstractInstance):
         # --> 1. Call parent initialization
         await self._initialize()
 
-        # --> 2. Create instance
+        # --> 2. Create instance + wait until running
         response = await call_boto3_client_async('ec2', 'run_instances', self._run_instances)
-
-        # --> Wait until instance running
-
+        if 'Instances' in response:
+            self.instance = response['Instances'][0]
+            if await self.wait_on_state(target_state='running') is False:
+                print('--> INSTANCE NEVER REACHED RUNNING STATE:', self.identifier)
+        else:
+            print('--> ERROR RUNNING INSTANCE:', self.identifier)
 
         # --> 3. Connect to container (SSM)
         await self.connect()
@@ -92,6 +95,10 @@ cluster = "daphne-dev-cluster"'''
                         {
                             'Key': 'IDENTIFIER',
                             'Value': self.identifier
+                        },
+                        {
+                            'Key': 'USER_ID',
+                            'Value': self.user_id
                         }
                     ]
                 },
@@ -109,9 +116,19 @@ cluster = "daphne-dev-cluster"'''
     """
     # - Connect to design-evaluator inside of instance
     async def connect(self):
-        print('--> CONNECTING TO DESIGN EVALUATOR:', self.identifier)
 
-        # --> 1. Await instance
+        # --> 1. Get instance and ensure running
+        instance = self.get_instance()
+        if instance is None:
+            print('--> (ERROR) INSTANCE IS NONE')
+            return None
+        if instance['State']['Name'] != 'running':
+            print('--> (ERROR) INSTANCE NOT RUNNING')
+            return None
+
+        # --> 2. Get SSM Connection
+
+
 
 
 
