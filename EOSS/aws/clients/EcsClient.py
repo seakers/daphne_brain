@@ -58,7 +58,7 @@ class EcsClient:
     async def initialize(self):
 
         # --> Initialize Sqs Client
-        await self.sqs_client.initialize()
+        # await self.sqs_client.initialize()
 
 
         # --> 1. Validate daphne-cluster exists
@@ -116,8 +116,9 @@ class EcsClient:
     ### Cluster ###
     ###############
 
-    async def get_or_create_cluster(self, cluster_name):
-        cluster_arn = await self.cluster_exists(cluster_name)
+    @staticmethod
+    async def get_or_create_cluster(cluster_name):
+        cluster_arn = await EcsClient.cluster_exists(cluster_name)
         if cluster_arn is None:            
             response = await call_boto3_client_async('ecs', 'create_cluster', {
                 "clusterName": cluster_name,
@@ -129,7 +130,8 @@ class EcsClient:
         else:
             return cluster_arn
 
-    async def cluster_exists(self, cluster_name):
+    @staticmethod
+    async def cluster_exists(cluster_name):
         list_cluster_response = await call_boto3_client_async('ecs', 'list_clusters')
         if 'clusterArns' not in list_cluster_response:
             return None

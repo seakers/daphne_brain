@@ -11,15 +11,6 @@ from EOSS.aws.clients.SqsClient import SqsClient
 """ AbstractInstance
 - The purpose of this class is to model a single ec2 instance (bottlerocket AMI) deployed on an ecs cluster (daphne-dev-cluster) 
 
-AWS Functions
-    1. run_instances()
-    
-    
-    2. start_instances()
-    3. stop_instances()
-    
-    SSM
-    4. start_session()
     
     
 Software Architecture Design Decisions
@@ -40,15 +31,14 @@ Software Architecture Design Decisions
     
 
 AWS Functions
-    1. run_instances()
-    
-    
-    2. start_instances()
-    3. stop_instances()
+
+    EC2
+    1. run_instances()   - used to create a new ec2 instance user resources are being initialized
+    2. start_instances() - starts a stopped ec2 instance when user requests more resources
+    3. stop_instances()  - stops a running ec2 instance when user requests less resources / timeout
     
     SSM
-    4. start_session()
-    
+    1. run_command()     - used to start container service inside ec2
 
 """
 

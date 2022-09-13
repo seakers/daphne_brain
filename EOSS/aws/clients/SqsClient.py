@@ -9,60 +9,10 @@ from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, call_boto3_clien
 class SqsClient:
 
     def __init__(self, user_info):
-        print('--> CREATING SQS CLIENT')
         self.user_info = user_info
         self.user_id = user_info.user.id
         self.eosscontext = user_info.eosscontext
 
-        # --> Queue Info: user eval queues
-        self.design_evaluator_request_queue_name = self.eosscontext.design_evaluator_request_queue_name
-        self.design_evaluator_request_queue_url = self.eosscontext.design_evaluator_request_queue_url
-        self.design_evaluator_request_queue_arn = self.eosscontext.design_evaluator_request_queue_arn
-
-        self.design_evaluator_response_queue_name = self.eosscontext.design_evaluator_response_queue_name
-        self.design_evaluator_response_queue_url = self.eosscontext.design_evaluator_response_queue_url
-        self.design_evaluator_response_queue_arn = self.eosscontext.design_evaluator_response_queue_arn
-
-        """ -- User Specific --> Instance Specific Queues -- 
-        
-            Eval Container - Instance Specific Queues (user_id: 1) (instance: 1)
-            1. user-1-design-evaluator-1-private-request-queue
-            2. user-1-design-evaluator-1-private-response-queue
-            
-            GA Container - Instance Specific Queues (user_id: 1) (instance: 1)
-            3. user-1-genetic-algorithm-1-request-queue
-            4. user-1-genetic-algorithm-1-response-queue
-        """
-
-    # --> This is called to ensure all user-specific queues are created
-    async def initialize(self):
-
-        # --> Initialize Queues
-        if self.design_evaluator_request_queue_name is None:
-            self.design_evaluator_request_queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
-        if self.design_evaluator_request_queue_url is None:
-            self.design_evaluator_request_queue_url = await self.create_queue_name(
-                self.design_evaluator_request_queue_name)
-        self.design_evaluator_request_queue_arn = await self.get_queue_arn(self.design_evaluator_request_queue_url)
-
-        if self.design_evaluator_response_queue_name is None:
-            self.design_evaluator_response_queue_name = 'user-' + str(self.user_id) + '-design-evaluator-response-queue'
-        if self.design_evaluator_response_queue_url is None:
-            self.design_evaluator_response_queue_url = await self.create_queue_name(
-                self.design_evaluator_response_queue_name)
-        self.design_evaluator_response_queue_arn = await self.get_queue_arn(self.design_evaluator_response_queue_url)
-
-        return await self.commit_db()
-    async def commit_db(self):
-        self.eosscontext.design_evaluator_request_queue_name = self.design_evaluator_request_queue_name
-        self.eosscontext.design_evaluator_request_queue_url = self.design_evaluator_request_queue_url
-        self.eosscontext.design_evaluator_request_queue_arn = self.design_evaluator_request_queue_arn
-
-        self.eosscontext.design_evaluator_response_queue_name = self.design_evaluator_response_queue_name
-        self.eosscontext.design_evaluator_response_queue_url = self.design_evaluator_response_queue_url
-        self.eosscontext.design_evaluator_response_queue_arn = self.design_evaluator_response_queue_arn
-
-        await _save_eosscontext(self.eosscontext)
 
     ####################
     ### Queue Exists ###
