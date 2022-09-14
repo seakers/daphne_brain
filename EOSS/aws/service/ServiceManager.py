@@ -10,8 +10,6 @@ from daphne_context.models import UserInformation
 
 
 
-
-
 class ServiceManager:
 
 

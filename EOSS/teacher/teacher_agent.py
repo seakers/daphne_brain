@@ -655,8 +655,8 @@ def get_driving_features_epsilon_moea(request, user_info, pareto=0):
         sen = fm[3] * 100
         distance_value = abs(fm[2] - fm[3])
         overall = cov * cov + sen * sen
-        and_count = df.expression.count('&&')
-        or_count = df.expression.count('||')
+        and_count = df.expression.desired_running_count('&&')
+        or_count = df.expression.desired_running_count('||')
         complexity = and_count + or_count
         features.append({'id': df.id, 'name': df.name, 'expression': df.expression, 'metrics': df.metrics, 'score': distance_value, 'overall': overall, 'complexity': complexity})
     client.endConnection()

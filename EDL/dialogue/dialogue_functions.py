@@ -64,7 +64,7 @@ def compute_stat(mission_name,mat_file, param_name, context: UserInformation):
     ##################### CHECK IF IT IS A SCORECARD METRIC ###########################################
     scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=os.path.basename(file_path).replace(".mat", ".yml"),
                                                           edl_context_id__exact=context.edlcontext.id)
-    if scorecard_query.count() > 0:
+    if scorecard_query.desired_running_count() > 0:
         scorecard = scorecard_query.first()
         scorecard_labeled = pickle.loads(scorecard.current_scorecard_df)
         sub_df = scorecard_labeled.loc[scorecard_labeled['metric_name'].str.lower() == param_name]
@@ -154,7 +154,7 @@ def load_scorecard(mission_name, mat_file, context: UserInformation):
     all_scorecards = EDLContextScorecards.objects
     scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search,
                                                           edl_context_id__exact=context.edlcontext.id)
-    if scorecard_query.count() > 0:
+    if scorecard_query.desired_running_count() > 0:
         scorecard = scorecard_query.first()
         return 'Scorecard already exists, and loaded'
 
@@ -232,7 +232,7 @@ def get_scorecard_post_results(edl_scorecard, scorecard_post_param, context: Use
         scorecard_query = EDLContextScorecards.objects.filter(
             scorecard_name__exact=os.path.basename(context.edlcontext.current_mat_file).replace(".mat", ".yml"),
             edl_context_id__exact=context.edlcontext.id)
-        if scorecard_query.count() > 0:
+        if scorecard_query.desired_running_count() > 0:
             scorecard = scorecard_query.first()
             scorecard_df = pickle.loads(scorecard.current_scorecard_df)
             sub_df = scorecard_df.loc[scorecard_df['metric_name'].str.lower() == scorecard_post_param.lower()]
@@ -262,7 +262,7 @@ def get_flag_summary(edl_scorecard, mat_file, context: UserInformation, *flag_ty
     if edl_scorecard == 'None':
         file_to_search = os.path.basename(mat_file.replace(".mat", ".yml"))
         scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
-        if scorecard_query.count() > 0:
+        if scorecard_query.desired_running_count() > 0:
             scorecard = scorecard_query.first()
             scorecard_df = scorecard.current_scorecard_df
             flagged_df = pickle.loads(scorecard.current_scorecard_df_flag)
@@ -270,7 +270,7 @@ def get_flag_summary(edl_scorecard, mat_file, context: UserInformation, *flag_ty
             scorecard_df = pickle.loads(scorecard_df)
     else:
         scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=edl_scorecard)
-        if scorecard_query.count() > 0:
+        if scorecard_query.desired_running_count() > 0:
             scorecard = scorecard_query.first()
             scorecard_df = scorecard.current_scorecard_df
             flagged_df = pickle.loads(scorecard.current_scorecard_df_flag)
@@ -354,7 +354,7 @@ def plot_from_matfile(mat_file, param_name1, param_name2, context: UserInformati
     # param_name2 = 'peak inflation axial load'
     file_to_search = os.path.basename(mat_file.replace(".mat", ".yml"))
     scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
-    if scorecard_query.count() > 0:
+    if scorecard_query.desired_running_count() > 0:
         scorecard = scorecard_query.first()
         complete_scorecard = pickle.loads(scorecard.current_scorecard_df)
         out_of_spec_df = pickle.loads(scorecard.current_scorecard_df_fail)

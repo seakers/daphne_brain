@@ -14,6 +14,7 @@ from daphne_ws.consumers import DaphneConsumer
 
 from EOSS.aws.clients.EcsClient import EcsClient
 from EOSS.aws.utils import get_boto3_client
+from EOSS.aws.service.ServiceManager import ServiceManager
 from EOSS.data.design_helpers import add_design
 from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
@@ -202,8 +203,8 @@ class EOSSConsumer(DaphneConsumer):
         _save_user_info(user_info)
 
         # --> 2. Validate desired services
-        ecs_client = EcsClient(user_info)
-        await ecs_client.initialize()
+        # service_manager = ServiceManager(user_info)
+        # await service_manager.initialize()
 
 
 

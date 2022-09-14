@@ -16,9 +16,31 @@ class InstanceClient:
         self.user_id = user_info.user.id
         self.eosscontext = user_info.eosscontext
 
+    @staticmethod
+    async def get_daphne_instances():
+        request = await call_boto3_client_async('ec2', 'describe_instances', {
+            "Filters": [
+                {
+                    'Name': 'vpc-id',
+                    'Values': [
+                        vpc_id,
+                    ]
+                },
+                {
+                    'Name': 'tag:Name',
+                    'Values': [
+                        'daphne-stack'
+                    ]
+                },
+            ]
+        })
+        if 'Reservations' in request:
+            return [item['Instances'][0] for item in request['Reservations']]
+        return []
+
 
     @staticmethod
-    async def get_instances(user_id, resource_type):
+    async def get_user_instances(user_id, resource_type):
         request = await call_boto3_client_async('ec2', 'describe_instances', {
             "Filters": [
                 {
@@ -46,15 +68,21 @@ class InstanceClient:
         return []
 
     @staticmethod
-    async def get_instances_by_state(user_id, resource_type, state='running'):
-        possible_state = ['pending', 'running', 'shutting-down', 'terminated', 'stopping', 'stopped']
-        if state not in possible_state:
-            print('--> ERROR, IMPOSSIBLE INSTANCE REQ STATE:', state)
-        instances = await InstanceClient.get_instances(user_id, resource_type)
-        if len(instances) > 0:
-            in_state = []
-            for instance in instances:
-                if instance['State']['Name'] == state:
-                    in_state.append(instance)
-            return in_state
-        return instances
+    async def get_user_active_instances(user_id, resource_type):
+        active_instances = []
+        instances = await InstanceClient.get_user_instances(user_id, resource_type)
+        for instance in instances:
+            if instance['State']['Name'] not in ['terminated']:
+                active_instances.append(instance)
+        return active_instances
+
+    @staticmethod
+    async def get_user_instances_by_states(user_id, resource_type, states):
+        # possible_state = ['pending', 'running', 'shutting-down', 'terminated', 'stopping', 'stopped']
+        instances = await InstanceClient.get_user_instances(user_id, resource_type)
+        state_instances = []
+        for instance in instances:
+            if instance['State']['Name'] in states:
+                state_instances.append(instance)
+        return state_instances
+

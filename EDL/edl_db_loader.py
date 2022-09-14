@@ -25,10 +25,10 @@ def create_csv_to_load(file_to_load, mission_name, ext_id,  user_info):
     file_to_search = os.path.basename(matout_path.replace(".mat", ".yml"))
     scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
 
-    if scorecard_query.count() > 0 & scorecard_query.first().current_scorecard_df_db.nbytes > 0:
+    if scorecard_query.desired_running_count() > 0 & scorecard_query.first().current_scorecard_df_db.nbytes > 0:
         scorecard = scorecard_query.first()
         db_template = pickle.loads(scorecard.current_scorecard_df_db)
-    elif scorecard_query.count() > 0 & scorecard_query.first().current_scorecard_df_db.nbytes < 1:
+    elif scorecard_query.desired_running_count() > 0 & scorecard_query.first().current_scorecard_df_db.nbytes < 1:
         scorecard = scorecard_query.first()
         db_template = pickle.loads(scorecard.current_scorecard_df_db)
     else:

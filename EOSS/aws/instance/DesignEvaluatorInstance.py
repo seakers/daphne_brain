@@ -1,5 +1,6 @@
 import os
 import boto3
+import json
 from EOSS.aws.utils import call_boto3_client_async, find_obj_value
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.instance.AbstractInstance import AbstractInstance
@@ -14,7 +15,7 @@ AWS Functions
     3. stop_instances()
     
     SSM
-    4. start_session()
+    1. send_command()     - used to start container service inside ec2
 
 """
 
@@ -25,72 +26,47 @@ class DesignEvaluatorInstance(AbstractInstance):
         super().__init__(user_info, instance)
         self.instance_type = 'design-evaluator'
 
-    async def initialize(self):
-        if self.instance is None:
-            await self.initialize_instance()
-        else:
-            await self.scan_container()
-
-    async def initialize_instance(self):
-
-        # --> 1. Call parent initialization
-        await self._initialize()
-
-        # --> 2. Create instance + wait until running
-        response = await call_boto3_client_async('ec2', 'run_instances', self._run_instances)
-        if 'Instances' in response:
-            self.instance = response['Instances'][0]
-            if await self.wait_on_state(target_state='running') is False:
-                print('--> INSTANCE NEVER REACHED RUNNING STATE:', self.identifier)
-        else:
-            print('--> ERROR RUNNING INSTANCE:', self.identifier)
-
-        # --> 3. Connect to container (SSM)
-        await self.connect()
-
-    async def shutdown(self):
-        await self._shutdown()
-
-    async def remove(self):
-        await self._remove()
-
+        self.design_evaluator_request_queue_url = self.eosscontext.design_evaluator_request_queue_url
 
     @property
-    def _run_instances(self):
-        user_data = '''[settings.ecs]
-cluster = "daphne-dev-cluster"'''
+    async def _user_data(self):
+        return '''#!/bin/bash
+INSTANCE_ID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
+sudo service docker start
+sudo $(sudo aws ecr get-login --region us-east-2 --no-include-email)
+sudo docker pull 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator
+ENV_STRING=""
+JSON_TAGS=$(aws ec2 describe-tags --filters "Name=resource-id,Values=${INSTANCE_ID}" --region=us-east-2)
+for row in $(echo ${JSON_TAGS} | jq -c '.Tags[]'); do
+        var_key=$(echo ${row} | jq -r '.Key')
+        var_value=$(echo ${row} | jq -r '.Value')
+        ENV_STRING+="--env ${var_key}=${var_value} "
+done
+sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest'''
+
+    @property
+    async def _run_instances(self):
         return {
-            "ImageId": "ami-06a14133d3bf45cbc",
+            "ImageId": "ami-0784177864ad003bd",
             "InstanceType": "t2.medium",
             "MaxCount": 1,
             "MinCount": 1,
             "SecurityGroupIds": [
                 "sg-03871503ca9368508"
             ],
+            "KeyName": 'gabe-master',
             "SubnetId": "subnet-05cc334fd084cb66c",
             "IamInstanceProfile": {
-                 'Name': 'ecsInstanceRole'
-             },
-            "UserData": user_data,
+                'Name': 'ecsInstanceRole'
+            },
+            "UserData": (await self._user_data),
             "TagSpecifications": [
                 {
                     'ResourceType': 'instance',
                     'Tags': [
                         {
-                            'Key': 'PING_REQUEST_QUEUE',
-                            'Value': self.ping_request_queue
-                        },
-                        {
-                            'Key': 'PING_RESPONSE_QUEUE',
-                            'Value': self.ping_response_queue
-                        },
-                        {
-                            'Key': 'PRIVATE_QUEUE_REQUEST',
-                            'Value': self.ping_request_queue
-                        },
-                        {
-                            'Key': 'PRIVATE_QUEUE_RESPONSE',
-                            'Value': self.ping_response_queue
+                            'Key': 'Name',
+                            'Value': 'daphne-stack'
                         },
                         {
                             'Key': 'IDENTIFIER',
@@ -98,40 +74,170 @@ cluster = "daphne-dev-cluster"'''
                         },
                         {
                             'Key': 'USER_ID',
-                            'Value': self.user_id
+                            'Value': str(self.user_id)
+                        },
+                        {
+                            'Key': 'REGION',
+                            'Value': 'us-east-2'
+                        },
+                        {
+                            'Key': 'REQUEST_MODE',
+                            'Value': 'CRISP-ATTRIBUTES'
+                        },
+                        {
+                            'Key': 'DEPLOYMENT_TYPE',
+                            'Value': 'AWS'
+                        },
+                        {
+                            'Key': 'MAXEVAL',
+                            'Value': '5'
+                        },
+                        {
+                            'Key': 'APOLLO_URL',
+                            'Value': 'http://graphql.daphne.dev:8080/v1/graphql'
+                        },
+                        {
+                            'Key': 'APOLLO_URL_WS',
+                            'Value': 'ws://graphql.daphne.dev:8080/v1/graphql'
+                        },
+                        {
+                            'Key': 'EVAL_REQUEST_URL',
+                            'Value': self.eosscontext.design_evaluator_request_queue_url
+                        },
+                        {
+                            'Key': 'EVAL_RESPONSE_URL',
+                            'Value': self.eosscontext.design_evaluator_response_queue_url
+                        },
+                        {
+                            'Key': 'PING_REQUEST_URL',
+                            'Value': self.ping_request_url
+                        },
+                        {
+                            'Key': 'PING_RESPONSE_URL',
+                            'Value': self.ping_response_url
+                        },
+                        {
+                            'Key': 'PRIVATE_REQUEST_URL',
+                            'Value': self.private_request_url
+                        },
+                        {
+                            'Key': 'PRIVATE_RESPONSE_URL',
+                            'Value': self.private_response_url
                         }
                     ]
                 },
             ],
         }
 
+    """
+      _____       _ _   _       _ _         
+     |_   _|     (_) | (_)     | (_)        
+       | |  _ __  _| |_ _  __ _| |_ _______ 
+       | | | '_ \| | __| |/ _` | | |_  / _ \
+      _| |_| | | | | |_| | (_| | | |/ /  __/
+     |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
+    """
+
+    async def initialize(self):
+        if self.instance is not None:
+            await self.scan_container()
+        else:
+            await self.create_instance()
+
+    # --> NOTE: creating the ec2 instance should automatically start the design-evaluator service inside
+    # - this is done through userdata
+    async def create_instance(self):
+
+        # --> 1. Call parent initialization
+        await self._initialize()
+
+        # --> 2. Create instance + wait until running
+        print('--> CREATING INSTANCE:', self.identifier)
+        response = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
+        if response is None or 'Instances' not in response:
+            print('--> ERROR RUNNING INSTANCE:', self.identifier, json.dumps(response, indent=4, default=str))
+
+
+
 
     """
-            _____                            _   
-          / ____|                          | |  
-         | |     ___  _ __  _ __   ___  ___| |_ 
-         | |    / _ \| '_ \| '_ \ / _ \/ __| __|
-         | |___| (_) | | | | | | |  __/ (__| |_ 
-          \_____\___/|_| |_|_| |_|\___|\___|\__|
+       _____  _                _   
+      / ____|| |              | |  
+     | (___  | |_  __ _  _ __ | |_ 
+      \___ \ | __|/ _` || '__|| __|
+      ____) || |_| (_| || |   | |_ 
+     |_____/  \__|\__,_||_|    \__|
     """
-    # - Connect to design-evaluator inside of instance
-    async def connect(self):
 
-        # --> 1. Get instance and ensure running
-        instance = self.get_instance()
-        if instance is None:
-            print('--> (ERROR) INSTANCE IS NONE')
-            return None
-        if instance['State']['Name'] != 'running':
-            print('--> (ERROR) INSTANCE NOT RUNNING')
-            return None
-
-        # --> 2. Get SSM Connection
+    async def start(self):
+        await super().start()
 
 
 
 
 
+    """
+       _____  _                
+      / ____|| |               
+     | (___  | |_  ___   _ __  
+      \___ \ | __|/ _ \ | '_ \ 
+      ____) || |_| (_) || |_) |
+     |_____/  \__|\___/ | .__/ 
+                        | |    
+                        |_|    
+    """
+
+    async def stop(self):
+        await super().stop()
+
+
+
+    """
+     _____                                    
+    |  __ \                                   
+    | |__) | ___  _ __ ___    ___ __   __ ___ 
+    |  _  / / _ \| '_ ` _ \  / _ \\ \ / // _ \
+    | | \ \|  __/| | | | | || (_) |\ V /|  __/
+    |_|  \_\\___||_| |_| |_| \___/  \_/  \___|
+                                       
+    """
+
+    async def remove(self):
+        await super().remove()
+
+
+
+    """
+      ____        _ _     _ 
+     |  _ \      (_) |   | |
+     | |_) |_   _ _| | __| |
+     |  _ <| | | | | |/ _` |
+     | |_) | |_| | | | (_| |
+     |____/ \__,_|_|_|\__,_|                 
+    """
+
+    async def build(self):
+        await super().build()
+
+        # --> 1. Send build message
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': self.private_request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'build',
+                    'DataType': 'String'
+                },
+                'group_id': {
+                    'StringValue': str(self.eosscontext.group_id),
+                    'DataType': 'String'
+                },
+                'problem_id': {
+                    'StringValue': str(self.eosscontext.problem_id),
+                    'DataType': 'String'
+                }
+            }
+        })
 
 
 

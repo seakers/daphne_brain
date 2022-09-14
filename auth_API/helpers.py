@@ -8,6 +8,8 @@ from AT.models import ATContext, ActiveATContext
 from experiment.models import ExperimentContext
 from daphne_context.models import UserInformation
 from django.contrib.sessions.models import Session
+from EOSS.aws.service.ServiceManager import ServiceManager
+
 from asgiref.sync import async_to_sync
 
 from mycroft.utils import generate_unique_mycroft_session
@@ -74,8 +76,8 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
             user_info.eoss_context = eoss_context
             user_info.save()
             print('--> Creating EOSS Context')
-            ecs_client = EcsClient(user_info)
-            async_to_sync(ecs_client.initialize)()
+            service_manager = ServiceManager(user_info)
+            async_to_sync(service_manager.initialize)()
             eoss_context.save()
 
 

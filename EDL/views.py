@@ -68,7 +68,7 @@ class ImportDataAvail(APIView):
         file_to_search = file_to_load.replace(".mat", ".yml")
 
         scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
-        if scorecard_query.count() > 0:
+        if scorecard_query.desired_running_count() > 0:
             scorecard_status = 'Scorecard for this simulation cases exists'
             scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
             scorecard = scorecard_query.first()

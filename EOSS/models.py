@@ -47,34 +47,51 @@ class EOSSContext(models.Model):
 
     # --> Cluster
     cluster_name = models.TextField(default='daphne-dev-cluster')
-    cluster_arn = models.TextField(null=True)
+
+    # --> Design Evaluator
+    design_evaluator_task_count = models.IntegerField(default=1)
+    design_evaluator_request_queue_name = models.TextField(null=True)  # user-1-design-evaluator-request-queue
+    design_evaluator_request_queue_url = models.TextField(null=True)
+    design_evaluator_response_queue_name = models.TextField(null=True)  # user-1-design-evaluator-response-queue
+    design_evaluator_response_queue_url = models.TextField(null=True)
+
+    # --> Genetic Algorithm
+    genetic_algorithm_task_count = models.IntegerField(default=1)
+    genetic_algorithm_request_queue_name = models.TextField(null=True)  # user-1-genetic-algorithm-request-queue
+    genetic_algorithm_request_queue_url = models.TextField(null=True)
+    genetic_algorithm_response_queue_name = models.TextField(null=True)  # user-1-genetic-algorithm-response-queue
+    genetic_algorithm_response_queue_url = models.TextField(null=True)
+
+
+
 
     # --> Tasks
-    design_evaluator_task_name = models.TextField(null=True)  # user-1-design-evaluator-task (task family)
-    design_evaluator_task_arn = models.TextField(null=True)
-    design_evaluator_task_count = models.IntegerField(default=1)
-
-    genetic_algorithm_task_name = models.TextField(null=True)  # user-1-genetic-algorithm-task (task family)
-    genetic_algorithm_task_arn = models.TextField(null=True)
-    genetic_algorithm_task_count = models.IntegerField(default=0)
+    # design_evaluator_task_name = models.TextField(null=True)  # user-1-design-evaluator-task (task family)
+    # design_evaluator_task_arn = models.TextField(null=True)
+    # design_evaluator_task_count = models.IntegerField(default=1)
+    #
+    # genetic_algorithm_task_name = models.TextField(null=True)  # user-1-genetic-algorithm-task (task family)
+    # genetic_algorithm_task_arn = models.TextField(null=True)
+    # genetic_algorithm_task_count = models.IntegerField(default=0)
 
 
     # --> Services
-    design_evaluator_service_name = models.TextField(null=True)  # user-1-design-evaluator-service
-    design_evaluator_service_arn = models.TextField(null=True)
-
-    genetic_algorithm_service_name = models.TextField(null=True)  # user-1-genetic-algorithm-service
-    genetic_algorithm_service_arn = models.TextField(null=True)
+    # design_evaluator_service_name = models.TextField(null=True)  # user-1-design-evaluator-service
+    # design_evaluator_service_arn = models.TextField(null=True)
+    #
+    # genetic_algorithm_service_name = models.TextField(null=True)  # user-1-genetic-algorithm-service
+    # genetic_algorithm_service_arn = models.TextField(null=True)
 
 
     # --> Queues
-    design_evaluator_request_queue_name = models.TextField(null=True)  # user-1-design-evaluator-request-queue
-    design_evaluator_request_queue_url = models.TextField(null=True)
-    design_evaluator_request_queue_arn = models.TextField(null=True)
 
-    design_evaluator_response_queue_name = models.TextField(null=True)  # user-1-design-evaluator-response-queue
-    design_evaluator_response_queue_url = models.TextField(null=True)
-    design_evaluator_response_queue_arn = models.TextField(null=True)
+
+
+
+    # design_evaluator_request_queue_arn = models.TextField(null=True)
+
+
+    # design_evaluator_response_queue_arn = models.TextField(null=True)
 
 
 

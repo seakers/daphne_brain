@@ -21,23 +21,23 @@ class EcsClient:
         self.user_id = self.user_info.user.id
         self.eosscontext = user_info.eosscontext
 
-        self.ecs_client = get_boto3_client('ecs')
-        self.sqs_client = SqsClient(self.user_info)
+        # self.ecs_client = get_boto3_client('ecs')
+        # self.sqs_client = SqsClient(self.user_info)
         
 
         # --> Cluster Info: daphne-cluster
         self.cluster_name = self.eosscontext.cluster_name
-        self.cluster_arn = self.eosscontext.cluster_name
+        # self.cluster_arn = self.eosscontext.cluster_name
 
         
         # --> Task Info: design-evaluator, genetic-algorithm
-        self.design_evaluator_task_name = self.eosscontext.design_evaluator_task_name
-        self.design_evaluator_task_arn = self.eosscontext.design_evaluator_task_arn
-        self.design_evaluator_task_count = self.eosscontext.design_evaluator_task_count
-
-        self.genetic_algorithm_task_name = self.eosscontext.genetic_algorithm_task_name
-        self.genetic_algorithm_task_arn = self.eosscontext.genetic_algorithm_task_arn
-        self.genetic_algorithm_task_count = self.eosscontext.genetic_algorithm_task_count
+        # self.design_evaluator_task_name = self.eosscontext.design_evaluator_task_name
+        # self.design_evaluator_task_arn = self.eosscontext.design_evaluator_task_arn
+        # self.design_evaluator_task_count = self.eosscontext.design_evaluator_task_count
+        #
+        # self.genetic_algorithm_task_name = self.eosscontext.genetic_algorithm_task_name
+        # self.genetic_algorithm_task_arn = self.eosscontext.genetic_algorithm_task_arn
+        # self.genetic_algorithm_task_count = self.eosscontext.genetic_algorithm_task_count
         
 
 
@@ -45,11 +45,11 @@ class EcsClient:
 
 
         # --> (DEPRECATED) Service Info: design-evaluator, genetic-algorithm
-        self.design_evaluator_service_name = self.eosscontext.design_evaluator_service_name
-        self.design_evaluator_service_arn = self.eosscontext.design_evaluator_service_arn
-
-        self.genetic_algorithm_service_name = self.eosscontext.genetic_algorithm_service_name
-        self.genetic_algorithm_service_arn = self.eosscontext.genetic_algorithm_service_arn
+        # self.design_evaluator_service_name = self.eosscontext.design_evaluator_service_name
+        # self.design_evaluator_service_arn = self.eosscontext.design_evaluator_service_arn
+        #
+        # self.genetic_algorithm_service_name = self.eosscontext.genetic_algorithm_service_name
+        # self.genetic_algorithm_service_arn = self.eosscontext.genetic_algorithm_service_arn
 
         
 
@@ -84,32 +84,6 @@ class EcsClient:
         # --> 3. Run requested number of user tasks
         # de_response = await self.regulate_design_evaluator_tasks()
         # ga_response = await self.regulate_genetic_algorithm_tasks()
-        
-        return await self.commit_db()
-
-    async def commit_db(self):
-        self.eosscontext.cluster_name = self.cluster_name
-        self.eosscontext.cluster_arn = self.cluster_arn
-
-        self.eosscontext.design_evaluator_task_name = self.design_evaluator_task_name
-        self.eosscontext.design_evaluator_task_arn = self.design_evaluator_task_arn
-        self.eosscontext.design_evaluator_task_count = self.design_evaluator_task_count
-
-
-        self.eosscontext.genetic_algorithm_task_name = self.genetic_algorithm_task_name
-        self.eosscontext.genetic_algorithm_task_arn = self.genetic_algorithm_task_arn
-        self.eosscontext.genetic_algorithm_task_count = self.genetic_algorithm_task_count
-
-
-        # self.eoss_context.design_evaluator_service_name = self.design_evaluator_service_name
-        # self.eoss_context.design_evaluator_service_arn = self.design_evaluator_service_arn
-        #
-        # self.eoss_context.genetic_algorithm_service_name = self.genetic_algorithm_service_name
-        # self.eoss_context.genetic_algorithm_service_arn = self.genetic_algorithm_service_arn
-
-
-
-        await _save_eosscontext(self.eosscontext)
 
 
     ###############

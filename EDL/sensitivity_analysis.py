@@ -25,7 +25,7 @@ def run_SA(target_metric, metric_type, input_data_type, event_selection, boundar
     # get scorecard
     file_to_search = os.path.basename(matfile_path.replace(".mat", ".yml"))
     scorecard_query = EDLContextScorecards.objects.filter(scorecard_name__exact=file_to_search)
-    if scorecard_query.count() > 0:
+    if scorecard_query.desired_running_count() > 0:
         scorecard = scorecard_query.first()
         scorecard_labeled = pickle.loads(scorecard.current_scorecard_df)
         scorecard_labeled = scorecard_labeled.dropna()
