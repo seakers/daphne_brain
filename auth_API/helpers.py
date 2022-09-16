@@ -77,7 +77,7 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
             user_info.save()
             print('--> Creating EOSS Context')
             service_manager = ServiceManager(user_info)
-            async_to_sync(service_manager.initialize)(regulate=True)
+            async_to_sync(service_manager.initialize)()
             eoss_context.save()
 
 

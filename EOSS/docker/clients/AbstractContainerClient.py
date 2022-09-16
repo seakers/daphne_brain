@@ -50,12 +50,10 @@ class AbstractContainerClient:
         print('--> INITIALIZING PRIVATE PING QUEUES RESULT', self.ping_response_queue, self.ping_request_queue)
 
     def initialize_private_queues(self):
-        print('--> INITIALIZING PRIVATE REQUEST QUEUES')
         queue_name_request = 'user-' + str(self.user_info.user.id) + '-private-request-' + self.identifier
         queue_name_response = 'user-' + str(self.user_info.user.id) + '-private-response-' + self.identifier
         self.private_request_queue = get_or_create_queue(queue_name_request)
         self.private_response_queue = get_or_create_queue(queue_name_response)
-        print('--> INITIALIZING PRIVATE REQUEST QUEUES RESULT', self.private_request_queue, self.private_response_queue)
 
     def delete_private_queues(self):
         sqs_client = get_boto3_client('sqs')

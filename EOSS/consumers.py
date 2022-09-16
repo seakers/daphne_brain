@@ -202,9 +202,10 @@ class EOSSConsumer(DaphneConsumer):
             user_info.eosscontext.genetic_algorithm_task_count = int(content.get('num_ga'))
         _save_user_info(user_info)
 
-        # --> 2. Validate desired services
+        # --> 2. Regulate services
         service_manager = ServiceManager(user_info)
-        await service_manager.initialize(regulate=True)
+        await service_manager.initialize()
+        await service_manager.regulate_services()
 
 
 

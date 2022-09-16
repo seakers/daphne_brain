@@ -103,6 +103,7 @@ class InstanceManager:
                 if self.resource_type == 'design-evaluator':
                     instance = DesignEvaluatorInstance(self.user_info, instance=None)
                     async_tasks.append(asyncio.create_task(instance.initialize()))
+                    self.instances.append(instance)
             for task in async_tasks:
                 await task
 
@@ -128,19 +129,21 @@ class InstanceManager:
         running_instances = await self.get_instances_by_states(['pending', 'running'])
         curr_running = len(running_instances)
 
+        print('--> REGULATE INSTANCES:', curr_stopped, curr_running, req_running)
+
 
         async_tasks = []
         diff = abs(req_running - curr_running)
         if curr_running < req_running:
             print('--> STARTING', diff, 'INSTANCES')
-            if stopped_instances >= diff:
+            if curr_stopped >= diff:
                 for idx in range(diff):
                     async_tasks.append(asyncio.create_task(stopped_instances[idx].start()))
             else:
                 print('--> ERROR, NOT ENOUGH STOPPED INSTANCES', stopped_instances, diff)
         elif curr_running > req_running:
             print('--> STOPPING', diff, 'INSTANCES')
-            if running_instances < diff:
+            if curr_running >= diff:
                 for idx in range(diff):
                     async_tasks.append(asyncio.create_task(running_instances[idx].stop()))
             else:
@@ -173,7 +176,8 @@ class InstanceManager:
 
     async def get_instances_by_states(self, states):
         async def add_if_correct_state(instance_check, state_check, instance_list):
-            if (await instance_check.instance_state) in state_check:
+            state = await instance_check.instance_state
+            if state in state_check:
                 instance_list.append(instance_check)
 
         search_instances = []
@@ -199,7 +203,7 @@ class InstanceManager:
     """
 
     async def build_instances(self):
-        running_instances = await self.get_instances_by_states(['running'])
+        running_instances = await self.get_instances_by_states(['pending', 'running'])
 
         async_tasks = []
         for instance in running_instances:

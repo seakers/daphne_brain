@@ -101,6 +101,21 @@ class SqsClient:
             print('--> ERROR DELETING QUEUE', error)
             return None
 
+    ###################
+    ### Purge Queue ###
+    ###################
+
+    @staticmethod
+    async def purge_queue_url(queue_url):
+        try:
+            await call_boto3_client_async('sqs', 'purge_queue', {
+                "QueueUrl": queue_url
+            })
+        except botocore.exceptions.ClientError as error:
+            print('--> ERROR PURGING QUEUE', error)
+            return None
+
+
 
     ###################
     ### Queue Facts ###

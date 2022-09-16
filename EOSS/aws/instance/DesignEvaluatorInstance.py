@@ -77,6 +77,10 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
                             'Value': str(self.user_id)
                         },
                         {
+                            'Key': 'RESOURCE_TYPE',
+                            'Value': 'design-evaluator'
+                        },
+                        {
                             'Key': 'REGION',
                             'Value': 'us-east-2'
                         },
@@ -221,9 +225,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
     async def build(self):
         await super().build()
-
-        # --> 1. Send build message (do not subscribe to response)
-        await SqsClient.send_build_msg(self.private_request_url)
 
 
     """

@@ -25,7 +25,7 @@ class ServiceManager:
         self.de_manager = InstanceManager(self.user_info, 'design-evaluator')
 
 
-    async def initialize(self, regulate=False):
+    async def initialize(self):
 
         # --> Service: design-evaluator
         if self.eosscontext.design_evaluator_request_queue_name is None:
@@ -43,9 +43,6 @@ class ServiceManager:
 
         # --> Initialize Managers
         await self.de_manager.initialize()
-
-        if regulate is True:
-            await self.regulate_services()
 
 
     async def regulate_services(self):

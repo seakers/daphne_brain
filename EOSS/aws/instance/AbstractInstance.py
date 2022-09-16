@@ -40,14 +40,6 @@ AWS Functions
     
     SSM
     1. send_command()     - used to start container service inside ec2
-    
-    
-    async_tasks = []
-    async_tasks.append(asyncio.create_task())
-    
-    for task in async_tasks:
-        await task
-    
 
 """
 
@@ -96,7 +88,6 @@ class AbstractInstance:
             await task
 
     async def initialize_ping_queues(self):
-        print('--> INITIALIZING PRIVATE PING QUEUES')
         self.ping_request_url = await SqsClient.create_queue_name_unique(
             'user-' + str(self.user_id) + '-design-evaluator-ping-request-queue' + self.identifier
         )
@@ -105,7 +96,6 @@ class AbstractInstance:
         )
 
     async def initialize_private_queues(self):
-        print('--> INITIALIZING PRIVATE REQUEST QUEUES')
         self.private_request_url = await SqsClient.create_queue_name_unique(
             'user-' + str(self.user_id) + '-design-evaluator-private-request-queue' + self.identifier
         )
@@ -114,11 +104,12 @@ class AbstractInstance:
         )
 
     async def scan_container(self):
+        print('--> SCANNING CONTAINER')
         tags = self.instance['Tags']
-        self.private_request_url = await find_obj_value(tags, 'Key', 'PRIVATE_REQUEST_QUEUE', 'Value')
-        self.private_response_url = await find_obj_value(tags, 'Key', 'PRIVATE_RESPONSE_QUEUE', 'Value')
-        self.ping_request_url = await find_obj_value(tags, 'Key', 'PING_REQUEST_QUEUE', 'Value')
-        self.ping_response_url = await find_obj_value(tags, 'Key', 'PING_RESPONSE_QUEUE', 'Value')
+        self.private_request_url = await find_obj_value(tags, 'Key', 'PRIVATE_REQUEST_URL', 'Value')
+        self.private_response_url = await find_obj_value(tags, 'Key', 'PRIVATE_RESPONSE_URL', 'Value')
+        self.ping_request_url = await find_obj_value(tags, 'Key', 'PING_REQUEST_URL', 'Value')
+        self.ping_response_url = await find_obj_value(tags, 'Key', 'PING_RESPONSE_URL', 'Value')
         self.identifier = await find_obj_value(tags, 'Key', 'IDENTIFIER', 'Value')
 
 
@@ -134,6 +125,18 @@ class AbstractInstance:
     """
 
     async def start(self):
+
+        # --> 1. Ensure instance either stopping or stopped
+        curr_state = await self.instance_state
+        if curr_state not in ['stopping', 'stopped']:
+            print('--> COULD NOT START INSTANCE, NOT STOPPED OR STOPPING:', self.identifier, curr_state)
+            return None
+
+        # --> 2. If current state is stopping, wait until stopped
+        if await self.wait_on_state('stopped', seconds=120) is False:
+            print('--> COULD NOT START INSTANCE, NEVER REACHED STOPPED STATE:', self.identifier, curr_state)
+            return None
+
         response = await call_boto3_client_async('ec2', 'start_instances', {
             'InstanceIds': [await self.instance_id]
         })
@@ -158,6 +161,19 @@ class AbstractInstance:
     """
 
     async def stop(self):
+
+        # --> 1. Ensure instance either pending or running
+        curr_state = await self.instance_state
+        if curr_state not in ['pending', 'running']:
+            print('--> COULD NOT STOP INSTANCE, NOT RUNNING OR PENDING:', self.identifier, curr_state)
+            return None
+
+        # --> 2. If current state is pending, wait until running
+        if await self.wait_on_state('running', seconds=120) is False:
+            print('--> COULD NOT STOP INSTANCE, NEVER REACHED RUNNING STATE:', self.identifier, curr_state)
+            return None
+
+        # --> 3. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
             'InstanceIds': [await self.instance_id]
         })
@@ -167,8 +183,8 @@ class AbstractInstance:
             print('--> ERROR NO INSTANCES WERE STARTED')
         else:
             temp = response['StoppingInstances'][0]
-            print('--> STOPPING INSTANCE:', self.identifier, temp['CurrentState']['Name'],
-                  temp['PreviousState']['Name'])
+            print('--> STOPPING INSTANCE:', self.identifier, temp['PreviousState']['Name'], '-->',
+                  temp['CurrentState']['Name'])
 
 
 
@@ -235,7 +251,19 @@ class AbstractInstance:
     """
 
     async def build(self):
-        return 0
+
+        # --> 1. Ensure instance either pending or running
+        curr_state = await self.instance_state
+        if curr_state not in ['pending', 'running']:
+            print('--> COULD NOT BUILD INSTANCE, NOT RUNNING OR PENDING:', self.identifier, curr_state)
+            return False
+
+        # --> 2. If current state is pending, wait until running
+        if await self.wait_on_state('running', seconds=120) is False:
+            print('--> COULD NOT BUILD INSTANCE, NEVER REACHED RUNNING STATE:', self.identifier, curr_state)
+            return False
+
+        await SqsClient.send_build_msg(self.private_request_url)
 
     """
       _____ _             
@@ -255,17 +283,6 @@ class AbstractInstance:
         response['instance_tags'] = await self._tags  # From child class
         return response
 
-    def send_ping_message(self):
-        request = await call_boto3_client_async('sqs', 'send_message', {
-            'QueueUrl': self.ping_request_url,
-            'MessageBody': 'boto3',
-            'MessageAttributes': {
-                'msgType': {
-                    'StringValue': 'ping',
-                    'DataType': 'String'
-                },
-            }
-        })
 
     """
       _    _        _                         
@@ -278,7 +295,7 @@ class AbstractInstance:
                       |_|               
     """
 
-    async def get_instance(self):
+    async def get_instance(self, debug=False):
         request = await call_boto3_client_async('ec2', 'describe_instances', {
             "Filters": [
                 {
@@ -300,7 +317,7 @@ class AbstractInstance:
                     ]
                 },
             ]
-        })
+        }, debug=debug)
         if request is not None and 'Reservations' in request:
             self.instance = request['Reservations'][0]['Instances'][0]
         return self.instance
@@ -317,15 +334,40 @@ class AbstractInstance:
 
     async def wait_on_state(self, target_state='running', seconds=60):
         iter = 0
-        iter_max = int(seconds/2)
+        iter_max = int(seconds/3)
         curr_state = await self.instance_state
         while curr_state != target_state:
             iter += 1
             if iter >= iter_max:
                 return False
-            await _linear_sleep_async(2)
+            await _linear_sleep_async(3)
             curr_state = await self.instance_state
         return True
+
+
+    """
+       _____  _____  __  __ 
+      / ____|/ ____||  \/  |
+     | (___ | (___  | \  / |
+      \___ \ \___ \ | |\/| |
+      ____) |____) || |  | |
+     |_____/|_____/ |_|  |_|
+                            
+    """
+
+    async def container_running(self):
+
+        response = await call_boto3_client_async('ssm', 'send_command', {
+            'InstanceIds': [await self.instance_id],
+
+
+        })
+
+
+        return 0
+
+
+
 
 
 
