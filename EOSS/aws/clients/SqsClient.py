@@ -3,6 +3,7 @@ import json
 import random
 import botocore
 import asyncio
+import copy
 from EOSS.aws.utils import _save_eosscontext, sync_to_async_mt, call_boto3_client_async
 
 
@@ -136,5 +137,87 @@ class SqsClient:
     @staticmethod
     async def get_queue_name_from_url(queue_url):
         return queue_url.split("/")[-1]
+
+
+
+    #####################
+    ### Send Messages ###
+    #####################
+
+    @staticmethod
+    async def send_ping_msg(request_url, response_url=None):
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'ping',
+                    'DataType': 'String'
+                },
+            }
+        })
+        if response_url is not None:
+            return await SqsClient.subscribe_to_message(response_url, 'statusAck')
+
+
+    @staticmethod
+    async def send_build_msg(request_url, response_url=None):
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'build',
+                    'DataType': 'String'
+                }
+            }
+        })
+        if response_url is not None:
+            return await SqsClient.subscribe_to_message(response_url, 'build')
+
+
+    @staticmethod
+    async def send_eval_msg(request_url, design):
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'build',
+                    'DataType': 'String'
+                }
+            }
+        })
+
+
+
+
+
+    @staticmethod
+    async def subscribe_to_message(response_queue, msg_type, attempts=5, attempt_time=5):
+        subscription = {}
+        break_switch = False
+        for i in range(attempts):
+            response = await call_boto3_client_async('sqs', 'receive_message', {
+                'QueueUrl': response_queue,
+                'MaxNumberOfMessages': 1,
+                'WaitTimeSeconds': attempt_time,
+                'MessageAttributeNames': ['All']
+            })
+            if "Messages" in response:
+                for message in response["Messages"]:
+                    if message["MessageAttributes"]["msgType"]["StringValue"] == msg_type:
+                        subscription = copy.deepcopy(message["MessageAttributes"])
+                        await call_boto3_client_async('sqs', 'delete_message', {
+                            'QueueUrl': response_queue,
+                            'ReceiptHandle': message["ReceiptHandle"]
+                        })
+                        break_switch = True
+                if break_switch is True:
+                    return subscription
+        print('--> CONNECTION TIMEOUT ERROR')
+        return {'msgType': 'timeout error'}
+
+
 
 

@@ -1,5 +1,6 @@
 import os
 import boto3
+import copy
 import json
 import asyncio
 import random
@@ -225,27 +226,46 @@ class AbstractInstance:
 
 
     """
-      ____          _  _      _       __   _____                                  _   
-     |  _ \        (_)| |    | |     / /  / ____|                                | |  
-     | |_) | _   _  _ | |  __| |    / /  | |      ___   _ __   _ __    ___   ___ | |_ 
-     |  _ < | | | || || | / _` |   / /   | |     / _ \ | '_ \ | '_ \  / _ \ / __|| __|
-     | |_) || |_| || || || (_| |  / /    | |____| (_) || | | || | | ||  __/| (__ | |_ 
-     |____/  \__,_||_||_| \__,_| /_/      \_____|\___/ |_| |_||_| |_| \___| \___| \__|
-                                                                                                 
+      ____        _ _     _ 
+     |  _ \      (_) |   | |
+     | |_) |_   _ _| | __| |
+     |  _ <| | | | | |/ _` |
+     | |_) | |_| | | | (_| |
+     |____/ \__,_|_|_|\__,_|                 
     """
 
     async def build(self):
         return 0
 
-    async def connect(self):
-        return 0
+    """
+      _____ _             
+     |  __ (_)            
+     | |__) | _ __   __ _ 
+     |  ___/ | '_ \ / _` |
+     | |   | | | | | (_| |
+     |_|   |_|_| |_|\__, |
+                     __/ |
+                    |___/ 
+    """
 
+    async def ping(self):
 
+        # --> 1. Send ping message, get response
+        response = await SqsClient.send_ping_msg(self.ping_request_url, self.ping_response_url)
+        response['instance_tags'] = await self._tags  # From child class
+        return response
 
-
-
-
-
+    def send_ping_message(self):
+        request = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': self.ping_request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'ping',
+                    'DataType': 'String'
+                },
+            }
+        })
 
     """
       _    _        _                         
@@ -306,11 +326,6 @@ class AbstractInstance:
             await _linear_sleep_async(2)
             curr_state = await self.instance_state
         return True
-
-
-
-
-
 
 
 

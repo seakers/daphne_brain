@@ -203,8 +203,8 @@ class EOSSConsumer(DaphneConsumer):
         _save_user_info(user_info)
 
         # --> 2. Validate desired services
-        # service_manager = ServiceManager(user_info)
-        # await service_manager.initialize()
+        service_manager = ServiceManager(user_info)
+        await service_manager.initialize(regulate=True)
 
 
 
@@ -220,7 +220,6 @@ class EOSSConsumer(DaphneConsumer):
             'status': "success"
         })
         return 0
-
 
     async def connect_vassar_old(self, user_info: UserInformation, skip_check: bool = False):
         vassar_client = VASSARClient(user_info)

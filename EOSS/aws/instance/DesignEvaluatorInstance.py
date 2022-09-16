@@ -129,6 +129,12 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             ],
         }
 
+    @property
+    async def _tags(self):
+        run_template = await self._run_instances
+        return run_template['TagSpecifications'][0]['Tags']
+
+
     """
       _____       _ _   _       _ _         
      |_   _|     (_) | (_)     | (_)        
@@ -171,9 +177,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
     async def start(self):
         await super().start()
-
-
-
 
 
     """
@@ -219,27 +222,20 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     async def build(self):
         await super().build()
 
-        # --> 1. Send build message
-        response = await call_boto3_client_async('sqs', 'send_message', {
-            'QueueUrl': self.private_request_url,
-            'MessageBody': 'boto3',
-            'MessageAttributes': {
-                'msgType': {
-                    'StringValue': 'build',
-                    'DataType': 'String'
-                },
-                'group_id': {
-                    'StringValue': str(self.eosscontext.group_id),
-                    'DataType': 'String'
-                },
-                'problem_id': {
-                    'StringValue': str(self.eosscontext.problem_id),
-                    'DataType': 'String'
-                }
-            }
-        })
+        # --> 1. Send build message (do not subscribe to response)
+        await SqsClient.send_build_msg(self.private_request_url)
 
 
+    """
+          _____ _             
+         |  __ (_)            
+         | |__) | _ __   __ _ 
+         |  ___/ | '_ \ / _` |
+         | |   | | | | | (_| |
+         |_|   |_|_| |_|\__, |
+                         __/ |
+                        |___/ 
+    """
 
-
-
+    async def ping(self):
+        await super().ping()

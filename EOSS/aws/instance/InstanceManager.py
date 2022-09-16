@@ -199,13 +199,43 @@ class InstanceManager:
     """
 
     async def build_instances(self):
-        running_instances = await self.get_instances_by_states(['pending', 'running'])
+        running_instances = await self.get_instances_by_states(['running'])
+
+        async_tasks = []
+        for instance in running_instances:
+            async_tasks.append(asyncio.create_task(instance.build()))
+        for task in async_tasks:
+            await task
+
+    async def build_instance(self, identifier):
+        instance = await self.get_instance_by_identifier(identifier)
+        await instance.build()
 
 
+    """
+      _____ _             
+     |  __ (_)            
+     | |__) | _ __   __ _ 
+     |  ___/ | '_ \ / _` |
+     | |   | | | | | (_| |
+     |_|   |_|_| |_|\__, |
+                     __/ |
+                    |___/ 
+    """
 
 
+    async def ping_instances(self):
 
+        async def ping_instance(instance, survey):
+            survey.append(await instance.ping())
 
+        survey = []
+        async_tasks = []
+        running_instances = await self.get_instances_by_states(['running'])
+        for instance in running_instances:
+            async_tasks.append(asyncio.create_task(ping_instance(instance, survey)))
+        for task in async_tasks:
+            await task
 
-
+        return survey
 

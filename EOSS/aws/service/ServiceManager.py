@@ -1,5 +1,6 @@
 import os
 import boto3
+import asyncio
 
 from EOSS.aws.instance.InstanceManager import InstanceManager
 from EOSS.aws.utils import call_boto3_client_async, _save_eosscontext
@@ -24,7 +25,7 @@ class ServiceManager:
         self.de_manager = InstanceManager(self.user_info, 'design-evaluator')
 
 
-    async def initialize(self):
+    async def initialize(self, regulate=False):
 
         # --> Service: design-evaluator
         if self.eosscontext.design_evaluator_request_queue_name is None:
@@ -42,6 +43,34 @@ class ServiceManager:
 
         # --> Initialize Managers
         await self.de_manager.initialize()
+
+        if regulate is True:
+            await self.regulate_services()
+
+
+    async def regulate_services(self):
+        await self.de_manager.regulate_instances()
+
+
+    async def ping_services(self):
+
+        async def add_to_survey(instance_manager, survey, key):
+            survey[key] = await instance_manager.ping_instances()
+
+        survey = {}
+        async_tasks = []
+        async_tasks.append(asyncio.create_task(add_to_survey(self.de_manager, survey, 'design-evaluator')))
+        for task in async_tasks:
+            await task
+
+        return survey
+
+
+
+
+
+
+
 
 
 
