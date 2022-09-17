@@ -1,32 +1,19 @@
-import os
-import boto3
 import asyncio
+import json
 
 from EOSS.aws.instance.DesignEvaluatorInstance import DesignEvaluatorInstance
 from EOSS.aws.clients.InstanceClient import InstanceClient
-from EOSS.aws.utils import call_boto3_client_async
-from EOSS.aws.clients.SqsClient import SqsClient
 
 
 """ InstanceManager
-- Purpose of this class is to manage / regulate user ec2 instances for hosting containerized services
 
-Services
-- design-evaluator
-- genetic-algorithm
+    Purpose
+    - Manage / regulate user ec2 instances for a specific service
     
-AWS Functions
-    1. run_instances()
-    
-    
-    2. start_instances()
-    3. stop_instances()
-    
-    SSM
-    4. start_session()
-    
-    
-    
+    Services
+    - design-evaluator
+    - genetic-algorithm
+        
 """
 
 
@@ -44,21 +31,27 @@ class InstanceManager:
 
     @property
     async def desired_running_count(self):
+        desired_count = 0
         if self.resource_type == 'design-evaluator':
-            return self.eosscontext.design_evaluator_task_count
+            desired_count = self.eosscontext.design_evaluator_task_count
+        elif self.resource_type == 'genetic-algorithm':
+            desired_count = self.eosscontext.genetic_algorithm_task_count
         else:
             print('--> INSTANCE TYPE NOT RECOGNIZED')
-        return 0
+        return desired_count
 
     @property
-    async def user_instance_limit(self):
+    async def max_instances(self):
         if self.resource_type == 'design-evaluator':
-            return 3
-        return 1
+            return 1
+        elif self.resource_type == 'genetic-algorithm':
+            return 1
+        else:
+            return 1
 
     @property
     async def can_start_instance(self):
-        daphne_instance_limit = 100
+        daphne_instance_limit = 300
         total_instances = len(await InstanceClient.get_daphne_instances())
         if total_instances > daphne_instance_limit:
             return False
@@ -68,10 +61,10 @@ class InstanceManager:
 
     async def initialize(self):
 
-        # --> Gather the user's ec2 instances, regardless of state
+        # --> 1. Gather current ec2 instances
         await self.gather_instances()
 
-        # --> Enforce 10 ec2 instances, with the appropriate num running tasks
+        # --> 2. Enforce 10 ec2 instances
         await self.create_instances()
 
     async def gather_instances(self):
@@ -84,15 +77,13 @@ class InstanceManager:
 
         async_tasks = []
         for instance in self.instances:
-            async_tasks.append(
-                asyncio.create_task(instance.initialize())
-            )
+            async_tasks.append(asyncio.create_task(instance.initialize()))
 
         for task in async_tasks:
             await task
 
     async def create_instances(self):
-        user_instance_limit = await self.user_instance_limit
+        user_instance_limit = await self.max_instances
         current_count = len(self.instances)
 
         if current_count < user_instance_limit:

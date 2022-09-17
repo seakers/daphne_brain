@@ -190,6 +190,21 @@ class SqsClient:
         if response_url is not None:
             return await SqsClient.subscribe_to_message(response_url, 'build')
 
+    @staticmethod
+    async def send_exit_msg(request_url, response_url=None):
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'exit',
+                    'DataType': 'String'
+                }
+            }
+        })
+        if response_url is not None:
+            return await SqsClient.subscribe_to_message(response_url, 'exit')
+
 
     @staticmethod
     async def send_eval_msg(request_url, design):

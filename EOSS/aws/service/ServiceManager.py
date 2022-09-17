@@ -27,7 +27,6 @@ class ServiceManager:
 
     async def initialize(self):
 
-        # --> Service: design-evaluator
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
             self.eosscontext.design_evaluator_request_queue_name = queue_name
@@ -37,8 +36,6 @@ class ServiceManager:
             self.eosscontext.design_evaluator_response_queue_name = queue_name
             self.eosscontext.design_evaluator_response_queue_url = await SqsClient.create_queue_name(queue_name)
 
-        # --> Service: genetic-algorithm
-        # --> Save
         await _save_eosscontext(self.eosscontext)
 
         # --> Initialize Managers

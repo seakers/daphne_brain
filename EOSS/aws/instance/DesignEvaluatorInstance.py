@@ -1,3 +1,4 @@
+import asyncio
 import os
 import boto3
 import json
@@ -8,6 +9,11 @@ from EOSS.aws.instance.AbstractInstance import AbstractInstance
 
 
 """
+
+Tags
+-   RESOURCE_STATE
+
+
 AWS Functions
     1. run_instances()
     
@@ -45,6 +51,79 @@ done
 sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest'''
 
     @property
+    async def _tags(self):
+        return [
+            {
+                'Key': 'Name',
+                'Value': 'daphne-stack'
+            },
+            {
+                'Key': 'IDENTIFIER',
+                'Value': self.identifier
+            },
+            {
+                'Key': 'USER_ID',
+                'Value': str(self.user_id)
+            },
+            {
+                'Key': 'RESOURCE_TYPE',
+                'Value': 'design-evaluator'
+            },
+            {
+                'Key': 'REGION',
+                'Value': 'us-east-2'
+            },
+            {
+                'Key': 'REQUEST_MODE',
+                'Value': 'CRISP-ATTRIBUTES'
+            },
+            {
+                'Key': 'DEPLOYMENT_TYPE',
+                'Value': 'AWS'
+            },
+            {
+                'Key': 'MAXEVAL',
+                'Value': '5'
+            },
+            {
+                'Key': 'APOLLO_URL',
+                'Value': 'http://graphql.daphne.dev:8080/v1/graphql'
+            },
+            {
+                'Key': 'APOLLO_URL_WS',
+                'Value': 'ws://graphql.daphne.dev:8080/v1/graphql'
+            },
+            {
+                'Key': 'EVAL_REQUEST_URL',
+                'Value': self.eosscontext.design_evaluator_request_queue_url
+            },
+            {
+                'Key': 'EVAL_RESPONSE_URL',
+                'Value': self.eosscontext.design_evaluator_response_queue_url
+            },
+            {
+                'Key': 'PING_REQUEST_URL',
+                'Value': self.ping_request_url
+            },
+            {
+                'Key': 'PING_RESPONSE_URL',
+                'Value': self.ping_response_url
+            },
+            {
+                'Key': 'PRIVATE_REQUEST_URL',
+                'Value': self.private_request_url
+            },
+            {
+                'Key': 'PRIVATE_RESPONSE_URL',
+                'Value': self.private_response_url
+            },
+            {
+                'Key': 'RESOURCE_STATE',
+                'Value': 'INITIALIZING'
+            }
+        ]
+
+    @property
     async def _run_instances(self):
         return {
             "ImageId": "ami-0784177864ad003bd",
@@ -63,80 +142,11 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             "TagSpecifications": [
                 {
                     'ResourceType': 'instance',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': 'daphne-stack'
-                        },
-                        {
-                            'Key': 'IDENTIFIER',
-                            'Value': self.identifier
-                        },
-                        {
-                            'Key': 'USER_ID',
-                            'Value': str(self.user_id)
-                        },
-                        {
-                            'Key': 'RESOURCE_TYPE',
-                            'Value': 'design-evaluator'
-                        },
-                        {
-                            'Key': 'REGION',
-                            'Value': 'us-east-2'
-                        },
-                        {
-                            'Key': 'REQUEST_MODE',
-                            'Value': 'CRISP-ATTRIBUTES'
-                        },
-                        {
-                            'Key': 'DEPLOYMENT_TYPE',
-                            'Value': 'AWS'
-                        },
-                        {
-                            'Key': 'MAXEVAL',
-                            'Value': '5'
-                        },
-                        {
-                            'Key': 'APOLLO_URL',
-                            'Value': 'http://graphql.daphne.dev:8080/v1/graphql'
-                        },
-                        {
-                            'Key': 'APOLLO_URL_WS',
-                            'Value': 'ws://graphql.daphne.dev:8080/v1/graphql'
-                        },
-                        {
-                            'Key': 'EVAL_REQUEST_URL',
-                            'Value': self.eosscontext.design_evaluator_request_queue_url
-                        },
-                        {
-                            'Key': 'EVAL_RESPONSE_URL',
-                            'Value': self.eosscontext.design_evaluator_response_queue_url
-                        },
-                        {
-                            'Key': 'PING_REQUEST_URL',
-                            'Value': self.ping_request_url
-                        },
-                        {
-                            'Key': 'PING_RESPONSE_URL',
-                            'Value': self.ping_response_url
-                        },
-                        {
-                            'Key': 'PRIVATE_REQUEST_URL',
-                            'Value': self.private_request_url
-                        },
-                        {
-                            'Key': 'PRIVATE_RESPONSE_URL',
-                            'Value': self.private_response_url
-                        }
-                    ]
+                    'Tags': (await self._tags)
                 },
             ],
         }
 
-    @property
-    async def _tags(self):
-        run_template = await self._run_instances
-        return run_template['TagSpecifications'][0]['Tags']
 
 
     """
@@ -146,6 +156,8 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
        | | | '_ \| | __| |/ _` | | |_  / _ \
       _| |_| | | | | |_| | (_| | | |/ /  __/
      |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
+     - When UserInformation is being created, create instances then stop all to reach starting state
+     - This is done in create_instance function
     """
 
     async def initialize(self):
@@ -163,9 +175,18 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
         # --> 2. Create instance + wait until running
         print('--> CREATING INSTANCE:', self.identifier)
-        response = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
-        if response is None or 'Instances' not in response:
-            print('--> ERROR RUNNING INSTANCE:', self.identifier, json.dumps(response, indent=4, default=str))
+        result = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
+        if result is None:
+            return
+
+        # --> 3. Wait until instance is pending / starting then stop
+        running = await self.wait_on_states(['pending', 'running'], seconds=120)
+        if running is True:
+            await super().stop()
+
+        # --> 4. Set RESOURCE_STATE tag to READY
+        await self.set_tag('RESOURCE_STATE', 'READY')
+
 
 
 
@@ -180,7 +201,12 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     """
 
     async def start(self):
+        await self.purge_queues()
+
         await super().start()
+
+        await SqsClient.send_build_msg(self.private_request_url)
+
 
 
     """
@@ -195,9 +221,14 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     """
 
     async def stop(self):
-        await super().stop()
 
+        # --> 1. Try to stop via vassar inside
+        await SqsClient.send_exit_msg(self.private_request_url)
+        stopping = await self.wait_on_state('stopping', seconds=30)
 
+        # --> 2. Force stop if inner-stop times out
+        if stopping is False:
+            await super().stop()
 
     """
      _____                                    

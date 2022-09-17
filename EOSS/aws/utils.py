@@ -105,7 +105,8 @@ async def call_boto3_client_async(client_type, func_name, params=None, debug=Tru
             else:
                 result = await func(**params)
         except Exception as ex:
-            print('--> COULD NOT GET ASYNC CLIENT:', ex)
+            print('--> (AWS ERROR)', client_type, func_name, '-----', ex)
+            return None
     return result
 
 

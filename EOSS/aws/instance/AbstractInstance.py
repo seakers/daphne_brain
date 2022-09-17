@@ -73,6 +73,8 @@ class AbstractInstance:
            | | | '_ \| | __| |/ _` | | |_  / _ \
           _| |_| | | | | |_| | (_| | | |/ /  __/
          |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
+         ---- If instance dne: call _initialize()
+         - If instance exists: call scan_container()
     """
 
     async def _initialize(self):
@@ -295,6 +297,40 @@ class AbstractInstance:
                       |_|               
     """
 
+    # --> NOTE: can only be called every 60 seconds
+    async def purge_queues(self):
+        async_tasks = []
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.private_request_url)))
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.private_response_url)))
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.ping_response_url)))
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.ping_response_url)))
+        for task in async_tasks:
+            await task
+
+    async def wait_on_state(self, target_state='running', seconds=60):
+        iter = 0
+        iter_max = int(seconds/3)
+        curr_state = await self.instance_state
+        while curr_state != target_state:
+            iter += 1
+            if iter >= iter_max:
+                return False
+            await _linear_sleep_async(3)
+            curr_state = await self.instance_state
+        return True
+
+    async def wait_on_states(self, target_states=['pending', 'running'], seconds=60):
+        iter = 0
+        iter_max = int(seconds / 3)
+        curr_state = await self.instance_state
+        while curr_state not in target_states:
+            iter += 1
+            if iter >= iter_max:
+                return False
+            await _linear_sleep_async(3)
+            curr_state = await self.instance_state
+        return True
+
     async def get_instance(self, debug=False):
         request = await call_boto3_client_async('ec2', 'describe_instances', {
             "Filters": [
@@ -332,17 +368,21 @@ class AbstractInstance:
         instance = await self.get_instance()
         return instance['State']['Name']
 
-    async def wait_on_state(self, target_state='running', seconds=60):
-        iter = 0
-        iter_max = int(seconds/3)
-        curr_state = await self.instance_state
-        while curr_state != target_state:
-            iter += 1
-            if iter >= iter_max:
-                return False
-            await _linear_sleep_async(3)
-            curr_state = await self.instance_state
-        return True
+    async def get_tag(self, tag):
+        instance = await self.get_instance()
+        return await find_obj_value(instance['Tags'], 'Key', tag, 'Value')
+
+    async def set_tag(self, tag, value):
+        result = await call_boto3_client_async('ec2', 'create_tags', {
+            'Resources': [await self.instance_id],
+            'Tags': [
+                {
+                    'Key': tag,
+                    'Value': value
+                }
+            ]
+        })
+
 
 
     """
@@ -355,19 +395,49 @@ class AbstractInstance:
                             
     """
 
-    async def container_running(self):
+    async def ssm_command(self, command):
 
+        async def wait_for_output(command_id):
+            await _linear_sleep_async(1)
+            response = await call_boto3_client_async('ssm', 'list_command_invocations', {
+                'CommandId': command_id,
+                'Details': True
+            })
+            count = 0
+            while len(response['CommandInvocations']) == 0:
+                await _linear_sleep_async(2)
+                response = await call_boto3_client_async('ssm', 'list_command_invocations', {
+                    'CommandId': command_id,
+                    'Details': True
+                })
+                count += 1
+                if count > 10:
+                    return ''
+            output = response['CommandInvocations'][0]['CommandPlugins'][0]['Output']
+            return output
+
+        # --> 1. Send command
         response = await call_boto3_client_async('ssm', 'send_command', {
             'InstanceIds': [await self.instance_id],
-
-
+            'DocumentName': 'AWS-RunShellScript',
+            'Parameters': {
+                'commands': [command]
+            }
         })
+        command_id = response['Command']['CommandId']
+
+        # --> 2. Get output and strip
+        output = await wait_for_output(command_id)
+        return output.strip()
 
 
-        return 0
-
-
-
+    async def container_running(self):
+        command = 'docker ps -q | xargs'
+        output = await self.ssm_command(command)
+        if output == '':
+            return False
+        else:
+            return True
 
 
 
