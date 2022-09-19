@@ -1,8 +1,13 @@
 import asyncio
 import json
 
+from functools import wraps
+from types import FunctionType
+
 from EOSS.aws.instance.DesignEvaluatorInstance import DesignEvaluatorInstance
 from EOSS.aws.clients.InstanceClient import InstanceClient
+from EOSS.aws.utils import _save_eosscontext
+
 
 
 """ InstanceManager
@@ -15,6 +20,7 @@ from EOSS.aws.clients.InstanceClient import InstanceClient
     - genetic-algorithm
         
 """
+
 
 
 class InstanceManager:
@@ -57,6 +63,32 @@ class InstanceManager:
             return False
         return True
 
+    @property
+    async def lock(self):
+        if self.resource_type == 'design-evaluator':
+            return self.eosscontext.design_evaluator_service_lock
+        elif self.resource_type == 'genetic-algorithm':
+            return self.eosscontext.genetic_algorithm_service_lock
+        return True
+
+    async def lock_service(self):
+        print('\n\n-------- LOCKING SERVICE', self.resource_type, '--------')
+        if self.resource_type == 'design-evaluator':
+            self.eosscontext.design_evaluator_service_lock = True
+        elif self.resource_type == 'genetic-algorithm':
+            self.eosscontext.genetic_algorithm_service_lock = True
+        await _save_eosscontext(self.eosscontext)
+        print('--> FINISHED LOCKING')
+
+    async def unlock_service(self):
+        print('-------- UNLOCKING SERVICE', self.resource_type, '--------\n\n')
+        if self.resource_type == 'design-evaluator':
+            self.eosscontext.design_evaluator_service_lock = False
+        elif self.resource_type == 'genetic-algorithm':
+            self.eosscontext.genetic_algorithm_service_lock = False
+        await _save_eosscontext(self.eosscontext)
+        print('--> FINISHED UNLOCKING')
+
 
 
     async def initialize(self):
@@ -64,8 +96,8 @@ class InstanceManager:
         # --> 1. Gather current ec2 instances
         await self.gather_instances()
 
-        # --> 2. Enforce 10 ec2 instances
-        await self.create_instances()
+        # --> 2. Enforce 10 ec2 instances (only called once)
+        await self.init_instances()
 
     async def gather_instances(self):
         self.instances = []
@@ -73,7 +105,7 @@ class InstanceManager:
         instance_list = await InstanceClient.get_user_active_instances(self.user_id, self.resource_type)
         for instance in instance_list:
             if self.resource_type == 'design-evaluator':
-                self.instances.append(DesignEvaluatorInstance(self.user_info, instance))
+                self.instances.append(await self.create_instance(instance=instance))
 
         async_tasks = []
         for instance in self.instances:
@@ -82,21 +114,40 @@ class InstanceManager:
         for task in async_tasks:
             await task
 
-    async def create_instances(self):
+    async def init_instances(self):
         user_instance_limit = await self.max_instances
         current_count = len(self.instances)
 
         if current_count < user_instance_limit:
             if (await self.can_start_instance) is False:
-                raise Exception('--> CANNOT START INSTANCE, OVER INSTANCE LIMIT')
-            async_tasks = []
-            for itr in range(current_count, user_instance_limit):
-                if self.resource_type == 'design-evaluator':
-                    instance = DesignEvaluatorInstance(self.user_info, instance=None)
+                print('--> CANNOT REGULATE INSTANCES, OVER GLOBAL INSTANCE LIMIT', self.resource_type)
+            if await self.lock is True:
+                print('--> CANNOT REGULATE INSTANCES, SERVICE LOCKED', self.resource_type)
+            else:
+                # --> 1. Lock Service
+                # await self.lock_service()
+
+                # --> 2. Start service
+                async_tasks = []
+                print('--> STARTING SERVICES')
+                for itr in range(current_count, user_instance_limit):
+                    instance = await self.create_instance(instance=None)
+                    print(instance)
                     async_tasks.append(asyncio.create_task(instance.initialize()))
                     self.instances.append(instance)
-            for task in async_tasks:
-                await task
+                for task in async_tasks:
+                    await task
+
+                # --> 3. Unlock service
+                # await self.unlock_service()
+
+    async def create_instance(self, instance=None):
+        print('--> CREATING INSTANCE')
+        if self.resource_type == 'design-evaluator':
+            return DesignEvaluatorInstance(self.user_info, instance=instance)
+        elif self.resource_type == 'genetic-algorithm':
+            return DesignEvaluatorInstance(self.user_info, instance=instance)
+
 
 
     """
@@ -112,6 +163,10 @@ class InstanceManager:
 
 
     async def regulate_instances(self):
+        if self.lock is True:
+            print('--> COULD NOT REGULATE INSTANCES, SERVICE LOCKED:', self.resource_type)
+            return None
+
         req_running = await self.desired_running_count
 
         stopped_instances = await self.get_instances_by_states(['stopped'])
@@ -194,6 +249,10 @@ class InstanceManager:
     """
 
     async def build_instances(self):
+        if self.lock is True:
+            print('--> COULD NOT BUILD INSTANCES, SERVICE LOCKED:', self.resource_type)
+            return None
+
         running_instances = await self.get_instances_by_states(['pending', 'running'])
 
         async_tasks = []
@@ -220,6 +279,9 @@ class InstanceManager:
 
 
     async def ping_instances(self):
+        if self.lock is True:
+            print('--> COULD NOT PING INSTANCES, SERVICE LOCKED:', self.resource_type)
+            return None
 
         async def ping_instance(instance, survey):
             survey.append(await instance.ping())

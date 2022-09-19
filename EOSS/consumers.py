@@ -204,8 +204,9 @@ class EOSSConsumer(DaphneConsumer):
 
         # --> 2. Regulate services
         service_manager = ServiceManager(user_info)
-        await service_manager.initialize()
-        await service_manager.regulate_services()
+        result = await service_manager.initialize()
+        if result is True:
+            await service_manager.regulate_services()
 
 
 

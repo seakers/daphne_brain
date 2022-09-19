@@ -89,6 +89,7 @@ class AbstractInstance:
         for task in async_tasks:
             await task
 
+
     async def initialize_ping_queues(self):
         self.ping_request_url = await SqsClient.create_queue_name_unique(
             'user-' + str(self.user_id) + '-design-evaluator-ping-request-queue' + self.identifier

@@ -24,8 +24,29 @@ class ServiceManager:
         # --> Instance Managers
         self.de_manager = InstanceManager(self.user_info, 'design-evaluator')
 
+    @property
+    async def lock(self):
+        return self.eosscontext.service_lock
+
+    async def lock_services(self):
+        print('\n\n-------- LOCKING SERVICES --------')
+        self.eosscontext.service_lock = True
+        await _save_eosscontext(self.eosscontext)
+
+    async def unlock_services(self):
+        print('-------- UNLOCKING SERVICES --------\n\n')
+        self.eosscontext.service_lock = False
+        await _save_eosscontext(self.eosscontext)
+
+
 
     async def initialize(self):
+
+        if await self.lock is True:
+            print('--> COULD NOT INITIALIZE SERVICE MANAGER, LOCKED')
+            return False
+        else:
+            await self.lock_services()
 
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
@@ -38,15 +59,29 @@ class ServiceManager:
 
         await _save_eosscontext(self.eosscontext)
 
-        # --> Initialize Managers
-        await self.de_manager.initialize()
+        # --> Initialize
+        async_tasks = []
+        async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
+        for task in async_tasks:
+            await task
 
+        await self.unlock_services()
+
+        return True
 
     async def regulate_services(self):
+        if await self.lock is True:
+            print('--> COULD NOT REGULATE SERVICES, LOCKED')
+            return None
+
         await self.de_manager.regulate_instances()
 
 
     async def ping_services(self):
+        if await self.lock is True:
+            print('--> COULD NOT PING SERVICES, LOCKED')
+            return None
+
 
         async def add_to_survey(instance_manager, survey, key):
             survey[key] = await instance_manager.ping_instances()

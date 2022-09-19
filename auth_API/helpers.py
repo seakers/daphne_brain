@@ -1,7 +1,10 @@
+import asyncio
+
 from django.contrib.auth.models import User
 from django.db import transaction
 
 from EDL.models import EDLContext
+import threading
 from EOSS.models import EOSSContext, ActiveContext
 from EOSS.aws.clients.EcsClient import EcsClient
 from AT.models import ATContext, ActiveATContext
@@ -75,7 +78,6 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         if user_info.user is not None:
             user_info.eoss_context = eoss_context
             user_info.save()
-            print('--> Creating EOSS Context')
             service_manager = ServiceManager(user_info)
             async_to_sync(service_manager.initialize)()
             eoss_context.save()

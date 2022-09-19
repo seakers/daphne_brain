@@ -44,11 +44,13 @@ class EOSSContext(models.Model):
     ########################
     ### AWS 2.0 Backends ###
     ########################
+    service_lock = models.BooleanField(default=False)  # If true, restricts user's access to all service resources
 
     # --> Cluster
     cluster_name = models.TextField(default='daphne-dev-cluster')
 
     # --> Design Evaluator
+    design_evaluator_service_lock = models.BooleanField(default=False)  # If true, restricts user's access to vassar service resources
     design_evaluator_task_count = models.IntegerField(default=1)
     design_evaluator_request_queue_name = models.TextField(null=True)  # user-1-design-evaluator-request-queue
     design_evaluator_request_queue_url = models.TextField(null=True)
@@ -56,6 +58,7 @@ class EOSSContext(models.Model):
     design_evaluator_response_queue_url = models.TextField(null=True)
 
     # --> Genetic Algorithm
+    genetic_algorithm_service_lock = models.BooleanField(default=False)  # If true, restricts user's access to ga service resources
     genetic_algorithm_task_count = models.IntegerField(default=1)
     genetic_algorithm_request_queue_name = models.TextField(null=True)  # user-1-genetic-algorithm-request-queue
     genetic_algorithm_request_queue_url = models.TextField(null=True)

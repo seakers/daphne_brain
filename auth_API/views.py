@@ -108,6 +108,13 @@ class Register(APIView):
             user_id = self.create_user(username, email, password1)
             print('--> ADDING USER TO GROUP')
             async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
+
+            # # --> Get user_information to "create" the db object and initialize aws resources
+            # user = authenticate(request, username=username, password=password1)
+            # if user is not None:
+            #     userinfo = get_or_create_user_information(request.session, user, 'EOSS')
+            #     userinfo.user = user
+            #     userinfo.save()
         except ValueError:
             return Response({'status': 'registration_error',
                              'registration_error': 'Error creating user!'})
