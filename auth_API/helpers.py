@@ -75,12 +75,12 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
                                    added_archs_count=0, group_id=1, problem_id=1)
         eoss_context.save()
 
-        if user_info.user is not None:
-            user_info.eoss_context = eoss_context
-            user_info.save()
-            service_manager = ServiceManager(user_info)
-            async_to_sync(service_manager.initialize)()
-            eoss_context.save()
+        # if user_info.user is not None:
+        #     user_info.eoss_context = eoss_context
+        #     user_info.save()
+        #     service_manager = ServiceManager(user_info)
+        #     async_to_sync(service_manager.initialize)()
+        #     eoss_context.save()
 
 
 

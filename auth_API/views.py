@@ -18,6 +18,78 @@ import requests
 import json
 
 
+class InitializeServices(APIView):
+    """
+    Initialize user AWS resources
+    """
+
+class Register(APIView):
+    """
+    Register a user
+    """
+    username_blacklist = ['default']
+
+    def post(self, request, format=None):
+
+        # --> Extract fields
+        username = request.data["username"]
+        email = request.data["email"]
+        password1 = request.data["password1"]
+        password2 = request.data["password2"]
+
+        # --> Validate fields
+        validation = self.validate(username, email, password1, password2)
+        if validation is not None:
+            return validation
+
+        # --> Create user and insert into default group: (all users are admins)
+        try:
+            user_id = self.create_user(username, email, password1)
+            async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
+        except ValueError:
+            return Response({'status': 'registration_error',
+                             'registration_error': 'Error creating user!'})
+        return Response({'status': 'registered'})
+
+    def validate(self, username, email, password1, password2):
+
+        # --> Validate email
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'Email has an incorrect format.'
+            })
+
+        # --> Validate password
+        if not password1 or not password2 or password1 != password2:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'The passwords do not match.'
+            })
+
+        # --> Validate username isn't blacklisted
+        if username in self.username_blacklist:
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'This username is already in use.'
+            })
+
+        # --> Validate username uniqueness
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'status': 'registration_error',
+                'registration_error': 'This username is already in use.'
+            })
+
+    def create_user(self, username, email, password):
+        user = User.objects.create_user(username, email, password)
+        user.save()
+        return user.id
+
+
+
 class Login(APIView):
     """
     Login a user
@@ -83,80 +155,6 @@ class Logout(APIView):
         return Response({
             'message': 'User logged out.'
         })
-
-
-class Register(APIView):
-    username_blacklist = ['default']
-    """
-    Register a user
-    """
-    def post(self, request, format=None):
-
-        # --> Extract fields
-        username = request.data["username"]
-        email = request.data["email"]
-        password1 = request.data["password1"]
-        password2 = request.data["password2"]
-
-        # --> Validate fields
-        validation = self.validate(username, email, password1, password2)
-        if validation is not None:
-            return validation
-
-        # --> Create user and insert into default group: (all users are admins)
-        try:
-            user_id = self.create_user(username, email, password1)
-            print('--> ADDING USER TO GROUP')
-            async_to_sync(AbstractGraphqlClient.add_user_to_group)(user_id, 1)
-
-            # # --> Get user_information to "create" the db object and initialize aws resources
-            # user = authenticate(request, username=username, password=password1)
-            # if user is not None:
-            #     userinfo = get_or_create_user_information(request.session, user, 'EOSS')
-            #     userinfo.user = user
-            #     userinfo.save()
-        except ValueError:
-            return Response({'status': 'registration_error',
-                             'registration_error': 'Error creating user!'})
-        return Response({'status': 'registered'})
-
-    def validate(self, username, email, password1, password2):
-
-        # --> Validate email
-        try:
-            validate_email(email)
-        except ValidationError:
-            return Response({
-                'status': 'registration_error',
-                'registration_error': 'Email has an incorrect format.'
-            })
-
-        # --> Validate password
-        if not password1 or not password2 or password1 != password2:
-            return Response({
-                'status': 'registration_error',
-                'registration_error': 'The passwords do not match.'
-            })
-
-        # --> Validate username isn't blacklisted
-        if username in self.username_blacklist:
-            return Response({
-                'status': 'registration_error',
-                'registration_error': 'This username is already in use.'
-            })
-
-        # --> Validate username uniqueness
-        if User.objects.filter(username=username).exists():
-            return Response({
-                'status': 'registration_error',
-                'registration_error': 'This username is already in use.'
-            })
-
-    def create_user(self, username, email, password):
-        user = User.objects.create_user(username, email, password)
-        user.save()
-        return user.id
-
 
 class ResetPassword(APIView):
     """
