@@ -42,11 +42,11 @@ class ServiceManager:
 
     async def initialize(self):
 
-        if await self.lock is True:
-            print('--> COULD NOT INITIALIZE SERVICE MANAGER, LOCKED')
-            return False
-        else:
-            await self.lock_services()
+        # if await self.lock is True:
+        #     print('--> COULD NOT INITIALIZE SERVICE MANAGER, LOCKED')
+        #     return False
+        # else:
+        #     await self.lock_services()
 
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
@@ -65,30 +65,31 @@ class ServiceManager:
         for task in async_tasks:
             await task
 
-        await self.unlock_services()
+        # await self.unlock_services()
 
         return True
 
     async def regulate_services(self):
-        if await self.lock is True:
-            print('--> COULD NOT REGULATE SERVICES, LOCKED')
-            return None
+        # if await self.lock is True:
+        #     print('--> COULD NOT REGULATE SERVICES, LOCKED')
+        #     return None
 
         await self.de_manager.regulate_instances()
 
-
     async def ping_services(self):
-        if await self.lock is True:
-            print('--> COULD NOT PING SERVICES, LOCKED')
-            return None
+        # if await self.lock is True:
+        #     print('--> COULD NOT PING SERVICES, LOCKED')
+        #     return None
 
+        async def add_to_survey(instance_manager, internal_survey, key):
+            internal_survey[key] = await instance_manager.ping_instances()
 
-        async def add_to_survey(instance_manager, survey, key):
-            survey[key] = await instance_manager.ping_instances()
-
-        survey = {}
+        survey = {
+            'vassar_containers': [],
+            'ga_containers': []
+        }
         async_tasks = []
-        async_tasks.append(asyncio.create_task(add_to_survey(self.de_manager, survey, 'design-evaluator')))
+        async_tasks.append(asyncio.create_task(add_to_survey(self.de_manager, survey, 'vassar_containers')))
         for task in async_tasks:
             await task
 

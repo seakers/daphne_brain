@@ -190,7 +190,19 @@ class EOSSConsumer(DaphneConsumer):
     ################
 
     async def ping_services(self, user_info: UserInformation, content):
-        print('--> PING SERVICES (PLACEHOLDER)')
+        print('--> PING SERVICES')
+
+        service_manager = ServiceManager(user_info)
+        result = await service_manager.initialize()
+        if result is True:
+            survey = await service_manager.ping_services()
+            await self.send_json({
+                'type': 'ping',
+                'status': survey
+            })
+
+
+
 
     # --> Functions
     async def connect_services(self, user_info: UserInformation, content):
@@ -204,10 +216,10 @@ class EOSSConsumer(DaphneConsumer):
         _save_user_info(user_info)
 
         # --> 2. Regulate services
-        # service_manager = ServiceManager(user_info)
-        # result = await service_manager.initialize()
-        # if result is True:
-        #     await service_manager.regulate_services()
+        service_manager = ServiceManager(user_info)
+        result = await service_manager.initialize()
+        if result is True:
+            await service_manager.regulate_services()
 
 
 

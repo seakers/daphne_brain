@@ -126,6 +126,13 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     @property
     async def _run_instances(self):
         return {
+            "BlockDeviceMappings": [
+                {
+                    'Ebs': {
+                        'Encrypted': True
+                    }
+                }
+            ],
             "ImageId": "ami-0784177864ad003bd",
             "InstanceType": "t2.medium",
             "MaxCount": 1,
@@ -137,6 +144,9 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             "SubnetId": "subnet-05cc334fd084cb66c",
             "IamInstanceProfile": {
                 'Name': 'ecsInstanceRole'
+            },
+            "HibernationOptions": {
+                "Configured": True
             },
             "UserData": (await self._user_data),
             "TagSpecifications": [
@@ -156,7 +166,7 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
        | | | '_ \| | __| |/ _` | | |_  / _ \
       _| |_| | | | | |_| | (_| | | |/ /  __/
      |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
-     - When UserInformation is being created, create instances then stop all to reach starting state
+     - Right after user registration, create instances then stop all to reach system starting state
      - This is done in create_instance function
     """
 
@@ -182,6 +192,11 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         running = await self.wait_on_states(['pending', 'running'], seconds=120)
         if running is True:
             await super().stop()
+
+        # --> 4. Wait until instance is stopped
+        stopped = await self.wait_on_states(['stopped'], seconds=120)
+        if stopped is False:
+            print('--> ERROR, INSTANCE WAS NEVER STOPPED:', self.identifier)
 
         # --> 4. Set RESOURCE_STATE tag to READY
         await self.set_tag('RESOURCE_STATE', 'READY')
@@ -269,4 +284,8 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     """
 
     async def ping(self):
-        await super().ping()
+        if await self.container_running() is True:
+            response = await super().ping()
+            return response
+        else:
+            print('--> COULD NOT PING ', self.instance, 'CONTAINER NOT RUNNING')

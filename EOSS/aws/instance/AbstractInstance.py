@@ -178,7 +178,8 @@ class AbstractInstance:
 
         # --> 3. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
-            'InstanceIds': [await self.instance_id]
+            'InstanceIds': [await self.instance_id],
+            'Hibernate': True
         })
         if response is None or 'StoppingInstances' not in response:
             print('--> ERROR STARTING INSTANCE, BAD RESPONSE:', json.dumps(response, indent=4, default=str))
@@ -284,6 +285,7 @@ class AbstractInstance:
         # --> 1. Send ping message, get response
         response = await SqsClient.send_ping_msg(self.ping_request_url, self.ping_response_url)
         response['instance_tags'] = await self._tags  # From child class
+        response['IDENTIFIER'] = self.identifier
         return response
 
 

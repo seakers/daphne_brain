@@ -49,7 +49,7 @@ class InstanceManager:
     @property
     async def max_instances(self):
         if self.resource_type == 'design-evaluator':
-            return 1
+            return 3
         elif self.resource_type == 'genetic-algorithm':
             return 1
         else:
@@ -277,12 +277,14 @@ class InstanceManager:
 
 
     async def ping_instances(self):
-        if self.lock is True:
-            print('--> COULD NOT PING INSTANCES, SERVICE LOCKED:', self.resource_type)
-            return None
+        # if self.lock is True:
+        #     print('--> COULD NOT PING INSTANCES, SERVICE LOCKED:', self.resource_type)
+        #     return None
 
-        async def ping_instance(instance, survey):
-            survey.append(await instance.ping())
+        async def ping_instance(local_instance, local_survey):
+            instance_ping = await local_instance.ping()
+            if instance_ping is not None:
+                local_survey.append(instance_ping)
 
         survey = []
         async_tasks = []
