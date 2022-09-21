@@ -36,7 +36,6 @@ from mycroft.utils import generate_unique_mycroft_session
 def get_session(session_key):
     session_objs = Session.objects.filter(session_key=session_key)
     if len(session_objs) == 0:
-        print('--> SESSION NOT FOUND')
         return None
     else:
         return session_objs[0]
@@ -89,17 +88,13 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
     with transaction.atomic():
 
         # --> 1. UserInformation
-
         if username is not None and session_key is None:
             user_info = UserInformation(user=User.objects.get(username=username), daphne_version=version)
         elif session_key is not None and username is None:
-            query = Session.objects.filter(session_key=session_key)
-            if len(query) == 0:
+            q_session = get_session(session_key)
+            if q_session is None:
                 return None
-            session_q = query[0]
-
-
-            user_info = UserInformation(session=session_q, daphne_version=version)
+            user_info = UserInformation(session=q_session, daphne_version=version)
         else:
             raise Exception("Unexpected input for create_user_information")
 
@@ -114,14 +109,6 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         eoss_context = EOSSContext(user_information=user_info, dataset_id=-1, last_arch_id=0, selected_arch_id=-1,
                                    added_archs_count=0, group_id=1, problem_id=1)
         eoss_context.save()
-
-        # if user_info.user is not None:
-        #     user_info.eoss_context = eoss_context
-        #     user_info.save()
-        #     service_manager = ServiceManager(user_info)
-        #     async_to_sync(service_manager.initialize)()
-        #     eoss_context.save()
-
 
 
         # --> ActiveContext

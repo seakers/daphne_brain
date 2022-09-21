@@ -26,7 +26,6 @@ from EOSS.vassar.scaling import EvaluationScaling
 class EOSSConsumer(DaphneConsumer):
     # WebSocket event handlers
     async def receive_json(self, content, **kwargs):
-        print('--> EOSS WS MESSAGE: ', self.scope['user'], self.scope['session'])
         """
             Called when we get a text frame. Channels will JSON-decode the payload
             for us and pass it as the first argument.
@@ -38,7 +37,6 @@ class EOSSConsumer(DaphneConsumer):
         # --> 2. Get user_info
         user_info: UserInformation = await _get_user_information(self.scope['session'], self.scope['user'])
         if user_info is None:
-            print('--> NO USER INFO FOUND FOR WS CONNECTION:', self.scope['user'], self.scope['session'])
             return
 
 

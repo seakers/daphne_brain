@@ -20,68 +20,6 @@ import requests
 import json
 
 
-
-
-class InitializeUserServices(APIView):
-    """ Initialize user AWS resources
-    - Does same functions as Login only it also initializes services
-    - Called directly after Register() view
-    - At the time of being called, assumes UserInformation has not been created
-    """
-    def post(self, request, format=None):
-
-        # --> 1. Authenticate user from request
-        username = request.data['username']
-        password = request.data['password1']
-        daphne_version = request.data['daphneVersion']
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            return Response({'status': 'auth_error', 'login_error': 'Invalid Credentials'})
-
-        # --> 2. Create UserInformation if DNE, handling session
-        userinfo = self.get_user_info_wrapper(user, request, daphne_version)
-
-        # --> 3. Login user
-        login(request, user)
-
-        # --> 4. Initialize services
-        service_manager = ServiceManager(userinfo)
-        async_to_sync(service_manager.initialize)()
-
-        # --> 5. Return the same data as Login
-        return Response({
-            'status': 'logged_in',
-            'username': username,
-            'pk': get_user_pk(username),
-            'is_experiment_user': userinfo.is_experiment_user,
-            'permissions': []
-        })
-
-    def get_user_info_wrapper(self, user, request, daphne_version):
-        userinfo = None
-
-        # --> 1. Check if UserInformation already exists
-        query = UserInformation.objects.filter(user__exact=user)
-        if len(query) > 0:
-            # --> If UserInformation exists (return first)
-            userinfo = query.first()
-            userinfo.daphne_version = daphne_version
-            userinfo.save()
-        else:
-            # --> If UserInformation DNE (create UserInformation)
-            userinfo = get_or_create_user_information(request.session, user, daphne_version)
-
-            # --> Transfer current session
-            userinfo.user = user
-            userinfo.session = None
-            userinfo.save()
-
-        return userinfo
-
-
-
-
-
 class Register(APIView):
     """
     Register a user
@@ -119,18 +57,20 @@ class Register(APIView):
             return Response({'status': 'auth_error', 'login_error': 'Invalid Credentials'})
 
 
-
-
+        # --> 5. Create user info / transfer session
         userinfo = self.get_user_info_wrapper(user, request, daphne_version)
 
 
-
-
+        # --> 6. Log user in
         login(request, user)
 
+
+        # --> 7. Create services
         service_manager = ServiceManager(userinfo)
         async_to_sync(service_manager.initialize)()
 
+
+        # --> 8. Return
         return Response({
             'status': 'logged_in',
             'username': username,
@@ -199,10 +139,6 @@ class Register(APIView):
             userinfo.save()
 
         return userinfo
-
-
-
-
 
 
 class Login(APIView):
