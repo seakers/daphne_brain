@@ -32,6 +32,8 @@ class DaphneConsumer(AsyncJsonWebsocketConsumer):
 
         # --> 2. Save ws channel name in user_info
         user_information: UserInformation = await _get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
+        if user_information is None:
+            await self.close()
         user_information.channel_name = self.channel_name
         await _save_user_info(user_information)
 

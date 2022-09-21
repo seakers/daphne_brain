@@ -17,7 +17,28 @@ from asgiref.sync import async_to_sync
 
 from mycroft.utils import generate_unique_mycroft_session
 
+
+""" Sequence: get_or_create_user_information
+
+    1. Check if user is authenticated (logged in / out)
+     - if logged in: 
+        - get user_info by: UserInformation.objects.filter(user__exact=user)
+     - if not logged in: 
+        - get or create session object
+        - get user_info by: UserInformation.objects.filter(session_id__exact=session.session_key)
+
+    2. Create UserInformation (user must be logged in, )
+
+
+
+"""
+
+
+
+
+
 def get_or_create_user_information(session, user, version='EOSS'):
+    # print('--> get_or_create_user_information:', session, user)
     userinfo = get_user_information(session, user)
     if userinfo is not None:
         return userinfo
@@ -37,8 +58,16 @@ def get_user_information(session, user):
         # If no session exists, create one here
         if session.session_key is None:
             session.create()
-        session = Session.objects.get(session_key=session.session_key)
-        userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
+        session_objs = Session.objects.filter(session_key=session.session_key)
+        if len(session_objs) == 0:
+            print('--> ERROR, COULD NOT GET SESSION JUST CREATED')
+            userinfo_qs = []
+        else:
+            session = session_objs[0]
+            userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
+
+
+
 
     if len(userinfo_qs) >= 1:
         user_info = userinfo_qs[0]
@@ -58,8 +87,13 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         if username is not None and session_key is None:
             user_info = UserInformation(user=User.objects.get(username=username), daphne_version=version)
         elif session_key is not None and username is None:
-            user_info = UserInformation(session=Session.objects.get(session_key=session_key),
-                                        daphne_version=version)
+            query = Session.objects.filter(session_key=session_key)
+            if len(query) == 0:
+                return None
+            session_q = query[0]
+
+
+            user_info = UserInformation(session=session_q, daphne_version=version)
         else:
             raise Exception("Unexpected input for create_user_information")
 
