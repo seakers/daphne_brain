@@ -33,7 +33,13 @@ from mycroft.utils import generate_unique_mycroft_session
 
 """
 
-
+def get_session(session_key):
+    session_objs = Session.objects.filter(session_key=session_key)
+    if len(session_objs) == 0:
+        print('--> SESSION NOT FOUND')
+        return None
+    else:
+        return session_objs[0]
 
 
 
@@ -57,18 +63,18 @@ def get_user_information(session, user):
         # Try to look by session key
         # If no session exists, create one here
         if session.session_key is None:
+            print('--> GENERATING SESSION: get_user_information')
             session.create()
-        session_objs = Session.objects.filter(session_key=session.session_key)
-        if len(session_objs) == 0:
-            print('--> ERROR, COULD NOT GET SESSION JUST CREATED')
-            userinfo_qs = []
+
+        q_session = get_session(session.session_key)
+        if q_session is None:
+            return None
         else:
-            session = session_objs[0]
-            userinfo_qs = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
-
-
-
-
+            userinfo_qs = UserInformation.objects.filter(session_id__exact=q_session.session_key).select_related("user",
+                                                                                                               "eosscontext",
+                                                                                                               "eosscontext__activecontext",
+                                                                                                               "experimentcontext",
+                                                                                                               "edlcontext")
     if len(userinfo_qs) >= 1:
         user_info = userinfo_qs[0]
         return user_info

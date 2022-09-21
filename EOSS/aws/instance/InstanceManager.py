@@ -129,7 +129,6 @@ class InstanceManager:
 
                 # --> 2. Start service
                 async_tasks = []
-                print('--> STARTING SERVICES')
                 for itr in range(current_count, user_instance_limit):
                     instance = await self.create_instance(instance=None)
                     print(instance)
@@ -142,7 +141,6 @@ class InstanceManager:
                 # await self.unlock_service()
 
     async def create_instance(self, instance=None):
-        print('--> CREATING INSTANCE')
         if self.resource_type == 'design-evaluator':
             return DesignEvaluatorInstance(self.user_info, instance=instance)
         elif self.resource_type == 'genetic-algorithm':

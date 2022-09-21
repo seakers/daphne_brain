@@ -356,6 +356,8 @@ class AbstractInstance:
             ]
         }, debug=debug)
         if request is not None and 'Reservations' in request:
+            if len(request['Reservations']) == 0:
+                print('--> NO RESERVATIONS:', self.user_info.user, self.identifier)
             self.instance = request['Reservations'][0]['Instances'][0]
         return self.instance
 

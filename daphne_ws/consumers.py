@@ -28,12 +28,19 @@ class DaphneConsumer(AsyncJsonWebsocketConsumer):
         """
 
         # --> 1. Accept connection
+        print('--> TRYING TO ACCEPT WEBSOCKET CONNECTION')
         await self.accept()
 
+        session = self.scope['session']
+        user = self.scope['user']
+        print('--> WEBSOCKET DETAILS:', user, session, session.session_key)
+
+
         # --> 2. Save ws channel name in user_info
-        user_information: UserInformation = await _get_or_create_user_information(self.scope['session'], self.scope['user'], self.daphne_version)
-        if user_information is None:
-            await self.close()
+        user_information: UserInformation = await _get_or_create_user_information(session, user, self.daphne_version)
+
+
+
         user_information.channel_name = self.channel_name
         await _save_user_info(user_information)
 
@@ -50,6 +57,9 @@ class DaphneConsumer(AsyncJsonWebsocketConsumer):
 
         # --> 1. Get user_info
         user_info: UserInformation = await _get_or_create_user_information(self.scope['session'], self.scope['user'])
+        if user_info is None:
+            return
+
 
         # --> 2. Get key and hash-key
         key = self.scope['path'].lstrip('api/')

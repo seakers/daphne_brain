@@ -174,7 +174,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         await self._initialize()
 
         # --> 2. Create instance + wait until running
-        print('--> CREATING INSTANCE:', self.identifier)
         result = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
         if result is None:
             return
