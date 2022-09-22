@@ -25,6 +25,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 # --> AMI Setup Commands
 #sudo yum -y update
 #sudo yum -y install jq wget
-#sudo amazon-linux-extras -y install docker
+#sudo amazon-linux-extras install docker
 #sudo groupadd docker
 #sudo usermod -aG docker ec2-user

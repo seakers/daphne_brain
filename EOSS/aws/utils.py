@@ -163,6 +163,9 @@ def exponential_backoff(func, attempts=5, backoff='EXPONENTIAL', dne=False):
     return result
 
 
+
+
+
 async def exponential_backoff_async(func, attempts=5, backoff='EXPONENTIAL', dne=False):
     result = await return_flipper_async(func, dne)
     x = 0
@@ -185,7 +188,7 @@ def _exponential_sleep(x):
 
 
 def _linear_sleep(x):
-    time.sleep(1)
+    time.sleep(x)
 
 
 async def _exponential_sleep_async(x):
@@ -207,10 +210,17 @@ def return_flipper(func, dne=False):
     return None
 
 
-async def return_flipper_async(func, dne=False):
+async def return_flipper_async(func, params=None, dne=False):
     if dne is False:
-        return await func()
-    result = await func()
+        if params is not None:
+            return await func(**params)
+        else:
+            return await func()
+
+    if params is not None:
+        result = await func(**params)
+    else:
+        result = await func()
     if result is None:
         return {}
     return None

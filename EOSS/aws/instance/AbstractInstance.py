@@ -5,7 +5,7 @@ import json
 import asyncio
 import random
 import string
-from EOSS.aws.utils import call_boto3_client_async, find_obj_value, _linear_sleep_async
+from EOSS.aws.utils import call_boto3_client_async, find_obj_value, _linear_sleep_async, exponential_backoff_async
 from EOSS.aws.clients.SqsClient import SqsClient
 
 
@@ -181,6 +181,11 @@ class AbstractInstance:
             'InstanceIds': [await self.instance_id],
             'Hibernate': True
         })
+        if response is None:
+            response = await call_boto3_client_async('ec2', 'stop_instances', {
+                'InstanceIds': [await self.instance_id],
+                'Hibernate': False
+            })
         if response is None or 'StoppingInstances' not in response:
             print('--> ERROR STARTING INSTANCE, BAD RESPONSE:', json.dumps(response, indent=4, default=str))
         elif len(response['StoppingInstances']) == 0:
@@ -189,6 +194,22 @@ class AbstractInstance:
             temp = response['StoppingInstances'][0]
             print('--> STOPPING INSTANCE:', self.identifier, temp['PreviousState']['Name'], '-->',
                   temp['CurrentState']['Name'])
+
+
+    async def hibernate(self, blocking=True):
+        parameters = {
+            'InstanceIds': [await self.instance_id],
+            'Hibernate': True
+        }
+        if blocking:
+            await exponential_backoff_async()
+
+        exponential_backoff_async()
+        count = 0
+        while await call_boto3_client_async('ec2', 'stop_instances', {
+            'InstanceIds': [await self.instance_id],
+            'Hibernate': True
+        }) is None:
 
 
 

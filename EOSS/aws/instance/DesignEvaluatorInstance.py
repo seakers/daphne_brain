@@ -126,14 +126,8 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     @property
     async def _run_instances(self):
         return {
-            "BlockDeviceMappings": [
-                {
-                    'Ebs': {
-                        'Encrypted': True
-                    }
-                }
-            ],
-            "ImageId": "ami-0784177864ad003bd",
+            # "ImageId": "ami-0784177864ad003bd",  # DesignEvaluatorProdImagev1.0
+            "ImageId": "ami-0f14a43a3fe818407",    # DesignEvaluatorProdImagev2.0
             "InstanceType": "t2.medium",
             "MaxCount": 1,
             "MinCount": 1,
