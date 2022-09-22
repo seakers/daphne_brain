@@ -34,6 +34,84 @@ class DesignEvaluatorInstance(AbstractInstance):
 
         self.design_evaluator_request_queue_url = self.eosscontext.design_evaluator_request_queue_url
 
+
+
+    """
+      _____       _ _   _       _ _         
+     |_   _|     (_) | (_)     | (_)        
+       | |  _ __  _| |_ _  __ _| |_ _______ 
+       | | | '_ \| | __| |/ _` | | |_  / _ \
+      _| |_| | | | | |_| | (_| | | |/ /  __/
+     |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
+     - Right after user registration, create instances then stop all to reach system starting state
+     - This is done in create_instance function
+    """
+
+    async def initialize(self):
+        if self.instance is not None:
+            await self.scan_container()
+        else:
+            await self.create_instance()
+
+    # --> NOTE: creating the ec2 instance should automatically start the design-evaluator service inside
+    # - this is done through userdata
+    async def create_instance(self):
+
+
+        # --> 1. Call parent initialization
+        await self._initialize()
+
+        # --> 2. Create instance + wait until running
+        result = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
+        if result is None:
+            return
+
+        # --> 3. Wait until instance state is running checking instance status
+        running = await self.wait_on_states(['running'], seconds=120)
+        if running is not True:
+            print('--> INSTANCE NEVER REACHED RUNNING STATE:', self.identifier)
+        else:
+            print('-->', self.identifier, 'RUNNING')
+
+        # --> 4. Wait until instance status is ok before hibernating
+        ok = await self.wait_on_status('ok', seconds=120)
+        if ok is not True:
+            print('--> INSTANCE NEVER REACHED OK STATUS:', self.identifier)
+        else:
+            print('-->', self.identifier, 'OK')
+
+
+        # --> 5. Hibernate instance
+        await self.hibernate(blocking=True)
+
+        # --> 6. Wait until instance is stopped
+        stopped = await self.wait_on_states(['stopped'], seconds=120)
+        if stopped is not True:
+            print('--> INSTANCE NEVER REACHED STOPPED STATE:', self.identifier)
+        else:
+            print('-->', self.identifier, 'STOPPED')
+
+        # --> 7. Set RESOURCE_STATE tag to READY
+        await self.set_tag('RESOURCE_STATE', 'READY')
+
+
+
+
+
+
+
+    """
+         _____                                 _    _            
+        |  __ \                               | |  (_)           
+        | |__) |_ __  ___   _ __    ___  _ __ | |_  _   ___  ___ 
+        |  ___/| '__|/ _ \ | '_ \  / _ \| '__|| __|| | / _ \/ __|
+        | |    | |  | (_) || |_) ||  __/| |   | |_ | ||  __/\__ \
+        |_|    |_|   \___/ | .__/  \___||_|    \__||_| \___||___/
+                           | |                                   
+                           |_|          
+    """
+
+
     @property
     async def _user_data(self):
         return '''#!/bin/bash
@@ -55,6 +133,10 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         return [
             {
                 'Key': 'Name',
+                'Value': 'daphne-stack'
+            },
+            {
+                'Key': 'ResourceGroup',
                 'Value': 'daphne-stack'
             },
             {
@@ -150,52 +232,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
                 },
             ],
         }
-
-
-
-    """
-      _____       _ _   _       _ _         
-     |_   _|     (_) | (_)     | (_)        
-       | |  _ __  _| |_ _  __ _| |_ _______ 
-       | | | '_ \| | __| |/ _` | | |_  / _ \
-      _| |_| | | | | |_| | (_| | | |/ /  __/
-     |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
-     - Right after user registration, create instances then stop all to reach system starting state
-     - This is done in create_instance function
-    """
-
-    async def initialize(self):
-        if self.instance is not None:
-            await self.scan_container()
-        else:
-            await self.create_instance()
-
-    # --> NOTE: creating the ec2 instance should automatically start the design-evaluator service inside
-    # - this is done through userdata
-    async def create_instance(self):
-
-        # --> 1. Call parent initialization
-        await self._initialize()
-
-        # --> 2. Create instance + wait until running
-        result = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
-        if result is None:
-            return
-
-        # --> 3. Wait until instance is pending / starting then stop
-        running = await self.wait_on_states(['pending', 'running'], seconds=120)
-        if running is True:
-            await super().stop()
-
-        # --> 4. Wait until instance is stopped
-        stopped = await self.wait_on_states(['stopped'], seconds=120)
-        if stopped is False:
-            print('--> ERROR, INSTANCE WAS NEVER STOPPED:', self.identifier)
-
-        # --> 4. Set RESOURCE_STATE tag to READY
-        await self.set_tag('RESOURCE_STATE', 'READY')
-
-
 
 
 

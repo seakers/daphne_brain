@@ -49,7 +49,7 @@ class InstanceManager:
     @property
     async def max_instances(self):
         if self.resource_type == 'design-evaluator':
-            return 3
+            return 1
         elif self.resource_type == 'genetic-algorithm':
             return 1
         else:

@@ -173,7 +173,7 @@ async def exponential_backoff_async(func, attempts=5, backoff='EXPONENTIAL', dne
         if backoff == 'EXPONENTIAL':
             await _exponential_sleep_async(x)
         if backoff == 'LINEAR':
-            await _linear_sleep_async(x)
+            await _linear_sleep_async(2)
         result = await return_flipper_async(func, dne)
         x += 1
         if x > attempts:

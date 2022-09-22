@@ -57,7 +57,10 @@ class SqsClient:
         # --> 2. Create queue and return url
         try:
             response = await call_boto3_client_async('sqs', 'create_queue', {
-                "QueueName": salt_name
+                "QueueName": salt_name,
+                "tags": {
+                    "ResourceGroup": "daphne-stack"
+                }
             })
             return response['QueueUrl']
         except botocore.exceptions.ClientError as error:

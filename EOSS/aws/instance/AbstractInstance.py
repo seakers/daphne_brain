@@ -66,6 +66,7 @@ class AbstractInstance:
         self.ping_response_url = None
 
 
+
     """
           _____       _ _   _       _ _         
          |_   _|     (_) | (_)     | (_)        
@@ -81,6 +82,7 @@ class AbstractInstance:
 
         # --> 1. Create instance identifier
         self.identifier = str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
+        print('--> CREATING INSTANCE:', self.identifier)
 
         # --> 2. Create queues
         async_tasks = []
@@ -88,7 +90,6 @@ class AbstractInstance:
         async_tasks.append(asyncio.create_task(self.initialize_ping_queues()))
         for task in async_tasks:
             await task
-
 
     async def initialize_ping_queues(self):
         self.ping_request_url = await SqsClient.create_queue_name_unique(
@@ -114,6 +115,91 @@ class AbstractInstance:
         self.ping_request_url = await find_obj_value(tags, 'Key', 'PING_REQUEST_URL', 'Value')
         self.ping_response_url = await find_obj_value(tags, 'Key', 'PING_RESPONSE_URL', 'Value')
         self.identifier = await find_obj_value(tags, 'Key', 'IDENTIFIER', 'Value')
+
+
+
+
+
+
+
+    """
+         _____                                 _    _            
+        |  __ \                               | |  (_)           
+        | |__) |_ __  ___   _ __    ___  _ __ | |_  _   ___  ___ 
+        |  ___/| '__|/ _ \ | '_ \  / _ \| '__|| __|| | / _ \/ __|
+        | |    | |  | (_) || |_) ||  __/| |   | |_ | ||  __/\__ \
+        |_|    |_|   \___/ | .__/  \___||_|    \__||_| \___||___/
+                           | |                                   
+                           |_|          
+    """
+
+    async def get_instance(self, debug=False):
+        request = await call_boto3_client_async('ec2', 'describe_instances', {
+            "Filters": [
+                {
+                    'Name': 'vpc-id',
+                    'Values': [
+                        'vpc-0167d66edf8eebc3c',
+                    ]
+                },
+                {
+                    'Name': 'tag:USER_ID',
+                    'Values': [
+                        str(self.user_id),
+                    ]
+                },
+                {
+                    'Name': 'tag:IDENTIFIER',
+                    'Values': [
+                        self.identifier
+                    ]
+                },
+            ]
+        }, debug=debug)
+        if request is not None and 'Reservations' in request:
+            if len(request['Reservations']) == 0:
+                print('--> NO RESERVATIONS:', self.user_info.user, self.identifier)
+            self.instance = request['Reservations'][0]['Instances'][0]
+        return self.instance
+
+    async def get_instance_status(self):
+        # --> Instance must be running to get status
+        # Statuses: initializing, ok
+
+        request = await call_boto3_client_async('ec2', 'describe_instances', {
+            "InstanceIds": [await self.instance_id]
+        })
+        if request is None or 'InstanceStatuses' not in request:
+            return None
+        if len(request['InstanceStatuses'] == 0):
+            return None
+        curr_status = request['InstanceStatuses'][0]
+        return curr_status
+
+    @property
+    async def instance_id(self):
+        instance = await self.get_instance()
+        return instance['InstanceId']
+
+    @property
+    async def instance_state(self):
+        instance = await self.get_instance()
+        return instance['State']['Name']
+
+    @property
+    async def instance_status(self):
+        instance = await self.get_instance_status()
+        if instance is None:
+            return instance
+        return instance['InstanceStatus']['Status']
+
+    @property
+    async def system_status(self):
+        instance = await self.get_instance_status()
+        if instance is None:
+            return instance
+        return instance['SystemStatus']['Status']
+
 
 
 
@@ -197,20 +283,28 @@ class AbstractInstance:
 
 
     async def hibernate(self, blocking=True):
+
+        async def wait_func(parameters, seconds=30):
+            sleep_time = 5
+            counter = 0
+            attempts = int(seconds / sleep_time)
+            result = await call_boto3_client_async('ec2', 'stop_instances', parameters)
+            while result is None:
+                await _linear_sleep_async(sleep_time)
+                result = await call_boto3_client_async('ec2', 'stop_instances', parameters)
+                counter += 1
+                if counter > attempts:
+                    return None
+            return result
+
+        print('--> HIBERNATING INSTANCE:', self.identifier)
         parameters = {
             'InstanceIds': [await self.instance_id],
             'Hibernate': True
         }
+        task = asyncio.create_task(wait_func(parameters))
         if blocking:
-            await exponential_backoff_async()
-
-        exponential_backoff_async()
-        count = 0
-        while await call_boto3_client_async('ec2', 'stop_instances', {
-            'InstanceIds': [await self.instance_id],
-            'Hibernate': True
-        }) is None:
-
+            await task
 
 
     """
@@ -355,44 +449,21 @@ class AbstractInstance:
             curr_state = await self.instance_state
         return True
 
-    async def get_instance(self, debug=False):
-        request = await call_boto3_client_async('ec2', 'describe_instances', {
-            "Filters": [
-                {
-                    'Name': 'vpc-id',
-                    'Values': [
-                        'vpc-0167d66edf8eebc3c',
-                    ]
-                },
-                {
-                    'Name': 'tag:USER_ID',
-                    'Values': [
-                        str(self.user_id),
-                    ]
-                },
-                {
-                    'Name': 'tag:IDENTIFIER',
-                    'Values': [
-                        self.identifier
-                    ]
-                },
-            ]
-        }, debug=debug)
-        if request is not None and 'Reservations' in request:
-            if len(request['Reservations']) == 0:
-                print('--> NO RESERVATIONS:', self.user_info.user, self.identifier)
-            self.instance = request['Reservations'][0]['Instances'][0]
-        return self.instance
+    async def wait_on_status(self, target_status='ok', seconds=60):
+        sleep_time = 10
+        iter = 0
+        iter_max = int(seconds / sleep_time)
+        curr_status = await self.instance_status
+        while curr_status != target_status:
+            iter += 1
+            if iter >= iter_max:
+                return False
+            await _linear_sleep_async(sleep_time)
+            curr_status = await self.instance_status
+        return True
 
-    @property
-    async def instance_id(self):
-        instance = await self.get_instance()
-        return instance['InstanceId']
 
-    @property
-    async def instance_state(self):
-        instance = await self.get_instance()
-        return instance['State']['Name']
+
 
     async def get_tag(self, tag):
         instance = await self.get_instance()
@@ -411,6 +482,8 @@ class AbstractInstance:
 
 
 
+
+
     """
        _____  _____  __  __ 
       / ____|/ ____||  \/  |
@@ -418,7 +491,10 @@ class AbstractInstance:
       \___ \ \___ \ | |\/| |
       ____) |____) || |  | |
      |_____/|_____/ |_|  |_|
-                            
+    
+    Constraints
+    - Only possible when instance in running state
+    
     """
 
     async def ssm_command(self, command):
@@ -430,7 +506,7 @@ class AbstractInstance:
                 'Details': True
             })
             count = 0
-            while len(response['CommandInvocations']) == 0:
+            while response is None or 'CommandInvocations' not in response or len(response['CommandInvocations']) == 0:
                 await _linear_sleep_async(2)
                 response = await call_boto3_client_async('ssm', 'list_command_invocations', {
                     'CommandId': command_id,
@@ -442,7 +518,12 @@ class AbstractInstance:
             output = response['CommandInvocations'][0]['CommandPlugins'][0]['Output']
             return output
 
-        # --> 1. Send command
+        # --> 1. Validate instance is in running state
+        if await self.instance_state != 'running':
+            print('--> (ERROR) CANT EXECUTE SSM COMMAND UNLESS INSTANCE IN RUNNING STATE:', self.identifier)
+            return None
+
+        # --> 2. Send command
         response = await call_boto3_client_async('ssm', 'send_command', {
             'InstanceIds': [await self.instance_id],
             'DocumentName': 'AWS-RunShellScript',
@@ -450,17 +531,19 @@ class AbstractInstance:
                 'commands': [command]
             }
         })
+        if response is None or 'Command' not in response or 'CommandId' not in response['Command']:
+            print('--> (ERROR) SSM COMMAND NOT ABLE TO BE SENT:', self.identifier, command)
+            return None
         command_id = response['Command']['CommandId']
 
-        # --> 2. Get output and strip
+        # --> 3. Get output and strip
         output = await wait_for_output(command_id)
         return output.strip()
-
 
     async def container_running(self):
         command = 'docker ps -q | xargs'
         output = await self.ssm_command(command)
-        if output == '':
+        if output is None or output == '':
             return False
         else:
             return True
