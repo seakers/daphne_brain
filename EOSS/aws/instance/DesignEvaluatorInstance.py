@@ -49,9 +49,10 @@ class DesignEvaluatorInstance(AbstractInstance):
 
     async def initialize(self):
         if self.instance is not None:
-            await self.scan_container()
+            await self._existing_instance()
         else:
-            await self.create_instance()
+            await self._new_resources()
+            await self._new_instance(await self._definition)
 
     # --> NOTE: creating the ec2 instance should automatically start the design-evaluator service inside
     # - this is done through userdata
@@ -59,10 +60,10 @@ class DesignEvaluatorInstance(AbstractInstance):
 
 
         # --> 1. Call parent initialization
-        await self._initialize()
+        await self._new_instance()
 
         # --> 2. Create instance + wait until running
-        result = await call_boto3_client_async('ec2', 'run_instances', await self._run_instances)
+        result = await call_boto3_client_async('ec2', 'run_instances', await self._definition)
         if result is None:
             return
 
@@ -206,7 +207,7 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         ]
 
     @property
-    async def _run_instances(self):
+    async def _definition(self):
         return {
             # "ImageId": "ami-0784177864ad003bd",  # DesignEvaluatorProdImagev1.0
             "ImageId": "ami-0f14a43a3fe818407",    # DesignEvaluatorProdImagev2.0
@@ -224,7 +225,7 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             "HibernationOptions": {
                 "Configured": True
             },
-            "UserData": (await self._user_data),
+            # "UserData": (await self._user_data),
             "TagSpecifications": [
                 {
                     'ResourceType': 'instance',

@@ -10,4 +10,4 @@ for row in $(echo ${JSON_TAGS} | jq -c '.Tags[]'); do
         var_value=$(echo ${row} | jq -r '.Value')
         ENV_STRING+="--env ${var_key}=${var_value} "
 done
-sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest
+sudo docker run -d --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest

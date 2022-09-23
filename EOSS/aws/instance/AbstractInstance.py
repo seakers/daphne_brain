@@ -1,6 +1,7 @@
 import os
 import boto3
 import copy
+import time
 import json
 import asyncio
 import random
@@ -74,15 +75,16 @@ class AbstractInstance:
            | | | '_ \| | __| |/ _` | | |_  / _ \
           _| |_| | | | | |_| | (_| | | |/ /  __/
          |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
-         ---- If instance dne: call _initialize()
-         - If instance exists: call scan_container()
     """
 
-    async def _initialize(self):
 
+    ####################
+    ### New Instance ###
+    ####################
+    # parameter (definition) is supplied by the child class calling this function
+    async def _new_resources(self):
         # --> 1. Create instance identifier
         self.identifier = str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
-        print('--> CREATING INSTANCE:', self.identifier)
 
         # --> 2. Create queues
         async_tasks = []
@@ -90,6 +92,30 @@ class AbstractInstance:
         async_tasks.append(asyncio.create_task(self.initialize_ping_queues()))
         for task in async_tasks:
             await task
+
+
+    async def _new_instance(self, definition):
+        start_time = time.time()
+
+        # --> 1. Create instance (no userdata)
+        run_call = await call_boto3_client_async('ec2', 'run_instances', definition)
+        if run_call is None:
+            return
+        t_run_call = start_time - time.time()
+
+        # --> 2. Wait until instance is running (~32s)
+        running = await self.wait_on_states(['running'], seconds=120)
+        if running is not True:
+            print('--> INSTANCE NEVER REACHED RUNNING STATE:', self.identifier)
+        else:
+            print('-->', self.identifier, 'RUNNING', time.time() - start_time, 'seconds')
+
+        # --> 3. run evaluator container
+        await self.ssm_command('. /home/ec2-user/run.sh')
+
+
+
+
 
     async def initialize_ping_queues(self):
         self.ping_request_url = await SqsClient.create_queue_name_unique(
@@ -107,8 +133,12 @@ class AbstractInstance:
             'user-' + str(self.user_id) + '-design-evaluator-private-response-queue' + self.identifier
         )
 
-    async def scan_container(self):
-        print('--> SCANNING CONTAINER')
+
+    #########################
+    ### Existing Instance ###
+    #########################
+
+    async def _existing_instance(self):
         tags = self.instance['Tags']
         self.private_request_url = await find_obj_value(tags, 'Key', 'PRIVATE_REQUEST_URL', 'Value')
         self.private_response_url = await find_obj_value(tags, 'Key', 'PRIVATE_RESPONSE_URL', 'Value')
@@ -200,6 +230,21 @@ class AbstractInstance:
             return instance
         return instance['SystemStatus']['Status']
 
+
+    async def get_tag(self, tag):
+        instance = await self.get_instance()
+        return await find_obj_value(instance['Tags'], 'Key', tag, 'Value')
+
+    async def set_tag(self, tag, value):
+        result = await call_boto3_client_async('ec2', 'create_tags', {
+            'Resources': [await self.instance_id],
+            'Tags': [
+                {
+                    'Key': tag,
+                    'Value': value
+                }
+            ]
+        })
 
 
 
@@ -450,6 +495,22 @@ class AbstractInstance:
         return True
 
     async def wait_on_status(self, target_status='ok', seconds=60):
+
+        # --> 1. Wait for instance to be in running state
+        curr_state = await self.instance_state
+        if curr_state != 'running':
+            if curr_state != 'pending':
+                print('--> (ERROR) CANT WAIT ON STATUS WHILE INSTANCE NOT RUNNING OR PENDING:', self.identifier)
+                return False
+            else:
+                t_start = time.time()
+                result = await self.wait_on_state('running', seconds=seconds)
+                if result is False:
+                    return False
+                t_run = time.time() - t_start
+                seconds = seconds - t_run
+
+        # --> 2. Now wait on status
         sleep_time = 10
         iter = 0
         iter_max = int(seconds / sleep_time)
@@ -465,20 +526,6 @@ class AbstractInstance:
 
 
 
-    async def get_tag(self, tag):
-        instance = await self.get_instance()
-        return await find_obj_value(instance['Tags'], 'Key', tag, 'Value')
-
-    async def set_tag(self, tag, value):
-        result = await call_boto3_client_async('ec2', 'create_tags', {
-            'Resources': [await self.instance_id],
-            'Tags': [
-                {
-                    'Key': tag,
-                    'Value': value
-                }
-            ]
-        })
 
 
 
@@ -497,7 +544,10 @@ class AbstractInstance:
     
     """
 
-    async def ssm_command(self, command):
+    async def ssm_command(self, commands):
+
+        if not isinstance(commands, list):
+            commands = [commands]
 
         async def wait_for_output(command_id):
             await _linear_sleep_async(1)
@@ -528,11 +578,11 @@ class AbstractInstance:
             'InstanceIds': [await self.instance_id],
             'DocumentName': 'AWS-RunShellScript',
             'Parameters': {
-                'commands': [command]
+                'commands': commands
             }
         })
         if response is None or 'Command' not in response or 'CommandId' not in response['Command']:
-            print('--> (ERROR) SSM COMMAND NOT ABLE TO BE SENT:', self.identifier, command)
+            print('--> (ERROR) SSM COMMAND NOT ABLE TO BE SENT:', self.identifier, commands)
             return None
         command_id = response['Command']['CommandId']
 
@@ -547,6 +597,10 @@ class AbstractInstance:
             return False
         else:
             return True
+
+
+    async def restart_container(self):
+
 
 
 
