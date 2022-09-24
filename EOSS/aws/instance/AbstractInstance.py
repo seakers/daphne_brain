@@ -600,6 +600,7 @@ class AbstractInstance:
 
 
     async def restart_container(self):
+        return 0
 
 
 
