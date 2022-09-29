@@ -42,12 +42,6 @@ class ServiceManager:
 
     async def initialize(self):
 
-        # if await self.lock is True:
-        #     print('--> COULD NOT INITIALIZE SERVICE MANAGER, LOCKED')
-        #     return False
-        # else:
-        #     await self.lock_services()
-
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
             self.eosscontext.design_evaluator_request_queue_name = queue_name
@@ -65,15 +59,9 @@ class ServiceManager:
         for task in async_tasks:
             await task
 
-        # await self.unlock_services()
-
         return True
 
     async def regulate_services(self):
-        # if await self.lock is True:
-        #     print('--> COULD NOT REGULATE SERVICES, LOCKED')
-        #     return None
-
         await self.de_manager.regulate_instances()
 
     async def ping_services(self):
@@ -96,8 +84,8 @@ class ServiceManager:
         return survey
 
 
-
-
+    async def build_vassar(self):
+        await self.de_manager.build_instances(blocking=False)
 
 
 

@@ -210,17 +210,38 @@ class SqsClient:
 
 
     @staticmethod
-    async def send_eval_msg(request_url, design):
+    async def send_eval_msg(request_url, design, dataset_id):
         response = await call_boto3_client_async('sqs', 'send_message', {
             'QueueUrl': request_url,
             'MessageBody': 'boto3',
             'MessageAttributes': {
                 'msgType': {
-                    'StringValue': 'build',
+                    'StringValue': 'evaluate',
                     'DataType': 'String'
+                },
+                "input": {
+                    "DataType": "String",
+                    "StringValue": design
+                },
+                "dataset_id": {
+                    "DataType": "String",
+                    "StringValue": str(dataset_id)
+                },
+                "ga": {
+                    "DataType": "String",
+                    "StringValue": "false"
+                },
+                "redo": {
+                    "DataType": "String",
+                    "StringValue": "false"
+                },
+                "fast": {
+                    "DataType": "String",
+                    "StringValue": "false"
                 }
             }
         })
+
 
 
 

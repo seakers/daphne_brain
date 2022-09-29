@@ -1,8 +1,9 @@
 from django.db import models
 from rest_framework import serializers
 
-from daphne_context.models import UserInformation, DialogueContext
+from asgiref.sync import async_to_sync
 
+from daphne_context.models import UserInformation, DialogueContext
 
 # Context for EOSS Users
 class EOSSContext(models.Model):
@@ -95,9 +96,6 @@ class EOSSContext(models.Model):
 
 
     # design_evaluator_response_queue_arn = models.TextField(null=True)
-
-
-
 
 
 

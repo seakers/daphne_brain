@@ -93,7 +93,6 @@ class AbstractInstance:
         for task in async_tasks:
             await task
 
-
     async def _new_instance(self, definition):
         start_time = time.time()
 
@@ -101,7 +100,6 @@ class AbstractInstance:
         run_call = await call_boto3_client_async('ec2', 'run_instances', definition)
         if run_call is None:
             return
-        t_run_call = start_time - time.time()
 
         # --> 2. Wait until instance is running (~32s)
         running = await self.wait_on_states(['running'], seconds=120)
@@ -118,14 +116,16 @@ class AbstractInstance:
             print('-->', self.identifier, 'SSM ONLINE', time.time() - start_time, 'seconds')
 
         # --> 4. Run evaluator container (retry)
-        result = await self.ssm_command('. /home/ec2-user/run.sh')
+        await self.ssm_command([
+            '. /home/ec2-user/pull.sh',
+            '. /home/ec2-user/run.sh'
+        ])
+        # await self.ssm_command('. /home/ec2-user/pull.sh')
+        # await self.ssm_command('. /home/ec2-user/run.sh')
 
         # --> 5. Wait on container running
         result = await self.wait_on_container_running()
         print('-->', self.identifier, 'CONTAINER ONLINE', time.time() - start_time, 'seconds')
-
-
-
 
     async def initialize_ping_queues(self):
         self.ping_request_url = await SqsClient.create_queue_name_unique(
@@ -370,8 +370,6 @@ class AbstractInstance:
                 if counter > attempts:
                     return None
             return result
-
-        print('--> HIBERNATING INSTANCE:', self.identifier)
         parameters = {
             'InstanceIds': [await self.instance_id],
             'Hibernate': True
@@ -601,7 +599,7 @@ class AbstractInstance:
     async def _ssm(self, parameters, attempts=1):
 
         async def validate(parameters):
-            response = await call_boto3_client_async('ssm', 'send_command', parameters, False)
+            response = await call_boto3_client_async('ssm', 'send_command', parameters, True)
             if response is None or 'Command' not in response or 'CommandId' not in response['Command']:
                 return None
             return response
@@ -626,7 +624,7 @@ class AbstractInstance:
             response = await call_boto3_client_async('ssm', 'list_command_invocations', {
                 'CommandId': command_id,
                 'Details': True
-            })
+            }, False)
             count = 0
             while response is None or 'CommandInvocations' not in response or len(response['CommandInvocations']) == 0:
                 await _linear_sleep_async(2)

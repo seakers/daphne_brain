@@ -2,28 +2,9 @@ import asyncio
 import os
 import boto3
 import json
-from EOSS.aws.utils import call_boto3_client_async, find_obj_value
+from EOSS.aws.utils import call_boto3_client_async
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.instance.AbstractInstance import AbstractInstance
-
-
-
-"""
-
-Tags
--   RESOURCE_STATE
-
-
-AWS Functions
-    1. run_instances()
-    
-    2. start_instances()
-    3. stop_instances()
-    
-    SSM
-    1. send_command()     - used to start container service inside ec2
-
-"""
 
 
 class DesignEvaluatorInstance(AbstractInstance):
@@ -245,14 +226,8 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
 
 
-    """
-       _____  _                _   
-      / ____|| |              | |  
-     | (___  | |_  __ _  _ __ | |_ 
-      \___ \ | __|/ _` || '__|| __|
-      ____) || |_| (_| || |   | |_ 
-     |_____/  \__|\__,_||_|    \__|
-    """
+
+
 
     async def start(self):
         await self.purge_queues()
@@ -260,19 +235,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         await super().start()
 
         await SqsClient.send_build_msg(self.private_request_url)
-
-
-
-    """
-       _____  _                
-      / ____|| |               
-     | (___  | |_  ___   _ __  
-      \___ \ | __|/ _ \ | '_ \ 
-      ____) || |_| (_) || |_) |
-     |_____/  \__|\___/ | .__/ 
-                        | |    
-                        |_|    
-    """
 
     async def stop(self):
 
@@ -284,44 +246,14 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         if stopping is False:
             await super().stop()
 
-    """
-     _____                                    
-    |  __ \                                   
-    | |__) | ___  _ __ ___    ___ __   __ ___ 
-    |  _  / / _ \| '_ ` _ \  / _ \\ \ / // _ \
-    | | \ \|  __/| | | | | || (_) |\ V /|  __/
-    |_|  \_\\___||_| |_| |_| \___/  \_/  \___|
-                                       
-    """
 
     async def remove(self):
         await super().remove()
 
 
-
-    """
-      ____        _ _     _ 
-     |  _ \      (_) |   | |
-     | |_) |_   _ _| | __| |
-     |  _ <| | | | | |/ _` |
-     | |_) | |_| | | | (_| |
-     |____/ \__,_|_|_|\__,_|                 
-    """
-
     async def build(self):
         await super().build()
 
-
-    """
-          _____ _             
-         |  __ (_)            
-         | |__) | _ __   __ _ 
-         |  ___/ | '_ \ / _` |
-         | |   | | | | | (_| |
-         |_|   |_|_| |_|\__, |
-                         __/ |
-                        |___/ 
-    """
 
     async def ping(self):
         if await self.container_running() is True:
@@ -329,3 +261,4 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             return response
         else:
             print('--> COULD NOT PING ', self.instance, 'CONTAINER NOT RUNNING')
+            return {}

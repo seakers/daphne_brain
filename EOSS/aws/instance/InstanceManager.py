@@ -246,18 +246,15 @@ class InstanceManager:
      |____/ \__,_|_|_|\__,_|                 
     """
 
-    async def build_instances(self):
-        if self.lock is True:
-            print('--> COULD NOT BUILD INSTANCES, SERVICE LOCKED:', self.resource_type)
-            return None
-
+    async def build_instances(self, blocking=True):
         running_instances = await self.get_instances_by_states(['pending', 'running'])
 
         async_tasks = []
         for instance in running_instances:
             async_tasks.append(asyncio.create_task(instance.build()))
-        for task in async_tasks:
-            await task
+        if blocking:
+            for task in async_tasks:
+                await task
 
     async def build_instance(self, identifier):
         instance = await self.get_instance_by_identifier(identifier)

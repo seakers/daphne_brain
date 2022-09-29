@@ -109,6 +109,19 @@ async def call_boto3_client_async(client_type, func_name, params=None, debug=Tru
             return None
     return result
 
+async def backoff_boto3_client_async(client_type, func_name, params=None, debug=False, seconds=30):
+    result = await call_boto3_client_async(client_type, func_name, params, debug)
+    trys = 1
+    sleep_time = 2
+    attempts = int(seconds / sleep_time)
+    while result is None and trys < attempts:
+        result = await call_boto3_client_async(client_type, func_name, params, debug)
+        trys += 1
+    return 0
+
+
+
+
 
 ##############
 ### SEARCH ###

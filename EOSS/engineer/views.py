@@ -6,6 +6,7 @@ import json
 
 from thrift.Thrift import TApplicationException
 
+from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.vassar.api import VASSARClient
 from auth_API.helpers import get_or_create_user_information
 from EOSS.data.design_helpers import add_design
@@ -76,39 +77,58 @@ class GetInstrumentList(APIView):
 class EvaluateArchitecture(APIView):
     def post(self, request, format=None):
         user_info = get_or_create_user_information(request.session, request.user, 'EOSS')
-        client = VASSARClient(user_information=user_info)
 
+        # --> 1. Get input data
         inputs = request.data['inputs']
         inputs = json.loads(inputs)
+        input_arch = ''
+        for x in inputs:
+            if x:
+                input_arch = input_arch + '1'
+            else:
+                input_arch = input_arch + '0'
 
-        # Make sure the dataset is not read-only
+
+
+        client = VASSARClient(user_information=user_info)
+
+
+        # --> 2. Check if dataset is read-only
         dataset_client = DatasetGraphqlClient(user_info)
         is_read_only = async_to_sync(dataset_client.check_dataset_read_only)()
-        # is_read_only = client.check_dataset_read_only()
-
         if is_read_only:
+            print('--> (ERROR) DATASET IS READ ONLY')
             return Response({
                 "status": "Dataset is read only",
                 "code": "read_only_dataset"
             })
 
-        # Check if the architecture already exists in DB before adding it again
+        # --> 3. Check if architecture already exists
         dataset_client = DatasetGraphqlClient(user_info)
         is_same, arch_id = async_to_sync(dataset_client.check_existing_architecture_2)(inputs)
-        # is_same, arch_id = client.check_for_existing_arch(inputs)
-
-        if not is_same:
-            architecture = client.evaluate_architecture(inputs, eval_queue_url=user_info.eosscontext.vassar_request_queue_url, block=False, user=request.user, session=request.session)
-            return Response({
-                "status": "Architecture evaluated!",
-                "code": "arch_evaluated"
-            })
-        else:
+        if is_same:
             return Response({
                 "status": "Architecture already exists",
                 "code": "arch_repeated",
                 "arch_id": arch_id
             })
+
+
+        # --> 4. Evaluate architecture
+        eosscontext = user_info.eosscontext
+        result = async_to_sync(
+            SqsClient.send_eval_msg
+        )(eosscontext.design_evaluator_request_queue_url, input_arch, eosscontext.dataset_id)
+        # architecture = client.evaluate_architecture(input_arch, eval_queue_url=user_info.eosscontext.vassar_request_queue_url, block=False, user=request.user, session=request.session)
+
+
+
+
+
+        return Response({
+            "status": "Architecture evaluated!",
+            "code": "arch_evaluated"
+        })
 
 
 class EvaluateFalseArchitecture(APIView):
