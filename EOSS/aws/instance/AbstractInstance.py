@@ -110,9 +110,19 @@ class AbstractInstance:
         else:
             print('-->', self.identifier, 'RUNNING', time.time() - start_time, 'seconds')
 
-        # --> 3. run evaluator container
-        await self.ssm_command('. /home/ec2-user/run.sh')
+        # --> 3. Wait until SSM has finished booting
+        ssm_running = await self.wait_on_ssm_status('Online', seconds=120)
+        if ssm_running is not True:
+            print('--> INSTANCE SSM MANAGER NEVER ONLINE:', self.identifier)
+        else:
+            print('-->', self.identifier, 'SSM ONLINE', time.time() - start_time, 'seconds')
 
+        # --> 4. Run evaluator container (retry)
+        result = await self.ssm_command('. /home/ec2-user/run.sh')
+
+        # --> 5. Wait on container running
+        result = await self.wait_on_container_running()
+        print('-->', self.identifier, 'CONTAINER ONLINE', time.time() - start_time, 'seconds')
 
 
 
@@ -193,18 +203,29 @@ class AbstractInstance:
         return self.instance
 
     async def get_instance_status(self):
-        # --> Instance must be running to get status
-        # Statuses: initializing, ok
-
-        request = await call_boto3_client_async('ec2', 'describe_instances', {
+        request = await call_boto3_client_async('ec2', 'describe_instance_status', {
             "InstanceIds": [await self.instance_id]
-        })
+        }, False)
         if request is None or 'InstanceStatuses' not in request:
             return None
         if len(request['InstanceStatuses'] == 0):
             return None
         curr_status = request['InstanceStatuses'][0]
         return curr_status
+
+    async def get_instance_ssm_info(self):
+        request = await call_boto3_client_async('ssm', 'describe_instance_information', {
+            "Filters": [
+                {
+                    'Key': 'InstanceIds',
+                    'Values': [await self.instance_id]
+                }
+            ]
+        }, False)
+        if request is None or 'InstanceInformationList' not in request or len(request['InstanceInformationList']) == 0:
+            return None
+        return request['InstanceInformationList'][0]
+
 
     @property
     async def instance_id(self):
@@ -229,6 +250,14 @@ class AbstractInstance:
         if instance is None:
             return instance
         return instance['SystemStatus']['Status']
+
+    @property
+    async def instance_ssm_status(self):
+        instance = await self.get_instance_ssm_info()
+        if instance is None:
+            return instance
+        return instance['PingStatus']
+
 
 
     async def get_tag(self, tag):
@@ -483,14 +512,15 @@ class AbstractInstance:
         return True
 
     async def wait_on_states(self, target_states=['pending', 'running'], seconds=60):
+        request_interval = 3
         iter = 0
-        iter_max = int(seconds / 3)
+        iter_max = int(seconds / request_interval)
         curr_state = await self.instance_state
         while curr_state not in target_states:
             iter += 1
             if iter >= iter_max:
                 return False
-            await _linear_sleep_async(3)
+            await _linear_sleep_async(request_interval)
             curr_state = await self.instance_state
         return True
 
@@ -523,6 +553,31 @@ class AbstractInstance:
             curr_status = await self.instance_status
         return True
 
+    async def wait_on_ssm_status(self, target_status='Online', seconds=60):
+        request_interval = 3
+        iter = 0
+        iter_max = int(seconds / request_interval)
+        curr_status = await self.instance_ssm_status
+        while curr_status != target_status:
+            iter += 1
+            if iter >= iter_max:
+                return False
+            await _linear_sleep_async(request_interval)
+            curr_status = await self.instance_ssm_status
+        return True
+
+    async def wait_on_container_running(self, seconds=60):
+        request_interval = 3
+        iter = 0
+        iter_max = int(seconds / request_interval)
+        curr_status = await self.container_running()
+        while curr_status is False:
+            iter += 1
+            if iter >= iter_max:
+                return False
+            await asyncio.sleep(request_interval)
+            curr_status = await self.container_running()
+        return True
 
 
 
@@ -543,11 +598,28 @@ class AbstractInstance:
     - Only possible when instance in running state
     
     """
+    async def _ssm(self, parameters, attempts=1):
+
+        async def validate(parameters):
+            response = await call_boto3_client_async('ssm', 'send_command', parameters, False)
+            if response is None or 'Command' not in response or 'CommandId' not in response['Command']:
+                return None
+            return response
+
+        response = await validate(parameters)
+        counter = 1
+        while response is None and counter < attempts:
+            await asyncio.sleep(5)
+            response = await validate(parameters)
+            counter += 1
+
+        if response is None:
+            return None
+        else:
+            return response['Command']['CommandId']
+
 
     async def ssm_command(self, commands):
-
-        if not isinstance(commands, list):
-            commands = [commands]
 
         async def wait_for_output(command_id):
             await _linear_sleep_async(1)
@@ -573,20 +645,27 @@ class AbstractInstance:
             print('--> (ERROR) CANT EXECUTE SSM COMMAND UNLESS INSTANCE IN RUNNING STATE:', self.identifier)
             return None
 
-        # --> 2. Send command
-        response = await call_boto3_client_async('ssm', 'send_command', {
+        # --> 2. Validate SSM service is online
+        if await self.instance_ssm_status != 'Online':
+            print('--> (ERROR) CANT EXECUTE SSM COMMAND UNLESS INSTANCE SSM AGENT IS ONLINE:', self.identifier)
+            return None
+
+        # --> 3. Send command, get command_id
+        if not isinstance(commands, list):
+            commands = [commands]
+        command_parameters = {
             'InstanceIds': [await self.instance_id],
             'DocumentName': 'AWS-RunShellScript',
             'Parameters': {
                 'commands': commands
             }
-        })
-        if response is None or 'Command' not in response or 'CommandId' not in response['Command']:
-            print('--> (ERROR) SSM COMMAND NOT ABLE TO BE SENT:', self.identifier, commands)
+        }
+        command_id = await self._ssm(command_parameters)
+        if command_id is None:
+            print('--> (ERROR) SSM COMMAND WAS NOT ABLE TO BE SENT:', self.identifier, commands)
             return None
-        command_id = response['Command']['CommandId']
 
-        # --> 3. Get output and strip
+        # --> 4. Get output and strip
         output = await wait_for_output(command_id)
         return output.strip()
 

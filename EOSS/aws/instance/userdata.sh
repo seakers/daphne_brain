@@ -22,9 +22,13 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
 
 
-# --> AMI Setup Commands
+# --> Design Evaluator AMI Setup Commands
 #sudo yum -y update
 #sudo yum -y install jq wget
 #sudo amazon-linux-extras install docker
 #sudo groupadd docker
 #sudo usermod -aG docker ec2-user
+#sudo systemctl enable amazon-ssm-agent
+#sudo systemctl start amazon-ssm-agent
+#sudo $(sudo aws ecr get-login --region us-east-2 --no-include-email)
+#sudo docker pull 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator

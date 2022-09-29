@@ -53,9 +53,10 @@ class DesignEvaluatorInstance(AbstractInstance):
         else:
             await self._new_resources()
             await self._new_instance(await self._definition)
+            await SqsClient.send_build_msg(self.private_request_url)
 
     # --> NOTE: creating the ec2 instance should automatically start the design-evaluator service inside
-    # - this is done through userdata
+    # - this is done through userdata (deprecated)
     async def create_instance(self):
 
 
@@ -128,6 +129,12 @@ for row in $(echo ${JSON_TAGS} | jq -c '.Tags[]'); do
         ENV_STRING+="--env ${var_key}=${var_value} "
 done
 sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest'''
+
+    @property
+    async def _user_data2(self):
+        return '''#!/bin/bash
+    sudo systemctl start amazon-ssm-agent'''
+
 
     @property
     async def _tags(self):
@@ -210,7 +217,9 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     async def _definition(self):
         return {
             # "ImageId": "ami-0784177864ad003bd",  # DesignEvaluatorProdImagev1.0
-            "ImageId": "ami-0f14a43a3fe818407",    # DesignEvaluatorProdImagev2.0
+            # "ImageId": "ami-0f14a43a3fe818407",  # DesignEvaluatorProdImagev2.0
+            # "ImageId": "ami-0f598a7aeac3948fc",  # DesignEvaluatorProdImagev3.0
+            "ImageId": "ami-02b34b6bd313c02f1",    # DesignEvaluatorProdImagev4.0
             "InstanceType": "t2.medium",
             "MaxCount": 1,
             "MinCount": 1,
@@ -225,7 +234,7 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             "HibernationOptions": {
                 "Configured": True
             },
-            # "UserData": (await self._user_data),
+            # "UserData": (await self._user_data2),
             "TagSpecifications": [
                 {
                     'ResourceType': 'instance',
