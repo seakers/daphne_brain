@@ -309,7 +309,7 @@ class InstanceManager:
             elif command == 'pull_container':
                 async_tasks.append(asyncio.create_task(instance.pull_container()))
             elif command == 'build_container':
-                async_tasks.append(asyncio.create_task(instance.build_container())) 
+                async_tasks.append(asyncio.create_task(instance.build_container()))
 
 
 
