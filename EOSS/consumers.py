@@ -111,10 +111,12 @@ class EOSSConsumer(DaphneConsumer):
 
 
         elif content.get('msg_type') == 'resource_msg':
-            service_manager = ServiceManager(user_info)
-            result = await service_manager.initialize()
             command = content.get('command')
             instance_ids = content.get('instance_ids')
+
+            service_manager = ServiceManager(user_info)
+            await service_manager.initialize()
+
             await service_manager.resource_msg(instance_ids, command)
 
 

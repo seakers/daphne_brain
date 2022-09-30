@@ -262,6 +262,15 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     #####################
     
     async def stop_instance(self):
+
+        # --> 1. Stop via inner container
+        # if await self.container_running():
+        #     await SqsClient.send_exit_msg(self.private_request_url)
+        #     stopping = await self.wait_on_state('stopping', seconds=10)
+
+        await super().stop()
+
+
         return 0
     async def start_instance(self):
         return 0

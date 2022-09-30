@@ -327,16 +327,11 @@ class AbstractInstance:
 
         # --> 1. Ensure instance either pending or running
         curr_state = await self.instance_state
-        if curr_state not in ['pending', 'running']:
-            print('--> COULD NOT STOP INSTANCE, NOT RUNNING OR PENDING:', self.identifier, curr_state)
+        if curr_state not in ['running']:
+            print('--> COULD NOT STOP INSTANCE, NOT RUNNING:', self.identifier, curr_state)
             return None
 
-        # --> 2. If current state is pending, wait until running
-        if await self.wait_on_state('running', seconds=120) is False:
-            print('--> COULD NOT STOP INSTANCE, NEVER REACHED RUNNING STATE:', self.identifier, curr_state)
-            return None
-
-        # --> 3. Stop instance
+        # --> 2. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
             'InstanceIds': [await self.instance_id],
             'Hibernate': True
