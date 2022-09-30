@@ -24,23 +24,10 @@ class ServiceManager:
         # --> Instance Managers
         self.de_manager = InstanceManager(self.user_info, 'design-evaluator')
 
-    @property
-    async def lock(self):
-        return self.eosscontext.service_lock
-
-    async def lock_services(self):
-        print('\n\n-------- LOCKING SERVICES --------')
-        self.eosscontext.service_lock = True
-        await _save_eosscontext(self.eosscontext)
-
-    async def unlock_services(self):
-        print('-------- UNLOCKING SERVICES --------\n\n')
-        self.eosscontext.service_lock = False
-        await _save_eosscontext(self.eosscontext)
 
 
 
-    async def initialize(self):
+    async def initialize(self, blocking=True):
 
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
@@ -53,21 +40,22 @@ class ServiceManager:
 
         await _save_eosscontext(self.eosscontext)
 
+
         # --> Initialize
         async_tasks = []
         async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
-        for task in async_tasks:
-            await task
+        if blocking:
+            for task in async_tasks:
+                await task
 
         return True
 
+    # --> Deprecated
     async def regulate_services(self):
         await self.de_manager.regulate_instances()
 
     async def ping_services(self):
-        # if await self.lock is True:
-        #     print('--> COULD NOT PING SERVICES, LOCKED')
-        #     return None
+        print('--> PINGING SERVICES')
 
         async def add_to_survey(instance_manager, internal_survey, key):
             internal_survey[key] = await instance_manager.ping_instances()
@@ -89,7 +77,39 @@ class ServiceManager:
 
 
 
+    # --> Control Panel Functions
+    async def resource_msg(self, instance_ids, command, blocking=False):
+        async_tasks = []
+        async_tasks.append(asyncio.create_task(self.de_manager.resource_msg(instance_ids['vassar'], command)))
+        if blocking:
+            for task in async_tasks:
+                await task
 
+
+
+    """
+     _                   _    
+    | |                 | |   
+    | |      ___    ___ | | __
+    | |     / _ \  / __|| |/ /
+    | |____| (_) || (__ |   < 
+    |______|\___/  \___||_|\_\  
+                           
+    """
+
+    @property
+    async def lock(self):
+        return self.eosscontext.service_lock
+
+    async def lock_services(self):
+        print('\n\n-------- LOCKING SERVICES --------')
+        self.eosscontext.service_lock = True
+        await _save_eosscontext(self.eosscontext)
+
+    async def unlock_services(self):
+        print('-------- UNLOCKING SERVICES --------\n\n')
+        self.eosscontext.service_lock = False
+        await _save_eosscontext(self.eosscontext)
 
 
 

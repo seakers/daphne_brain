@@ -272,7 +272,6 @@ class InstanceManager:
                     |___/ 
     """
 
-
     async def ping_instances(self):
         # if self.lock is True:
         #     print('--> COULD NOT PING INSTANCES, SERVICE LOCKED:', self.resource_type)
@@ -285,11 +284,34 @@ class InstanceManager:
 
         survey = []
         async_tasks = []
-        running_instances = await self.get_instances_by_states(['running'])
-        for instance in running_instances:
+        # running_instances = await self.get_instances_by_states(['running'])
+        for instance in self.instances:
             async_tasks.append(asyncio.create_task(ping_instance(instance, survey)))
         for task in async_tasks:
             await task
 
         return survey
+
+
+
+    async def resource_msg(self, instance_ids, command):
+        target_instances = [await self.get_instance_by_identifier(identifier) for identifier in instance_ids]
+        async_tasks = []
+        for instance in target_instances:
+            if command == 'stop_instance':
+                async_tasks.append(asyncio.create_task(instance.stop_instance()))
+            elif command == 'start_instance':
+                async_tasks.append(asyncio.create_task(instance.start_instance()))
+            elif command == 'stop_container':
+                async_tasks.append(asyncio.create_task(instance.stop_container()))
+            elif command == 'start_container':
+                async_tasks.append(asyncio.create_task(instance.start_container()))
+            elif command == 'pull_container':
+                async_tasks.append(asyncio.create_task(instance.pull_container()))
+            elif command == 'build_container':
+                async_tasks.append(asyncio.create_task(instance.build_container())) 
+
+
+
+
 

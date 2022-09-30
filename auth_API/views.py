@@ -67,7 +67,7 @@ class Register(APIView):
 
         # --> 7. Create services
         service_manager = ServiceManager(userinfo)
-        async_to_sync(service_manager.initialize)()
+        async_to_sync(service_manager.initialize)(blocking=False)
 
 
         # --> 8. Return
@@ -122,7 +122,9 @@ class Register(APIView):
     def get_user_info_wrapper(self, user, request, daphne_version):
         userinfo = None
 
-        # --> 1. Check if UserInformation already exists
+        # --> 1. Check if user_info object exists for user
+        # - if user_info exists, set daphne_version and return
+        # - if user_info dne, call get_or_create_user_information to create... then transfer current session
         query = UserInformation.objects.filter(user__exact=user)
         if len(query) > 0:
             # --> If UserInformation exists (return first)

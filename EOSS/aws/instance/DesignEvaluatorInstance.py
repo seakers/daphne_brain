@@ -226,9 +226,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
 
 
-
-
-
     async def start(self):
         await self.purge_queues()
 
@@ -256,9 +253,24 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
 
     async def ping(self):
-        if await self.container_running() is True:
-            response = await super().ping()
-            return response
-        else:
-            print('--> COULD NOT PING ', self.instance, 'CONTAINER NOT RUNNING')
-            return {}
+        response = await super().ping()
+        return response
+    
+    
+    #####################
+    ### NEW FUNCTIONS ###
+    #####################
+    
+    async def stop_instance(self):
+        return 0
+    async def start_instance(self):
+        return 0
+    async def stop_container(self):
+        return 0
+    async def start_container(self):
+        return 0
+    async def pull_container(self):
+        return 0
+    async def build_container(self):
+        return 0
+    

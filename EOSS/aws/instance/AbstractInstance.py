@@ -208,7 +208,7 @@ class AbstractInstance:
         }, False)
         if request is None or 'InstanceStatuses' not in request:
             return None
-        if len(request['InstanceStatuses'] == 0):
+        if len(request['InstanceStatuses']) == 0:
             return None
         curr_status = request['InstanceStatuses'][0]
         return curr_status
@@ -468,12 +468,29 @@ class AbstractInstance:
     """
 
     async def ping(self):
+        ping_response = dict()
+        ping_response['container'] = {}
+        ping_response['instance'] = {}
 
-        # --> 1. Send ping message, get response
-        response = await SqsClient.send_ping_msg(self.ping_request_url, self.ping_response_url)
-        response['instance_tags'] = await self._tags  # From child class
-        response['IDENTIFIER'] = self.identifier
-        return response
+        # --> 1. Get instance: tags, state, status, ssm status
+        instance = await self.get_instance()
+        if instance is not None:
+            ping_response['instance']['Tags'] = instance['Tags']
+            ping_response['instance']['State'] = instance['State']['Name']
+        else:
+            ping_response['instance']['Tags'] = None
+            ping_response['instance']['State'] = None
+        ping_response['instance']['Status'] = await self.instance_status
+        ping_response['instance']['SSMStatus'] = await self.instance_ssm_status
+        ping_response['instance']['IDENTIFIER'] = self.identifier
+
+        # --> 2. Get container info if instance and container both running
+        if ping_response['instance']['Status'] == 'running' and await self.container_running() is True:
+            ping_response['container'] = await SqsClient.send_ping_msg(self.ping_request_url, self.ping_response_url)
+        else:
+            ping_response['container'] = 'empty'
+
+        return ping_response
 
 
     """
