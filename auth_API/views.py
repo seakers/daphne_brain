@@ -17,6 +17,7 @@ from EOSS.aws.service.ServiceManager import ServiceManager
 
 
 import requests
+import threading
 import json
 
 
@@ -66,8 +67,12 @@ class Register(APIView):
 
 
         # --> 7. Create services
+        def init_service(service_manager):
+            async_to_sync(service_manager.initialize)(blocking=True)
         service_manager = ServiceManager(userinfo)
-        async_to_sync(service_manager.initialize)(blocking=False)
+        thread = threading.Thread(target=init_service, args=(service_manager,))
+        thread.start()
+
 
 
         # --> 8. Return

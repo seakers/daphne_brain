@@ -6,7 +6,7 @@ import random
 from asgiref.sync import SyncToAsync, sync_to_async
 from django.conf import settings
 from EOSS.models import EOSSContext
-
+from botocore.client import Config
 
 def sync_to_async_mt(func):
     return SyncToAsync(func, thread_sensitive=False)
@@ -98,6 +98,25 @@ async def call_boto3_client_async(client_type, func_name, params=None, debug=Tru
     session = aioboto3.Session()
     async with session.client(client_type, region_name='us-east-2', aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
                               aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']) as client:
+        try:
+            func = getattr(client, func_name)
+            if params is None:
+                result = await func()
+            else:
+                result = await func(**params)
+        except Exception as ex:
+            print('--> (AWS ERROR)', client_type, func_name, '-----', ex)
+            return None
+    return result
+
+async def call_boto3_client_async_timeout(client_type, func_name, params=None, debug=True, connect_timeout=3):
+    if debug is True:
+        print('--> ATTEMPTING ASYNC AWS CALL:', client_type, func_name)
+    result = None
+    config = Config(connect_timeout=connect_timeout, retries={'max_attempts': 0})
+    session = aioboto3.Session()
+    async with session.client(client_type, region_name='us-east-2', aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                              aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], config=config) as client:
         try:
             func = getattr(client, func_name)
             if params is None:

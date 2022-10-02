@@ -9,11 +9,11 @@ from EOSS.aws.instance.AbstractInstance import AbstractInstance
 
 class DesignEvaluatorInstance(AbstractInstance):
 
-    def __init__(self, user_info, instance=None):
-        super().__init__(user_info, instance)
+    def __init__(self, user_info, instance=None, instance_status_info=None, instance_info=None):
+        super().__init__(user_info, instance, instance_status_info, instance_info)
         self.instance_type = 'design-evaluator'
 
-        self.design_evaluator_request_queue_url = self.eosscontext.design_evaluator_request_queue_url
+        # self.design_evaluator_request_queue_url = self.eosscontext.design_evaluator_request_queue_url
 
 
 
@@ -35,47 +35,6 @@ class DesignEvaluatorInstance(AbstractInstance):
             await self._new_resources()
             await self._new_instance(await self._definition)
             await SqsClient.send_build_msg(self.private_request_url)
-
-    # --> NOTE: creating the ec2 instance should automatically start the design-evaluator service inside
-    # - this is done through userdata (deprecated)
-    async def create_instance(self):
-
-
-        # --> 1. Call parent initialization
-        await self._new_instance()
-
-        # --> 2. Create instance + wait until running
-        result = await call_boto3_client_async('ec2', 'run_instances', await self._definition)
-        if result is None:
-            return
-
-        # --> 3. Wait until instance state is running checking instance status
-        running = await self.wait_on_states(['running'], seconds=120)
-        if running is not True:
-            print('--> INSTANCE NEVER REACHED RUNNING STATE:', self.identifier)
-        else:
-            print('-->', self.identifier, 'RUNNING')
-
-        # --> 4. Wait until instance status is ok before hibernating
-        ok = await self.wait_on_status('ok', seconds=120)
-        if ok is not True:
-            print('--> INSTANCE NEVER REACHED OK STATUS:', self.identifier)
-        else:
-            print('-->', self.identifier, 'OK')
-
-
-        # --> 5. Hibernate instance
-        await self.hibernate(blocking=True)
-
-        # --> 6. Wait until instance is stopped
-        stopped = await self.wait_on_states(['stopped'], seconds=120)
-        if stopped is not True:
-            print('--> INSTANCE NEVER REACHED STOPPED STATE:', self.identifier)
-        else:
-            print('-->', self.identifier, 'STOPPED')
-
-        # --> 7. Set RESOURCE_STATE tag to READY
-        await self.set_tag('RESOURCE_STATE', 'READY')
 
 
 

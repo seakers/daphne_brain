@@ -25,40 +25,58 @@ class ServiceManager:
         self.de_manager = InstanceManager(self.user_info, 'design-evaluator')
 
 
-
-
     async def initialize(self, blocking=True):
 
+        save = False
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
             self.eosscontext.design_evaluator_request_queue_name = queue_name
             self.eosscontext.design_evaluator_request_queue_url = await SqsClient.create_queue_name(queue_name)
+            save = True
         if self.eosscontext.design_evaluator_response_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-response-queue'
             self.eosscontext.design_evaluator_response_queue_name = queue_name
             self.eosscontext.design_evaluator_response_queue_url = await SqsClient.create_queue_name(queue_name)
-
-        await _save_eosscontext(self.eosscontext)
-
+            save = True
+        if save:
+            await _save_eosscontext(self.eosscontext)
 
         # --> Initialize
         async_tasks = []
-        async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
+        # async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
+        async_tasks.append(asyncio.create_task(self.de_manager.init_instances()))
         if blocking:
             for task in async_tasks:
                 await task
+        return True
 
+    async def gather(self, blocking=True):
+        async_tasks = []
+        async_tasks.append(asyncio.create_task(self.de_manager.gather_instances()))
+        if blocking:
+            for task in async_tasks:
+                await task
         return True
 
     # --> Deprecated
     async def regulate_services(self):
         await self.de_manager.regulate_instances()
 
+
+
+    async def build_vassar(self):
+        await self.de_manager.build_instances(blocking=False)
+
+
+    ############
+    ### PING ###
+    ############
+
     async def ping_services(self):
-        print('--> PINGING SERVICES')
 
         async def add_to_survey(instance_manager, internal_survey, key):
-            internal_survey[key] = await instance_manager.ping_instances()
+            ping_result = await instance_manager.ping_instances()
+            internal_survey[key] = ping_result
 
         survey = {
             'vassar_containers': [],
@@ -72,12 +90,10 @@ class ServiceManager:
         return survey
 
 
-    async def build_vassar(self):
-        await self.de_manager.build_instances(blocking=False)
 
-
-
-    # --> Control Panel Functions
+    #####################
+    ### CONTROL PANEL ###
+    #####################
     async def resource_msg(self, instance_ids, command, blocking=False):
         async_tasks = []
         async_tasks.append(asyncio.create_task(self.de_manager.resource_msg(instance_ids['vassar'], command)))

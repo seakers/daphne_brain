@@ -9,7 +9,7 @@ EOSS/engineer/__pycache__/*
 EOSS/analyst/__pycache__/*
 EOSS/analyst/.ipynb_checkpoints/
 EOSS/analyst/data/
-
+/logs
 EOSS/sensitivities/venv
 EOSS/sensitivities/.idea
 .vscode

@@ -2,6 +2,7 @@ import asyncio
 import os
 import threading
 import json
+import time
 
 
 from asgiref.sync import sync_to_async, async_to_sync
@@ -110,14 +111,6 @@ class EOSSConsumer(DaphneConsumer):
             
 
 
-        elif content.get('msg_type') == 'resource_msg':
-            command = content.get('command')
-            instance_ids = content.get('instance_ids')
-
-            service_manager = ServiceManager(user_info)
-            await service_manager.initialize()
-
-            await service_manager.resource_msg(instance_ids, command)
 
 
 
@@ -136,6 +129,21 @@ class EOSSConsumer(DaphneConsumer):
             content = content.get('teacher_context')  # --> Dict
             entry = ArchitecturesEvaluated(user_information=user_info, arch_evaluated=json.dumps(content))
             entry.save()
+
+
+
+
+
+
+        elif content.get('msg_type') == 'resource_msg':
+            command = content.get('command')
+            instance_ids = content.get('instance_ids')
+            service_manager = ServiceManager(user_info)
+            await service_manager.gather()
+            await service_manager.resource_msg(instance_ids, command)
+
+
+
         elif content.get('msg_type') == 'ping_services':
             if user_info.user is not None:
                 await self.ping_services(user_info, content)
@@ -178,11 +186,14 @@ class EOSSConsumer(DaphneConsumer):
     ################
 
     async def ping_services(self, user_info: UserInformation, content):
-        print('--> PING SERVICES')
+        print('\n--> PINGING')
+        start_time = time.time()
         service_manager = ServiceManager(user_info)
-        result = await service_manager.initialize()
+        result = await service_manager.gather()
+        print('--> GATHER TOOK', time.time() - start_time, 'seconds')
         if result is True:
             survey = await service_manager.ping_services()
+            print('--> PING FULFILLED', time.time() - start_time, 'seconds')
             await self.send_json({
                 'type': 'ping',
                 'status': survey

@@ -35,16 +35,6 @@ class InstanceManager:
         self.instances = []
 
 
-    @property
-    async def desired_running_count(self):
-        desired_count = 0
-        if self.resource_type == 'design-evaluator':
-            desired_count = self.eosscontext.design_evaluator_task_count
-        elif self.resource_type == 'genetic-algorithm':
-            desired_count = self.eosscontext.genetic_algorithm_task_count
-        else:
-            print('--> INSTANCE TYPE NOT RECOGNIZED')
-        return desired_count
 
     @property
     async def max_instances(self):
@@ -52,8 +42,7 @@ class InstanceManager:
             return 1
         elif self.resource_type == 'genetic-algorithm':
             return 1
-        else:
-            return 1
+        return 1
 
     @property
     async def can_start_instance(self):
@@ -63,31 +52,6 @@ class InstanceManager:
             return False
         return True
 
-    @property
-    async def lock(self):
-        if self.resource_type == 'design-evaluator':
-            return self.eosscontext.design_evaluator_service_lock
-        elif self.resource_type == 'genetic-algorithm':
-            return self.eosscontext.genetic_algorithm_service_lock
-        return True
-
-    async def lock_service(self):
-        print('\n\n-------- LOCKING SERVICE', self.resource_type, '--------')
-        if self.resource_type == 'design-evaluator':
-            self.eosscontext.design_evaluator_service_lock = True
-        elif self.resource_type == 'genetic-algorithm':
-            self.eosscontext.genetic_algorithm_service_lock = True
-        await _save_eosscontext(self.eosscontext)
-        print('--> FINISHED LOCKING')
-
-    async def unlock_service(self):
-        print('-------- UNLOCKING SERVICE', self.resource_type, '--------\n\n')
-        if self.resource_type == 'design-evaluator':
-            self.eosscontext.design_evaluator_service_lock = False
-        elif self.resource_type == 'genetic-algorithm':
-            self.eosscontext.genetic_algorithm_service_lock = False
-        await _save_eosscontext(self.eosscontext)
-        print('--> FINISHED UNLOCKING')
 
 
 
@@ -102,10 +66,13 @@ class InstanceManager:
     async def gather_instances(self):
         self.instances = []
 
-        instance_list = await InstanceClient.get_user_active_instances(self.user_id, self.resource_type)
-        for instance in instance_list:
+        # instance_list = await InstanceClient.get_user_active_instances(self.user_id, self.resource_type)
+        instance_list, instance_status_info, instance_info = await InstanceClient.get_user_active_instances_all(self.user_id, self.resource_type)
+        print('--> GATHERED INSTANCES', len(instance_list), len(instance_status_info), len(instance_info))
+
+        for idx, instance in enumerate(instance_list):
             if self.resource_type == 'design-evaluator':
-                self.instances.append(await self.create_instance(instance=instance))
+                self.instances.append(await self.create_instance(instance=instance_list[idx], instance_status_info=instance_status_info[idx], instance_info=instance_info[idx]))
 
         async_tasks = []
         for instance in self.instances:
@@ -115,36 +82,26 @@ class InstanceManager:
             await task
 
     async def init_instances(self):
+        print('--> init_instances')
         user_instance_limit = await self.max_instances
         current_count = len(self.instances)
 
         if current_count < user_instance_limit:
-            if (await self.can_start_instance) is False:
-                print('--> CANNOT REGULATE INSTANCES, OVER GLOBAL INSTANCE LIMIT', self.resource_type)
-            if await self.lock is True:
-                print('--> CANNOT REGULATE INSTANCES, SERVICE LOCKED', self.resource_type)
-            else:
-                # --> 1. Lock Service
-                # await self.lock_service()
+            # if (await self.can_start_instance) is False:
+            #     print('--> CANNOT REGULATE INSTANCES, OVER GLOBAL INSTANCE LIMIT', self.resource_type)
+            #     return None
+            async_tasks = []
+            for itr in range(current_count, user_instance_limit):
+                instance = await self.create_instance()
+                print(instance)
+                async_tasks.append(asyncio.create_task(instance.initialize()))
+                self.instances.append(instance)
+            for task in async_tasks:
+                await task
 
-                # --> 2. Start service
-                async_tasks = []
-                for itr in range(current_count, user_instance_limit):
-                    instance = await self.create_instance(instance=None)
-                    print(instance)
-                    async_tasks.append(asyncio.create_task(instance.initialize()))
-                    self.instances.append(instance)
-                for task in async_tasks:
-                    await task
-
-                # --> 3. Unlock service
-                # await self.unlock_service()
-
-    async def create_instance(self, instance=None):
+    async def create_instance(self, instance=None, instance_status_info=None, instance_info=None):
         if self.resource_type == 'design-evaluator':
-            return DesignEvaluatorInstance(self.user_info, instance=instance)
-        elif self.resource_type == 'genetic-algorithm':
-            return DesignEvaluatorInstance(self.user_info, instance=instance)
+            return DesignEvaluatorInstance(self.user_info, instance=instance, instance_status_info=instance_status_info, instance_info=instance_info)
 
 
 
@@ -157,8 +114,19 @@ class InstanceManager:
      |_|  \_\\___| \__, | \__,_||_| \__,_| \__|\___| |_____||_| |_||___/ \__|\__,_||_| |_| \___|\___||___/
                     __/ |                                                                                 
                    |___/                    
+    - DEPRECATED
     """
 
+    @property
+    async def desired_running_count(self):
+        desired_count = 0
+        if self.resource_type == 'design-evaluator':
+            desired_count = self.eosscontext.design_evaluator_task_count
+        elif self.resource_type == 'genetic-algorithm':
+            desired_count = self.eosscontext.genetic_algorithm_task_count
+        else:
+            print('--> INSTANCE TYPE NOT RECOGNIZED')
+        return desired_count
 
     async def regulate_instances(self):
         if self.lock is True:
@@ -196,6 +164,8 @@ class InstanceManager:
         for task in async_tasks:
             await task
 
+
+
     async def get_instance_by_identifier(self, identifier):
         for instance in self.instances:
             if instance.identifier == identifier:
@@ -205,7 +175,7 @@ class InstanceManager:
 
     async def get_instances_by_state(self, state):
         async def add_if_correct_state(instance_check, state_check, instance_list):
-            if (await instance_check.instance_state) == state_check:
+            if (await instance_check.get_instance_state) == state_check:
                 instance_list.append(instance_check)
 
         search_instances = []
@@ -220,7 +190,7 @@ class InstanceManager:
 
     async def get_instances_by_states(self, states):
         async def add_if_correct_state(instance_check, state_check, instance_list):
-            state = await instance_check.instance_state
+            state = await instance_check.get_instance_state
             if state in state_check:
                 instance_list.append(instance_check)
 
@@ -233,6 +203,8 @@ class InstanceManager:
         for task in async_tasks:
             await task
         return search_instances
+
+
 
 
 
@@ -273,9 +245,8 @@ class InstanceManager:
     """
 
     async def ping_instances(self):
-        # if self.lock is True:
-        #     print('--> COULD NOT PING INSTANCES, SERVICE LOCKED:', self.resource_type)
-        #     return None
+
+        print('--> INSTANCE MANAGER PINGING INSTANCES')
 
         async def ping_instance(local_instance, local_survey):
             instance_ping = await local_instance.ping()
@@ -284,7 +255,6 @@ class InstanceManager:
 
         survey = []
         async_tasks = []
-        # running_instances = await self.get_instances_by_states(['running'])
         for instance in self.instances:
             async_tasks.append(asyncio.create_task(ping_instance(instance, survey)))
         for task in async_tasks:
@@ -292,6 +262,14 @@ class InstanceManager:
 
         return survey
 
+
+
+
+
+
+    #####################
+    ### CONTROL PANEL ###
+    #####################
 
 
     async def resource_msg(self, instance_ids, command):
@@ -311,7 +289,38 @@ class InstanceManager:
             elif command == 'build_container':
                 async_tasks.append(asyncio.create_task(instance.build_container()))
 
+    """
+     _                   _    
+    | |                 | |   
+    | |      ___    ___ | | __
+    | |     / _ \  / __|| |/ /
+    | |____| (_) || (__ |   < 
+    |______|\___/  \___||_|\_\  
 
+    """
 
+    @property
+    async def lock(self):
+        if self.resource_type == 'design-evaluator':
+            return self.eosscontext.design_evaluator_service_lock
+        elif self.resource_type == 'genetic-algorithm':
+            return self.eosscontext.genetic_algorithm_service_lock
+        return True
 
+    async def lock_service(self):
+        print('\n\n-------- LOCKING SERVICE', self.resource_type, '--------')
+        if self.resource_type == 'design-evaluator':
+            self.eosscontext.design_evaluator_service_lock = True
+        elif self.resource_type == 'genetic-algorithm':
+            self.eosscontext.genetic_algorithm_service_lock = True
+        await _save_eosscontext(self.eosscontext)
+        print('--> FINISHED LOCKING')
 
+    async def unlock_service(self):
+        print('-------- UNLOCKING SERVICE', self.resource_type, '--------\n\n')
+        if self.resource_type == 'design-evaluator':
+            self.eosscontext.design_evaluator_service_lock = False
+        elif self.resource_type == 'genetic-algorithm':
+            self.eosscontext.genetic_algorithm_service_lock = False
+        await _save_eosscontext(self.eosscontext)
+        print('--> FINISHED UNLOCKING')

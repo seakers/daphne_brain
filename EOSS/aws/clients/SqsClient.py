@@ -63,7 +63,7 @@ class SqsClient:
                 }
             })
             return response['QueueUrl']
-        except botocore.exceptions.ClientError as error:
+        except Exception as error:
             print('--> ERROR', error)
             return None
 
