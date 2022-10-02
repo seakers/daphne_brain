@@ -202,15 +202,8 @@ class EOSSConsumer(DaphneConsumer):
     # --> Functions
     async def connect_services(self, user_info: UserInformation, content):
 
-        # --> 1. Set desired number of services
-        if 'num_eval' in content:
-            user_info.eosscontext.design_evaluator_task_count = int(content.get('num_eval'))
-        if 'num_ga' in content:
-            user_info.eosscontext.genetic_algorithm_task_count = int(content.get('num_ga'))
-        _save_user_info(user_info)
-
-        # --> 2. Regulate services
-        print('--> REGULATE SERVICES (PLACEHOLDER)')
+        # --> 1. Connect services
+        print('--> (PLACEHOLDER) CONNECT SERVICES')
         # service_manager = ServiceManager(user_info)
         # result = await service_manager.initialize()
         # if result is True:
