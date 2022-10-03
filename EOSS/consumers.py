@@ -98,9 +98,7 @@ class EOSSConsumer(DaphneConsumer):
                 })
 
 
-        elif content.get('msg_type') == 'connect_services':
-            if user_info.user is not None:
-                await self.connect_services(user_info, content)
+
 
         elif content.get('msg_type') == 'start_ga':
             await self.start_ga(user_info)
@@ -135,6 +133,13 @@ class EOSSConsumer(DaphneConsumer):
 
 
 
+        elif content.get('msg_type') == 'connect_services':
+            if user_info.user is not None:
+                await self.connect_services(user_info, content)
+
+
+
+
         elif content.get('msg_type') == 'resource_msg':
             command = content.get('command')
             instance_ids = content.get('instance_ids')
@@ -151,6 +156,9 @@ class EOSSConsumer(DaphneConsumer):
             await self.send_json({
                 'type': 'ping'
             })
+
+
+
         # elif content.get('msg_type') == 'mycroft':
         #     self.send_json({
         #         'type': 'mycroft.message',
@@ -188,12 +196,16 @@ class EOSSConsumer(DaphneConsumer):
     async def ping_services(self, user_info: UserInformation, content):
         print('\n--> PINGING')
         start_time = time.time()
+
         service_manager = ServiceManager(user_info)
         result = await service_manager.gather()
+
         print('--> GATHER TOOK', time.time() - start_time, 'seconds')
         if result is True:
+
             survey = await service_manager.ping_services()
             print('--> PING FULFILLED', time.time() - start_time, 'seconds')
+
             await self.send_json({
                 'type': 'ping',
                 'status': survey

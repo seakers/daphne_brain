@@ -1,32 +1,18 @@
 import asyncio
-import os
-import boto3
 import json
-from EOSS.aws.utils import call_boto3_client_async
+
 from EOSS.aws.clients.SqsClient import SqsClient
 from EOSS.aws.instance.AbstractInstance import AbstractInstance
 
 
+
+
 class DesignEvaluatorInstance(AbstractInstance):
 
-    def __init__(self, user_info, instance=None, instance_status_info=None, instance_info=None):
-        super().__init__(user_info, instance, instance_status_info, instance_info)
+    def __init__(self, user_info, instance=None, instance_status_info=None, instance_ssm_info=None):
+        super().__init__(user_info, instance, instance_status_info, instance_ssm_info)
         self.instance_type = 'design-evaluator'
 
-        # self.design_evaluator_request_queue_url = self.eosscontext.design_evaluator_request_queue_url
-
-
-
-    """
-      _____       _ _   _       _ _         
-     |_   _|     (_) | (_)     | (_)        
-       | |  _ __  _| |_ _  __ _| |_ _______ 
-       | | | '_ \| | __| |/ _` | | |_  / _ \
-      _| |_| | | | | |_| | (_| | | |/ /  __/
-     |_____|_| |_|_|\__|_|\__,_|_|_/___\___|
-     - Right after user registration, create instances then stop all to reach system starting state
-     - This is done in create_instance function
-    """
 
     async def initialize(self):
         if self.instance is not None:
@@ -37,21 +23,9 @@ class DesignEvaluatorInstance(AbstractInstance):
             await SqsClient.send_build_msg(self.private_request_url)
 
 
-
-
-
-
-
-    """
-         _____                                 _    _            
-        |  __ \                               | |  (_)           
-        | |__) |_ __  ___   _ __    ___  _ __ | |_  _   ___  ___ 
-        |  ___/| '__|/ _ \ | '_ \  / _ \| '__|| __|| | / _ \/ __|
-        | |    | |  | (_) || |_) ||  __/| |   | |_ | ||  __/\__ \
-        |_|    |_|   \___/ | .__/  \___||_|    \__||_| \___||___/
-                           | |                                   
-                           |_|          
-    """
+    ##################
+    ### PROPERTIES ###
+    ##################
 
 
     @property
@@ -74,7 +48,6 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
     async def _user_data2(self):
         return '''#!/bin/bash
     sudo systemctl start amazon-ssm-agent'''
-
 
     @property
     async def _tags(self):
@@ -149,7 +122,7 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             },
             {
                 'Key': 'RESOURCE_STATE',
-                'Value': 'INITIALIZING'
+                'Value': 'LOADING'
             }
         ]
 
@@ -185,6 +158,42 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
 
 
 
+    ############
+    ### PING ###
+    ############
+
+    async def ping(self):
+        response = await super().ping()
+        return response
+    
+    
+    #####################
+    ### NEW FUNCTIONS ###
+    #####################
+    
+    async def stop_instance(self):
+        await super().stop_instance()
+    async def start_instance(self):
+        await super().start_instance()
+    async def stop_container(self):
+        await super().start_container()
+    async def start_container(self):
+        return 0
+    async def pull_container(self):
+        return 0
+    async def build_container(self):
+        return 0
+
+
+
+
+
+    ##################
+    ### DEPRECATED ###
+    ##################
+
+
+
     async def start(self):
         await self.purge_queues()
 
@@ -202,43 +211,12 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         if stopping is False:
             await super().stop()
 
-
     async def remove(self):
         await super().remove()
-
 
     async def build(self):
         await super().build()
 
 
-    async def ping(self):
-        response = await super().ping()
-        return response
-    
-    
-    #####################
-    ### NEW FUNCTIONS ###
-    #####################
-    
-    async def stop_instance(self):
-
-        # --> 1. Stop via inner container
-        # if await self.container_running():
-        #     await SqsClient.send_exit_msg(self.private_request_url)
-        #     stopping = await self.wait_on_state('stopping', seconds=10)
-
-        await super().stop()
 
 
-        return 0
-    async def start_instance(self):
-        return 0
-    async def stop_container(self):
-        return 0
-    async def start_container(self):
-        return 0
-    async def pull_container(self):
-        return 0
-    async def build_container(self):
-        return 0
-    

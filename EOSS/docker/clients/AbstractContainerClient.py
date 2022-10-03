@@ -42,12 +42,10 @@ class AbstractContainerClient:
         self.delete_private_queues()
 
     def initialize_ping_queues(self):
-        print('--> INITIALIZING PRIVATE PING QUEUES')
         queue_name_request = 'user-' + str(self.user_info.user.id) + '-ping-request-' + self.identifier
         queue_name_response = 'user-' + str(self.user_info.user.id) + '-ping-response-' + self.identifier
         self.ping_request_queue = get_or_create_queue(queue_name_request)
         self.ping_response_queue = get_or_create_queue(queue_name_response)
-        print('--> INITIALIZING PRIVATE PING QUEUES RESULT', self.ping_response_queue, self.ping_request_queue)
 
     def initialize_private_queues(self):
         queue_name_request = 'user-' + str(self.user_info.user.id) + '-private-request-' + self.identifier

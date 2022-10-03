@@ -66,7 +66,7 @@ class Register(APIView):
         login(request, user)
 
 
-        # --> 7. Create services
+        # --> 7. Initialize services
         def init_service(service_manager):
             async_to_sync(service_manager.initialize)(blocking=True)
         service_manager = ServiceManager(userinfo)

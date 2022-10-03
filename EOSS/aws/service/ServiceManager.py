@@ -1,9 +1,8 @@
-import os
-import boto3
 import asyncio
+import json
 
+from EOSS.aws.utils import _save_eosscontext
 from EOSS.aws.instance.InstanceManager import InstanceManager
-from EOSS.aws.utils import call_boto3_client_async, _save_eosscontext
 from EOSS.aws.clients.SqsClient import SqsClient
 
 from daphne_context.models import UserInformation
@@ -27,6 +26,7 @@ class ServiceManager:
 
     async def initialize(self, blocking=True):
 
+        # --> 1. Create user resources (queues, etc...)
         save = False
         if self.eosscontext.design_evaluator_request_queue_name is None:
             queue_name = 'user-' + str(self.user_id) + '-design-evaluator-request-queue'
@@ -41,31 +41,23 @@ class ServiceManager:
         if save:
             await _save_eosscontext(self.eosscontext)
 
-        # --> Initialize
+        # --> 2. Initialize Managers
         async_tasks = []
-        # async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
-        async_tasks.append(asyncio.create_task(self.de_manager.init_instances()))
+        async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
         if blocking:
             for task in async_tasks:
                 await task
         return True
 
     async def gather(self, blocking=True):
+
+        # --> 1. Gather Managers
         async_tasks = []
-        async_tasks.append(asyncio.create_task(self.de_manager.gather_instances()))
+        async_tasks.append(asyncio.create_task(self.de_manager.gather()))
         if blocking:
             for task in async_tasks:
                 await task
         return True
-
-    # --> Deprecated
-    async def regulate_services(self):
-        await self.de_manager.regulate_instances()
-
-
-
-    async def build_vassar(self):
-        await self.de_manager.build_instances(blocking=False)
 
 
     ############

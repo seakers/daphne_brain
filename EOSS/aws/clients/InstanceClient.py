@@ -78,23 +78,35 @@ class InstanceClient:
 
     @staticmethod
     async def get_user_active_instances_all(user_id, resource_type):
-        active_instances = await InstanceClient.get_user_active_instances(user_id, resource_type)
-        active_instances = sorted(active_instances, key=lambda d: d['InstanceId'])
-        instance_ids = [instance['InstanceId'] for instance in active_instances]
 
-        # --> Get instance status
-        instance_statuses = []
-        if len(instance_ids) > 0:
-            request = await call_boto3_client_async('ec2', 'describe_instance_status', {
-                "InstanceIds": instance_ids
-            }, True)
+        # --> 1. Get user instances
+        user_instances = await InstanceClient.get_user_active_instances(user_id, resource_type)
+        if len(user_instances) == 0:
+            return [], [], []
+
+
+        # --> 2. Post process instance data
+        user_instance_ids = []
+        user_running_instance_ids = []
+        for instance in user_instances:
+            user_instance_ids.append(instance['InstanceId'])
+            if instance['State']['Name'] == 'running':
+                user_running_instance_ids.append(instance['InstanceId'])
+
+
+
+        # --> 3. Get status info / ssm info in parallel
+        async def query_status(instance_ids, results):
+            if len(instance_ids) == 0:
+                return []
+            request = await call_boto3_client_async('ec2', 'describe_instance_status', {"InstanceIds": instance_ids}, True)
             if request is not None and 'InstanceStatuses' in request:
-                instance_statuses = request['InstanceStatuses']
-        # instance_statuses = sorted(instance_statuses, key=lambda d: d['InstanceId'])
-
-        # --> Get instance additional info
-        instance_infos = []
-        if len(instance_ids) > 0:
+                results['status'] = request['InstanceStatuses']
+            else:
+                results['status'] = []
+        async def query_ssm(instance_ids, results):
+            if len(instance_ids) == 0:
+                results['ssm'] = []
             request = await call_boto3_client_async('ssm', 'describe_instance_information', {
                 "Filters": [
                     {
@@ -104,21 +116,33 @@ class InstanceClient:
                 ]
             }, True)
             if request is not None and 'InstanceInformationList' in request:
-                instance_infos = request['InstanceInformationList']
-                if len(instance_infos) != len(active_instances):
-                    print('--> ERROR, MORE ACTIVE INSTANCES THAN INSTANCE INFO OBJS')
-        # instance_infos = sorted(instance_infos, key=lambda d: d['InstanceId'])
+                results['ssm'] = request['InstanceInformationList']
+            else:
+                results['ssm'] = []
 
-        # --> Iterate over active instances and append
-        final_statuses = []
-        final_infos = []
-        for instance in active_instances:
-            status_item = next((item for item in instance_statuses if item["InstanceId"] == instance['InstanceId']), None)
-            final_statuses.append(status_item)
-            info_item = next((item for item in instance_infos if item["InstanceId"] == instance['InstanceId']), None)
-            final_infos.append(info_item)
+        async_tasks = []
+        results = {}
+        async_tasks.append(query_status(user_instance_ids, results))
+        async_tasks.append(query_ssm(user_running_instance_ids, results))
+        for task in async_tasks:
+            await task
 
-        return active_instances, final_statuses, final_infos
+        instance_status_info = results['status']
+        instance_ssm_info = results['ssm']
+
+
+        # --> 4. Create final objects
+        instance_status_info_list = []
+        instance_ssm_info_list = []
+        for instance in user_instances:
+            instance_status_info_list.append(
+                next((item for item in instance_status_info if item["InstanceId"] == instance['InstanceId']), None)
+            )
+            instance_ssm_info_list.append(
+                next((item for item in instance_ssm_info if item["InstanceId"] == instance['InstanceId']), None)
+            )
+
+        return user_instances, instance_status_info_list, instance_ssm_info_list
 
     @staticmethod
     async def get_user_instances_by_states(user_id, resource_type, states):
