@@ -36,31 +36,24 @@ class EOSSContext(models.Model):
 
 
 
-    # New Backends information
-    eval_request_queue_url = models.TextField(null=True)
-    eval_response_queue_url = models.TextField(null=True)
-
-
-
     ########################
     ### AWS 2.0 Backends ###
     ########################
-    service_lock = models.BooleanField(default=False)  # If true, restricts user's access to all service resources
 
-    # --> Cluster
-    cluster_name = models.TextField(default='daphne-dev-cluster')
+    # --> Locks
+    service_lock = models.BooleanField(default=False)
+    design_evaluator_service_lock = models.BooleanField(default=False)
+    genetic_algorithm_service_lock = models.BooleanField(default=False)
 
     # --> Design Evaluator
-    design_evaluator_service_lock = models.BooleanField(default=False)  # If true, restricts user's access to vassar service resources
-    design_evaluator_task_count = models.IntegerField(default=1)
+    design_evaluator_instance_count = models.IntegerField(default=3)
     design_evaluator_request_queue_name = models.TextField(null=True)  # user-1-design-evaluator-request-queue
     design_evaluator_request_queue_url = models.TextField(null=True)
     design_evaluator_response_queue_name = models.TextField(null=True)  # user-1-design-evaluator-response-queue
     design_evaluator_response_queue_url = models.TextField(null=True)
 
     # --> Genetic Algorithm
-    genetic_algorithm_service_lock = models.BooleanField(default=False)  # If true, restricts user's access to ga service resources
-    genetic_algorithm_task_count = models.IntegerField(default=1)
+    genetic_algorithm_instance_count = models.IntegerField(default=1)
     genetic_algorithm_request_queue_name = models.TextField(null=True)  # user-1-genetic-algorithm-request-queue
     genetic_algorithm_request_queue_url = models.TextField(null=True)
     genetic_algorithm_response_queue_name = models.TextField(null=True)  # user-1-genetic-algorithm-response-queue
@@ -69,39 +62,17 @@ class EOSSContext(models.Model):
 
 
 
-    # --> Tasks
-    # design_evaluator_task_name = models.TextField(null=True)  # user-1-design-evaluator-task (task family)
-    # design_evaluator_task_arn = models.TextField(null=True)
-    # design_evaluator_task_count = models.IntegerField(default=1)
-    #
-    # genetic_algorithm_task_name = models.TextField(null=True)  # user-1-genetic-algorithm-task (task family)
-    # genetic_algorithm_task_arn = models.TextField(null=True)
-    # genetic_algorithm_task_count = models.IntegerField(default=0)
 
 
-    # --> Services
-    # design_evaluator_service_name = models.TextField(null=True)  # user-1-design-evaluator-service
-    # design_evaluator_service_arn = models.TextField(null=True)
-    #
-    # genetic_algorithm_service_name = models.TextField(null=True)  # user-1-genetic-algorithm-service
-    # genetic_algorithm_service_arn = models.TextField(null=True)
+    ##################
+    ### Deprecated ###
+    ##################
 
-
-    # --> Queues
-
-
-
-
-    # design_evaluator_request_queue_arn = models.TextField(null=True)
-
-
-    # design_evaluator_response_queue_arn = models.TextField(null=True)
-
-
-
-
-
-
+    cluster_name = models.TextField(default='daphne-dev-cluster')
+    design_evaluator_task_count = models.IntegerField(default=1)
+    genetic_algorithm_task_count = models.IntegerField(default=1)
+    eval_request_queue_url = models.TextField(null=True)
+    eval_response_queue_url = models.TextField(null=True)
 
 
 class EvaluatorInstance(models.Model):

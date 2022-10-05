@@ -110,14 +110,46 @@ class SqsClient:
 
     @staticmethod
     async def purge_queue_url(queue_url):
-        try:
-            await call_boto3_client_async('sqs', 'purge_queue', {
-                "QueueUrl": queue_url
-            })
-        except botocore.exceptions.ClientError as error:
-            print('--> ERROR PURGING QUEUE', error)
-            return None
+        result = await call_boto3_client_async('sqs', 'purge_queue', {
+            "QueueUrl": queue_url
+        }, False)
+        if result is None:
+            await SqsClient.purge_queue_url_manual(queue_url)
 
+    @staticmethod
+    async def purge_queue_url_manual(queue_url):
+        response = await call_boto3_client_async('sqs', 'get_queue_attributes', {
+            'QueueUrl': queue_url,
+            'AttributeNames': [
+                'ApproximateNumberOfMessages',
+                'ApproximateNumberOfMessagesNotVisible'
+            ]
+        }, False)
+        if response is None or 'Attributes' not in response or 'ApproximateNumberOfMessages' not in response['Attributes']:
+            return None
+        num_messages = int(response['Attributes']['ApproximateNumberOfMessages'])
+        num_man_purges = round(num_messages / 10)
+        async_tasks = []
+        for x in range(num_man_purges):
+            async_tasks.append(asyncio.create_task(SqsClient._manual_purge(queue_url)))
+        for task in async_tasks:
+            await task
+
+    @staticmethod
+    async def _manual_purge(queue_url):
+        response = await call_boto3_client_async('sqs', 'receive_message', {
+            'QueueUrl': queue_url,
+            'MaxNumberOfMessages': 10,
+            'WaitTimeSeconds': 1,
+            'MessageAttributeNames': ['All']
+        })
+        if "Messages" in response:
+            to_delete = [{'Id': message['MessageId'], 'ReceiptHandle': message['ReceiptHandle']} for message in
+                         response['Messages']]
+            await call_boto3_client_async('sqs', 'delete_message_batch', {
+                'QueueUrl': queue_url,
+                'Entries': to_delete
+            })
 
 
     ###################
@@ -175,8 +207,7 @@ class SqsClient:
             }
         })
         if response_url is not None:
-            return await SqsClient.subscribe_to_message(response_url, 'statusAck')
-
+            return await SqsClient.subscribe_to_message(response_url, 'statusAck', attempts=1)
 
     @staticmethod
     async def send_build_msg(request_url, response_url=None):
@@ -191,7 +222,7 @@ class SqsClient:
             }
         })
         if response_url is not None:
-            return await SqsClient.subscribe_to_message(response_url, 'build')
+            return await SqsClient.subscribe_to_message(response_url, 'buildAck', attempts=5)
 
     @staticmethod
     async def send_exit_msg(request_url, response_url=None):
@@ -207,7 +238,6 @@ class SqsClient:
         })
         if response_url is not None:
             return await SqsClient.subscribe_to_message(response_url, 'exit')
-
 
     @staticmethod
     async def send_eval_msg(request_url, design, dataset_id):
@@ -247,6 +277,10 @@ class SqsClient:
 
 
 
+    #####################
+    ### Subscriptions ###
+    #####################
+
     @staticmethod
     async def subscribe_to_message(response_queue, msg_type, attempts=5, attempt_time=5):
         subscription = {}
@@ -269,8 +303,8 @@ class SqsClient:
                         break_switch = True
                 if break_switch is True:
                     return subscription
-        print('--> CONNECTION TIMEOUT ERROR')
-        return {'msgType': 'timeout error'}
+        print('--> SQS SUB TIMEOUT ERROR')
+        return None
 
 
 

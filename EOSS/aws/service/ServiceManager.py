@@ -86,36 +86,43 @@ class ServiceManager:
     #####################
     ### CONTROL PANEL ###
     #####################
+
     async def resource_msg(self, instance_ids, command, blocking=False):
+        results = {
+            'vassar': [],
+            'ga': []
+        }
         async_tasks = []
-        async_tasks.append(asyncio.create_task(self.de_manager.resource_msg(instance_ids['vassar'], command)))
-        if blocking:
-            for task in async_tasks:
-                await task
+        async_tasks.append(
+            asyncio.create_task(
+                self._resource_msg(self.de_manager, instance_ids['vassar'], command, results, 'vassar')
+            )
+        )
+        if blocking is False:
+            return {}
+        for task in async_tasks:
+            await task
+        return results
+
+    async def _resource_msg(self, manager, instance_ids, command, results, key):
+        result = await manager.resource_msg(instance_ids, command, blocking=True)
+        results[key] = result
 
 
 
-    """
-     _                   _    
-    | |                 | |   
-    | |      ___    ___ | | __
-    | |     / _ \  / __|| |/ /
-    | |____| (_) || (__ |   < 
-    |______|\___/  \___||_|\_\  
-                           
-    """
+    ############
+    ### LOCK ###
+    ############
 
     @property
     async def lock(self):
         return self.eosscontext.service_lock
 
     async def lock_services(self):
-        print('\n\n-------- LOCKING SERVICES --------')
         self.eosscontext.service_lock = True
         await _save_eosscontext(self.eosscontext)
 
     async def unlock_services(self):
-        print('-------- UNLOCKING SERVICES --------\n\n')
         self.eosscontext.service_lock = False
         await _save_eosscontext(self.eosscontext)
 

@@ -51,8 +51,9 @@ class AbstractInstance:
     ####################
     ### New Instance ###
     ####################
-    # parameter (definition) is supplied by the child class calling this function
+
     async def _new_resources(self):
+
         # --> 1. Create instance identifier
         self.identifier = str(''.join(random.choices(string.ascii_uppercase + string.digits, k=15)))
 
@@ -64,40 +65,16 @@ class AbstractInstance:
             await task
 
     async def _new_instance(self, definition):
-        print('--> (INIT) NEW INSTANCE')
-        start_time = time.time()
 
-        # --> 1. Create instance (no userdata)
+        # --> 1. Create instance
         run_call = await call_boto3_client_async('ec2', 'run_instances', definition)
-        if run_call is None:
-            return
 
-        # --> 2. Wait until instance is running (~32s)
-        running = await self.wait_on_states(['running'], seconds=120)
-        if running is not True:
-            print('--> INSTANCE NEVER REACHED RUNNING STATE:', self.identifier)
-        else:
-            print('-->', self.identifier, 'RUNNING', time.time() - start_time, 'seconds')
-
-        # --> 3. Wait until SSM has finished booting
-        ssm_running = await self.wait_on_ssm_status('Online', seconds=120)
-        if ssm_running is not True:
-            print('--> INSTANCE SSM MANAGER NEVER ONLINE:', self.identifier)
-        else:
-            print('-->', self.identifier, 'SSM ONLINE', time.time() - start_time, 'seconds')
-
-        # --> 4. Run evaluator container (retry)
-        await self.ssm_command([
-            '. /home/ec2-user/pull.sh',
-            '. /home/ec2-user/run.sh'
-        ])
-
-        # --> 5. Wait on container running
-        result = await self.wait_on_container_running()
-        print('-->', self.identifier, 'CONTAINER ONLINE', time.time() - start_time, 'seconds')
-
-        # --> 7. Set RESOURCE_STATE tag to READY
+        # --> 2. Call wait in separate async thread
+        print('--> WAITING ON CONTAINER RUNNING')
+        result = await self.wait_on_container_running(attempts=10)
         await self.set_tag('RESOURCE_STATE', 'READY')
+        print('--> CONTAINER READY:', self.identifier)
+
 
     async def initialize_ping_queues(self):
         self.ping_request_url = await SqsClient.create_queue_name_unique(
@@ -127,9 +104,6 @@ class AbstractInstance:
         self.ping_request_url = await find_obj_value(tags, 'Key', 'PING_REQUEST_URL', 'Value')
         self.ping_response_url = await find_obj_value(tags, 'Key', 'PING_RESPONSE_URL', 'Value')
         self.identifier = await find_obj_value(tags, 'Key', 'IDENTIFIER', 'Value')
-
-
-
 
     """
          _____                                 _    _            
@@ -168,7 +142,13 @@ class AbstractInstance:
         if request is not None and 'Reservations' in request:
             if len(request['Reservations']) == 0:
                 print('--> NO RESERVATIONS:', self.user_info.user, self.identifier)
-            self.instance = request['Reservations'][0]['Instances'][0]
+                self.instance = None
+            else:
+                if len(request['Reservations'][0]['Instances']) == 0:
+                    print('--> NO INSTANCES IN RESERVATION:', self.user_info.user, self.identifier)
+                    self.instance = None
+                else:
+                    self.instance = request['Reservations'][0]['Instances'][0]
         return self.instance
 
     async def get_instance_status_obj(self):
@@ -211,6 +191,14 @@ class AbstractInstance:
             return 'Offline'
         else:
             return self.instance['State']['Name']
+
+    async def get_instance_tags(self, fetch=False):
+        if fetch or self.instance is None:
+            await self.get_instance_obj()
+        if self.instance is None:
+            return []
+        else:
+            return self.instance['Tags']
 
     async def get_instance_status(self, fetch=False):
         if fetch or self.instance_status_info is None:
@@ -259,39 +247,69 @@ class AbstractInstance:
 
 
 
-
     """
-       _____  _                _   
-      / ____|| |              | |  
-     | (___  | |_  __ _  _ __ | |_ 
-      \___ \ | __|/ _` || '__|| __|
-      ____) || |_| (_| || |   | |_ 
-     |_____/  \__|\__,_||_|    \__|
+     _____  _               
+    |  __ \(_)              
+    | |__) |_  _ __    __ _ 
+    |  ___/| || '_ \  / _` |
+    | |    | || | | || (_| |
+    |_|    |_||_| |_| \__, |
+                       __/ |
+                      |___/ 
     """
 
-    async def start(self):
+    async def ping(self):
+        ping_response = dict()
+        ping_response['instance'] = await self._ping_instance()
+        ping_response['container'] = await self._ping_container()
+        ping_response['init_status'] = await self.get_tag('RESOURCE_STATE')
+        print('--> PING INIT STATE:', self.identifier, ping_response['init_status'])
+        return ping_response
 
-        # --> 1. Ensure instance either stopping or stopped
-        curr_state = await self.get_instance_state()
-        if curr_state not in ['stopping', 'stopped']:
-            print('--> COULD NOT START INSTANCE, NOT STOPPED OR STOPPING:', self.identifier, curr_state)
-            return None
+    async def _ping_instance(self):
+        return {
+            'IDENTIFIER': self.identifier,
+            'State': await self.get_instance_state(),
+            'Status': await self.get_instance_status(),
+            'SSMStatus': await self.get_instance_ssm_status(),
+            'Tags': await self.get_instance_tags()
+        }
 
-        # --> 2. If current state is stopping, wait until stopped
-        if await self.wait_on_state('stopped', seconds=120) is False:
-            print('--> COULD NOT START INSTANCE, NEVER REACHED STOPPED STATE:', self.identifier, curr_state)
-            return None
+    async def _ping_container(self):
+        info = {
+            'Status':       '-------',
+            'ProblemID':    '-------',
+            'VassarStatus': '-------'
+        }
 
-        response = await call_boto3_client_async('ec2', 'start_instances', {
-            'InstanceIds': [await self.get_instance_id()]
-        })
-        if response is None or 'StartingInstances' not in response:
-            print('--> ERROR STARTING INSTANCE, BAD RESPONSE:', json.dumps(response, indent=4, default=str))
-        elif len(response['StartingInstances']) == 0:
-            print('--> ERROR NO INSTANCES WERE STARTED')
+        # --> Populate info
+        if await self.get_instance_ssm_status() == 'Online' and await self.container_running():
+            info['Status'] = 'Running'
+            query = await SqsClient.send_ping_msg(self.ping_request_url, self.ping_response_url)
+            if query and 'PROBLEM_ID' in query and 'status' in query:
+                info['VassarStatus'] = query['status']['StringValue']
+                info['PROBLEM_ID'] = query['PROBLEM_ID']['StringValue']
+            else:
+                info['VassarStatus'] = 'Booting'
+                info['PROBLEM_ID'] = 'Booting'
         else:
-            temp = response['StartingInstances'][0]
-            print('--> STARTING INSTANCE:', self.identifier, temp['CurrentState']['Name'], temp['PreviousState']['Name'])
+            info['Status'] = 'Stopped'
+        return info
+
+
+    """
+      _____                           _       
+     / ____|                         | |      
+    | |      ___   _ __   ___   ___  | |  ___ 
+    | |     / _ \ | '_ \ / __| / _ \ | | / _ \
+    | |____| (_) || | | |\__ \| (_) || ||  __/
+     \_____|\___/ |_| |_||___/ \___/ |_| \___|
+     
+    """
+
+    ################
+    ### INSTANCE ###
+    ################
 
     async def start_instance(self):
 
@@ -306,77 +324,10 @@ class AbstractInstance:
 
         # --> 3. Validate Start
         if response is not None and 'StartingInstances' in response and len(response['StartingInstances']) > 0:
-            print('--> INSTANCE STARTED:', self.identifier)
+            print('--> INSTANCE STARTING:', self.identifier)
             return True
         else:
             return False
-
-    async def start_container(self):
-        await self.ssm_command([
-            '. /home/ec2-user/run.sh'
-        ])
-
-
-    """
-       _____  _                
-      / ____|| |               
-     | (___  | |_  ___   _ __  
-      \___ \ | __|/ _ \ | '_ \ 
-      ____) || |_| (_) || |_) |
-     |_____/  \__|\___/ | .__/ 
-                        | |    
-                        |_|    
-    """
-
-    async def stop(self):
-
-        # --> 1. Ensure instance either pending or running
-        curr_state = await self.get_instance_state()
-        if curr_state not in ['running']:
-            print('--> COULD NOT STOP INSTANCE, NOT RUNNING:', self.identifier, curr_state)
-            return None
-
-        # --> 2. Stop instance
-        response = await call_boto3_client_async('ec2', 'stop_instances', {
-            'InstanceIds': [await self.get_instance_id()],
-            'Hibernate': True
-        })
-        if response is None:
-            response = await call_boto3_client_async('ec2', 'stop_instances', {
-                'InstanceIds': [await self.get_instance_id()],
-                'Hibernate': False
-            })
-        if response is None or 'StoppingInstances' not in response:
-            print('--> ERROR STARTING INSTANCE, BAD RESPONSE:', json.dumps(response, indent=4, default=str))
-        elif len(response['StoppingInstances']) == 0:
-            print('--> ERROR NO INSTANCES WERE STARTED')
-        else:
-            temp = response['StoppingInstances'][0]
-            print('--> STOPPING INSTANCE:', self.identifier, temp['PreviousState']['Name'], '-->',
-                  temp['CurrentState']['Name'])
-
-
-    async def hibernate(self, blocking=True):
-
-        async def wait_func(parameters, seconds=30):
-            sleep_time = 5
-            counter = 0
-            attempts = int(seconds / sleep_time)
-            result = await call_boto3_client_async('ec2', 'stop_instances', parameters)
-            while result is None:
-                await _linear_sleep_async(sleep_time)
-                result = await call_boto3_client_async('ec2', 'stop_instances', parameters)
-                counter += 1
-                if counter > attempts:
-                    return None
-            return result
-        parameters = {
-            'InstanceIds': [await self.get_instance_id()],
-            'Hibernate': True
-        }
-        task = asyncio.create_task(wait_func(parameters))
-        if blocking:
-            await task
 
     async def stop_instance(self):
 
@@ -392,43 +343,85 @@ class AbstractInstance:
 
         # --> 3. Validate Stop
         if response is not None and 'StoppingInstances' in response and len(response['StoppingInstances']) > 0:
-            print('--> INSTANCE STOPPED:', self.identifier)
+            print('--> INSTANCE STOPPING:', self.identifier)
+            return True
+        else:
+            return False
+
+    async def hibernate_instance(self):
+
+        # --> 1. Ensure instance either pending or running
+        if await self.get_instance_state() not in ['running']:
+            return False
+
+        # --> 2. Stop instance
+        response = await call_boto3_client_async('ec2', 'stop_instances', {
+            'InstanceIds': [await self.get_instance_id()],
+            'Hibernate': True
+        })
+
+        # --> 3. Validate Stop
+        if response is not None and 'StoppingInstances' in response and len(response['StoppingInstances']) > 0:
+            print('--> INSTANCE STOPPING:', self.identifier)
             return True
         else:
             return False
 
 
-    async def hibernate_instance(self):
-        return 0
+    #################
+    ### CONTAINER ###
+    #################
+
+    async def run_container(self):
+        response = await self.ssm_command([
+            '. /home/ec2-user/run.sh'
+        ])
+        return response is not None
+
+    async def stop_container(self):
+        response = await self.ssm_command([
+            '. /home/ec2-user/stop.sh'
+        ])
+        return response is not None
+
+    async def update_container(self):
+        response = await self.ssm_command([
+            '. /home/ec2-user/update.sh'
+        ])
+        return response is not None
+
+    async def build_container(self):
+
+        # --> 1. Check container running
+        if await self.get_instance_state() != 'running' or not await self.container_running():
+            return False
+
+        # --> 2. Send build msg
+        response = await SqsClient.send_build_msg(self.private_request_url, self.private_response_url)
+        return response is not None
+
 
 
     """
-     _____                                    
-    |  __ \                                   
-    | |__) | ___  _ __ ___    ___ __   __ ___ 
-    |  _  / / _ \| '_ ` _ \  / _ \\ \ / // _ \
-    | | \ \|  __/| | | | | || (_) |\ V /|  __/
-    |_|  \_\\___||_| |_| |_| \___/  \_/  \___|
-
+      _    _        _                         
+     | |  | |      | |                        
+     | |__| |  ___ | | _ __    ___  _ __  ___ 
+     |  __  | / _ \| || '_ \  / _ \| '__|/ __|
+     | |  | ||  __/| || |_) ||  __/| |   \__ \
+     |_|  |_| \___||_|| .__/  \___||_|   |___/
+                      | |                     
+                      |_|               
     """
 
-    async def remove(self):
-
-        # --> 1. Terminate Instances
-        response = await call_boto3_client_async('ec2', 'terminate_instances', {
-            'InstanceIds': [await self.get_instance_id()]
-        })
-        if response is None or 'TerminatingInstances' not in response:
-            print('--> ERROR STARTING INSTANCE, BAD RESPONSE:', json.dumps(response, indent=4, default=str))
-        elif len(response['TerminatingInstances']) == 0:
-            print('--> ERROR NO INSTANCES WERE STARTED')
-        else:
-            temp = response['TerminatingInstances'][0]
-            print('--> TERMINATING INSTANCE:', self.identifier, temp['CurrentState']['Name'],
-                  temp['PreviousState']['Name'])
-
-        # --> 2. Delete queues
-        await self.delete_instance_queues()
+    # --> NOTE: can only be called every 60 seconds
+    async def purge_queues(self):
+        async_tasks = []
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.private_request_url)))
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.private_response_url)))
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.ping_response_url)))
+        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.ping_response_url)))
+        for task in async_tasks:
+            await task
 
     async def delete_instance_queues(self):
         async_tasks = []
@@ -450,84 +443,6 @@ class AbstractInstance:
                 asyncio.create_task(SqsClient.delete_queue_url(self.private_response_url))
             )
 
-        for task in async_tasks:
-            await task
-
-
-
-    """
-      ____        _ _     _ 
-     |  _ \      (_) |   | |
-     | |_) |_   _ _| | __| |
-     |  _ <| | | | | |/ _` |
-     | |_) | |_| | | | (_| |
-     |____/ \__,_|_|_|\__,_|                 
-    """
-
-    async def build(self):
-
-        # --> 1. Ensure instance either pending or running
-        curr_state = await self.get_instance_state()
-        if curr_state not in ['pending', 'running']:
-            print('--> COULD NOT BUILD INSTANCE, NOT RUNNING OR PENDING:', self.identifier, curr_state)
-            return False
-
-        # --> 2. If current state is pending, wait until running
-        if await self.wait_on_state('running', seconds=120) is False:
-            print('--> COULD NOT BUILD INSTANCE, NEVER REACHED RUNNING STATE:', self.identifier, curr_state)
-            return False
-
-        await SqsClient.send_build_msg(self.private_request_url)
-
-    ############
-    ### PING ###
-    ############
-
-    async def ping(self):
-        ping_response = dict()
-        ping_response['container'] = {}
-        ping_response['instance'] = {}
-
-        # --> 1. Get instance: tags, state, status, ssm status
-        # instance = await self.get_instance()
-        instance = self.instance
-        if instance is not None:
-            ping_response['instance']['Tags'] = instance['Tags']
-            ping_response['instance']['State'] = instance['State']['Name']
-        else:
-            ping_response['instance']['Tags'] = None
-            ping_response['instance']['State'] = None
-        ping_response['instance']['Status'] = await self.get_instance_status()
-        ping_response['instance']['SSMStatus'] = await self.get_instance_ssm_status()
-        ping_response['instance']['IDENTIFIER'] = self.identifier
-
-        # --> 2. Get container info if instance and container both running
-        if ping_response['instance']['Status'] == 'running' and ping_response['instance']['SSMStatus'] == 'Online' and await self.container_running() is True:
-            ping_response['container'] = await SqsClient.send_ping_msg(self.ping_request_url, self.ping_response_url)
-        else:
-            ping_response['container'] = 'empty'
-
-        return ping_response
-
-
-    """
-      _    _        _                         
-     | |  | |      | |                        
-     | |__| |  ___ | | _ __    ___  _ __  ___ 
-     |  __  | / _ \| || '_ \  / _ \| '__|/ __|
-     | |  | ||  __/| || |_) ||  __/| |   \__ \
-     |_|  |_| \___||_|| .__/  \___||_|   |___/
-                      | |                     
-                      |_|               
-    """
-
-    # --> NOTE: can only be called every 60 seconds
-    async def purge_queues(self):
-        async_tasks = []
-        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.private_request_url)))
-        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.private_response_url)))
-        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.ping_response_url)))
-        async_tasks.append(asyncio.create_task(SqsClient.purge_queue_url(self.ping_response_url)))
         for task in async_tasks:
             await task
 
@@ -598,10 +513,10 @@ class AbstractInstance:
             curr_status = await self.get_instance_ssm_status(fetch=True)
         return True
 
-    async def wait_on_container_running(self, seconds=60):
-        request_interval = 3
+    async def wait_on_container_running(self, attempts=5):
+        request_interval = 5
         iter = 0
-        iter_max = int(seconds / request_interval)
+        iter_max = attempts
         curr_status = await self.container_running()
         while curr_status is False:
             iter += 1
@@ -612,12 +527,6 @@ class AbstractInstance:
         return True
 
 
-
-
-
-
-
-
     """
        _____  _____  __  __ 
       / ____|/ ____||  \/  |
@@ -625,9 +534,6 @@ class AbstractInstance:
       \___ \ \___ \ | |\/| |
       ____) |____) || |  | |
      |_____/|_____/ |_|  |_|
-    
-    Constraints
-    - Only possible when instance in running state
     
     """
     async def _ssm(self, parameters, attempts=1):
@@ -650,7 +556,6 @@ class AbstractInstance:
         else:
             return response['Command']['CommandId']
 
-
     async def ssm_command(self, commands):
 
         async def wait_for_output(command_id):
@@ -661,13 +566,13 @@ class AbstractInstance:
             }, False)
             count = 0
             while response is None or 'CommandInvocations' not in response or len(response['CommandInvocations']) == 0:
-                await _linear_sleep_async(2)
+                await _linear_sleep_async(4)
                 response = await call_boto3_client_async('ssm', 'list_command_invocations', {
                     'CommandId': command_id,
                     'Details': True
                 })
                 count += 1
-                if count > 10:
+                if count > 5:
                     return ''
             output = response['CommandInvocations'][0]['CommandPlugins'][0]['Output']
             return output
@@ -705,12 +610,4 @@ class AbstractInstance:
             return False
         else:
             return True
-
-
-    async def restart_container(self):
-        return 0
-
-
-
-
 

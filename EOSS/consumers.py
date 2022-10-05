@@ -13,7 +13,6 @@ from daphne_context.models import UserInformation
 from daphne_ws.async_db_methods import _get_user_information, _save_subcontext, _save_user_info
 from daphne_ws.consumers import DaphneConsumer
 
-from EOSS.aws.clients.EcsClient import EcsClient
 from EOSS.aws.utils import get_boto3_client
 from EOSS.aws.service.ServiceManager import ServiceManager
 from EOSS.data.design_helpers import add_design
@@ -21,7 +20,6 @@ from EOSS.active import live_recommender
 from EOSS.vassar.api import VASSARClient
 from EOSS.graphql.client.Dataset import DatasetGraphqlClient
 from EOSS.teacher.models import ArchitecturesEvaluated, ArchitecturesUpdated, ArchitecturesClicked
-from EOSS.vassar.scaling import EvaluationScaling
 
 
 class EOSSConsumer(DaphneConsumer):
@@ -141,12 +139,7 @@ class EOSSConsumer(DaphneConsumer):
 
 
         elif content.get('msg_type') == 'resource_msg':
-            command = content.get('command')
-            instance_ids = content.get('instance_ids')
-            service_manager = ServiceManager(user_info)
-            await service_manager.gather()
-            await service_manager.resource_msg(instance_ids, command)
-
+            await self.resource_msg(user_info, content)
 
 
         elif content.get('msg_type') == 'ping_services':
@@ -193,33 +186,39 @@ class EOSSConsumer(DaphneConsumer):
     ### Services ###
     ################
 
+    async def resource_msg(self, user_info, content):
+        command = content.get('command')
+        request_id = content.get('request_id')
+        instance_ids = content.get('instance_ids')
+        service_manager = ServiceManager(user_info)
+        await service_manager.gather()
+        results = await service_manager.resource_msg(instance_ids, command, blocking=True)
+        await self.send_json({
+            'type': 'resource_msg_response',
+            'request_id': request_id,
+            'results': results
+        })
+
     async def ping_services(self, user_info: UserInformation, content):
         print('\n--> PINGING')
         start_time = time.time()
-
         service_manager = ServiceManager(user_info)
         result = await service_manager.gather()
-
         print('--> GATHER TOOK', time.time() - start_time, 'seconds')
         if result is True:
-
             survey = await service_manager.ping_services()
             print('--> PING FULFILLED', time.time() - start_time, 'seconds')
-
-            await self.send_json({
+            payload = {
                 'type': 'ping',
                 'status': survey
-            })
+            }
+            if 'ping_id' in content:
+                payload['ping_id'] = content['ping_id']
+            await self.send_json(payload)
 
     # --> Functions
     async def connect_services(self, user_info: UserInformation, content):
-
-        # --> 1. Connect services
         print('--> (PLACEHOLDER) CONNECT SERVICES')
-        # service_manager = ServiceManager(user_info)
-        # result = await service_manager.initialize()
-        # if result is True:
-        #     await service_manager.regulate_services()
 
 
 
@@ -229,14 +228,10 @@ class EOSSConsumer(DaphneConsumer):
 
     # --> Functions
     async def rebuild_vassar(self, user_info: UserInformation, group_id: int, problem_id: int, dataset_id: int):
-        service_manager = ServiceManager(user_info)
-        await service_manager.initialize()
-        await service_manager.build_vassar()
         await self.send_json({
             'type': 'services.vassar_rebuild',
             'status': "success"
         })
-        return 0
 
 
 

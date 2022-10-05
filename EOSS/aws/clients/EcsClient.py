@@ -21,35 +21,12 @@ class EcsClient:
         self.user_id = self.user_info.user.id
         self.eosscontext = user_info.eosscontext
 
-        # self.ecs_client = get_boto3_client('ecs')
-        # self.sqs_client = SqsClient(self.user_info)
         
 
         # --> Cluster Info: daphne-cluster
-        self.cluster_name = self.eosscontext.cluster_name
+        self.cluster_name = 'daphne-dev-cluster'
         # self.cluster_arn = self.eosscontext.cluster_name
 
-        
-        # --> Task Info: design-evaluator, genetic-algorithm
-        # self.design_evaluator_task_name = self.eosscontext.design_evaluator_task_name
-        # self.design_evaluator_task_arn = self.eosscontext.design_evaluator_task_arn
-        # self.design_evaluator_task_count = self.eosscontext.design_evaluator_task_count
-        #
-        # self.genetic_algorithm_task_name = self.eosscontext.genetic_algorithm_task_name
-        # self.genetic_algorithm_task_arn = self.eosscontext.genetic_algorithm_task_arn
-        # self.genetic_algorithm_task_count = self.eosscontext.genetic_algorithm_task_count
-        
-
-
-
-
-
-        # --> (DEPRECATED) Service Info: design-evaluator, genetic-algorithm
-        # self.design_evaluator_service_name = self.eosscontext.design_evaluator_service_name
-        # self.design_evaluator_service_arn = self.eosscontext.design_evaluator_service_arn
-        #
-        # self.genetic_algorithm_service_name = self.eosscontext.genetic_algorithm_service_name
-        # self.genetic_algorithm_service_arn = self.eosscontext.genetic_algorithm_service_arn
 
         
 

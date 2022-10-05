@@ -22,9 +22,9 @@ class InstanceManager:
     @property
     async def instance_limit(self):
         if self.resource_type == 'design-evaluator':
-            return 1
+            return int(self.eosscontext.design_evaluator_instance_count)
         elif self.resource_type == 'genetic-algorithm':
-            return 1
+            return int(self.eosscontext.genetic_algorithm_instance_count)
         return 1
 
     async def initialize(self):
@@ -64,7 +64,6 @@ class InstanceManager:
 
         # --> 1. Get user instances
         user_instances, instance_status_info_list, instance_ssm_info_list = await InstanceClient.get_user_active_instances_all(self.user_id, self.resource_type)
-        print('--> GATHERED INSTANCES', len(user_instances), len(instance_status_info_list), len(instance_ssm_info_list))
 
         # --> 2. Instantiate each user instance
         for idx, instance in enumerate(user_instances):
@@ -88,7 +87,6 @@ class InstanceManager:
         for instance in self.instances:
             if instance.identifier == identifier:
                 return instance
-        print('--> COULD NOT FIND INSTANCE BY IDENTIFIER:', identifier)
         return None
 
     async def get_instances_by_state(self, state):
@@ -124,7 +122,6 @@ class InstanceManager:
 
 
 
-
     ############
     ### PING ###
     ############
@@ -146,27 +143,27 @@ class InstanceManager:
 
 
 
-
     #####################
     ### CONTROL PANEL ###
     #####################
 
-    async def resource_msg(self, instance_ids, command):
+    async def resource_msg(self, instance_ids, command, blocking=False):
         target_instances = [await self.get_instance_by_identifier(identifier) for identifier in instance_ids]
+        results = []
         async_tasks = []
         for instance in target_instances:
-            if command == 'stop_instance':
-                async_tasks.append(asyncio.create_task(instance.stop_instance()))
-            elif command == 'start_instance':
-                async_tasks.append(asyncio.create_task(instance.start_instance()))
-            elif command == 'stop_container':
-                async_tasks.append(asyncio.create_task(instance.stop_container()))
-            elif command == 'start_container':
-                async_tasks.append(asyncio.create_task(instance.start_container()))
-            elif command == 'pull_container':
-                async_tasks.append(asyncio.create_task(instance.pull_container()))
-            elif command == 'build_container':
-                async_tasks.append(asyncio.create_task(instance.build_container()))
+            async_tasks.append(asyncio.create_task(self._resource_msg(instance, command, results)))
+        if blocking is False:
+            return []
+        for task in async_tasks:
+            await task
+        return results
+
+    async def _resource_msg(self, instance, command, results):
+        func = getattr(instance, command)
+        result = await func()
+        results.append(result)
+
 
 
 
@@ -184,50 +181,16 @@ class InstanceManager:
         return True
 
     async def lock_service(self):
-        print('\n\n-------- LOCKING SERVICE', self.resource_type, '--------')
         if self.resource_type == 'design-evaluator':
             self.eosscontext.design_evaluator_service_lock = True
         elif self.resource_type == 'genetic-algorithm':
             self.eosscontext.genetic_algorithm_service_lock = True
         await _save_eosscontext(self.eosscontext)
-        print('--> FINISHED LOCKING')
 
     async def unlock_service(self):
-        print('-------- UNLOCKING SERVICE', self.resource_type, '--------\n\n')
         if self.resource_type == 'design-evaluator':
             self.eosscontext.design_evaluator_service_lock = False
         elif self.resource_type == 'genetic-algorithm':
             self.eosscontext.genetic_algorithm_service_lock = False
         await _save_eosscontext(self.eosscontext)
-        print('--> FINISHED UNLOCKING')
-
-
-
-
-
-
-
-
-
-    ##################
-    ### DEPRECATED ###
-    ##################
-
-
-    async def build_instances(self, blocking=True):
-        running_instances = await self.get_instances_by_states(['pending', 'running'])
-
-        async_tasks = []
-        for instance in running_instances:
-            async_tasks.append(asyncio.create_task(instance.build()))
-        if blocking:
-            for task in async_tasks:
-                await task
-
-    async def build_instance(self, identifier):
-        instance = await self.get_instance_by_identifier(identifier)
-        await instance.build()
-
-
-
 

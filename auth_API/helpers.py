@@ -6,7 +6,6 @@ from django.db import transaction
 from EDL.models import EDLContext
 import threading
 from EOSS.models import EOSSContext, ActiveContext
-from EOSS.aws.clients.EcsClient import EcsClient
 from AT.models import ATContext, ActiveATContext
 from experiment.models import ExperimentContext
 from daphne_context.models import UserInformation

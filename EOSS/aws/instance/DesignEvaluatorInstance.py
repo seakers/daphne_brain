@@ -20,35 +20,15 @@ class DesignEvaluatorInstance(AbstractInstance):
         else:
             await self._new_resources()
             await self._new_instance(await self._definition)
-            await SqsClient.send_build_msg(self.private_request_url)
-
 
     ##################
     ### PROPERTIES ###
     ##################
 
-
     @property
     async def _user_data(self):
         return '''#!/bin/bash
-INSTANCE_ID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
-sudo service docker start
-sudo $(sudo aws ecr get-login --region us-east-2 --no-include-email)
-sudo docker pull 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator
-ENV_STRING=""
-JSON_TAGS=$(aws ec2 describe-tags --filters "Name=resource-id,Values=${INSTANCE_ID}" --region=us-east-2)
-for row in $(echo ${JSON_TAGS} | jq -c '.Tags[]'); do
-        var_key=$(echo ${row} | jq -r '.Key')
-        var_value=$(echo ${row} | jq -r '.Value')
-        ENV_STRING+="--env ${var_key}=${var_value} "
-done
-sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest'''
-
-    @property
-    async def _user_data2(self):
-        return '''#!/bin/bash
-    sudo systemctl start amazon-ssm-agent'''
-
+        . /home/ec2-user/update.sh'''
     @property
     async def _tags(self):
         return [
@@ -122,17 +102,17 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             },
             {
                 'Key': 'RESOURCE_STATE',
-                'Value': 'LOADING'
+                'Value': 'INITIALIZING'
             }
         ]
-
     @property
     async def _definition(self):
         return {
             # "ImageId": "ami-0784177864ad003bd",  # DesignEvaluatorProdImagev1.0
             # "ImageId": "ami-0f14a43a3fe818407",  # DesignEvaluatorProdImagev2.0
             # "ImageId": "ami-0f598a7aeac3948fc",  # DesignEvaluatorProdImagev3.0
-            "ImageId": "ami-02b34b6bd313c02f1",    # DesignEvaluatorProdImagev4.0
+            # "ImageId": "ami-02b34b6bd313c02f1",  # DesignEvaluatorProdImagev4.0
+            "ImageId": "ami-0ed4b8a5ca628fd8f",    # DesignEvaluatorProdImagev5.0
             "InstanceType": "t2.medium",
             "MaxCount": 1,
             "MinCount": 1,
@@ -147,7 +127,7 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
             "HibernationOptions": {
                 "Configured": True
             },
-            # "UserData": (await self._user_data2),
+            "UserData": (await self._user_data),
             "TagSpecifications": [
                 {
                     'ResourceType': 'instance',
@@ -167,55 +147,36 @@ sudo docker run --name=evaluator ${ENV_STRING} 923405430231.dkr.ecr.us-east-2.am
         return response
     
     
-    #####################
-    ### NEW FUNCTIONS ###
-    #####################
+    ################
+    ### CONSOLE  ###
+    ################
     
-    async def stop_instance(self):
-        await super().stop_instance()
     async def start_instance(self):
-        await super().start_instance()
-    async def stop_container(self):
-        await super().start_container()
-    async def start_container(self):
-        return 0
-    async def pull_container(self):
-        return 0
-    async def build_container(self):
-        return 0
-
-
-
-
-
-    ##################
-    ### DEPRECATED ###
-    ##################
-
-
-
-    async def start(self):
-        await self.purge_queues()
-
-        await super().start()
-
-        await SqsClient.send_build_msg(self.private_request_url)
-
-    async def stop(self):
-
+        result = await super().start_instance()
+        return {'identifier': self.identifier, 'result': result}
+    async def stop_instance(self):
         # --> 1. Try to stop via vassar inside
-        await SqsClient.send_exit_msg(self.private_request_url)
-        stopping = await self.wait_on_state('stopping', seconds=30)
+        # await SqsClient.send_exit_msg(self.private_request_url)
+        # stopping = await self.wait_on_state('stopping', seconds=30)
 
-        # --> 2. Force stop if inner-stop times out
-        if stopping is False:
-            await super().stop()
-
-    async def remove(self):
-        await super().remove()
-
-    async def build(self):
-        await super().build()
+        # --> 2. Try to stop via ec2 call
+        result = await super().stop_instance()
+        return {'identifier': self.identifier, 'result': result}
+    async def hibernate_instance(self):
+        result = await super().hibernate_instance()
+        return {'identifier': self.identifier, 'result': result}
+    async def run_container(self):
+        result = await super().run_container()
+        return {'identifier': self.identifier, 'result': result}
+    async def stop_container(self):
+        result = await super().stop_container()
+        return {'identifier': self.identifier, 'result': result}
+    async def update_container(self):
+        result = await super().update_container()
+        return {'identifier': self.identifier, 'result': result}
+    async def build_container(self):
+        result = await super().build_container()
+        return {'identifier': self.identifier, 'result': result}
 
 
 
