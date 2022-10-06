@@ -315,7 +315,7 @@ class AbstractInstance:
 
         # --> 1. Check if instance stopped
         if await self.get_instance_state() != 'stopped':
-            return False
+            return {'identifier': self.identifier, 'result': False}
 
         # --> 2. Start instance
         response = await call_boto3_client_async('ec2', 'start_instances', {
@@ -325,15 +325,20 @@ class AbstractInstance:
         # --> 3. Validate Start
         if response is not None and 'StartingInstances' in response and len(response['StartingInstances']) > 0:
             print('--> INSTANCE STARTING:', self.identifier)
-            return True
+            return {'identifier': self.identifier, 'result': True}
         else:
-            return False
+            return {'identifier': self.identifier, 'result': False}
 
     async def stop_instance(self):
+        # --> 0. Try to stop via vassar inside
+        # if await self.container_running():
+        #     await SqsClient.send_exit_msg(self.private_request_url)
+        #     if await self.wait_on_state('stopping', seconds=30):
+        #         return {'identifier': self.identifier, 'result': True}
 
-        # --> 1. Ensure instance either pending or running
+        # --> 1. Ensure instance state is running
         if await self.get_instance_state() not in ['running']:
-            return False
+            return {'identifier': self.identifier, 'result': False}
 
         # --> 2. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
@@ -344,15 +349,15 @@ class AbstractInstance:
         # --> 3. Validate Stop
         if response is not None and 'StoppingInstances' in response and len(response['StoppingInstances']) > 0:
             print('--> INSTANCE STOPPING:', self.identifier)
-            return True
+            return {'identifier': self.identifier, 'result': True}
         else:
-            return False
+            return {'identifier': self.identifier, 'result': False}
 
     async def hibernate_instance(self):
 
         # --> 1. Ensure instance either pending or running
         if await self.get_instance_state() not in ['running']:
-            return False
+            return {'identifier': self.identifier, 'result': False}
 
         # --> 2. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
@@ -363,9 +368,9 @@ class AbstractInstance:
         # --> 3. Validate Stop
         if response is not None and 'StoppingInstances' in response and len(response['StoppingInstances']) > 0:
             print('--> INSTANCE STOPPING:', self.identifier)
-            return True
+            return {'identifier': self.identifier, 'result': True}
         else:
-            return False
+            return {'identifier': self.identifier, 'result': False}
 
 
     #################
@@ -376,29 +381,19 @@ class AbstractInstance:
         response = await self.ssm_command([
             '. /home/ec2-user/run.sh'
         ])
-        return response is not None
+        return {'identifier': self.identifier, 'result': response is not None}
 
     async def stop_container(self):
         response = await self.ssm_command([
             '. /home/ec2-user/stop.sh'
         ])
-        return response is not None
+        return {'identifier': self.identifier, 'result': response is not None}
 
     async def update_container(self):
         response = await self.ssm_command([
             '. /home/ec2-user/update.sh'
         ])
-        return response is not None
-
-    async def build_container(self):
-
-        # --> 1. Check container running
-        if await self.get_instance_state() != 'running' or not await self.container_running():
-            return False
-
-        # --> 2. Send build msg
-        response = await SqsClient.send_build_msg(self.private_request_url, self.private_response_url)
-        return response is not None
+        return {'identifier': self.identifier, 'result': response is not None}
 
 
 

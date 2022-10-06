@@ -112,7 +112,8 @@ class DesignEvaluatorInstance(AbstractInstance):
             # "ImageId": "ami-0f14a43a3fe818407",  # DesignEvaluatorProdImagev2.0
             # "ImageId": "ami-0f598a7aeac3948fc",  # DesignEvaluatorProdImagev3.0
             # "ImageId": "ami-02b34b6bd313c02f1",  # DesignEvaluatorProdImagev4.0
-            "ImageId": "ami-0ed4b8a5ca628fd8f",    # DesignEvaluatorProdImagev5.0
+            # "ImageId": "ami-0ed4b8a5ca628fd8f",  # DesignEvaluatorProdImagev5.0
+            "ImageId": "ami-07ecbec4e2200e873",    # DaphneServiceProdImagev1.0
             "InstanceType": "t2.medium",
             "MaxCount": 1,
             "MinCount": 1,
@@ -151,32 +152,39 @@ class DesignEvaluatorInstance(AbstractInstance):
     ### CONSOLE  ###
     ################
     
-    async def start_instance(self):
-        result = await super().start_instance()
-        return {'identifier': self.identifier, 'result': result}
-    async def stop_instance(self):
-        # --> 1. Try to stop via vassar inside
-        # await SqsClient.send_exit_msg(self.private_request_url)
-        # stopping = await self.wait_on_state('stopping', seconds=30)
+    # async def start_instance(self):
+    #     result = await super().start_instance()
+    #     return {'identifier': self.identifier, 'result': result}
+    # async def stop_instance(self):
+    #     # --> 1. Try to stop via vassar inside
+    #     # await SqsClient.send_exit_msg(self.private_request_url)
+    #     # stopping = await self.wait_on_state('stopping', seconds=30)
+    #
+    #     # --> 2. Try to stop via ec2 call
+    #     result = await super().stop_instance()
+    #     return {'identifier': self.identifier, 'result': result}
+    # async def hibernate_instance(self):
+    #     result = await super().hibernate_instance()
+    #     return {'identifier': self.identifier, 'result': result}
+    # async def run_container(self):
+    #     result = await super().run_container()
+    #     return {'identifier': self.identifier, 'result': result}
+    # async def stop_container(self):
+    #     result = await super().stop_container()
+    #     return {'identifier': self.identifier, 'result': result}
+    # async def update_container(self):
+    #     result = await super().update_container()
+    #     return {'identifier': self.identifier, 'result': result}
 
-        # --> 2. Try to stop via ec2 call
-        result = await super().stop_instance()
-        return {'identifier': self.identifier, 'result': result}
-    async def hibernate_instance(self):
-        result = await super().hibernate_instance()
-        return {'identifier': self.identifier, 'result': result}
-    async def run_container(self):
-        result = await super().run_container()
-        return {'identifier': self.identifier, 'result': result}
-    async def stop_container(self):
-        result = await super().stop_container()
-        return {'identifier': self.identifier, 'result': result}
-    async def update_container(self):
-        result = await super().update_container()
-        return {'identifier': self.identifier, 'result': result}
-    async def build_container(self):
-        result = await super().build_container()
-        return {'identifier': self.identifier, 'result': result}
+    async def build_vassar(self):
+
+        # --> 1. Check container running
+        if await self.get_instance_state() != 'running' or not await self.container_running():
+            return {'identifier': self.identifier, 'result': False}
+
+        # --> 2. Send build msg
+        response = await SqsClient.send_build_msg(self.private_request_url, self.private_response_url)
+        return {'identifier': self.identifier, 'result': response is not None}
 
 
 
