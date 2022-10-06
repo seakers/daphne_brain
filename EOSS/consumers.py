@@ -207,7 +207,6 @@ class EOSSConsumer(DaphneConsumer):
         print('--> GATHER TOOK', time.time() - start_time, 'seconds')
         if result is True:
             survey = await service_manager.ping_services()
-            print('--> PING FULFILLED', time.time() - start_time, 'seconds')
             payload = {
                 'type': 'ping',
                 'status': survey
@@ -215,6 +214,7 @@ class EOSSConsumer(DaphneConsumer):
             if 'ping_id' in content:
                 payload['ping_id'] = content['ping_id']
             await self.send_json(payload)
+            print('--> PING FULFILLED', time.time() - start_time, 'seconds')
 
     # --> Functions
     async def connect_services(self, user_info: UserInformation, content):
@@ -357,6 +357,7 @@ class EOSSConsumer(DaphneConsumer):
         if self.scope["user"].is_authenticated:
             try:
 
+                # --> 1. Ensure Queues Exist
                 if await dataset_client.check_dataset_read_only():
                     await self.send_json({
                         'type': 'services.ga_running_status',
@@ -376,10 +377,13 @@ class EOSSConsumer(DaphneConsumer):
                 else:
                     ga_algorithm_queue_url = await vassar_client.get_queue_url(ga_algorithm_queue_name)
 
-                # Start GA in container
+                # --> 2. Start GA
                 await vassar_client.start_ga(ga_algorithm_queue_url)
 
-                # Start listening for AWS SQS inputs
+                # --> 3. Start consumer thread waiting for ga start validation
+                # - runs until GA is finished
+                # - receives pings
+                # - alerts front-end of state changes
                 def aws_consumer():
                     print("--> GA Thread: Algorithm Queue URL is", ga_algorithm_queue_url)
                     sqs_client = get_boto3_client('sqs')

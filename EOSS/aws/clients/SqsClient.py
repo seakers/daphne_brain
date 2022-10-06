@@ -55,6 +55,7 @@ class SqsClient:
             name_in_use = await SqsClient.queue_exists_name(salt_name)
 
         # --> 2. Create queue and return url
+        print('--> CREATING QUEUE:', salt_name)
         try:
             response = await call_boto3_client_async('sqs', 'create_queue', {
                 "QueueName": salt_name,
@@ -71,7 +72,10 @@ class SqsClient:
     async def create_queue_name(queue_name):
         if not await SqsClient.queue_exists_name(queue_name):
             response = await call_boto3_client_async('sqs', 'create_queue', {
-                "QueueName": queue_name
+                "QueueName": queue_name,
+                "tags": {
+                    "ResourceGroup": "daphne-stack"
+                }
             })
             queue_url = response['QueueUrl']
             return queue_url
@@ -83,7 +87,10 @@ class SqsClient:
         if not await SqsClient.queue_exists_url(queue_url):
             queue_name = SqsClient.get_queue_name_from_url(queue_url)
             response = await call_boto3_client_async('sqs', 'create_queue', {
-                "QueueName": queue_name
+                "QueueName": queue_name,
+                "tags": {
+                    "ResourceGroup": "daphne-stack"
+                }
             })
             return response['QueueUrl']
         else:
@@ -272,10 +279,59 @@ class SqsClient:
             }
         })
 
+    @staticmethod
+    async def send_start_ga_msg(request_url, group_id, problem_id, dataset_id, response_url=None):
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'start_ga',
+                    'DataType': 'String'
+                },
+                "maxEvals": {
+                    "DataType": "String",
+                    "StringValue": '3000'
+                },
+                "crossoverProbability": {
+                    "DataType": "String",
+                    "StringValue": '1'
+                },
+                "mutationProbability": {
+                    "DataType": "String",
+                    "StringValue": "0.01666"
+                },
+                "group_id": {
+                    "DataType": "String",
+                    "StringValue": str(group_id)
+                },
+                "problem_id": {
+                    "DataType": "String",
+                    "StringValue": str(problem_id)
+                },
+                "dataset_id": {
+                    "DataType": "String",
+                    "StringValue": str(dataset_id)
+                }
+            }
+        })
+        if response_url is not None:
+            return await SqsClient.subscribe_to_message(response_url, 'gaStarted')
 
-
-
-
+    @staticmethod
+    async def send_stop_ga_msg(request_url, response_url=None):
+        response = await call_boto3_client_async('sqs', 'send_message', {
+            'QueueUrl': request_url,
+            'MessageBody': 'boto3',
+            'MessageAttributes': {
+                'msgType': {
+                    'StringValue': 'stop_ga',
+                    'DataType': 'String'
+                }
+            }
+        })
+        if response_url is not None:
+            return await SqsClient.subscribe_to_message(response_url, 'gaEnded')
 
     #####################
     ### Subscriptions ###

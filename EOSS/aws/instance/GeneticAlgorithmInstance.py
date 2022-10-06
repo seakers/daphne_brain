@@ -11,13 +11,13 @@ class GeneticAlgorithmInstance(AbstractInstance):
         super().__init__(user_info, instance, instance_status_info, instance_ssm_info)
         self.instance_type = 'genetic-algorithm'
 
-
     async def initialize(self):
         if self.instance is not None:
             await self._existing_instance()
         else:
             await self._new_resources()
             await self._new_instance(await self._definition)
+
 
     ##################
     ### PROPERTIES ###
@@ -90,6 +90,18 @@ class GeneticAlgorithmInstance(AbstractInstance):
             {
                 'Key': 'RESOURCE_STATE',
                 'Value': 'INITIALIZING'
+            },
+            {
+                'Key': 'MESSAGE_RETRIEVAL_SIZE',
+                'Value': '3'
+            },
+            {
+                'Key': 'MESSAGE_QUERY_TIMEOUT',
+                'Value': '5'
+            },
+            {
+                'Key': 'DEBUG',
+                'Value': 'false'
             }
         ]
 
@@ -120,26 +132,41 @@ class GeneticAlgorithmInstance(AbstractInstance):
             ],
         }
 
-
     ############
     ### PING ###
     ############
-
 
     async def ping(self):
         response = await super().ping()
         return response
 
-
-
     ################
     ### CONSOLE  ###
     ################
 
+    async def start_ga(self):
 
+        # --> 1. Check container running
+        if await self.get_instance_state() != 'running' or not await self.container_running():
+            return False
 
+        # --> 2. Send start msg
+        response = await SqsClient.send_start_ga_msg(self.private_request_url,
+                                                     self.eosscontext.group_id,
+                                                     self.eosscontext.problem_id,
+                                                     self.eosscontext.dataset_id,
+                                                     self.private_response_url)
+        return response is not None
 
+    async def stop_ga(self):
 
+        # --> 1. Check container running
+        if await self.get_instance_state() != 'running' or not await self.container_running():
+            return False
 
+        # --> 2. Send start msg
+        response = await SqsClient.send_stop_ga_msg(self.private_request_url, self.private_response_url)
+        return response is not None
 
-
+    async def apply_feature(self):
+        return 0

@@ -77,19 +77,19 @@ class AbstractInstance:
 
 
     async def initialize_ping_queues(self):
-        self.ping_request_url = await SqsClient.create_queue_name_unique(
-            'user-' + str(self.user_id) + '-design-evaluator-ping-request-queue' + self.identifier
+        self.ping_request_url = await SqsClient.create_queue_name(
+            'user-' + str(self.user_id) + '-'+self.instance_type+'-ping-request-queue-' + self.identifier
         )
-        self.ping_response_url = await SqsClient.create_queue_name_unique(
-            'user-' + str(self.user_id) + '-design-evaluator-ping-response-queue' + self.identifier
+        self.ping_response_url = await SqsClient.create_queue_name(
+            'user-' + str(self.user_id) + '-'+self.instance_type+'-ping-response-queue-' + self.identifier
         )
 
     async def initialize_private_queues(self):
-        self.private_request_url = await SqsClient.create_queue_name_unique(
-            'user-' + str(self.user_id) + '-design-evaluator-private-request-queue' + self.identifier
+        self.private_request_url = await SqsClient.create_queue_name(
+            'user-' + str(self.user_id) + '-'+self.instance_type+'-private-request-queue-' + self.identifier
         )
-        self.private_response_url = await SqsClient.create_queue_name_unique(
-            'user-' + str(self.user_id) + '-design-evaluator-private-response-queue' + self.identifier
+        self.private_response_url = await SqsClient.create_queue_name(
+            'user-' + str(self.user_id) + '-'+self.instance_type+'-private-response-queue-' + self.identifier
         )
 
 
@@ -192,6 +192,15 @@ class AbstractInstance:
         else:
             return self.instance['State']['Name']
 
+    async def get_instance_ipv4(self, fetch=False):
+        if fetch or self.instance is None:
+            await self.get_instance_obj()
+        if self.instance is None:
+            return 'Networking Off'
+        if self.instance['State']['Name'] == 'running' and 'PublicIpAddress' in self.instance:
+            return self.instance['PublicIpAddress']
+        return 'Networking Off'
+
     async def get_instance_tags(self, fetch=False):
         if fetch or self.instance is None:
             await self.get_instance_obj()
@@ -272,7 +281,8 @@ class AbstractInstance:
             'State': await self.get_instance_state(),
             'Status': await self.get_instance_status(),
             'SSMStatus': await self.get_instance_ssm_status(),
-            'Tags': await self.get_instance_tags()
+            'Tags': await self.get_instance_tags(),
+            'Ipv4': await self.get_instance_ipv4()
         }
 
     async def _ping_container(self):
@@ -315,7 +325,7 @@ class AbstractInstance:
 
         # --> 1. Check if instance stopped
         if await self.get_instance_state() != 'stopped':
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
         # --> 2. Start instance
         response = await call_boto3_client_async('ec2', 'start_instances', {
@@ -325,9 +335,9 @@ class AbstractInstance:
         # --> 3. Validate Start
         if response is not None and 'StartingInstances' in response and len(response['StartingInstances']) > 0:
             print('--> INSTANCE STARTING:', self.identifier)
-            return {'identifier': self.identifier, 'result': True}
+            return True
         else:
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
     async def stop_instance(self):
         # --> 0. Try to stop via vassar inside
@@ -338,7 +348,7 @@ class AbstractInstance:
 
         # --> 1. Ensure instance state is running
         if await self.get_instance_state() not in ['running']:
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
         # --> 2. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
@@ -349,15 +359,15 @@ class AbstractInstance:
         # --> 3. Validate Stop
         if response is not None and 'StoppingInstances' in response and len(response['StoppingInstances']) > 0:
             print('--> INSTANCE STOPPING:', self.identifier)
-            return {'identifier': self.identifier, 'result': True}
+            return True
         else:
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
     async def hibernate_instance(self):
 
         # --> 1. Ensure instance either pending or running
         if await self.get_instance_state() not in ['running']:
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
         # --> 2. Stop instance
         response = await call_boto3_client_async('ec2', 'stop_instances', {
@@ -368,9 +378,9 @@ class AbstractInstance:
         # --> 3. Validate Stop
         if response is not None and 'StoppingInstances' in response and len(response['StoppingInstances']) > 0:
             print('--> INSTANCE STOPPING:', self.identifier)
-            return {'identifier': self.identifier, 'result': True}
+            return True
         else:
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
 
     #################
@@ -381,19 +391,19 @@ class AbstractInstance:
         response = await self.ssm_command([
             '. /home/ec2-user/run.sh'
         ])
-        return {'identifier': self.identifier, 'result': response is not None}
+        return response is not None
 
     async def stop_container(self):
         response = await self.ssm_command([
             '. /home/ec2-user/stop.sh'
         ])
-        return {'identifier': self.identifier, 'result': response is not None}
+        return response is not None
 
     async def update_container(self):
         response = await self.ssm_command([
             '. /home/ec2-user/update.sh'
         ])
-        return {'identifier': self.identifier, 'result': response is not None}
+        return response is not None
 
 
 

@@ -46,7 +46,7 @@ class EOSSContext(models.Model):
     genetic_algorithm_service_lock = models.BooleanField(default=False)
 
     # --> Design Evaluator
-    design_evaluator_instance_count = models.IntegerField(default=3)
+    design_evaluator_instance_count = models.IntegerField(default=1)
     design_evaluator_request_queue_name = models.TextField(null=True)  # user-1-design-evaluator-request-queue
     design_evaluator_request_queue_url = models.TextField(null=True)
     design_evaluator_response_queue_name = models.TextField(null=True)  # user-1-design-evaluator-response-queue

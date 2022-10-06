@@ -2,10 +2,9 @@ import asyncio
 import json
 
 from EOSS.aws.instance.DesignEvaluatorInstance import DesignEvaluatorInstance
+from EOSS.aws.instance.GeneticAlgorithmInstance import GeneticAlgorithmInstance
 from EOSS.aws.clients.InstanceClient import InstanceClient
 from EOSS.aws.utils import _save_eosscontext
-
-
 
 
 class InstanceManager:
@@ -45,6 +44,8 @@ class InstanceManager:
             instance = None
             if self.resource_type == 'design-evaluator':
                 instance = DesignEvaluatorInstance(self.user_info)
+            elif self.resource_type == 'genetic-algorithm':
+                instance = GeneticAlgorithmInstance(self.user_info)
 
             # --> Initialize Instance, add
             async_tasks.append(asyncio.create_task(instance.initialize()))
@@ -59,11 +60,16 @@ class InstanceManager:
                 return DesignEvaluatorInstance(self.user_info, instance=instance,
                                                instance_status_info=instance_status_info,
                                                instance_ssm_info=instance_ssm_info)
+            elif self.resource_type == 'genetic-algorithm':
+                return GeneticAlgorithmInstance(self.user_info, instance=instance,
+                                                instance_status_info=instance_status_info,
+                                                instance_ssm_info=instance_ssm_info)
 
         self.instances = []
 
         # --> 1. Get user instances
-        user_instances, instance_status_info_list, instance_ssm_info_list = await InstanceClient.get_user_active_instances_all(self.user_id, self.resource_type)
+        user_instances, instance_status_info_list, instance_ssm_info_list = await InstanceClient.get_user_active_instances_all(
+            self.user_id, self.resource_type)
 
         # --> 2. Instantiate each user instance
         for idx, instance in enumerate(user_instances):
@@ -77,7 +83,6 @@ class InstanceManager:
             async_tasks.append(asyncio.create_task(instance.initialize()))
         for task in async_tasks:
             await task
-
 
     ########################
     ### INSTANCE GETTERS ###
@@ -120,8 +125,6 @@ class InstanceManager:
             await task
         return search_instances
 
-
-
     ############
     ### PING ###
     ############
@@ -141,8 +144,6 @@ class InstanceManager:
 
         return survey
 
-
-
     #####################
     ### CONTROL PANEL ###
     #####################
@@ -161,12 +162,10 @@ class InstanceManager:
 
     async def _resource_msg(self, instance, command, results):
         func = getattr(instance, command)
-        result = await func()
-        results.append(result)
-
-
-
-
+        results.append({
+            'result': await func(),
+            'identifier': instance.identifier
+        })
 
     ############
     ### LOCK ###
@@ -193,4 +192,3 @@ class InstanceManager:
         elif self.resource_type == 'genetic-algorithm':
             self.eosscontext.genetic_algorithm_service_lock = False
         await _save_eosscontext(self.eosscontext)
-

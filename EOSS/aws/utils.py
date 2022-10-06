@@ -90,7 +90,6 @@ def get_boto3_client(client_type, region_name='us-east-2'):
 import asyncio
 import aioboto3
 
-
 async def call_boto3_client_async(client_type, func_name, params=None, debug=True):
     if debug is True:
         print('--> ATTEMPTING ASYNC AWS CALL:', client_type, func_name)

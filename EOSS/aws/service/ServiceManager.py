@@ -22,6 +22,7 @@ class ServiceManager:
 
         # --> Instance Managers
         self.de_manager = InstanceManager(self.user_info, 'design-evaluator')
+        self.ga_manager = InstanceManager(self.user_info, 'genetic-algorithm')
 
 
     async def initialize(self, blocking=True):
@@ -44,6 +45,7 @@ class ServiceManager:
         # --> 2. Initialize Managers
         async_tasks = []
         async_tasks.append(asyncio.create_task(self.de_manager.initialize()))
+        async_tasks.append(asyncio.create_task(self.ga_manager.initialize()))
         if blocking:
             for task in async_tasks:
                 await task
@@ -54,6 +56,7 @@ class ServiceManager:
         # --> 1. Gather Managers
         async_tasks = []
         async_tasks.append(asyncio.create_task(self.de_manager.gather()))
+        async_tasks.append(asyncio.create_task(self.ga_manager.gather()))
         if blocking:
             for task in async_tasks:
                 await task
@@ -71,11 +74,12 @@ class ServiceManager:
             internal_survey[key] = ping_result
 
         survey = {
-            'vassar_containers': [],
-            'ga_containers': []
+            'vassar': [],
+            'ga': []
         }
         async_tasks = []
-        async_tasks.append(asyncio.create_task(add_to_survey(self.de_manager, survey, 'vassar_containers')))
+        async_tasks.append(asyncio.create_task(add_to_survey(self.de_manager, survey, 'vassar')))
+        async_tasks.append(asyncio.create_task(add_to_survey(self.ga_manager, survey, 'ga')))
         for task in async_tasks:
             await task
 
@@ -96,6 +100,11 @@ class ServiceManager:
         async_tasks.append(
             asyncio.create_task(
                 self._resource_msg(self.de_manager, instance_ids['vassar'], command, results, 'vassar')
+            )
+        )
+        async_tasks.append(
+            asyncio.create_task(
+                self._resource_msg(self.ga_manager, instance_ids['ga'], command, results, 'ga')
             )
         )
         if blocking is False:

@@ -151,40 +151,16 @@ class DesignEvaluatorInstance(AbstractInstance):
     ################
     ### CONSOLE  ###
     ################
-    
-    # async def start_instance(self):
-    #     result = await super().start_instance()
-    #     return {'identifier': self.identifier, 'result': result}
-    # async def stop_instance(self):
-    #     # --> 1. Try to stop via vassar inside
-    #     # await SqsClient.send_exit_msg(self.private_request_url)
-    #     # stopping = await self.wait_on_state('stopping', seconds=30)
-    #
-    #     # --> 2. Try to stop via ec2 call
-    #     result = await super().stop_instance()
-    #     return {'identifier': self.identifier, 'result': result}
-    # async def hibernate_instance(self):
-    #     result = await super().hibernate_instance()
-    #     return {'identifier': self.identifier, 'result': result}
-    # async def run_container(self):
-    #     result = await super().run_container()
-    #     return {'identifier': self.identifier, 'result': result}
-    # async def stop_container(self):
-    #     result = await super().stop_container()
-    #     return {'identifier': self.identifier, 'result': result}
-    # async def update_container(self):
-    #     result = await super().update_container()
-    #     return {'identifier': self.identifier, 'result': result}
 
     async def build_vassar(self):
 
         # --> 1. Check container running
         if await self.get_instance_state() != 'running' or not await self.container_running():
-            return {'identifier': self.identifier, 'result': False}
+            return False
 
         # --> 2. Send build msg
         response = await SqsClient.send_build_msg(self.private_request_url, self.private_response_url)
-        return {'identifier': self.identifier, 'result': response is not None}
+        return response is not None
 
 
 
