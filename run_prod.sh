@@ -17,7 +17,7 @@ fi
 INIT_SUPERVISOR="true"
 if [ "$INIT_SUPERVISOR" = "true" ]; then
     cd /app
-    BRAIN_ENV=$(cat .env | sed 's|=\([^\n\r]*\)|="\1"|' | tr '\r' ',' | tr -d '\n')
+    BRAIN_ENV=$(cat .env_prod | sed 's|=\([^\n\r]*\)|="\1"|' | tr '\r' ',' | tr -d '\n')
     sed -i "s|^environment=.*|environment=$BRAIN_ENV,PYTHONUNBUFFERED=\"1\"|" /etc/supervisor/supervisord.conf
     sed -i "s|^directory=.*|directory=/app|" /etc/supervisor/supervisord.conf
     supervisord -c /etc/supervisor/supervisord.conf

@@ -31,5 +31,5 @@ RUN touch /app/logs/daphne.logs
 
 # --> 5. Run app
 WORKDIR /app
-RUN chmod +x /app/run.sh
-CMD /app/run.sh
+RUN chmod +x /app/run_prod.sh
+CMD /app/run_prod.sh

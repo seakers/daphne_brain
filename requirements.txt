@@ -110,6 +110,7 @@ SQLAlchemy==1.4.40
 sqlparse==0.4.2
 srsly==2.4.4
 statsmodels==0.13.2
+supervisor==4.2.4
 thinc==8.0.17
 thrift==0.15.0
 tokenizers==0.12.1
