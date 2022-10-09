@@ -2,9 +2,9 @@ version: '3.7'
 services:
   brain:
     build:
-      dockerfile: Dockerfile
+      dockerfile: DockerfileDev
       context: .
-    image: 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain
+    image: apazagab/brain:latest
     ports:
       - 8000:8000
     volumes:

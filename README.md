@@ -7,20 +7,40 @@ The api which serves all of the Daphne interfaces
 - Registry `923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
 
 
-#### Commands
+### Commands
+
+
+##### AWS Docker Login
+
 `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 923405430231.dkr.ecr.us-east-2.amazonaws.com`
 
+
+
 ##### Local
+
 `docker-compose build`
+
 `docker-compose up -d`
 
+`dshell brain`
+
+`. run_dev.sh`
+
+
+
 ##### Dev
-`docker build -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain .`
-`docker run --network=daphne-network --name=brain 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
+
+`docker build -f DockerfileDev -t apazagab/brain:latest .`
+
+`docker run --network=daphne-network --name=brain apazagab/brain:latest`
+
+
 
 ##### Prod
-`docker build -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain .`
-`docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain`
+
+`docker build -f DockerfileProd -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain:latest .`
+
+`docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain:latest`
 
 
 

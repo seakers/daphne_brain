@@ -4,16 +4,15 @@
 ### FCGI METHOD ###
 ###################
 
-# --> Try to stop daemons --> Kill supervisorctl process
+# --> 1. Restart supervisorctl
 if [ "$(supervisorctl pid)" = "unix:///var/run/supervisor.sock no such file" ]; then
-    echo 'TRUEEE'
+    echo '--> Supervisorclt not running... '
 else
     . /app/stop.sh
     kill -s SIGTERM $(supervisorctl pid)
 fi
 
-
-# --> 1. Set supervisord.conf file environment
+# --> 2. Set supervisord.conf file environment
 INIT_SUPERVISOR="true"
 if [ "$INIT_SUPERVISOR" = "true" ]; then
     cd /app
@@ -23,12 +22,8 @@ if [ "$INIT_SUPERVISOR" = "true" ]; then
     supervisord -c /etc/supervisor/supervisord.conf
 fi
 
-# --> 2. Run Brain
+# --> 3. Run brain
 supervisorctl start brain:*
 
-
-##################
-### OLD METHOD ###
-##################
-
-# env $(cat .env | tr -d '\r') daphne -b 0.0.0.0 -p 8000 daphne_brain.asgi:application
+# --> 4. Tail the output log file
+tail -f /app/logs/brain.out.log /app/logs/brain.err.log
