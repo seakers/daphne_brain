@@ -24,7 +24,9 @@ COPY ./supervisord.conf  /etc/supervisor
 WORKDIR /app
 COPY ./. /app
 WORKDIR /app/logs
-RUN touch /app/logs/daphne.logs
+RUN touch /app/logs/daphne.logs && \
+    touch /app/logs/brain.out.log && \
+    touch /app/logs/brain.err.log
 
 # --> 4. Ensure Django Migrations are Applied (DEPRECATED)
 #RUN python3 manage.py migrate --run-syncdb
