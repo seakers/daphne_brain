@@ -24,6 +24,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '3.128.235.245',
+    '18.191.17.82'
     '127.0.0.1',
     'localhost',
     'daphne',
@@ -34,7 +35,9 @@ ALLOWED_HOSTS = [
     'selva-research.engr.tamu.edu',
     'daphne-at-dev.selva-research.com',
     'daphne-at.selva-research.com',
-    'brain'
+    'brain',
+    'daphne-dev-bucket.s3-website.us-east-2.amazonaws.com',
+    'daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com'
 ]
 
 USE_X_FORWARDED_HOST = True
@@ -73,6 +76,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'daphne_brain.tamu_subdomains_session.TamuSubdomainsSessionMiddleware',
+    'daphne_brain.HealthCheckMiddleware.HealthCheckMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -141,7 +145,8 @@ CORS_ORIGIN_WHITELIST = (
     'http://daphne.engr.tamu.edu',
     'http://localhost:8080',
     'http://dev.selva-research.com',
-    'http://prod.selva-research.com'
+    'http://prod.selva-research.com',
+    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com'
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -151,7 +156,8 @@ CSRF_TRUSTED_ORIGINS = (
     'http://daphne.engr.tamu.edu',
     'http://localhost:8080',
     'http://dev.selva-research.com',
-    'http://prod.selva-research.com'
+    'http://prod.selva-research.com',
+    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com'
 )
 
 
