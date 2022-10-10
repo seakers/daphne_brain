@@ -1,5 +1,6 @@
 .idea
 .env
+.env.local
 daphne_brain/__pycache__/*
 *.DS_Store
 iFEED_API/__pycache__/*

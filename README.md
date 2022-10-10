@@ -24,7 +24,7 @@ The api which serves all of the Daphne interfaces
 
 `dshell brain`
 
-`. run_dev.sh`
+`. run.sh`
 
 
 
