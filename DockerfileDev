@@ -26,7 +26,24 @@ COPY ./supervisord.conf  /etc/supervisor
 
 # --> 3. Copy Brain + create dirs
 WORKDIR /app
-COPY ./. /app
+COPY ./config /app/config
+COPY ./AT /app/AT
+COPY ./daphne_context /app/daphne_context
+COPY ./dialogue /app/dialogue
+COPY ./EDL /app/EDL
+COPY ./example_problem /app/example_problem
+COPY ./experiment /app/experiment
+COPY ./experiment_at /app/experiment_at
+COPY ./iFEED_API /app/iFEED_API
+COPY ./mycroft /app/mycroft
+COPY ./test /app/test
+COPY ./vassar_db /app/vassar_db
+COPY ./daphne_ws /app/daphne_ws
+COPY .env .env_prod manage.py migrate.sh run.sh run_prod.sh stop.sh ./
+COPY ./daphne_brain /app/daphne_brain
+COPY ./EOSS /app/EOSS
+COPY ./auth_API /app/auth_API
+#COPY ./. /app
 
 
 # --> 4. Ensure Django Migrations are Applied (DEPRECATED)

@@ -13,7 +13,16 @@ if [ "$(supervisorctl pid)" != "unix:///var/run/supervisor.sock no such file" ];
 fi
 
 
-# --> 3. Set supervisord.conf file environment
+# --> 3. Create logs dir if DNE
+if [ ! -d /app/logs ]; then
+  echo "CREATING DIR"
+  mkdir -p /app/logs;
+else
+  echo "DIR EXISTS"
+fi
+
+
+# --> 4. Set supervisord.conf file environment
 INIT_SUPERVISOR="true"
 if [ "$INIT_SUPERVISOR" = "true" ]; then
     cd /app
@@ -21,12 +30,6 @@ if [ "$INIT_SUPERVISOR" = "true" ]; then
     sed -i "s|^environment=.*|environment=$BRAIN_ENV,PYTHONUNBUFFERED=\"1\"|" /etc/supervisor/supervisord.conf
     sed -i "s|^directory=.*|directory=/app|" /etc/supervisor/supervisord.conf
     supervisord -c /etc/supervisor/supervisord.conf
-fi
-
-
-# --> 4. Create logs dir if DNE
-if [ ! -d /app/logs ]; then
-  mkdir -p /app/logs;
 fi
 
 
