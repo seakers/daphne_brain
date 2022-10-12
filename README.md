@@ -45,6 +45,9 @@ The api which serves all of the Daphne interfaces
 
 
 
+`docker build -f DockerfileProd -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain:fast-deploy .`
+
+`docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/brain:fast-deploy`
 
 
 
