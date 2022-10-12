@@ -26,6 +26,22 @@ COPY ./supervisord.conf  /etc/supervisor
 
 # --> 3. Copy Brain + create dirs
 WORKDIR /app
+#COPY ./config /app
+#COPY ./AT /app
+#COPY ./daphne_context /app
+#COPY ./dialogue /app
+#COPY ./EDL /app
+#COPY ./example_problem /app
+#COPY ./experiment /app
+#COPY ./experiment_at /app
+#COPY ./iFEED_API /app
+#COPY ./mycroft /app
+#COPY ./test /app
+#COPY ./vassar_db /app
+#COPY ./EOSS /app
+#COPY ./daphne_brain /app
+#COPY ./daphne_ws /app
+#COPY ./auth_API /app
 COPY ./. /app
 
 

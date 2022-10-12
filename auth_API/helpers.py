@@ -32,12 +32,7 @@ from mycroft.utils import generate_unique_mycroft_session
 
 """
 
-def get_session(session_key):
-    session_objs = Session.objects.filter(session_key=session_key)
-    if len(session_objs) == 0:
-        return None
-    else:
-        return session_objs[0]
+
 
 
 
@@ -52,7 +47,40 @@ def get_or_create_user_information(session, user, version='EOSS'):
         return create_user_information(session_key=session.session_key, version=version)
 
 
+
+
+
 def get_user_information(session, user):
+
+    # --> 1. If user is logged-in, try to get user_info by user
+    if user.is_authenticated:
+        query_rows = UserInformation.objects.filter(user__exact=user).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
+        if len(query_rows) >= 1:
+            return query_rows[0]
+        else:
+            print('--> (ERROR) USER AUTHENTICATED, BUT NO UserInformation ENTRY FOR USER')
+            return None
+
+    # --> 2. Generate session key if doesn't exist
+    if session.session_key is None:
+        session.create()
+
+    # --> 3. Get current session / try to get user_info
+    user_session = get_session(session.session_key)
+    if user_session is None:
+        print('--> (ERROR) COULD NOT FIND GENERATED SESSION')
+        return None
+    else:
+        session = user_session
+        query_rows = UserInformation.objects.filter(session_id__exact=session.session_key).select_related("user", "eosscontext", "eosscontext__activecontext", "experimentcontext", "edlcontext")
+        if len(query_rows) >= 1:
+            return query_rows[0]
+        else:
+            print('--> (ERROR) COULD NOT FIND UserInformation FOR SESSION')
+            return None
+
+
+def get_user_information2(session, user):
 
     if user.is_authenticated:
         # First try lookup by username
@@ -73,6 +101,8 @@ def get_user_information(session, user):
                                                                                                                "eosscontext__activecontext",
                                                                                                                "experimentcontext",
                                                                                                                "edlcontext")
+
+
     if len(userinfo_qs) >= 1:
         user_info = userinfo_qs[0]
         return user_info
@@ -137,3 +167,14 @@ def create_user_information(session_key=None, username=None, version='EOSS'):
         
 
         return user_info
+
+
+
+
+
+def get_session(session_key):
+    session_objs = Session.objects.filter(session_key=session_key)
+    if len(session_objs) == 0:
+        return None
+    else:
+        return session_objs[0]

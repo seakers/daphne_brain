@@ -22,28 +22,32 @@ SECRET_KEY = 'aaaaa'
 DEBUG = True
 
 
+# ALLOWED_HOSTS = [
+#     '3.128.235.245',
+#     '18.191.17.82'
+#     '127.0.0.1',
+#     'localhost',
+#     'daphne',
+#     'daphne_brain',
+#     'www.selva-research.com',
+#     'dev.selva-research.com',
+#     'prod.selva-research.com',
+#     'selva-research.engr.tamu.edu',
+#     'daphne-at-dev.selva-research.com',
+#     'daphne-at.selva-research.com',
+#     'brain',
+#     'daphne-dev-bucket.s3-website.us-east-2.amazonaws.com',
+#     'daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
+#     'daphne-dev-services.selva-research.com'
+# ]
 ALLOWED_HOSTS = [
-    '3.128.235.245',
-    '18.191.17.82'
-    '127.0.0.1',
-    'localhost',
-    'daphne',
-    'daphne_brain',
-    'www.selva-research.com',
-    'dev.selva-research.com',
-    'prod.selva-research.com',
-    'selva-research.engr.tamu.edu',
-    'daphne-at-dev.selva-research.com',
-    'daphne-at.selva-research.com',
-    'brain',
-    'daphne-dev-bucket.s3-website.us-east-2.amazonaws.com',
-    'daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com'
+    '*'
 ]
 
 USE_X_FORWARDED_HOST = True
 
-# ACTIVE_MODULES = ['EDL', 'EOSS', 'AT']
 ACTIVE_MODULES = ['EOSS']
+
 
 EDL_PATH = '/Users/ssantini/Code/'
 INSTALLED_APPS = [
@@ -146,7 +150,10 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:8080',
     'http://dev.selva-research.com',
     'http://prod.selva-research.com',
-    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com'
+    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com:8080',
+    'http://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
+    'https://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
+    'https://daphne-dev-services.selva-research.com'
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -157,7 +164,10 @@ CSRF_TRUSTED_ORIGINS = (
     'http://localhost:8080',
     'http://dev.selva-research.com',
     'http://prod.selva-research.com',
-    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com'
+    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com:8080',
+    'http://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
+    'https://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
+    'https://daphne-dev-services.selva-research.com'
 )
 
 
@@ -224,6 +234,7 @@ ECLSS_DATABASE = {
 
 # Session configuration
 # SESSION_ENGINE = "merge_session.merge_db"
+# SESSION_COOKIE_DOMAIN = '.s3-website.us-east-2.amazonaws.com'
 
 # Email
 
