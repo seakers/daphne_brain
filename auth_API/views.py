@@ -283,7 +283,7 @@ class GenerateSession(APIView):
         if request.session.session_key is None:
             print('--> GENERATING SESSION: GenerateSession')
             request.session['is_guest'] = False
-        request.session.save()                        # If None, create new session key and save
+        request.session.save()
         return Response("Session generated")
 
 

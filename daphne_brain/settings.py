@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'aaaaa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 # ALLOWED_HOSTS = [
@@ -145,17 +145,32 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # CORS & CSRF
 
+
+# SESSION_COOKIE_DOMAIN = '.s3-website.us-east-2.amazonaws.com'
+# CSRF_COOKIE_DOMAIN = '.s3-website.us-east-2.amazonaws.com'
+
+if os.environ['DEPLOYMENT_TYPE'] == 'aws':
+    # CSRF_COOKIE_SECURE = True
+    # CSRF_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_DOMAIN = '.selva-research.com'
+    # SESSION_COOKIE_SECURE = True
+    # SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_DOMAIN = '.selva-research.com'
+
+
+
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_WHITELIST = (
     'http://daphne.engr.tamu.edu',
     'http://localhost:8080',
     'http://dev.selva-research.com',
     'http://prod.selva-research.com',
-    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com:8080',
+    'http://daphne-dev-bucket.selva-research.com',
     'http://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
     'https://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
-    'https://daphne-dev-services.selva-research.com'
+    'http://daphne-dev-services.selva-research.com:8000'
+    'https://daphne-dev-services.selva-research.com:443'
 )
-
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -164,10 +179,11 @@ CSRF_TRUSTED_ORIGINS = (
     'http://localhost:8080',
     'http://dev.selva-research.com',
     'http://prod.selva-research.com',
-    'http://daphne-dev-bucket.s3-website.us-east-2.amazonaws.com:8080',
+    'http://daphne-dev-bucket.selva-research.com',
     'http://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
     'https://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
-    'https://daphne-dev-services.selva-research.com'
+    'https://daphne-dev-services.selva-research.com:443',
+    'http://daphne-dev-services.selva-research.com:8000'
 )
 
 
@@ -237,7 +253,6 @@ ECLSS_DATABASE = {
 
 # Session configuration
 # SESSION_ENGINE = "merge_session.merge_db"
-# SESSION_COOKIE_DOMAIN = '.s3-website.us-east-2.amazonaws.com'
 
 # Email
 
@@ -287,6 +302,16 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        # 'WARNING': {
+        #     'handlers': ['file', 'console'],
+        #     'level': 'WARNING',
+        #     'propagate': True,
+        # },
+        # 'INFO': {
+        #     'handlers': ['file', 'console'],
+        #     'level': 'INFO',
+        #     'propagate': True,
+        # },
         'iFEED': {
             'handlers': ['file', 'console'],
             'level': 'ERROR',

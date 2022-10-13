@@ -13,7 +13,16 @@ if [ "$(supervisorctl pid)" != "unix:///var/run/supervisor.sock no such file" ];
 fi
 
 
-# --> 3. Set supervisord.conf file environment
+# --> 3. Create logs dir if DNE
+if [ ! -d /app/logs ]; then
+  echo "CREATING DIR"
+  mkdir -p /app/logs;
+else
+  echo "DIR EXISTS"
+fi
+
+
+# --> 4. Set supervisord.conf file environment
 INIT_SUPERVISOR="true"
 if [ "$INIT_SUPERVISOR" = "true" ]; then
     cd /app
@@ -24,15 +33,14 @@ if [ "$INIT_SUPERVISOR" = "true" ]; then
 fi
 
 
-# --> 4. Create logs dir if DNE
-if [ ! -d /app/logs ]; then
-  mkdir -p /app/logs;
-fi
-
-
 # --> 5. Start brain
 supervisorctl start brain:*
 
 
+echo 'SLEEP'
+sleep 10s
+echo 'FINISHED SLEEPING, TAIL'
+
+
 # --> 6. Tail the output log file
-tail -f /app/logs/brain.out.log /app/logs/brain.err.log
+tail -F /app/logs/brain.out.log /app/logs/brain.err.log /app/logs/daphne.log
