@@ -38,4 +38,4 @@ supervisorctl start brain:*
 
 
 # --> 6. Tail the output log file
-tail -f /app/logs/brain.out.log /app/logs/brain.err.log
+tail -F /app/logs/brain.out.log /app/logs/brain.err.log

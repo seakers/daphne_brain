@@ -43,4 +43,4 @@ echo 'FINISHED SLEEPING, TAIL'
 
 
 # --> 6. Tail the output log file
-tail -F /app/logs/brain.out.log /app/logs/brain.err.log /app/logs/daphne.log
+tail -F /app/logs/brain.out.log /app/logs/brain.err.log

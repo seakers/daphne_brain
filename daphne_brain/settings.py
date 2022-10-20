@@ -168,7 +168,7 @@ CORS_ORIGIN_WHITELIST = (
     'http://daphne-dev-bucket.selva-research.com',
     'http://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
     'https://daphne-dev-load-balancer-1316892040.us-east-2.elb.amazonaws.com',
-    'http://daphne-dev-services.selva-research.com:8000'
+    'http://daphne-dev-services.selva-research.com:8000',
     'https://daphne-dev-services.selva-research.com:443'
 )
 CORS_ALLOW_CREDENTIALS = True

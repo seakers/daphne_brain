@@ -43,7 +43,6 @@ COPY .env .env_prod manage.py migrate.sh run.sh run_prod.sh stop.sh ./
 COPY ./daphne_brain /app/daphne_brain
 COPY ./EOSS /app/EOSS
 COPY ./auth_API /app/auth_API
-#COPY ./. /app
 
 
 # --> 4. Ensure Django Migrations are Applied (DEPRECATED)
