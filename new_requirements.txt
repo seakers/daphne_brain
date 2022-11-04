@@ -115,7 +115,7 @@ tokenizers==0.12.1
 torch==1.11.0
 tqdm==4.64.1
 transformers==4.17.0
-Twisted==22.4.0
+Twisted==22.10.0
 txaio==22.2.1
 typer==0.4.2
 typing_extensions==4.3.0
