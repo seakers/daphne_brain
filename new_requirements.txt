@@ -71,7 +71,7 @@ pathos==0.2.9
 pathy==0.6.2
 patsy==0.5.2
 pika==1.2.1
-Pillow==9.2.0
+Pillow==9.3.0
 pox==0.3.1
 ppft==1.7.6.5
 preshed==3.0.7
