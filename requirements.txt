@@ -15,7 +15,7 @@ blis==0.7.8
 boto3==1.21.21
 botocore==1.24.21
 catalogue==2.0.8
-certifi==2022.6.15
+certifi==2022.12.7
 cffi==1.15.1
 channels==3.0.5
 channels-redis==3.3.1
