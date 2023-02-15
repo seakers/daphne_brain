@@ -29,7 +29,7 @@ daphne==3.0.2
 dateparser==1.1.1
 Deprecated==1.2.13
 dill==0.3.5.1
-Django==4.1.1
+Django==4.1.7
 django-cors-headers==3.11.0
 django-filter==21.1
 djangorestframework==3.13.1
