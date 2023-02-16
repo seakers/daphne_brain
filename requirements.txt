@@ -126,7 +126,7 @@ tzlocal==4.2
 urllib3==1.26.12
 wasabi==0.10.1
 websockets==10.3
-Werkzeug==2.2.2
+Werkzeug==2.2.3
 wrapt==1.14.1
 yarl==1.8.1
 zope.interface==5.4.0
