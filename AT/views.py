@@ -1,5 +1,11 @@
 import json
-
+import time
+from asyncio import sleep
+from datetime import datetime
+import requests
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.http import JsonResponse, HttpResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -7,13 +13,18 @@ from rest_framework.views import APIView
 import AT.global_objects as global_obj
 from AT.neo4j_queries.query_functions import diagnose_symptoms_by_intersection_with_anomaly, \
     retrieve_figures_from_procedure, retrieve_references_from_procedure, retrieve_reference_links_from_procedure, \
-    get_explanations_from_historical_database
+    get_explanations_from_historical_database, get_astrobee_procedure_list_from_pride
 from AT.neo4j_queries.query_functions import retrieve_all_anomalies
 from AT.neo4j_queries.query_functions import retrieve_equipment_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_fancy_steps_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_objective_from_procedure
 from AT.neo4j_queries.query_functions import retrieve_procedures_fTitle_from_anomaly
 from auth_API.helpers import get_or_create_user_information
+from daphne_context.models import UserInformation
+
+astrobee_status = 'NA'
+response = 'NA'
+countdown = 10
 
 
 def check_threads_status():
@@ -84,6 +95,103 @@ class SeclssFeed(APIView):
             })
 
 
+class UserResponse(APIView):
+    def get(self, request):
+        date = datetime.now().astimezone().isoformat()
+        global countdown
+        countdown = countdown - 1
+        if countdown == 0:
+            global response
+            humanValue = response
+            user_response = {'sysrepName': 'daphne_yaml', 'dataReferenceQuality': 'GOOD', 'dataReferenceTime': date,
+                             'dataReferenceDetail': 'A telemetry message from Daphne', 'type': 'STRING',
+                             'humanValue': humanValue, 'rawValue': humanValue}
+        else:
+            user_response = {'sysrepName': 'daphne_yaml', 'dataReferenceQuality': 'GOOD', 'dataReferenceTime': date,
+                             'dataReferenceDetail': 'A telemetry message from Daphne', 'type': 'STRING',
+                             'humanValue': "", 'rawValue': ""}
+        return JsonResponse(user_response, status=201, safe=False)
+
+
+class YesOrNO(APIView):
+    def post(self, request):
+        if 'user_response' in request.data:
+            global response
+            response = request.data['user_response']
+            response = response.replace('"', '')
+            response = ''
+        global astrobee_status
+        astrobee_status = 'Response received.'
+        status = {'astrobee_status': astrobee_status}
+        return Response(status)
+
+
+class PrideStatus(APIView):
+    def post(self, request):
+        date = datetime.now().astimezone().isoformat()
+        if 'initialData' in request.data:
+            params = request.data['initialData']
+            status = params[0]['argValue']
+            global astrobee_status
+            astrobee_status = status
+
+        return HttpResponse(status=200)
+
+
+class AstrobeeStatus(APIView):
+    def post(self, request, format=None):
+        status = {'astrobee_status': astrobee_status}
+        return Response(status)
+
+
+class StartAstrobeeProcedure(APIView):
+    def post(self, request, format=None):
+
+        procedure_staticID = request.data['procedureID'].replace('"', '')
+
+        # start/open a procedure to send astrobee
+        url = "http://0.0.0.0:8000/api/procedures/available/" + procedure_staticID
+
+        payload = json.dumps({
+            "user": "test",
+            "startWithAutomation": "true",
+            "finishWithAutomation": "true"
+        })
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer a57a391b-5e00-4872-844e-66d975e73c0a'
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload)
+        procedure_runtime_ID = response.text.replace('"', '')
+
+        if response.ok:
+            # start automation of the procedure
+            url = 'http://0.0.0.0:8000/api/procedures/' + procedure_runtime_ID + '/startAutomation'
+
+            payload = json.dumps({
+                "user": "test",
+            })
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer a57a391b-5e00-4872-844e-66d975e73c0a'
+            }
+
+            response = requests.request("PUT", url, headers=headers, data=payload)
+
+            global astrobee_status
+            astrobee_status = "Astrobee procedure " + procedure_runtime_ID + " started."
+
+            return Response({
+                "status": astrobee_status
+            })
+        else:
+            return Response({
+                "status": "error",
+                "message": "ERROR starting the procedure"
+            })
+
+
 class HeraFeed(APIView):
     def post(self, request):
         # habitatStatus
@@ -116,8 +224,12 @@ class RequestDiagnosis(APIView):
         # diagnosis_list = diagnose_symptoms_by_subset_of_anomaly(parsed_symptoms_list)
         diagnosis_list = diagnose_symptoms_by_intersection_with_anomaly(symptoms_list)
 
+        # Send request to pride to get all the procedures
+        astrobee_procedure_list = get_astrobee_procedure_list_from_pride()
+
         # Build the diagnosis report and send it to the frontend
-        diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list}
+        diagnosis_report = {'symptoms_list': symptoms_list, 'diagnosis_list': diagnosis_list,
+                            'astrobee_procedure_list': astrobee_procedure_list}
 
         return Response(diagnosis_report)
 

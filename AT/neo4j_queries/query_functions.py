@@ -1,22 +1,23 @@
 import itertools
+import json
 import os
 import re
-
 import numpy
 import pandas as pd
+import requests
 from neo4j import GraphDatabase, basic_auth
 
 
 def set_up_connection():
     # setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
     return session
 
 
 def diagnose_symptoms_by_subset_of_anomaly(symptoms):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # build the query based on the symptoms list
@@ -65,7 +66,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         parsed_symptoms_list.append(symptom)
 
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build the query based on the symptoms list
@@ -199,15 +200,8 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
             else:
                 text_score = "Very likely"
 
-            # Get explanations
-            # Query the historical database to get all information
-            # then find the information you need
-            historical_explanations = get_explanations_from_historical_database(signature[anomaly])
+            top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
 
-            top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score, 'cardinality':
-                cardinality_for_each_anomaly[anomaly], 'containsRequestedSymptoms': anomalyContainsRequestedSymptoms[
-                anomaly], 'signature': signature[anomaly], 'missing_symptoms': missing_anomaly_symptoms[anomaly],
-                'num_occurrences': historical_explanations['num_occurrences'], 'time': historical_explanations['time']})
     # Return result
     final_diagnosis = top_n_diagnosis
 
@@ -216,7 +210,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
 def retrieve_all_anomalies():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -233,7 +227,7 @@ def retrieve_all_anomalies():
 
 def retrieve_all_measurements():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -250,7 +244,7 @@ def retrieve_all_measurements():
 
 def retrieve_all_measurements_parameter_groups():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -268,7 +262,7 @@ def retrieve_all_measurements_parameter_groups():
 
 def retrieve_all_procedures():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -285,7 +279,7 @@ def retrieve_all_procedures():
 
 def retrieve_procedures_fTitle_from_anomaly(anomaly_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -302,7 +296,7 @@ def retrieve_procedures_fTitle_from_anomaly(anomaly_name):
 
 def retrieve_procedures_title_from_anomaly(anomaly_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -319,7 +313,7 @@ def retrieve_procedures_title_from_anomaly(anomaly_name):
 
 def retrieve_affected_components_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -356,7 +350,7 @@ def retrieve_affected_components_from_procedure(procedure):
 
 def retrieve_time_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -392,7 +386,7 @@ def retrieve_time_from_procedure(procedure):
 
 def retrieve_risks_from_anomaly(anomaly_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -412,7 +406,7 @@ def retrieve_risks_from_anomaly(anomaly_name):
 
 def retrieve_affected_subsystems_from_anomaly(anomaly_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -429,7 +423,7 @@ def retrieve_affected_subsystems_from_anomaly(anomaly_name):
 
 def retrieve_symptoms_from_anomaly(anomaly_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query to obtain the affected measurements that exceed the upper caution limit
@@ -499,7 +493,7 @@ def retrieve_symptoms_from_anomaly(anomaly_name):
 
 def retrieve_thresholds_from_measurement(measurement_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -529,7 +523,7 @@ def retrieve_thresholds_from_measurement(measurement_name):
 
 def retrieve_units_from_measurement(measurement_name):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -549,7 +543,7 @@ def retrieve_units_from_measurement(measurement_name):
 
 def retrieve_ordered_steps_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -586,7 +580,7 @@ def retrieve_ordered_steps_from_procedure(procedure):
 
 def retrieve_fancy_steps_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -718,7 +712,7 @@ def retrieve_fancy_steps_from_procedure(procedure):
 
 def retrieve_objective_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -757,7 +751,7 @@ def retrieve_objective_from_procedure(procedure):
 
 def retrieve_equipment_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -796,7 +790,7 @@ def retrieve_equipment_from_procedure(procedure):
 
 def retrieve_references_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -830,7 +824,7 @@ def retrieve_references_from_procedure(procedure):
 
 def retrieve_reference_links_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -864,7 +858,7 @@ def retrieve_reference_links_from_procedure(procedure):
 
 def retrieve_figures_from_procedure(procedure):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     try:
@@ -901,7 +895,7 @@ def retrieve_figures_from_procedure(procedure):
 
 def retrieve_all_components():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -924,7 +918,7 @@ def retrieve_all_components():
 
 def retrieve_all_procedure_numbers():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -941,7 +935,7 @@ def retrieve_all_procedure_numbers():
 
 def retrieve_all_step_numbers():
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -960,7 +954,7 @@ def retrieve_all_step_numbers():
 
 def retrieve_procedures_from_pNumber(pNumber):
     # Setup neo4j database connection
-    driver = GraphDatabase.driver("neo4j://3.15.160.239:7687", auth=basic_auth("neo4j", "goSEAKers!"))
+    driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
 
     # Build and send the query
@@ -1083,3 +1077,20 @@ def get_binary_signatures(signature, header):
     arr[numpy.where(arr == '')] = '0000'
     binary_signature = "".join(arr)
     return binary_signature
+
+
+def get_astrobee_procedure_list_from_pride():
+    url = "http://localhost:8000/api/procedures/available"
+    payload = {}
+    headers = {
+        'Authorization': 'Bearer a57a391b-5e00-4872-844e-66d975e73c0a'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+    response = json.loads(response.content)
+    procedure_name = []
+    for item in response:
+        procedure_name.append(item['filename'])
+    return procedure_name
+
+    return None
