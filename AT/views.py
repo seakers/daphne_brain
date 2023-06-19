@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from asyncio import sleep
 from datetime import datetime
@@ -100,30 +101,35 @@ class UserResponse(APIView):
         date = datetime.now().astimezone().isoformat()
         global countdown
         countdown = countdown - 1
-        if countdown == 0:
+        if countdown < 0:
+            user_response = {'sysrepName': 'daphne_yaml', 'dataReferenceQuality': 'GOOD', 'dataReferenceTime': date,
+                             'dataReferenceDetail': 'A telemetry message from Daphne', 'type': 'STRING',
+                             'humanValue': "", 'rawValue': ""}
+        else:
             global response
             humanValue = response
             user_response = {'sysrepName': 'daphne_yaml', 'dataReferenceQuality': 'GOOD', 'dataReferenceTime': date,
                              'dataReferenceDetail': 'A telemetry message from Daphne', 'type': 'STRING',
                              'humanValue': humanValue, 'rawValue': humanValue}
-        else:
-            user_response = {'sysrepName': 'daphne_yaml', 'dataReferenceQuality': 'GOOD', 'dataReferenceTime': date,
-                             'dataReferenceDetail': 'A telemetry message from Daphne', 'type': 'STRING',
-                             'humanValue': "", 'rawValue': ""}
         return JsonResponse(user_response, status=201, safe=False)
 
 
 class YesOrNO(APIView):
     def post(self, request):
+        global astrobee_status
         if 'user_response' in request.data:
             global response
             response = request.data['user_response']
             response = response.replace('"', '')
             response = ''
-        global astrobee_status
-        astrobee_status = 'Response received.'
-        status = {'astrobee_status': astrobee_status}
-        return Response(status)
+            astrobee_status = 'Response received.'
+            global countdown
+            countdown = 15
+            status = {'astrobee_status': astrobee_status}
+            return Response(astrobee_status)
+        else:
+            status = {'astrobee_status': astrobee_status}
+            return Response(status)
 
 
 class PrideStatus(APIView):

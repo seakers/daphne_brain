@@ -1090,7 +1090,6 @@ def get_astrobee_procedure_list_from_pride():
     response = json.loads(response.content)
     procedure_name = []
     for item in response:
-        procedure_name.append(item['filename'])
+        if '-' in item['filename']:
+            procedure_name.append({'title': item['title'], 'staticProcedureID': item['staticProcedureID']})
     return procedure_name
-
-    return None
