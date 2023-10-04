@@ -51,6 +51,7 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 
 
 def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
+    print("symptoms: ", symptoms_list)
     parsed_symptoms_list = []
     for item in symptoms_list:
         threshold_tag = item['threshold_tag']
@@ -59,7 +60,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
                    'display_name': item['display_name'],
                    'relationship': relationship}
         parsed_symptoms_list.append(symptom)
-
+    print("parsed_symptoms: ", parsed_symptoms_list)
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
@@ -73,20 +74,25 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
             clause = clause + ' OR '
         query = query + clause
     query = query + ' RETURN DISTINCT a.Title'
-
+    print("query: ", query)
     # Query the database and parse the result (which is a list of the anomalies which symptoms have non empty
     # intersection with the requested symptoms)
     result = session.run(query)
     diagnosis = [node[0] for node in result]
 
+    print("RESULT: ", result)
+    print("DIAGNOSIS: ", diagnosis)
+
     parsed_input_symptoms = []
     for symptom in parsed_symptoms_list:
         parsed_input_symptoms.append({'measurement': symptom['display_name'], 'relationship': symptom['relationship']})
+    print("parsed_input_symptoms:", parsed_input_symptoms)
 
     parsed_symptoms_of_each_anomaly = {}
     for anomaly in diagnosis:
         # Retrieve symptoms of anomaly
         anomaly_symptoms = retrieve_symptoms_from_anomaly(anomaly)
+        print("anomaly_symptoms", anomaly_symptoms)
         parsed_symptom_of_anomaly = []
         symptom_of_anomaly = []
 
@@ -107,6 +113,41 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
         # Append the resulting object to the dictionary
         parsed_symptoms_of_each_anomaly[anomaly] = parsed_symptom_of_anomaly
+
+        print("parsed_symptom_of_anomaly", parsed_symptom_of_anomaly)
+        print("symptom_of_anomaly", symptom_of_anomaly)
+    print("parsed_symptom_of_each_anomaly", parsed_symptoms_of_each_anomaly)
+
+    # Start-Creating pairs of parsed anomalies
+
+    temp_pair_dict ={}
+    for key1 in parsed_symptoms_of_each_anomaly.keys():
+        for key2 in parsed_symptoms_of_each_anomaly.keys():
+            if key1 != key2:
+                values = parsed_symptoms_of_each_anomaly[key1] + parsed_symptoms_of_each_anomaly[key2]
+                values = [item for index, item in enumerate(values) if item not in values[:index]]
+                print("VALUES", values)
+                paired_key = (key1,key2)
+                temp_pair_dict[paired_key] = values
+
+    print("TEMP_PAIR_DICT: ",temp_pair_dict )
+
+    parsed_symptoms_of_each_anomaly.update(temp_pair_dict)
+
+    print("parsed_symptom_of_each_anomaly", parsed_symptoms_of_each_anomaly)
+
+    # adding pairs of anomalies to diagnosis as they don't exist in knowledge graph
+    temp_diagnosis = []
+    for i in range(len(diagnosis)):
+        for j in range(i + 1, len(diagnosis)):
+            pair = (diagnosis[i],diagnosis[j])
+            # pair.append(diagnosis[i])
+            # pair.append(diagnosis[j])
+            temp_diagnosis.append(pair)
+
+    diagnosis.extend(temp_diagnosis)
+    print("DIAGNOSIS: ", diagnosis)
+    # Creating pairs of parsed anomalies-End
 
     def compare_parsed(anomaly_symptom, parsed_input_symptom):
         measurements_are_equal = (anomaly_symptom['measurement'] == parsed_input_symptom['measurement'])
@@ -157,7 +198,8 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         size_of_each_anomaly[anomaly] = len(parsed_symptoms_of_each_anomaly[anomaly])
         signature[anomaly] = signatureSymptom
         missing_anomaly_symptoms[anomaly] = missing_symptom
-
+        print("cardinality_for_each_anomaly[", anomaly, "]: ", cardinality_for_each_anomaly[anomaly])
+        print("signature: ", signature)
     # Create the result storing variable and parse the size of the requested symptoms set
     scored_diagnosis = {}
     total_requested_symptoms = len(parsed_symptoms_list)
@@ -172,7 +214,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         score = round(g, 2)
         # Save it
         scored_diagnosis[anomaly] = score
-
+    print("scored_diagnosis", scored_diagnosis)
     # Sort the result according to the scores
     ordered_diagnosis = {k: v for k, v in sorted(scored_diagnosis.items(), key=lambda item1: item1[1])}
 
@@ -183,20 +225,94 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
     # Cast list to top 7 items
     top_n_diagnosis = []
     size_limit = min(7, len(ordered_diagnosis))
-    for i in range(0, size_limit):
+
+    print("ordered_diagnosis: ", ordered_diagnosis)
+    # Adding in different arrays based on score to list in ordered fashion
+    # very_likely = []
+    # likely = []
+    # somewhat_likely = []
+    for i in range(0, len(ordered_diagnosis)):
         anomaly = ordered_diagnosis[i]
         score = scored_diagnosis[anomaly]
         text_score = ""
         if score != 0:
-            if score < 0.33:
-                text_score = "Somewhat likely"
-            elif score < 0.66:
-                text_score = "Likely"
+            if score < 0.1:
+                text_score = "1"
+                # somewhat_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
+            elif 0.2 > score >= 0.1:
+                text_score = "2"
+                # likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
+            elif 0.3 > score >= 0.2:
+                text_score = "3"
+            elif 0.4 > score >= 0.3:
+                text_score = "4"
+            elif 0.5 > score >= 0.4:
+                text_score = "5"
+            elif 0.6 > score >= 0.5:
+                text_score = "6"
+            elif 0.7 > score >= 0.6:
+                text_score = "7"
+            elif 0.8 > score >= 0.7:
+                text_score = "8"
+            elif 0.9 > score >= 0.8:
+                text_score = "9"
             else:
-                text_score = "Very likely"
+                text_score = "10"
+                # very_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
+            if i < size_limit or top_n_diagnosis[-1]['text_score'] == text_score:
+                top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
 
-            top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
+    # pair of anomaly changes start
+    # pair_of_anomalies = []
+    # for i in range(len(ordered_diagnosis)):
+    #     for j in range(i + 1, len(ordered_diagnosis)):
+    #         pair = []
+    #         pair.append(ordered_diagnosis[i])
+    #         pair.append(ordered_diagnosis[j])
+    #         abs_score_diff = abs(scored_diagnosis[ordered_diagnosis[i]] - scored_diagnosis[ordered_diagnosis[j]])
+    #         score = (scored_diagnosis[ordered_diagnosis[i]] + scored_diagnosis[ordered_diagnosis[j]]) / 2.0
+    #         pair_of_anomalies.append({'pair': pair, 'abs_score_diff': abs_score_diff, 'score': score})
+    #
+    # print("PAIRS_OF_ANOMALIES", pair_of_anomalies)
 
+    # Sort the list of dictionaries by the 'abs_score_diff' key in ascending order
+    # pair_of_anomalies = [item for item in pair_of_anomalies if item['abs_score_diff'] <= 0.5]
+
+    # Print the sorted list
+    # print("pair_of_anomalies: ", pair_of_anomalies)
+    # ordered_pair_of_anomalies = sorted(pair_of_anomalies, key=lambda x: -x['score'])
+    #
+    # print("ordered_pair_of_anomalies: ", ordered_pair_of_anomalies)
+    #
+    # for i in range(len(ordered_pair_of_anomalies)):
+    #     anomaly = ordered_pair_of_anomalies[i]['pair']
+    #     score = ordered_pair_of_anomalies[i]['score']
+    #     text_score = ""
+    #     if score != 0:
+    #         if score < 0.33:
+    #             text_score = "Somewhat likely"
+    #             somewhat_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
+    #         elif score < 0.66:
+    #             text_score = "Likely"
+    #             likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
+    #         else:
+    #             text_score = "Very likely"
+    #             very_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
+
+            # top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
+
+    # for v in very_likely:
+    #     top_n_diagnosis.append(v)
+    # for l in likely:
+    #     top_n_diagnosis.append(l)
+    # for sl in somewhat_likely:
+    #     top_n_diagnosis.append(sl)
+
+    print("top_n_diagnosis_all", top_n_diagnosis)
+    # top_n_diagnosis = top_n_diagnosis[0:8]
+    # print("top_n_diagnosis", top_n_diagnosis)
+
+    # pair of anomaly changes end
     # Return result
     final_diagnosis = top_n_diagnosis
 
