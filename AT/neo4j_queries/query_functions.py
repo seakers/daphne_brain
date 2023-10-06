@@ -224,7 +224,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
     # Cast list to top 7 items
     top_n_diagnosis = []
-    size_limit = min(7, len(ordered_diagnosis))
+    size_limit = min(8, len(ordered_diagnosis))
 
     print("ordered_diagnosis: ", ordered_diagnosis)
     # Adding in different arrays based on score to list in ordered fashion
@@ -237,27 +237,27 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         text_score = ""
         if score != 0:
             if score < 0.1:
-                text_score = "1"
+                text_score = "Level 1"
                 # somewhat_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             elif 0.2 > score >= 0.1:
-                text_score = "2"
+                text_score = "Level 2"
                 # likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             elif 0.3 > score >= 0.2:
-                text_score = "3"
+                text_score = "Level 3"
             elif 0.4 > score >= 0.3:
-                text_score = "4"
+                text_score = "Level 4"
             elif 0.5 > score >= 0.4:
-                text_score = "5"
+                text_score = "Level 5"
             elif 0.6 > score >= 0.5:
-                text_score = "6"
+                text_score = "Level 6"
             elif 0.7 > score >= 0.6:
-                text_score = "7"
+                text_score = "Level 7"
             elif 0.8 > score >= 0.7:
-                text_score = "8"
+                text_score = "Level 8"
             elif 0.9 > score >= 0.8:
-                text_score = "9"
+                text_score = "Level 9"
             else:
-                text_score = "10"
+                text_score = "Level 10"
                 # very_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             if i < size_limit or top_n_diagnosis[-1]['text_score'] == text_score:
                 top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
