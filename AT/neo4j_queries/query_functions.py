@@ -127,10 +127,10 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
                 values = parsed_symptoms_of_each_anomaly[key1] + parsed_symptoms_of_each_anomaly[key2]
                 values = [item for index, item in enumerate(values) if item not in values[:index]]
                 print("VALUES", values)
-                paired_key = (key1,key2)
+                paired_key = (key1, key2)
                 temp_pair_dict[paired_key] = values
 
-    print("TEMP_PAIR_DICT: ",temp_pair_dict)
+    print("TEMP_PAIR_DICT: ", temp_pair_dict)
 
     parsed_symptoms_of_each_anomaly.update(temp_pair_dict)
 
@@ -237,50 +237,55 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         anomaly = ordered_diagnosis[i]
         score = scored_diagnosis[anomaly]
         text_score = ""
-        #level = 0
+        # level = 0
         if score != 0:
             if score < 0.12:
                 text_score = "Extremely Unlikely : 0-0.11"
-                #level = 1
+                # level = 1
                 # somewhat_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             elif 0.23 > score >= 0.12:
                 text_score = "Highly Unlikely : 0.12-0.22"
-                #level = 2
+                # level = 2
                 # likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             elif 0.34 > score >= 0.23:
                 text_score = "Unlikely : 0.23-0.33"
-                #level = 3
+                # level = 3
             elif 0.45 > score >= 0.34:
                 text_score = "Moderately Unlikely : 0.34-0.44"
-                #level = 4
+                # level = 4
             elif 0.56 > score >= 0.45:
                 text_score = "Equally Likely and Unlikely : 0.45-0.55"
-                #level = 5
+                # level = 5
             elif 0.67 > score >= 0.56:
                 text_score = "Moderately Likely : 0.56-0.66"
-                #level = 6
+                # level = 6
             elif 0.78 > score >= 0.67:
                 text_score = "Likely : 0.67-0.77"
-                #level = 7
+                # level = 7
             elif 0.89 > score >= 0.78:
                 text_score = "Highly Likely : 0.78-0.88"
-                #level = 8
+                # level = 8
             else:
                 text_score = "Extremely Likely : 0.89-1.0"
-                #level = 9
+                # level = 9
 
                 # very_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             if i < size_limit or top_n_diagnosis[-1]['score'] == score:
-                top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score})
-
+                top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score,
+                                        'cardinality': cardinality_for_each_anomaly[anomaly],
+                                        'containsRequestedSymptoms': anomalyContainsRequestedSymptoms[
+                                            anomaly], 'signature': signature[anomaly],
+                                        'missing_symptoms': missing_anomaly_symptoms[anomaly], })
 
     sorted_top_n_diagnosis = sorted(top_n_diagnosis, key=lambda x: (-x['score'], -len(x['name'])))
-
 
     print("top_n_diagnosis_all", top_n_diagnosis)
     print("sorted_top_n_diagnosis_all", sorted_top_n_diagnosis)
     # top_n_diagnosis = top_n_diagnosis[0:8]
     # print("top_n_diagnosis", top_n_diagnosis)
+
+    # Return result
+    final_diagnosis = top_n_diagnosis
 
     # pair of anomaly changes end
     # Return result
