@@ -138,9 +138,12 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
     # adding pairs of anomalies to diagnosis as they don't exist in knowledge graph
     temp_diagnosis = []
+    anomaly_pretty_name = []
+
     for i in range(len(diagnosis)):
         for j in range(i + 1, len(diagnosis)):
             pair = (diagnosis[i], diagnosis[j])
+            anomaly_pretty_name.append({pair, diagnosis[i] + ' & ' + diagnosis[j]})
             # pair.append(diagnosis[i])
             # pair.append(diagnosis[j])
             temp_diagnosis.append(pair)
@@ -236,6 +239,13 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
     for i in range(0, len(ordered_diagnosis)):
         anomaly = ordered_diagnosis[i]
         score = scored_diagnosis[anomaly]
+
+        anomaly_name = ''
+        if type(anomaly) is tuple:
+            anomaly_name = anomaly[0] + ' & ' + anomaly[1]
+        else:
+            anomaly_name = anomaly
+
         text_score = ""
         # level = 0
         if score != 0:
@@ -271,7 +281,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
                 # very_likely.append({'name': anomaly, 'score': score, 'text_score': text_score})
             if i < size_limit or top_n_diagnosis[-1]['score'] == score:
-                top_n_diagnosis.append({'name': anomaly, 'score': score, 'text_score': text_score,
+                top_n_diagnosis.append({'name': anomaly_name, 'score': score, 'text_score': text_score,
                                         'cardinality': cardinality_for_each_anomaly[anomaly],
                                         'containsRequestedSymptoms': anomalyContainsRequestedSymptoms[
                                             anomaly], 'signature': signature[anomaly],
