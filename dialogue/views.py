@@ -12,7 +12,19 @@ import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, DialogueContext
 from experiment.models import AllowedCommand
+# Begin of langchain changes
+import openai
+import langchain
+import os
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import GraphCypherQAChain
+from langchain.graphs import Neo4jGraph
+from langchain.prompts.prompt import PromptTemplate
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage, SystemMessage
 
+
+# end of langchain changes
 
 class Command(APIView):
     """
@@ -36,7 +48,214 @@ class Command(APIView):
                                        visual_message="[\"" + request.data["command"] + "\"]",
                                        writer="user",
                                        date=datetime.datetime.utcnow())
+        print(request.data)
+        # langchain changes
 
+        graph = Neo4jGraph(
+            url="bolt://13.58.54.49:7687",
+            username="neo4j",
+            password="goSEAKers!"
+        )
+
+        os.environ['OPENAI_API_KEY'] = "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"
+
+        chain = GraphCypherQAChain.from_llm(
+            ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
+        )
+
+        CYPHER_GENERATION_TEMPLATE = """
+        Task:Generate Cypher statement to query a graph database.
+
+        Instructions:
+        Use only the provided relationship types and properties in the schema.
+        Do not use any other relationship types or properties that are not provided.
+        If the cipher query has empty return say no info available.
+        If multiple answers exists mention all.
+        Just list the query results don't try to frame answers.
+
+        Schema:
+        {schema}
+
+        Cypher examples:
+        # Risks of main cabin fan failure inclue what?
+        MATCH (a:Anomaly)-[:Can_Cause]->(r:Risk)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'main cabin fan failure') AS similarity, r
+        WHERE similarity > 0.7
+        Return
+        CASE WHEN r IS NULL
+          THEN 'No risks found'
+          ELSE r.Title
+          END
+
+        # What are the potential risks of nitrogen tank leak
+        MATCH (a:Anomaly)-[:Can_Cause]->(r:Risk)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'N2 Ballast Tank Line Leak') AS similarity, r
+        WHERE similarity > 0.7
+        Return
+        CASE WHEN r IS NULL
+          THEN 'No risks found'
+          ELSE r.Title
+          END
+
+        # What are the potential risks of a nitrogen tank burst and a nitrogen tank line leak.
+        MATCH (a:Anomaly)-[:Can_Cause]->(r:Risk)
+        WHERE a.Name IN ['N2 Tank Burst', 'N2 Ballast Tank Line Leak']
+        RETURN r.Title
+        Instructions : give anwers from return value
+
+        # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
+        # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
+        MATCH (a:Anomaly)-[:Can_Cause]->(r:Risk)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'Reduced Main Cabin Fan #1 Capacity') AS similarity, r
+        WHERE similarity > 0.7
+        RETURN
+          CASE WHEN r IS NULL
+          THEN 'No risks found'
+          ELSE r.Title
+          END
+        Instructions :  Don't give answers from the web
+
+        # what are the potential risks of trace contaminants. Don't give answers from the web
+        # what are the risks of trace contaminants. Don't give answers from the web
+        # What are the potential risks of trace contaminants. Don't give answers from the web
+        MATCH (a:Anomaly)-[:Can_Cause]->(r:Risk)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'Trace Contaminants') AS similarity, r
+        WHERE similarity > 0.7
+        RETURN
+          CASE WHEN r IS NULL
+          THEN 'No risks found'
+          ELSE r.Title
+          END
+
+        # what is the signature of CDRA Failure. Mention all m.Name, m.ParameterGroup, r
+        # what is the signature associated with cdra failure. Mention all m.Name, m.ParameterGroup, r
+        MATCH (m:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(a:Anomaly)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'CDRA Failure') AS similarity, m, r
+        WHERE similarity > 0.7
+        RETURN m.Name, m.ParameterGroup, r
+        # Note: Give answers from query results
+
+        # what are the symptoms of cdra failure. Mention all m.Name, m.ParameterGroup, r
+        # if cdra failure was occurring what symptoms would I expect to see. Give answer from the query result
+        MATCH (m:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(a:Anomaly)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'CDRA Failure') AS similarity, m, r
+        WHERE similarity > 0.7
+        RETURN m.Name, m.ParameterGroup, r
+
+        # what measurements are affected by main cabin fan failure
+        MATCH (m:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(a:Anomaly)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'Main Cabin Fan Failure') AS similarity, m, r
+        WHERE similarity > 0.7
+        RETURN m.Name, m.ParameterGroup, r
+
+        # Note: Give answers from query results
+
+        # what are the characteristic symptoms of cdra lioh filter clogged. Mention all m.Name, m.ParameterGroup, r
+        MATCH (m:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(a:Anomaly)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,cdra lioh filter clogged') AS similarity, m, r
+        WHERE similarity > 0.7
+        RETURN m.Name, m.ParameterGroup, r
+
+
+        # Note: Give answers from query results
+
+        # what subsystems does biological filter saturation affect. Answer SubSystem's Title value
+        MATCH (a:Anomaly)-[:Affects]->(s:SubSystem)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'Biological Filter Saturation') AS similarity, s
+        WHERE similarity > 0.7
+        RETURN s.Title
+        # Note: Answer s.Title value
+
+        # how do i fix biological filter saturation. Mention the procedure titlte
+        MATCH (a:Anomaly)-[:Solution]->(p:Procedure)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'Biological Filter Saturation') AS similarity, p
+        WHERE similarity > 0.7
+        RETURN p.Title
+        # Note: Mention the procedure title
+
+        Note: Do not include any explanations or apologies in your responses.
+        Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
+        Do not include any text except the generated Cypher statement.
+        If multiple answers list all
+
+        # how long will it take me to solve biological filter saturation
+        # what is the average timeframe for resolving biological filter saturation
+        # how long will it take to complete fuel cell maintenance. Mention all times with correspnding procesdures, give the higher value first
+        MATCH (a:Anomaly)-[:Solution]->(p:Procedure)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'Biological Filter Saturation') AS similarity, p
+        WHERE similarity > 0.7
+        RETURN p.ETR
+
+        #Instructions: Mention all times in order with correspnding procesdures titles and number
+
+        # how long is 3.109
+        # time of completion 3.101
+        MATCH (p:Procedure)
+        WHERE p.pNumber = '3.109'
+        RETURN p.ETR
+
+        # how long would electrolysis system biological filter swap out take to complete
+        MATCH (p:Procedure)
+        WITH apoc.text.sorensenDiceSimilarity(p.Title,'Electrolysis System Biological Filter Swapout') AS similarity, p
+        WHERE similarity > 0.7
+        RETURN p.ETR
+
+        # read steps of procedure 3.109
+        MATCH (p:Procedure)-[:Has]->(s:Step)
+        WHERE p.pNumber = '3.109'
+        RETURN s.Title, s.Action
+
+        # how long will it take to solve wrs off nominal ph level.
+        MATCH (a:Anomaly)-[:Solution]->(p:Procedure)
+        WITH apoc.text.sorensenDiceSimilarity(a.Name,'WRS Off Nominal pH Level') AS similarity, p
+        WHERE similarity > 0.7
+        RETURN p.ETR, p.Title, p.pNumber
+
+
+
+        The question is:
+        {question}"""
+        CYPHER_GENERATION_PROMPT = PromptTemplate(
+            input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
+        )
+
+        chain = GraphCypherQAChain.from_llm(
+            ChatOpenAI(temperature=0, model="gpt-4"), graph=graph, verbose=True,
+            cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True
+        )
+        print(request.data['command'])
+        result1 = chain.run(request.data['command'])
+        folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
+        value = result1[0].get("p.Title", 'Key not found')
+        print("VALUE: " + value)
+        file_path = ""
+        if os.path.exists(os.path.join(folder_path, value + ".pdf")):
+            file_path = os.path.join(folder_path, value + ".pdf")
+            print(file_path)
+        result_string = ", ".join(str(item) if isinstance(item, dict) else item for item in result1)
+
+        # Create a descriptive string
+        description = "{} Just list the above information".format(result_string)
+
+        # Print or use the description as needed
+        print(description)
+
+        # conversation.run(description)
+
+        chat = ChatOpenAI()
+
+        messages = [
+            SystemMessage(
+                content="You are a helpful assistant that helps convert cipher query results to English Sentences"
+            ),
+            HumanMessage(content=description),
+        ]
+
+        response = chat(messages)
+
+        print(response.content)
+        return Response({'response': response.content})
+        # End of langchain changes
         # Experiment-specific code to limit what can be asked to Daphne
         AllowedCommand.objects.filter(user_information__exact=user_info).delete()
 
