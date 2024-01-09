@@ -2,11 +2,9 @@ import datetime
 import json
 import urllib.parse
 from collections import OrderedDict
-
 import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
 from daphne_brain.nlp_object import nlp
 from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
@@ -14,7 +12,9 @@ from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, DialogueContext
 from experiment.models import AllowedCommand
 
-#Begin of langchain changes
+
+#Begin of langchain
+from dotenv import load_dotenv
 import openai
 import langchain
 import os
@@ -61,7 +61,8 @@ class Command(APIView):
         )
 
         # os.environ['OPENAI_API_KEY'] = "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"
-        os.environ['OPENAI_API_KEY'] = "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"
+        load_dotenv()
+        os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
         print("HERE")
         chain = GraphCypherQAChain.from_llm(
             ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
