@@ -15,3 +15,4 @@ venv/
 venv_linux/
 experiment_at/results
 dialogue/models
+dialogue/.env
