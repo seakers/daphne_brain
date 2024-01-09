@@ -26,7 +26,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 #end of langchain changes
 
-print("Testing chatbot 2")
 class Command(APIView):
     """
     Process a command
@@ -37,6 +36,7 @@ class Command(APIView):
 
     def post(self, request, format=None):
         # Define context and see if it was already defined for this session
+
         # user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
         #
         # # Obtain the merged context
@@ -53,7 +53,6 @@ class Command(APIView):
         print("hi: ",request.data)
 
         # langchain changes
-
         graph = Neo4jGraph(
             url="bolt://13.58.54.49:7687",
             username="neo4j",
@@ -69,6 +68,7 @@ class Command(APIView):
         )
 
         CYPHER_GENERATION_TEMPLATE = """
+
                 Task:Generate Cypher statement to query a graph database.
 
                 Instructions:
@@ -226,16 +226,18 @@ class Command(APIView):
 
                 The question is:
                 {question}"""
+
         CYPHER_GENERATION_PROMPT = PromptTemplate(
             input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
         )
 
         chain = GraphCypherQAChain.from_llm(
-            ChatOpenAI(temperature=0, model="gpt-4"), graph=graph, verbose=True,
+            ChatOpenAI(temperature=0, model="gpt-3.5-turbo"), graph=graph, verbose=True,
             cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True
         )
         print(request.data['command'])
         result1 = chain.run(request.data['command'])
+
         # folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
         # value = result1[0].get("p.Title", 'Key not found')
         # print("VALUE: "+value)
@@ -269,12 +271,14 @@ class Command(APIView):
         response = chat(messages)
 
         print(response.content)
+
         return Response({"response": {
             "voice_message": response.content,
             "visual_message_type": ["text"],
             "visual_message": [response.content],
             "writer": "daphne"}
         })
+
         # End of langchain changes
         # Experiment-specific code to limit what can be asked to Daphne
         # AllowedCommand.objects.filter(user_information__exact=user_info).delete()
