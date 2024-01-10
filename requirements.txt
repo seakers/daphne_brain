@@ -18,7 +18,7 @@ scipy~=1.6.1
 spacy~=3.0.3
 statsmodels~=0.12.2
 SQLAlchemy==1.4.14
-tensorflow~=2.4.1
+#tensorflow~=2.4.1
 thrift~=0.13.0
 xlrd~=2.0.1
 asgiref~=3.3.4
