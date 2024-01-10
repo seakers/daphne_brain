@@ -15,7 +15,7 @@ python-Levenshtein~=0.12.2
 redis~=3.5.3
 schedule==1.1.0
 scipy~=1.6.1
-spacy~=3.0.3
+#spacy~=3.0.3
 statsmodels~=0.12.2
 SQLAlchemy==1.4.14
 #tensorflow~=2.4.1
