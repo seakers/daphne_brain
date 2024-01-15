@@ -6,8 +6,8 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from daphne_brain.nlp_object import nlp
-from dialogue.nn_models import nn_models
+# from daphne_brain.nlp_object import nlp
+# from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, DialogueContext
@@ -61,7 +61,7 @@ class Command(APIView):
 
         # os.environ['OPENAI_API_KEY'] = "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"
         load_dotenv()
-        os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
+        os.environ['OPENAI_API_KEY'] = "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"
         print("HERE")
         chain = GraphCypherQAChain.from_llm(
             ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
