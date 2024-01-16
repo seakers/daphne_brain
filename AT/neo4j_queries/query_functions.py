@@ -287,7 +287,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
                                             anomaly], 'signature': signature[anomaly],
                                         'missing_symptoms': missing_anomaly_symptoms[anomaly], })
 
-    sorted_top_n_diagnosis = sorted(top_n_diagnosis, key=lambda x: (-x['score'], -len(x['name'])))
+    sorted_top_n_diagnosis = sorted(top_n_diagnosis, key=lambda x: (-x['score'], len(x['name'])))
 
     print("top_n_diagnosis_all", top_n_diagnosis)
     print("sorted_top_n_diagnosis_all", sorted_top_n_diagnosis)
