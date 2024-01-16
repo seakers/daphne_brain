@@ -294,10 +294,8 @@ class Command(APIView):
                         pdf_name = value + ".pdf"
                         folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
                         filepath = os.path.join(folder_path, pdf_name)
-                        path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures", pdf_name)
-                        pdf_link = urllib.parse.urlencode({"filename": path})
-                        #result1[0][key] = f'<a href="{pdf_link}" target="_blank">{pdf_name}</a>'
-                        # result1[0][key] = f'<a href = "javascript:window.open(window.location.href+\'src/images/${component}\');">${COMPONENT1} </a>'
+                        path = os.path.join(os.getcwd(), "AT", "databases", "procedures", pdf_name)
+                        pdf_link = urllib.parse.urlencode({"": path})
                         print("res[0]: ", result1[0])
                         link_flag = 1
 
@@ -330,39 +328,7 @@ class Command(APIView):
 
 
             if link_flag == 1:
-                response.content = response.content + "\nHere is the link\n" + f'<a href="{pdf_link}" target="_blank">{pdf_name}</a>'
-                # delimiter = '.'  # Change this to the actual delimiter you are using
-                #
-                # result1_flat = {key.split(delimiter, 1)[1]: value for key, value in result1[0].items()}
-                #
-                # # Create a list of "key": "value" strings
-                # key_value_strings = [f'{key}: {value}' for key, value in result1_flat.items()]
-                #
-                # # Join the list into a single string
-                # result_string = ", ".join(key_value_strings)
-                #
-                # # Print the result
-                # print(result_string)
-                #
-                # chat = ChatOpenAI()
-                #
-                # messages = [
-                #     SystemMessage(
-                #         content="You are a helpful assistant that helps present cipher query results to human readable form"
-                #     ),
-                #     HumanMessage(content=result_string),
-                # ]
-                #
-                # response = chat(messages)
-                # print("YO",key_value_strings[0])
-                # #response.content = response.content.replace("", key_value_strings[0])
-                # print(response)
-                # return Response({"response": {
-                #     "voice_message": key_value_strings,
-                #     "visual_message_type": ["text"],
-                #     "visual_message": [response.content],
-                #     "writer": "daphne"}
-                # })
+                response.content = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename"+pdf_link}" target="_blank">{pdf_name}</a>'
             return Response({"response": {
                 "voice_message": response.content,
                 "visual_message_type": ["text"],
