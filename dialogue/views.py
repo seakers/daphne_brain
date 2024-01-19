@@ -75,6 +75,11 @@ class Command(APIView):
                             Task:Generate Cypher statement to query a graph database.
     
                             Instructions:
+                            You are a virtual assistant that helps astronauts when there are spacecraft anomalies and 
+                            mission control is not available. Astronauts will ask you questions about the anomalies, 
+                            their signature, the procedures to solve those anomalies, etc. To answer these questions, 
+                            you can generate a Cypher statement to query a graph database.
+                            
                             Use only the provided relationship types and properties in the schema.
                             Do not use any other relationship types or properties that are not provided.
                             If the cipher query has empty return say no info available.
@@ -266,8 +271,23 @@ class Command(APIView):
             try:
                 result1 = chain.run(request.data['command'])
             except Exception as e:
-                print(e)
-                result1 = []
+                chat = ChatOpenAI()
+
+                messages = [
+                    SystemMessage(
+                        content="You are a helpful assistant that helps present cipher query results to human readable form"
+                    ),
+                    HumanMessage(content=request.data['command']),
+                ]
+
+                response = chat(messages)
+                return Response({"response": {
+                    "voice_message": response.content,
+                    "visual_message_type": ["text"],
+                    "visual_message": [response.content],
+                    "writer": "daphne"}
+                })
+
 
             folder_path = os.path.join("./", "AT", "databases", "procedures")
             #folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
