@@ -4,7 +4,6 @@ import re
 import urllib.parse
 from collections import OrderedDict
 
-
 import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,7 +15,7 @@ from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, DialogueContext
 from experiment.models import AllowedCommand
 
-#Begin of langchain
+# Begin of langchain
 from dotenv import load_dotenv
 import openai
 import langchain
@@ -27,9 +26,11 @@ from langchain.graphs import Neo4jGraph
 from langchain.prompts.prompt import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
+
+
 # from django.http import HttpResponse
 # from django.http import FileResponse, Http404
-#end of langchain changes
+# end of langchain changes
 
 class Command(APIView):
     """
@@ -63,9 +64,9 @@ class Command(APIView):
             )
 
             # os.environ['OPENAI_API_KEY'] = "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"
-            os.environ['OPENAI_API_KEY'] = "sk - TvjDOEtX8QgbRSwhdWQwT3BlbkFJo8fT6kgKnKxBPd6s10K1"
+            os.environ['OPENAI_API_KEY'] = "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"
             load_dotenv()
-            #os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
+            # os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
             print("HERE")
             chain = GraphCypherQAChain.from_llm(
                 ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
@@ -262,7 +263,6 @@ class Command(APIView):
                 input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
             )
 
-
             chain = GraphCypherQAChain.from_llm(
                 ChatOpenAI(temperature=0, model="gpt-3.5-turbo"), graph=graph, verbose=True,
                 cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True
@@ -289,9 +289,8 @@ class Command(APIView):
                     "writer": "daphne"}
                 })
 
-
             folder_path = os.path.join("./", "AT", "databases", "procedures")
-            #folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
+            # folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
             desired_string = 'Title'
             matching_keys = []
             if len(result1) > 0:
@@ -344,12 +343,10 @@ class Command(APIView):
             ]
 
             response = chat(messages)
-            #print("Yahoo:", response.dict)
-
-
+            # print("Yahoo:", response.dict)
 
             if link_flag == 1:
-                response.content = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename"+pdf_link}" target="_blank">{pdf_name}</a>'
+                response.content = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename" + pdf_link}" target="_blank">{pdf_name}</a>'
             return Response({"response": {
                 "voice_message": response.content,
                 "visual_message_type": ["text"],
@@ -374,8 +371,7 @@ class Command(APIView):
                                            writer="user",
                                            date=datetime.datetime.utcnow())
 
-            print("hi: ",request.data)
-
+            print("hi: ", request.data)
 
             # Experiment-specific code to limit what can be asked to Daphne
             AllowedCommand.objects.filter(user_information__exact=user_info).delete()
@@ -426,7 +422,8 @@ class Command(APIView):
                     command_class = self.command_options[command_role]
                     condition_name = self.condition_names[command_role]
 
-                    command_predictions = command_processing.command_type_predictions(processed_command, self.daphne_version,
+                    command_predictions = command_processing.command_type_predictions(processed_command,
+                                                                                      self.daphne_version,
                                                                                       command_class)
 
                     # If highest value prediction is over 95%, take that question. If over 90%, ask the user to make sure
@@ -436,14 +433,16 @@ class Command(APIView):
                         command_type = command_processing.get_top_types(command_predictions, self.daphne_version,
                                                                         command_class, top_number=1)[0]
                         new_dialogue_contexts = self.create_dialogue_contexts()
-                        dialogue_turn = command_processing.answer_command(processed_command, command_type, command_class,
+                        dialogue_turn = command_processing.answer_command(processed_command, command_type,
+                                                                          command_class,
                                                                           condition_name, user_info, context,
                                                                           new_dialogue_contexts, request.session)
                         self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
                     elif max_value > 0.90:
                         command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
                                                                          command_class, top_number=3)
-                        command_processing.choose_command(command_types, self.daphne_version, command_role, command_class,
+                        command_processing.choose_command(command_types, self.daphne_version, command_role,
+                                                          command_class,
                                                           user_info)
                     else:
                         command_processing.not_answerable(user_info)
