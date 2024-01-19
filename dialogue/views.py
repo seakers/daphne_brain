@@ -63,8 +63,9 @@ class Command(APIView):
             )
 
             # os.environ['OPENAI_API_KEY'] = "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"
+            os.environ['OPENAI_API_KEY'] = "sk - TvjDOEtX8QgbRSwhdWQwT3BlbkFJo8fT6kgKnKxBPd6s10K1"
             load_dotenv()
-            os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
+            #os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
             print("HERE")
             chain = GraphCypherQAChain.from_llm(
                 ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
