@@ -300,11 +300,11 @@ class Command(APIView):
                         if match:
                             image_name = match.group(1)
                             image_name = image_name.replace(" ", "_")
-                            image_link = image_name+".png"
+                            image_link = urllib.parse.urlencode({"": os.path.join(os.getcwd(), "daphne-at-interface", "src", "images",image_name + ".png")})
                             image_name = image_name.replace("_", " ")
                         break
                 if flag1:
-                   res = "\nHere is the image<br>" + f'<a href="{"/src/images/" + image_link}" target="_blank">{image_name}</a>'
+                   res = "\nHere is the image<br>" + f'<a href="{"api/at/recommendation/figure?filename" + image_link}" target="_blank">{image_name}</a>'
                    res_voice = "Here is the image you requested"
                    return Response({"response": {
                        "voice_message": res_voice,
