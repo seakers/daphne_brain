@@ -46,7 +46,6 @@ class Command(APIView):
         print("hi: ", request.data['command'])
         templates = [r"^Check measurement (.+) status$", r"^Check (.+) status$",
                      r"^Show the current value of (.+) measurement$", r"^Show the current value of (.+)$",
-                     r"^Show the image of component (.+)$", r"^Show the image of (.+)$",
                      r"^Read steps of procedure (.+)", r"^Read steps of (.+)", "Next", "previous", "Repeat",
                      "Previous", "next", "repeat"]
         flag = False
@@ -288,6 +287,31 @@ class Command(APIView):
             print(request.data['command'])
             print(chain)
             try:
+                temps = [r"^Show the image of component (.+)$", r"^Show the image of (.+)$"]
+                image_link = ""
+                image_name = ""
+
+                flag1= False
+                for temp in temps:
+                    pattern = re.compile(temp, re.IGNORECASE)
+                    flag1 = bool(pattern.match(request.data['command']))
+                    if flag1:
+                        match = re.match(pattern, request.data['command'])
+                        if match:
+                            image_name = match.group(1)
+                            image_name = image_name.replace(" ", "_")
+                            image_link = image_name+".png"
+                            image_name = image_name.replace("_", " ")
+                        break
+                if flag1:
+                   res = "\nHere is the image<br>" + f'<a href="{"/src/images/" + image_link}" target="_blank">{image_name}</a>'
+                   res_voice = "Here is the image you requested"
+                   return Response({"response": {
+                       "voice_message": res_voice,
+                       "visual_message_type": ["text"],
+                       "visual_message": [res],
+                       "writer": "daphne"}
+                   })
                 result1 = chain.run(request.data['command'])
             except Exception as e:
                 print('Error:', e)
