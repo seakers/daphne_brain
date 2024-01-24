@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+import sys
 import urllib.parse
 from collections import OrderedDict
 
@@ -235,10 +236,10 @@ class Command(APIView):
                             Note: answer the question like -> The title of the procedure is "CDRA Zeolite Filter Swapout" and the procedure number is 3.104.
     
                             # read steps cdra zeolite filter swap out
-                            MATCH (procedure:Procedure)-[:Has]->(s)
+                            MATCH (procedure:Procedure)-[:Has]->(step)
                             WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
                             RETURN step.Title, step.Action
-                            ORDER BY step.Step,step.Substep,step.SubSubStep
+                            ORDER BY step.Step,step.SubSubStep,step.SubStep
     
                             Note: always check all nodes connected through has relationship
     
@@ -256,6 +257,23 @@ class Command(APIView):
                             RETURN procedure.Title, procedure.pNumber
 
                             Note: use the name of the node type as the variable for that node
+                            
+                            #what anomalies are related to the ppCO2
+                            MATCH (measurement:Measurement)-[]->(anomaly:Anomaly)
+                            WHERE measurement.Name = 'ppCO2'
+                            RETURN anomaly.Name
+                            
+                            # give me a list of possible anomalies regarding the Sabatier system
+                            Match(anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
+                            WITH apoc.text.sorensenDiceSimilarity(subsystem.Title,'Sabatier') AS similarity, anomaly
+                            WHERE similarity > 0.85
+                            return anomaly.Name 
+                            
+                            # what is step 1.1 of procedure 3.124
+                            MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
+                            WHERE procedure.pNumber = '3.124' AND substep.Step = 1 AND substep.SubStep = 1
+                            RETURN substep.Title, substep.Action
+                            
                             The question is:
                             {question}"""
 
@@ -264,14 +282,15 @@ class Command(APIView):
             )
 
             chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0, model="gpt-3.5-turbo"), graph=graph, verbose=True,
-                cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True
+                ChatOpenAI(temperature=0, model="gpt-4"), graph=graph, verbose=True,
+                cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize
             )
             print(request.data['command'])
             print(chain)
             try:
                 result1 = chain.run(request.data['command'])
             except Exception as e:
+                print('Error:', e)
                 chat = ChatOpenAI()
 
                 messages = [
@@ -333,20 +352,29 @@ class Command(APIView):
             print("Description:", description)
             # conversation.run(description)
 
-            chat = ChatOpenAI()
+            chat = ChatOpenAI(model="gpt-4")
 
             messages = [
                 SystemMessage(
-                    content="You are a helpful assistant that helps present cipher query results to human readable form"
+                    content="You are a helpful assistant that helps present cipher query results to human readable form, don't write any fullforms, present information as it is in sentences"
                 ),
                 HumanMessage(content=description),
             ]
 
             response = chat(messages)
-            # print("Yahoo:", response.dict)
+
+            response.content = response.content.replace('\n', '<br>')
+            print("Yahoo:", response.dict)
 
             if link_flag == 1:
-                response.content = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename" + pdf_link}" target="_blank">{pdf_name}</a>'
+                response_final = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename" + pdf_link}" target="_blank">{pdf_name}</a>'
+                return Response({"response": {
+                    "voice_message": response.content,
+                    "visual_message_type": ["text"],
+                    "visual_message": [response_final],
+                    "writer": "daphne"}
+                })
+
             return Response({"response": {
                 "voice_message": response.content,
                 "visual_message_type": ["text"],
