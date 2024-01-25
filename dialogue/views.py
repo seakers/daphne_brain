@@ -282,7 +282,7 @@ class Command(APIView):
 
             chain = GraphCypherQAChain.from_llm(
                 ChatOpenAI(temperature=0, model="gpt-4"), graph=graph, verbose=True,
-                cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize
+                cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
             )
             print(request.data['command'])
             print(chain)
@@ -379,7 +379,7 @@ class Command(APIView):
             print("Description:", description)
             # conversation.run(description)
 
-            chat = ChatOpenAI(model="gpt-4")
+            chat = ChatOpenAI(model="gpt-4-0125-preview")
 
             messages = [
                 SystemMessage(
