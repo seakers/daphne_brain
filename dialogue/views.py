@@ -235,10 +235,18 @@ class Command(APIView):
                             Note: answer the question like -> The title of the procedure is "CDRA Zeolite Filter Swapout" and the procedure number is 3.104.
     
                             # read steps cdra zeolite filter swap out
-                            MATCH (procedure:Procedure)-[:Has]->(step)
+                            MATCH (procedure:Procedure)-[:Has]->(step:Step)
                             WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                            RETURN step.Title, step.Action
-                            ORDER BY step.Step,step.SubSubStep,step.SubStep
+                            
+                            MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
+                            WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
+                            
+                            
+                            MATCH (procedure:Procedure)-[:Has]->(subsubstep:SubSubStep)
+                            WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
+                            RETURN step.Title, step.Action, substep.Title, substep.Action, subsubstep.Title, subsubstep.Action
+                            
+                            ORDER BY step.Step,subsubstep.SubSubStep,substep.SubStep
     
                             Note: always check all nodes connected through has relationship
     
@@ -273,6 +281,12 @@ class Command(APIView):
                             WHERE procedure.pNumber = '3.124' AND substep.Step = 1 AND substep.SubStep = 1
                             RETURN substep.Title, substep.Action
                             
+                            # how long it takes to solve tccs fan failure
+                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'TCCS Aux Fan #1 Failure') AS similarity, procedure
+                            WHERE similarity > 0.8
+                            RETURN procedure.ETR, procedure.Title, procedure.pNumber
+                            
                             The question is:
                             {question}"""
 
@@ -281,7 +295,7 @@ class Command(APIView):
             )
 
             chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0, model="gpt-4"), graph=graph, verbose=True,
+                ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), graph=graph, verbose=True,
                 cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
             )
             print(request.data['command'])
