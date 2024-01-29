@@ -287,6 +287,42 @@ class Command(APIView):
                             WHERE similarity > 0.8
                             RETURN procedure.ETR, procedure.Title, procedure.pNumber
                             
+                            # what is the difference in symptoms between cdra failure and main cabin fan failure
+                            MATCH (measurement:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
+                            WHERE anomaly.Name IN ['CDRA Failure', 'Main Cabin Fan Failure']
+                            RETURN anomaly.Name,  measurement.Name,  measurement.ParameterGroup, type(r)
+
+                            # What is the confidence score of 'ppCO2','Exceeds_UpperWarningLimit','L2','ppCO2','Exceeds_UpperWarningLimit','L1','ppO2','Exceeds_LowerCautionLimit','L1','ppO2','Exceeds_LowerCautionLimit','L2' for cdra failure
+                            MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_LowerCautionLimit]->(anomaly:Anomaly)
+                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement
+                            WHERE similarity > 0.8 AND 
+                            measurement.Name = 'ppCO2' AND type(r) = 'Exceeds_UpperWarningLimit' OR 
+                            measurement.Name = 'ppO2' AND type(r) = 'Exceeds_LowerCautionLimit'
+                            WITH COUNT(DISTINCT measurement) AS measurementCount
+
+                            MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_UpperCautionLimit|Exceeds_LowerCautionLimit|Exceeds_LowerWarningLimit]->(anomaly:Anomaly)
+                            WHERE anomaly.Name = 'CDRA Failure'
+                            WITH COUNT(DISTINCT measurement) AS totalCount, measurementCount
+
+
+                            WITH measurementCount * 1.0 / totalCount AS ratio
+
+
+                            WITH ratio,
+                            CASE 
+                                WHEN ratio < 0.12 THEN "Extremely Unlikely : 0-0.11"
+                                WHEN 0.12 <= ratio < 0.23 THEN "Highly Unlikely : 0.12-0.22"
+                                WHEN 0.23 <= ratio < 0.34 THEN "Unlikely : 0.23-0.33"
+                                WHEN 0.34 <= ratio < 0.45 THEN "Moderately Unlikely : 0.34-0.44"
+                                WHEN 0.45 <= ratio < 0.56 THEN "Equally Likely and Unlikely : 0.45-0.55"
+                                WHEN 0.56 <= ratio < 0.67 THEN "Moderately Likely : 0.56-0.66"
+                                WHEN 0.67 <= ratio < 0.78 THEN "Likely : 0.67-0.77"
+                                WHEN 0.78 <= ratio < 0.89 THEN "Highly Likely : 0.78-0.88"
+                                ELSE "Extremely Likely : 0.89-1.0"
+                            END AS text_score
+
+                            RETURN ratio, text_score
+
                             The question is:
                             {question}"""
 
@@ -397,7 +433,7 @@ class Command(APIView):
 
             messages = [
                 SystemMessage(
-                    content="You are a helpful assistant that helps present cipher query results to human readable form, don't write any fullforms, present information as it is in sentences"
+                    content="You are a helpful assistant that helps present cipher query results to human readable form, don't write any fullforms, present information as it is in sentences, give line breaks whereever required to improve formatting"
                 ),
                 HumanMessage(content=description),
             ]
