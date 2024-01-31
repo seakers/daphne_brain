@@ -29,6 +29,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 
 
+
 # from django.http import HttpResponse
 # from django.http import FileResponse, Http404
 # end of langchain changes
@@ -40,6 +41,51 @@ class Command(APIView):
     daphne_version = ""
     command_options = []
     condition_names = []
+
+    # def __init__(self):
+        # Initialize session_state dictionary in the constructor
+    session_state = {}
+    # Generated natural language
+    if 'generated' not in session_state:
+        print("helooooooooo3")
+        session_state['generated'] = []
+    # Neo4j database results
+    if 'database_results' not in session_state:
+        print("helooooooooo4")
+        session_state['database_results'] = []
+    # User input
+    if 'user_input' not in session_state:
+        print("helooooooooo5")
+        session_state['user_input'] = []
+    # Generated Cypher statements
+    if 'cypher' not in session_state:
+        print("helooooooooo6")
+        session_state['cypher'] = []
+
+
+    def generate_context(self,prompt, context_data='generated'):
+
+        print("helooooooooo")
+
+        context = []
+
+        print("helooooooooo1")
+        print(self.session_state['generated'])
+        # If any history exists
+        if self.session_state['generated']:
+            print("helooooooooo2")
+            # Add the last three exchanges
+            size = len(self.session_state['generated'])
+            for i in range(max(size - 5, 0), size):
+                context.append(
+                    {'role': 'user', 'content': self.session_state['user_input'][i]})
+                context.append(
+                    {'role': 'assistant', 'content': self.session_state[context_data][i]})
+        print(context)
+        # Add the latest user prompt
+        context.append({'role': 'user', 'content': str(prompt)})
+        return context
+
 
     def post(self, request, format=None):
         # Example usage
@@ -334,7 +380,7 @@ class Command(APIView):
                 ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), graph=graph, verbose=True,
                 cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
             )
-            print(request.data['command'])
+            print("ques:",request.data['command'])
             print(chain)
             try:
                 temps = [r"^Show the image of component (.+)$", r"^Show the image of (.+)$"]
@@ -365,7 +411,17 @@ class Command(APIView):
                        "visual_message": [res],
                        "writer": "daphne"}
                    })
-                result1 = chain.run(request.data['command'])
+                # print(self.generate_context(request.data['command'], 'user_input'))
+
+                # question = {'history' : self.generate_context(request.data['command'], 'user_input'), 'query' : request.data['command']}
+                # print(question)
+                ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {request.data['command']}"
+                print("QUES_DESC:", ques_desc)
+                result1 = chain.run(ques_desc)
+                self.session_state['user_input'].append(request.data['command'])
+                self.session_state['database_results'].append(str(result1))
+
+                # print(self.session_state['database_results'])
             except Exception as e:
                 print('Error:', e)
                 chat = ChatOpenAI()
@@ -378,6 +434,11 @@ class Command(APIView):
                 ]
 
                 response = chat(messages)
+                self.session_state['generated'].append(response.content)
+                self.generate_context(response.content, 'generated')
+
+
+                print(self.session_state)
                 return Response({"response": {
                     "voice_message": response.content,
                     "visual_message_type": ["text"],
@@ -445,12 +506,25 @@ class Command(APIView):
 
             if link_flag == 1:
                 response_final = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename" + pdf_link}" target="_blank">{pdf_name}</a>'
+
+                self.session_state['generated'].append(response_final)
+                self.generate_context(response_final, 'generated')
+
+
+                print(self.session_state)
+
                 return Response({"response": {
                     "voice_message": response.content,
                     "visual_message_type": ["text"],
                     "visual_message": [response_final],
                     "writer": "daphne"}
                 })
+
+            self.session_state['generated'].append(response.content)
+            self.generate_context(response.content, 'generated')
+
+
+            # print(self.generate_context(response.content, 'generated'))
 
             return Response({"response": {
                 "voice_message": response.content,
