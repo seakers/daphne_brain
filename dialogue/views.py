@@ -314,7 +314,7 @@ class Command(APIView):
                             #what anomalies are related to the ppCO2
                             MATCH (measurement:Measurement)-[]->(anomaly:Anomaly)
                             WHERE measurement.Name = 'ppCO2'
-                            RETURN anomaly.Name
+                            RETURN anomaly.Name, measurement.ParameterGroup
                             
                             # give me a list of possible anomalies regarding the Sabatier system
                             Match(anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
@@ -418,6 +418,8 @@ class Command(APIView):
                 ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {request.data['command']}"
                 print("QUES_DESC:", ques_desc)
                 result1 = chain.run(ques_desc)
+
+                
                 self.session_state['user_input'].append(request.data['command'])
                 self.session_state['database_results'].append(str(result1))
 
