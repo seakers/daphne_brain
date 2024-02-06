@@ -426,7 +426,7 @@ class Command(APIView):
                 # print(self.session_state['database_results'])
             except Exception as e:
                 print('Error:', e)
-                chat = ChatOpenAI()
+                chat = ChatOpenAI(model="gpt-4-0125-preview")
 
                 messages = [
                     SystemMessage(
