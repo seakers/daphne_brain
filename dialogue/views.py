@@ -436,6 +436,7 @@ class Command(APIView):
                 ]
 
                 response = chat(messages)
+                self.session_state['user_input'].append(request.data['command'])
                 self.session_state['generated'].append(response.content)
                 self.generate_context(response.content, 'generated')
 
