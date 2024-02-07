@@ -9,6 +9,7 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+
 from daphne_brain.nlp_object import nlp
 from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
@@ -27,8 +28,12 @@ from langchain.graphs import Neo4jGraph
 from langchain.prompts.prompt import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
+import AT.simulator_thread.simulator_routine_by_real_eclss as sim
 
 
+from langchain.agents import create_json_agent
+from langchain.agents.agent_toolkits import JsonToolkit
+from langchain.tools.json.tool import  JsonSpec
 
 # from django.http import HttpResponse
 # from django.http import FileResponse, Http404
@@ -41,7 +46,6 @@ class Command(APIView):
     daphne_version = ""
     command_options = []
     condition_names = []
-
     # def __init__(self):
         # Initialize session_state dictionary in the constructor
     session_state = {}
@@ -66,7 +70,6 @@ class Command(APIView):
     def generate_context(self,prompt, context_data='generated'):
 
         print("helooooooooo")
-
         context = []
 
         print("helooooooooo1")
@@ -89,359 +92,471 @@ class Command(APIView):
 
     def post(self, request, format=None):
         # Example usage
-        print("hi: ", request.data['command'])
-        templates = [r"^Check measurement (.+) status$", r"^Check (.+) status$",
-                     r"^Show the current value of (.+) measurement$", r"^Show the current value of (.+)$",
-                     r"^Read steps of procedure (.+)", r"^Read steps of (.+)", "Next", "previous", "Repeat",
-                     "Previous", "next", "repeat"]
-        flag = False
-        for template in templates:
-            pattern = re.compile(template, re.IGNORECASE)
-            flag = bool(pattern.match(request.data['command']))
-            print(flag)
-            if flag:
-                break
-        if flag == False:
-            # langchain changes
-            graph = Neo4jGraph(
-                url="bolt://13.58.54.49:7687",
-                username="neo4j",
-                password="goSEAKers!"
-            )
+        try:
+        # JSON changes
 
-            # os.environ['OPENAI_API_KEY'] = "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"
-            # os.environ['OPENAI_API_KEY'] = "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"
             load_dotenv()
             os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
-            print("HERE")
-            chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
-            )
+            sensor_data = json.loads(sim.get_sensor_data())
+            my_suffix = "If you don't know the answer return a empty list"
+            print("typee: ", sensor_data)
+            spec = JsonSpec(dict_=dict(sensor_data), max_value_length=sys.maxsize)
+            toolkit = JsonToolkit(spec=spec)
+            agent = create_json_agent(llm=ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), toolkit=toolkit, max_iterations=sys.maxsize,
+                                      verbose=True)
+            response = agent.run(request.data['command'])
+            if response in ["I don't know.","I don't know"]:
+                raise ValueError("Optional error message")
 
-            CYPHER_GENERATION_TEMPLATE = """
-    
-                            Task:Generate Cypher statement to query a graph database.
-    
-                            Instructions:
-                            You are a virtual assistant that helps astronauts when there are spacecraft anomalies and 
-                            mission control is not available. Astronauts will ask you questions about the anomalies, 
-                            their signature, the procedures to solve those anomalies, etc. To answer these questions, 
-                            you can generate a Cypher statement to query a graph database.
-                            
-                            Use only the provided relationship types and properties in the schema.
-                            Do not use any other relationship types or properties that are not provided.
-                            If the cipher query has empty return say no info available.
-                            If multiple answers exists mention all.
-                            Just list the query results don't try to frame answers.
-    
-                            Schema:
-                            {schema}
-    
-                            Cypher examples:
-                            # Risks of main cabin fan failure include what?
-                            MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                            WITH apoc.text.sorensenDiceSimilarity(a.Name,'main cabin fan failure') AS similarity, risk
-                            WHERE similarity > 0.85
-                            Return
-                            CASE WHEN risk IS NULL
-                              THEN 'No risks found'
-                              ELSE risk.Title
-                              END
-    
-                            # What are the potential risks of nitrogen tank leak
-                            MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'N2 Ballast Tank Line Leak') AS similarity, risk
-                            WHERE similarity > 0.85
-                            Return
-                            CASE WHEN risk IS NULL
-                              THEN 'No risks found'
-                              ELSE risk.Title
-                              END
-    
-                            # What are the potential risks of a nitrogen tank burst and a nitrogen tank line leak.
-                            MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                            WHERE anomaly.Name IN ['N2 Tank Burst', 'N2 Ballast Tank Line Leak']
-                            RETURN risk.Title
-                            Instructions : give answers from return value
-    
-                            # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
-                            # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
-                            MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Reduced Main Cabin Fan #1 Capacity') AS similarity, risk
-                            WHERE similarity > 0.85
-                            RETURN
-                              CASE WHEN risk IS NULL
-                              THEN 'No risks found'
-                              ELSE risk.Title
-                              END
-                            Instructions :  Don't give answers from the web
-    
-                            # what are the potential risks of trace contaminants. Don't give answers from the web
-                            # what are the risks of trace contaminants. Don't give answers from the web
-                            # What are the potential risks of trace contaminants. Don't give answers from the web
-                            MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Trace Contaminants') AS similarity, risk
-                            WHERE similarity > 0.85
-                            RETURN
-                              CASE WHEN risk IS NULL
-                              THEN 'No risks found'
-                              ELSE risk.Title
-                              END
-    
-                            # what is the signature of CDRA Failure. Mention all m.Name, m.ParameterGroup, r
-                            # what is the signature associated with cdra failure. Mention all m.Name, m.ParameterGroup, r
-                            MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement, relationship
-                            WHERE similarity > 0.85
-                            RETURN measurement.Name, measurement.ParameterGroup, relationship
-                            # Note: Give answers from query results
-    
-                            # what are the symptoms of cdra failure. Mention all m.Name, m.ParameterGroup, r
-                            # if cdra failure was occurring what symptoms would I expect to see. Give answer from the query result
-                            MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement, relationship
-                            WHERE similarity > 0.85
-                            RETURN measurement.Name, measurement.ParameterGroup, relationship
-    
-                            # what measurements are affected by main cabin fan failure
-                            MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Main Cabin Fan Failure') AS similarity, measurement, relationship
-                            WHERE similarity > 0.85
-                            RETURN measurement.Name, measurement.ParameterGroup, relationship
-    
-                            # Note: Give answers from query results
-    
-                            # what are the characteristic symptoms of cdra lioh filter clogged. Mention all m.Name, m.ParameterGroup, r
-                            MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,cdra lioh filter clogged') AS similarity, measurement, relationship
-                            WHERE similarity > 0.85
-                            RETURN measurement.Name, measurement.ParameterGroup, relationship
-    
-    
-                            # Note: Give answers from query results
-    
-                            # what subsystems does biological filter saturation affect. Answer SubSystem's Title value
-                            MATCH (anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, subsystem
-                            WHERE similarity > 0.85
-                            RETURN subsystem.Title
-                            # Note: Answer subsystem.Title value
-    
-                            # how do i fix biological filter saturation. Mention the procedure titlte
-                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, procedure
-                            WHERE similarity > 0.85
-                            RETURN procedure.Title
-                            # Note: Mention the procedure title
-    
-                            Note: Do not include any explanations or apologies in your responses.
-                            Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
-                            Do not include any text except the generated Cypher statement.
-                            If multiple answers list all
-    
-                            # how long will it take me to solve biological filter saturation
-                            # what is the average timeframe for resolving biological filter saturation
-                            # how long will it take to complete fuel cell maintenance. Mention all times with correspnding procesdures, give the higher value first
-                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, procedure
-                            WHERE similarity > 0.85
-                            RETURN procedure.ETR
-    
-                            #Instructions: Mention all times in order with correspnding procesdures titles and number
-    
-                            # how long is 3.109
-                            # time of completion 3.101
-                            MATCH (procedure:Procedure)
-                            WHERE procedure.pNumber = '3.109'
-                            RETURN procedure.ETR
-    
-                            # how long would electrolysis system biological filter swap out take to complete
-                            MATCH (procedure:Procedure)
-                            WITH apoc.text.sorensenDiceSimilarity(procedure.Title,'Electrolysis System Biological Filter Swapout') AS similarity, procedure
-                            WHERE similarity > 0.85
-                            RETURN procedure.ETR
-    
-                            # read steps of procedure 3.109
-                            MATCH (procedure:Procedure)-[:Has]->(step:Step)
-                            WHERE procedure.pNumber = '3.109'
-                            RETURN step.Title, step.Action
-    
-                            # how long will it take to solve wrs off nominal ph level.
-                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'WRS Off Nominal pH Level') AS similarity, procedure
-                            WHERE similarity > 0.85
-                            RETURN procedure.ETR, procedure.Title, procedure.pNumber
-    
-                            # What are the procedures for cdra failure
-                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
-                            WHERE similarity > 0.85
-                            RETURN procedure.Title, procedure.pNumber
-    
-                            Note: answer the question like -> The title of the procedure is "CDRA Zeolite Filter Swapout" and the procedure number is 3.104.
-    
-                            # read steps cdra zeolite filter swap out
-                            MATCH (procedure:Procedure)-[:Has]->(step:Step)
-                            WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                            
-                            MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
-                            WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                            
-                            
-                            MATCH (procedure:Procedure)-[:Has]->(subsubstep:SubSubStep)
-                            WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                            RETURN step.Title, step.Action, substep.Title, substep.Action, subsubstep.Title, subsubstep.Action
-                            
-                            ORDER BY step.Step,subsubstep.SubSubStep,substep.SubStep
-    
-                            Note: always check all nodes connected through has relationship
-    
-                            # list all substeps of step 1 of procedure 3.106
-                            MATCH (procedure:Procedure)-[:Has]->(ss)
-                            WHERE procedure.pNumber = '3.106' AND ss.Step = 1
-                            RETURN ss.Title, ss.Action
-                            ORDER BY ss.SubStep
-    
-                            Note: always check all nodes connected through has relationship
-                            
-                            # what is the procedure for Fuel Cell #1 and PDU Failure
-                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                            Where anomaly.Name='Fuel Cell #1 and PDU Failure'
-                            RETURN procedure.Title, procedure.pNumber
+            return Response({"response": {
+                "voice_message": response,
+                "visual_message_type": ["text"],
+                "visual_message": [response],
+                "writer": "daphne"}
+            })
 
-                            Note: use the name of the node type as the variable for that node
-                            
-                            #what anomalies are related to the ppCO2
-                            MATCH (measurement:Measurement)-[]->(anomaly:Anomaly)
-                            WHERE measurement.Name = 'ppCO2'
-                            RETURN anomaly.Name, measurement.ParameterGroup
-                            
-                            # give me a list of possible anomalies regarding the Sabatier system
-                            Match(anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
-                            WITH apoc.text.sorensenDiceSimilarity(subsystem.Title,'Sabatier') AS similarity, anomaly
-                            WHERE similarity > 0.85
-                            return anomaly.Name 
-                            
-                            # what is step 1.1 of procedure 3.124
-                            MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
-                            WHERE procedure.pNumber = '3.124' AND substep.Step = 1 AND substep.SubStep = 1
-                            RETURN substep.Title, substep.Action
-                            
-                            # how long it takes to solve tccs fan failure
-                            MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'TCCS Aux Fan #1 Failure') AS similarity, procedure
-                            WHERE similarity > 0.8
-                            RETURN procedure.ETR, procedure.Title, procedure.pNumber
-                            
-                            # what is the difference in symptoms between cdra failure and main cabin fan failure
-                            MATCH (measurement:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                            WHERE anomaly.Name IN ['CDRA Failure', 'Main Cabin Fan Failure']
-                            RETURN anomaly.Name,  measurement.Name,  measurement.ParameterGroup, type(r)
+        except Exception as e:
+            print("Error:", e)
+            print("hi: ", request.data['command'])
+            # templates = [r"^Check measurement (.+) status$", r"^Check (.+) status$",
+            #              r"^Show the current value of (.+) measurement$", r"^Show the current value of (.+)$",
+            #              r"^Read steps of procedure (.+)", r"^Read steps of (.+)", "Next", "previous", "Repeat",
+            #              "Previous", "next", "repeat"]
+            flag = False
+            # for template in templates:
+            #     pattern = re.compile(template, re.IGNORECASE)
+            #     flag = bool(pattern.match(request.data['command']))
+            #     print(flag)
+            #     if flag:
+            #         break
+            if flag == False:
+                # langchain changes
+                graph = Neo4jGraph(
+                    url="bolt://13.58.54.49:7687",
+                    username="neo4j",
+                    password="goSEAKers!"
+                )
 
-                            # What is the confidence score of 'ppCO2','Exceeds_UpperWarningLimit','L2','ppCO2','Exceeds_UpperWarningLimit','L1','ppO2','Exceeds_LowerCautionLimit','L1','ppO2','Exceeds_LowerCautionLimit','L2' for cdra failure
-                            MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_LowerCautionLimit]->(anomaly:Anomaly)
-                            WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement
-                            WHERE similarity > 0.8 AND 
-                            measurement.Name = 'ppCO2' AND type(r) = 'Exceeds_UpperWarningLimit' OR 
-                            measurement.Name = 'ppO2' AND type(r) = 'Exceeds_LowerCautionLimit'
-                            WITH COUNT(DISTINCT measurement) AS measurementCount
+                # os.environ['OPENAI_API_KEY'] = "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"
+                # os.environ['OPENAI_API_KEY'] = "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"
+                load_dotenv()
+                os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
+                print("HERE")
+                chain = GraphCypherQAChain.from_llm(
+                    ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
+                )
 
-                            MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_UpperCautionLimit|Exceeds_LowerCautionLimit|Exceeds_LowerWarningLimit]->(anomaly:Anomaly)
-                            WHERE anomaly.Name = 'CDRA Failure'
-                            WITH COUNT(DISTINCT measurement) AS totalCount, measurementCount
+                CYPHER_GENERATION_TEMPLATE = """
+        
+                                Task:Generate Cypher statement to query a graph database.
+        
+                                Instructions:
+                                You are a virtual assistant that helps astronauts when there are spacecraft anomalies and 
+                                mission control is not available. Astronauts will ask you questions about the anomalies, 
+                                their signature, the procedures to solve those anomalies, etc. To answer these questions, 
+                                you can generate a Cypher statement to query a graph database.
+                                
+                                Use only the provided relationship types and properties in the schema.
+                                Do not use any other relationship types or properties that are not provided.
+                                If the cipher query has empty return say no info available.
+                                If multiple answers exists mention all.
+                                Just list the query results don't try to frame answers.
+        
+                                Schema:
+                                {schema}
+        
+                                Cypher examples:
+                                # Risks of main cabin fan failure include what?
+                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
+                                WITH apoc.text.sorensenDiceSimilarity(a.Name,'main cabin fan failure') AS similarity, risk
+                                WHERE similarity > 0.85
+                                Return
+                                CASE WHEN risk IS NULL
+                                  THEN 'No risks found'
+                                  ELSE risk.Title
+                                  END
+        
+                                # What are the potential risks of nitrogen tank leak
+                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'N2 Ballast Tank Line Leak') AS similarity, risk
+                                WHERE similarity > 0.85
+                                Return
+                                CASE WHEN risk IS NULL
+                                  THEN 'No risks found'
+                                  ELSE risk.Title
+                                  END
+        
+                                # What are the potential risks of a nitrogen tank burst and a nitrogen tank line leak.
+                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
+                                WHERE anomaly.Name IN ['N2 Tank Burst', 'N2 Ballast Tank Line Leak']
+                                RETURN risk.Title
+                                Instructions : give answers from return value
+        
+                                # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
+                                # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
+                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Reduced Main Cabin Fan #1 Capacity') AS similarity, risk
+                                WHERE similarity > 0.85
+                                RETURN
+                                  CASE WHEN risk IS NULL
+                                  THEN 'No risks found'
+                                  ELSE risk.Title
+                                  END
+                                Instructions :  Don't give answers from the web
+        
+                                # what are the potential risks of trace contaminants. Don't give answers from the web
+                                # what are the risks of trace contaminants. Don't give answers from the web
+                                # What are the potential risks of trace contaminants. Don't give answers from the web
+                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Trace Contaminants') AS similarity, risk
+                                WHERE similarity > 0.85
+                                RETURN
+                                  CASE WHEN risk IS NULL
+                                  THEN 'No risks found'
+                                  ELSE risk.Title
+                                  END
+        
+                                # what is the signature of CDRA Failure. Mention all m.Name, m.ParameterGroup, r
+                                # what is the signature associated with cdra failure. Mention all m.Name, m.ParameterGroup, r
+                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement, relationship
+                                WHERE similarity > 0.85
+                                RETURN measurement.Name, measurement.ParameterGroup, relationship
+                                # Note: Give answers from query results
+        
+                                # what are the symptoms of cdra failure. Mention all m.Name, m.ParameterGroup, r
+                                # if cdra failure was occurring what symptoms would I expect to see. Give answer from the query result
+                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement, relationship
+                                WHERE similarity > 0.85
+                                RETURN measurement.Name, measurement.ParameterGroup, relationship
+        
+                                # what measurements are affected by main cabin fan failure
+                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Main Cabin Fan Failure') AS similarity, measurement, relationship
+                                WHERE similarity > 0.85
+                                RETURN measurement.Name, measurement.ParameterGroup, relationship
+        
+                                # Note: Give answers from query results
+        
+                                # what are the characteristic symptoms of cdra lioh filter clogged. Mention all m.Name, m.ParameterGroup, r
+                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,cdra lioh filter clogged') AS similarity, measurement, relationship
+                                WHERE similarity > 0.85
+                                RETURN measurement.Name, measurement.ParameterGroup, relationship
+        
+        
+                                # Note: Give answers from query results
+        
+                                # what subsystems does biological filter saturation affect. Answer SubSystem's Title value
+                                MATCH (anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, subsystem
+                                WHERE similarity > 0.85
+                                RETURN subsystem.Title
+                                # Note: Answer subsystem.Title value
+        
+                                # how do i fix biological filter saturation. Mention the procedure titlte
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, procedure
+                                WHERE similarity > 0.85
+                                RETURN procedure.Title
+                                # Note: Mention the procedure title
+        
+                                Note: Do not include any explanations or apologies in your responses.
+                                Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
+                                Do not include any text except the generated Cypher statement.
+                                If multiple answers list all
+        
+                                # how long will it take me to solve biological filter saturation
+                                # what is the average timeframe for resolving biological filter saturation
+                                # how long will it take to complete fuel cell maintenance. Mention all times with correspnding procesdures, give the higher value first
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, procedure
+                                WHERE similarity > 0.85
+                                RETURN procedure.ETR
+        
+                                #Instructions: Mention all times in order with correspnding procesdures titles and number
+        
+                                # how long is 3.109
+                                # time of completion 3.101
+                                MATCH (procedure:Procedure)
+                                WHERE procedure.pNumber = '3.109'
+                                RETURN procedure.ETR
+        
+                                # how long would electrolysis system biological filter swap out take to complete
+                                MATCH (procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(procedure.Title,'Electrolysis System Biological Filter Swapout') AS similarity, procedure
+                                WHERE similarity > 0.85
+                                RETURN procedure.ETR
+        
+                                # read steps of procedure 3.109
+                                MATCH (procedure:Procedure)-[:Has]->(step:Step)
+                                WHERE procedure.pNumber = '3.109'
+                                RETURN step.Title, step.Action
+        
+                                # how long will it take to solve wrs off nominal ph level.
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'WRS Off Nominal pH Level') AS similarity, procedure
+                                WHERE similarity > 0.85
+                                RETURN procedure.ETR, procedure.Title, procedure.pNumber
+        
+                                # What are the procedures for cdra failure
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
+                                WHERE similarity > 0.85
+                                RETURN procedure.Title, procedure.pNumber
+        
+                                Note: answer the question like -> The title of the procedure is "CDRA Zeolite Filter Swapout" and the procedure number is 3.104.
+        
+                                # read steps cdra zeolite filter swap out
+                                MATCH (procedure:Procedure)-[:Has]->(step:Step)
+                                WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
+                                
+                                MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
+                                WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
+                                
+                                
+                                MATCH (procedure:Procedure)-[:Has]->(subsubstep:SubSubStep)
+                                WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
+                                RETURN step.Title, step.Action, substep.Title, substep.Action, subsubstep.Title, subsubstep.Action
+                                
+                                ORDER BY step.Step,subsubstep.SubSubStep,substep.SubStep
+        
+                                Note: always check all nodes connected through has relationship
+        
+                                # list all substeps of step 1 of procedure 3.106
+                                MATCH (procedure:Procedure)-[:Has]->(ss)
+                                WHERE procedure.pNumber = '3.106' AND ss.Step = 1
+                                RETURN ss.Title, ss.Action
+                                ORDER BY ss.SubStep
+        
+                                Note: always check all nodes connected through has relationship
+                                
+                                # what is the procedure for Fuel Cell #1 and PDU Failure
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                Where anomaly.Name='Fuel Cell #1 and PDU Failure'
+                                RETURN procedure.Title, procedure.pNumber
+    
+                                Note: use the name of the node type as the variable for that node
+                                
+                                #what anomalies are related to the ppCO2
+                                MATCH (measurement:Measurement)-[]->(anomaly:Anomaly)
+                                WHERE measurement.Name = 'ppCO2'
+                                RETURN anomaly.Name, measurement.ParameterGroup
+                                
+                                # give me a list of possible anomalies regarding the Sabatier system
+                                Match(anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
+                                WITH apoc.text.sorensenDiceSimilarity(subsystem.Title,'Sabatier') AS similarity, anomaly
+                                WHERE similarity > 0.85
+                                return anomaly.Name 
+                                
+                                # what is step 1.1 of procedure 3.124
+                                MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
+                                WHERE procedure.pNumber = '3.124' AND substep.Step = 1 AND substep.SubStep = 1
+                                RETURN substep.Title, substep.Action
+                                
+                                # how long it takes to solve tccs fan failure
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'TCCS Aux Fan #1 Failure') AS similarity, procedure
+                                WHERE similarity > 0.8
+                                RETURN procedure.ETR, procedure.Title, procedure.pNumber
+                                
+                                # what is the difference in symptoms between cdra failure and main cabin fan failure
+                                MATCH (measurement:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
+                                WHERE anomaly.Name IN ['CDRA Failure', 'Main Cabin Fan Failure']
+                                RETURN anomaly.Name,  measurement.Name,  measurement.ParameterGroup, type(r)
+    
+                                # What is the confidence score of 'ppCO2','Exceeds_UpperWarningLimit','L2','ppCO2','Exceeds_UpperWarningLimit','L1','ppO2','Exceeds_LowerCautionLimit','L1','ppO2','Exceeds_LowerCautionLimit','L2' for cdra failure
+                                MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_LowerCautionLimit]->(anomaly:Anomaly)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement
+                                WHERE similarity > 0.8 AND 
+                                measurement.Name = 'ppCO2' AND type(r) = 'Exceeds_UpperWarningLimit' OR 
+                                measurement.Name = 'ppO2' AND type(r) = 'Exceeds_LowerCautionLimit'
+                                WITH COUNT(DISTINCT measurement) AS measurementCount
+    
+                                MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_UpperCautionLimit|Exceeds_LowerCautionLimit|Exceeds_LowerWarningLimit]->(anomaly:Anomaly)
+                                WHERE anomaly.Name = 'CDRA Failure'
+                                WITH COUNT(DISTINCT measurement) AS totalCount, measurementCount
+    
+    
+                                WITH measurementCount * 1.0 / totalCount AS ratio
+    
+    
+                                WITH ratio,
+                                CASE 
+                                    WHEN ratio < 0.12 THEN "Extremely Unlikely : 0-0.11"
+                                    WHEN 0.12 <= ratio < 0.23 THEN "Highly Unlikely : 0.12-0.22"
+                                    WHEN 0.23 <= ratio < 0.34 THEN "Unlikely : 0.23-0.33"
+                                    WHEN 0.34 <= ratio < 0.45 THEN "Moderately Unlikely : 0.34-0.44"
+                                    WHEN 0.45 <= ratio < 0.56 THEN "Equally Likely and Unlikely : 0.45-0.55"
+                                    WHEN 0.56 <= ratio < 0.67 THEN "Moderately Likely : 0.56-0.66"
+                                    WHEN 0.67 <= ratio < 0.78 THEN "Likely : 0.67-0.77"
+                                    WHEN 0.78 <= ratio < 0.89 THEN "Highly Likely : 0.78-0.88"
+                                    ELSE "Extremely Likely : 0.89-1.0"
+                                END AS text_score
+    
+                                RETURN ratio, text_score
+    
+                                The question is:
+                                {question}"""
+
+                CYPHER_GENERATION_PROMPT = PromptTemplate(
+                    input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
+                )
+
+                chain = GraphCypherQAChain.from_llm(
+                    ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), graph=graph, verbose=True,
+                    cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
+                )
+                print("ques:",request.data['command'])
+                print(chain)
+                try:
+                    temps = [r"^Show the image of component (.+)$", r"^Show the image of (.+)$"]
+                    image_link = ""
+                    image_name = ""
+
+                    flag1= False
+                    for temp in temps:
+                        pattern = re.compile(temp, re.IGNORECASE)
+                        flag1 = bool(pattern.match(request.data['command']))
+                        if flag1:
+                            match = re.match(pattern, request.data['command'])
+                            if match:
+                                image_name = match.group(1)
+                                image_name = image_name.replace(" ", "_")
 
 
-                            WITH measurementCount * 1.0 / totalCount AS ratio
-
-
-                            WITH ratio,
-                            CASE 
-                                WHEN ratio < 0.12 THEN "Extremely Unlikely : 0-0.11"
-                                WHEN 0.12 <= ratio < 0.23 THEN "Highly Unlikely : 0.12-0.22"
-                                WHEN 0.23 <= ratio < 0.34 THEN "Unlikely : 0.23-0.33"
-                                WHEN 0.34 <= ratio < 0.45 THEN "Moderately Unlikely : 0.34-0.44"
-                                WHEN 0.45 <= ratio < 0.56 THEN "Equally Likely and Unlikely : 0.45-0.55"
-                                WHEN 0.56 <= ratio < 0.67 THEN "Moderately Likely : 0.56-0.66"
-                                WHEN 0.67 <= ratio < 0.78 THEN "Likely : 0.67-0.77"
-                                WHEN 0.78 <= ratio < 0.89 THEN "Highly Likely : 0.78-0.88"
-                                ELSE "Extremely Likely : 0.89-1.0"
-                            END AS text_score
-
-                            RETURN ratio, text_score
-
-                            The question is:
-                            {question}"""
-
-            CYPHER_GENERATION_PROMPT = PromptTemplate(
-                input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
-            )
-
-            chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), graph=graph, verbose=True,
-                cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
-            )
-            print("ques:",request.data['command'])
-            print(chain)
-            try:
-                temps = [r"^Show the image of component (.+)$", r"^Show the image of (.+)$"]
-                image_link = ""
-                image_name = ""
-
-                flag1= False
-                for temp in temps:
-                    pattern = re.compile(temp, re.IGNORECASE)
-                    flag1 = bool(pattern.match(request.data['command']))
+                                encoded_file_path = urllib.parse.quote(os.path.join("home","ubuntu", "daphne-at-interface", "src", "images",image_name + ".png"),safe="")
+                                image_link = f"https://daphne-at.selva-research.com/api/at/recommendation/figure?filename=%2F{encoded_file_path}"
+                                image_name = image_name.replace("_", " ")
+                            break
                     if flag1:
-                        match = re.match(pattern, request.data['command'])
-                        if match:
-                            image_name = match.group(1)
-                            image_name = image_name.replace(" ", "_")
+                       res = "\nHere is the image<br>" + f'<a href="{image_link}" target="_blank">{image_name}</a>'
+                       res_voice = "Here is the image you requested"
+                       return Response({"response": {
+                           "voice_message": res_voice,
+                           "visual_message_type": ["text"],
+                           "visual_message": [res],
+                           "writer": "daphne"}
+                       })
+                    # print(self.generate_context(request.data['command'], 'user_input'))
+
+                    # question = {'history' : self.generate_context(request.data['command'], 'user_input'), 'query' : request.data['command']}
+                    # print(question)
+                    ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {request.data['command']}"
+                    print("QUES_DESC:", ques_desc)
+                    result1 = chain.run(ques_desc)
 
 
-                            encoded_file_path = urllib.parse.quote(os.path.join("home","ubuntu", "daphne-at-interface", "src", "images",image_name + ".png"),safe="")
-                            image_link = f"https://daphne-at.selva-research.com/api/at/recommendation/figure?filename=%2F{encoded_file_path}"
-                            image_name = image_name.replace("_", " ")
-                        break
-                if flag1:
-                   res = "\nHere is the image<br>" + f'<a href="{image_link}" target="_blank">{image_name}</a>'
-                   res_voice = "Here is the image you requested"
-                   return Response({"response": {
-                       "voice_message": res_voice,
-                       "visual_message_type": ["text"],
-                       "visual_message": [res],
-                       "writer": "daphne"}
-                   })
-                # print(self.generate_context(request.data['command'], 'user_input'))
+                    self.session_state['user_input'].append(request.data['command'])
+                    self.session_state['database_results'].append(str(result1))
 
-                # question = {'history' : self.generate_context(request.data['command'], 'user_input'), 'query' : request.data['command']}
-                # print(question)
-                ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {request.data['command']}"
-                print("QUES_DESC:", ques_desc)
-                result1 = chain.run(ques_desc)
+                    # print(self.session_state['database_results'])
+                except Exception as e:
+                    print('Error:', e)
+                    chat = ChatOpenAI(model="gpt-4-0125-preview")
 
-                
-                self.session_state['user_input'].append(request.data['command'])
-                self.session_state['database_results'].append(str(result1))
+                    messages = [
+                        SystemMessage(
+                            content="You are a helpful assistant that helps present cipher query results to human readable form"
+                        ),
+                        HumanMessage(content=request.data['command']),
+                    ]
 
-                # print(self.session_state['database_results'])
-            except Exception as e:
-                print('Error:', e)
+                    response = chat(messages)
+                    self.session_state['user_input'].append(request.data['command'])
+                    self.session_state['generated'].append(response.content)
+                    self.generate_context(response.content, 'generated')
+
+
+                    print(self.session_state)
+                    return Response({"response": {
+                        "voice_message": response.content,
+                        "visual_message_type": ["text"],
+                        "visual_message": [response.content],
+                        "writer": "daphne"}
+                    })
+
+                folder_path = os.path.join("./", "AT", "databases", "procedures")
+                # folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
+                desired_string = 'Title'
+                matching_keys = []
+                if len(result1) > 0:
+                    matching_keys = [key for key in result1[0].keys() if desired_string in key]
+                    print("matching_keys ", matching_keys)
+                link_flag = 0
+                file_path = ""
+                pdf_link = None
+                pdf_name = None
+                for key in matching_keys:
+                    value = result1[0].get(key, 'Key not found')
+                    print("VALUE: " + value)
+                    print(os.path.join(folder_path, value + ".pdf"))
+
+                    if os.path.exists(os.path.join(folder_path, value + ".pdf")):
+                        file_path = os.path.join(folder_path, value + ".pdf")
+                        print("File_PATH ", file_path)
+                        procedure_pdfs = os.listdir(folder_path)
+                        print("PP:", procedure_pdfs)
+                        if value + ".pdf" in procedure_pdfs:
+                            pdf_name = value + ".pdf"
+                            folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
+                            filepath = os.path.join(folder_path, pdf_name)
+                            path = os.path.join(os.getcwd(), "AT", "databases", "procedures", pdf_name)
+                            pdf_link = urllib.parse.urlencode({"": path})
+                            print("res[0]: ", result1[0])
+                            link_flag = 1
+
+                # Create a descriptive string
+                response = ""
+                result_string = ", ".join(str(item) if isinstance(item, dict) else item for item in result1)
+                print("RS:", result_string)
+                print("RES:", result1)
+                description = "No Results Found"
+                if result1:
+                    description = "{} present the information in human readable form".format(
+                        result_string)
+                # Just list the above information as bullet-points without additional text
+                # Print or use the description as needed
+                print("Description:", description)
+                # conversation.run(description)
+
                 chat = ChatOpenAI(model="gpt-4-0125-preview")
 
                 messages = [
                     SystemMessage(
-                        content="You are a helpful assistant that helps present cipher query results to human readable form"
+                        content="You are a helpful assistant that helps present cipher query results to human readable form, don't write any fullforms, present information as it is in sentences, give line breaks whereever required to improve formatting"
                     ),
-                    HumanMessage(content=request.data['command']),
+                    HumanMessage(content=description),
                 ]
 
                 response = chat(messages)
-                self.session_state['user_input'].append(request.data['command'])
+
+                response.content = response.content.replace('\n', '<br>')
+                print("Yahoo:", response.dict)
+
+                if link_flag == 1:
+                    response_final = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename" + pdf_link}" target="_blank">{pdf_name}</a>'
+
+                    self.session_state['generated'].append(response_final)
+                    self.generate_context(response_final, 'generated')
+
+
+                    print(self.session_state)
+
+                    return Response({"response": {
+                        "voice_message": response.content,
+                        "visual_message_type": ["text"],
+                        "visual_message": [response_final],
+                        "writer": "daphne"}
+                    })
+
                 self.session_state['generated'].append(response.content)
                 self.generate_context(response.content, 'generated')
 
 
-                print(self.session_state)
+                # print(self.generate_context(response.content, 'generated'))
+
                 return Response({"response": {
                     "voice_message": response.content,
                     "visual_message_type": ["text"],
@@ -449,94 +564,7 @@ class Command(APIView):
                     "writer": "daphne"}
                 })
 
-            folder_path = os.path.join("./", "AT", "databases", "procedures")
-            # folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
-            desired_string = 'Title'
-            matching_keys = []
-            if len(result1) > 0:
-                matching_keys = [key for key in result1[0].keys() if desired_string in key]
-                print("matching_keys ", matching_keys)
-            link_flag = 0
-            file_path = ""
-            pdf_link = None
-            pdf_name = None
-            for key in matching_keys:
-                value = result1[0].get(key, 'Key not found')
-                print("VALUE: " + value)
-                print(os.path.join(folder_path, value + ".pdf"))
-
-                if os.path.exists(os.path.join(folder_path, value + ".pdf")):
-                    file_path = os.path.join(folder_path, value + ".pdf")
-                    print("File_PATH ", file_path)
-                    procedure_pdfs = os.listdir(folder_path)
-                    print("PP:", procedure_pdfs)
-                    if value + ".pdf" in procedure_pdfs:
-                        pdf_name = value + ".pdf"
-                        folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
-                        filepath = os.path.join(folder_path, pdf_name)
-                        path = os.path.join(os.getcwd(), "AT", "databases", "procedures", pdf_name)
-                        pdf_link = urllib.parse.urlencode({"": path})
-                        print("res[0]: ", result1[0])
-                        link_flag = 1
-
-            # Create a descriptive string
-            response = ""
-            result_string = ", ".join(str(item) if isinstance(item, dict) else item for item in result1)
-            print("RS:", result_string)
-            print("RES:", result1)
-            description = "No Results Found"
-            if result1:
-                description = "{} present the information in human readable form".format(
-                    result_string)
-            # Just list the above information as bullet-points without additional text
-            # Print or use the description as needed
-            print("Description:", description)
-            # conversation.run(description)
-
-            chat = ChatOpenAI(model="gpt-4-0125-preview")
-
-            messages = [
-                SystemMessage(
-                    content="You are a helpful assistant that helps present cipher query results to human readable form, don't write any fullforms, present information as it is in sentences, give line breaks whereever required to improve formatting"
-                ),
-                HumanMessage(content=description),
-            ]
-
-            response = chat(messages)
-
-            response.content = response.content.replace('\n', '<br>')
-            print("Yahoo:", response.dict)
-
-            if link_flag == 1:
-                response_final = response.content + "\nHere is the link\n" + f'<a href="{"api/at/recommendation/procedure?filename" + pdf_link}" target="_blank">{pdf_name}</a>'
-
-                self.session_state['generated'].append(response_final)
-                self.generate_context(response_final, 'generated')
-
-
-                print(self.session_state)
-
-                return Response({"response": {
-                    "voice_message": response.content,
-                    "visual_message_type": ["text"],
-                    "visual_message": [response_final],
-                    "writer": "daphne"}
-                })
-
-            self.session_state['generated'].append(response.content)
-            self.generate_context(response.content, 'generated')
-
-
-            # print(self.generate_context(response.content, 'generated'))
-
-            return Response({"response": {
-                "voice_message": response.content,
-                "visual_message_type": ["text"],
-                "visual_message": [response.content],
-                "writer": "daphne"}
-            })
-
-        # End of langchain changes
+            # End of langchain changes
         else:
             # Define context and see if it was already defined for this session
 
