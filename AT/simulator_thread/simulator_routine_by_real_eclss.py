@@ -74,7 +74,7 @@ def get_hss_param_values(sensor_data):
         tf_info_dict[display_name] = [display_name, kg_name, group, units, lct, lwt, nominal, hwt, hct]
         new_row[display_name] = simulated_value
         status[display_name] = stat
-    set_sensor_data({'new_values': new_row, 'info': tf_info_dict, 'status': status})
+    set_sensor_data({'new_values': new_row, 'status': status})
     tf_info = pd.DataFrame(tf_info_dict)
     tf_info = tf_info.set_index('parameter')
     parsed_sensor_data = {'new_values': new_row, 'info': tf_info, 'status': status}
