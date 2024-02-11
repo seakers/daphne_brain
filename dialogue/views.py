@@ -97,12 +97,29 @@ class Command(APIView):
 
             messages = [
                 SystemMessage(
-                    content="You are a helpful assistant that helps know if the question is asking about current value or status, Answer in Yes or No only"
+                    content="You are a helpful assistant that helps know if the question is asking about current value or status of something, Answer in Yes or No only"
                 ),
                 HumanMessage(content=request.data['command']),
             ]
 
             response = chat(messages)
+            print("RESPONSEEEEEEE:", response.content)
+            templates = [r"^Check measurement (.+) status$", r"^Check (.+) status$",
+                         r"^Show the current value of (.+) measurement$", r"^Show the current value of (.+)$",
+                         r"^What is the current value of (.+) measurement$", r"^What is the current value of (.+)$",
+                         r"^current value$", r"^What is the value of (.+) measurement currently$",
+                         r"^What is the value of (.+) currently$", r"^What is the status of (.+) measurement$",
+                         r"^What is the status of (.+)$", r"^status$",r"^What is current value of (.+) measurement$",
+                         r"^What is current value of (.+)$", r"^What is status of (.+)$",
+                         r"^What is status of (.+) measurement$"]
+            flag = False
+            for template in templates:
+                pattern = re.compile(template, re.IGNORECASE)
+                flag = bool(pattern.match(request.data['command']))
+                print(flag)
+                if flag:
+                    response.content = 'Yes'
+                    break
             if response.content == 'No':
                 raise ValueError("Optional error message")
 
@@ -111,7 +128,7 @@ class Command(APIView):
             spec = JsonSpec(dict_=dict(sensor_data), max_value_length=sys.maxsize)
             toolkit = JsonToolkit(spec=spec)
             agent = create_json_agent(llm=ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), toolkit=toolkit,
-                                      max_iterations=10,
+                                      max_iterations=sys.maxsize,
                                       verbose=True)
             response = agent.run(request.data['command'])
 
