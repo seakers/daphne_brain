@@ -325,6 +325,8 @@ class Command(APIView):
                                 RETURN procedure.ETR, procedure.Title, procedure.pNumber
         
                                 # What are the procedures for cdra failure
+                                # Provide the link of the procedure for cdra failure
+                                # Provide the pdf of the procedure for cdra failure
                                 MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
                                 WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
                                 WHERE similarity > 0.85
@@ -332,6 +334,12 @@ class Command(APIView):
         
                                 Note: answer the question like -> The title of the procedure is "CDRA Zeolite Filter Swapout" and the procedure number is 3.104.
         
+                                # provide the link for procedure 3.104
+                                # provide the pdf for procedure 3.104
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WHERE procedure.pNumber = '3.104'
+                                RETURN procedure.Title, procedure.pNumber
+                                
                                 # read steps cdra zeolite filter swap out
                                 MATCH (procedure:Procedure)-[:Has]->(step:Step)
                                 WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
@@ -486,27 +494,33 @@ class Command(APIView):
                         "visual_message": [self.session_state['generated'][ind]],
                         "writer": "daphne"}
                     })
-                chat = ChatOpenAI(model="gpt-4-0125-preview")
+                try:
+                    result1 = chain.run(request.data['command'])
 
-                messages = [
-                    SystemMessage(
-                        content="You are a helpful assistant that helps present cipher query results to human readable form"
-                    ),
-                    HumanMessage(content=request.data['command']),
-                ]
+                    self.session_state['user_input'].append(request.data['command'])
+                    self.session_state['database_results'].append(str(result1))
+                except Exception as err:
+                    chat = ChatOpenAI(model="gpt-4-0125-preview")
 
-                response = chat(messages)
-                self.session_state['user_input'].append(request.data['command'])
-                self.session_state['generated'].append(response.content)
-                self.generate_context(response.content, 'generated')
+                    messages = [
+                        SystemMessage(
+                            content="You are a helpful assistant that helps present cipher query results to human readable form"
+                        ),
+                        HumanMessage(content=request.data['command']),
+                    ]
 
-                print(self.session_state)
-                return Response({"response": {
-                    "voice_message": response.content,
-                    "visual_message_type": ["text"],
-                    "visual_message": [response.content],
-                    "writer": "daphne"}
-                })
+                    response = chat(messages)
+                    self.session_state['user_input'].append(request.data['command'])
+                    self.session_state['generated'].append(response.content)
+                    self.generate_context(response.content, 'generated')
+
+                    print(self.session_state)
+                    return Response({"response": {
+                        "voice_message": response.content,
+                        "visual_message_type": ["text"],
+                        "visual_message": [response.content],
+                        "writer": "daphne"}
+                    })
 
             folder_path = os.path.join("./", "AT", "databases", "procedures")
             # folder_path = os.path.join(os.getcwd(), "daphne_brain", "AT", "databases", "procedures")
