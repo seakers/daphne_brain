@@ -325,8 +325,15 @@ class Command(APIView):
                                 RETURN procedure.ETR, procedure.Title, procedure.pNumber
         
                                 # What are the procedures for cdra failure
-                                # Provide the link of the procedure for cdra failure
-                                # Provide the pdf of the procedure for cdra failure
+                                # Provide the link for cdra failure
+                                # Provide the pdf for cdra failure 
+                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
+                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
+                                WHERE similarity > 0.85
+                                RETURN procedure.Title, procedure.pNumber
+                                
+                                # Give me the link for cdra failure
+                                # Givde me the pdf for cdra failure 
                                 MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
                                 WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
                                 WHERE similarity > 0.85
