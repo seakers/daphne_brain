@@ -1,8 +1,16 @@
+import json
 import time
 import pandas as pd
 from AT.global_objects import server_to_sEclss_queue, server_to_hera_queue
 
+SENSOR_DATA = None
+def set_sensor_data(sensor_data):
+    global SENSOR_DATA
+    SENSOR_DATA = json.dumps(sensor_data)
+def get_sensor_data():
+    return SENSOR_DATA
 def get_param_values(sensor_data):
+    status = {}
     new_row = {}
     tf_info_dict = {'parameter': ['display_name',
                                   'kg_name',
@@ -12,7 +20,7 @@ def get_param_values(sensor_data):
                                   'low_caution_threshold',
                                   'nominal',
                                   'high_caution_threshold',
-                                  'high_warning_threshold', ]}
+                                  'high_warning_threshold',]}
 
     for item in sensor_data:
         name = item['Name']
@@ -24,19 +32,20 @@ def get_param_values(sensor_data):
         lwt = item['LowerCautionLimit']
         hwt = item['UpperCautionLimit']
         hct = item['UpperWarningLimit']
-
+        stat=[key for key, value in item['Status'].items() if value]
         display_name = name + ' (' + group + ')'
         kg_name = name
 
         tf_info_dict[display_name] = [display_name, kg_name, group, units, lct, lwt, nominal, hwt, hct]
         new_row[display_name] = simulated_value
-
+        status[display_name] = stat
     tf_info = pd.DataFrame(tf_info_dict)
     tf_info = tf_info.set_index('parameter')
-    parsed_sensor_data = {'new_values': new_row, 'info': tf_info}
+    parsed_sensor_data = {'new_values': new_row, 'info': tf_info, 'status': status}
     return parsed_sensor_data
 
 def get_hss_param_values(sensor_data):
+    status ={}
     new_row = {}
     tf_info_dict = {'parameter': ['display_name',
                                   'kg_name',
@@ -46,7 +55,7 @@ def get_hss_param_values(sensor_data):
                                   'low_caution_threshold',
                                   'nominal',
                                   'high_caution_threshold',
-                                  'high_warning_threshold', ]}
+                                  'high_warning_threshold',]}
 
     for item in sensor_data:
         name = item['Name']
@@ -58,16 +67,18 @@ def get_hss_param_values(sensor_data):
         lwt = item['LowerCautionLimit']
         hwt = item['UpperCautionLimit']
         hct = item['UpperWarningLimit']
-
+        stat = [key for key, value in item['Status'].items() if value]
         display_name = name + ' (' + group + ')'
         kg_name = name
 
         tf_info_dict[display_name] = [display_name, kg_name, group, units, lct, lwt, nominal, hwt, hct]
         new_row[display_name] = simulated_value
-
+        status[display_name] = stat
+    set_sensor_data({'new_values': new_row, 'status': status})
     tf_info = pd.DataFrame(tf_info_dict)
     tf_info = tf_info.set_index('parameter')
-    parsed_sensor_data = {'new_values': new_row, 'info': tf_info}
+    parsed_sensor_data = {'new_values': new_row, 'info': tf_info, 'status': status}
+    # print(parsed_sensor_data)
     return parsed_sensor_data
 
 
@@ -134,9 +145,8 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
             signal = ser_to_sEclss.get()
             if signal['type'] == 'sensor_data':
                 sensor_data = signal['content']
-                print(sensor_data)
                 parsed_sensor_data = get_hss_param_values(sensor_data)
-
+                # print(sensor_data)
                 if first_update:
                     print("Initialized tf window.")
                     tf_window = generate_initial_window(parsed_sensor_data)
