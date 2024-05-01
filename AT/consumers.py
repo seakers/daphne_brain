@@ -5161,6 +5161,9 @@ class ATConsumer(DaphneConsumer):
     def ws_configuration_update(self, event):
         self.send(json.dumps(event))
 
+    def without_daphne_session(self, event):
+        self.send(json.dumps(event))
+
     def finish_experiment_from_mcc(self, event):
         self.send(json.dumps(event))
 
