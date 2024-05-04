@@ -25,3 +25,4 @@ asgiref~=3.3.4
 openai
 langchain
 python-dotenv[cli]
+typing_extensions

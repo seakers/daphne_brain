@@ -9,8 +9,8 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from daphne_brain.nlp_object import nlp
-from dialogue.nn_models import nn_models
+# from daphne_brain.nlp_object import nlp
+# from dialogue.nn_models import nn_models
 import dialogue.command_processing as command_processing
 from auth_API.helpers import get_or_create_user_information
 from daphne_context.models import DialogueHistory, DialogueContext
@@ -50,31 +50,28 @@ class Command(APIView):
     session_state = {}
     # Generated natural language
     if 'generated' not in session_state:
-        print("helooooooooo3")
+        print("generated")
         session_state['generated'] = []
     # Neo4j database results
     if 'database_results' not in session_state:
-        print("helooooooooo4")
+        print("database_results")
         session_state['database_results'] = []
     # User input
     if 'user_input' not in session_state:
-        print("helooooooooo5")
+        print("user_input")
         session_state['user_input'] = []
     # Generated Cypher statements
     if 'cypher' not in session_state:
-        print("helooooooooo6")
+        print("cypher")
         session_state['cypher'] = []
 
     def generate_context(self, prompt, context_data='generated'):
 
-        print("helooooooooo")
         context = []
 
-        print("helooooooooo1")
         print(self.session_state['generated'])
         # If any history exists
         if self.session_state['generated']:
-            print("helooooooooo2")
             # Add the last three exchanges
             size = len(self.session_state['generated'])
             for i in range(max(size - 5, 0), size):

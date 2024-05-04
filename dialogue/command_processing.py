@@ -9,57 +9,57 @@ import numpy as np
 from dialogue import qa_pipeline, data_helpers
 from dialogue.errors import ParameterMissingError
 from daphne_context.models import UserInformation, DialogueHistory, DialogueContext
-from dialogue.nn_models import nn_models
+# from dialogue.nn_models import nn_models
 
 
-def classify_command_role(command, daphne_version):
-    cleaned_command = data_helpers.clean_str(command)
+# def classify_command_role(command, daphne_version):
+#     cleaned_command = data_helpers.clean_str(command)
+#
+#     # Get model
+#     loaded_model = nn_models[daphne_version]["general"]
+#
+#     # Map data into vocabulary
+#     model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
+#     vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
+#     with open(vocab_path, 'rb') as handle:
+#         tokenizer = pickle.load(handle)
+#
+#     x = tokenizer.texts_to_sequences([cleaned_command])
+#     expected_input_length = loaded_model.layers[0].input_shape[0][1]
+#     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+#     print("\nEvaluating...\n")
+#
+#     # Evaluation
+#     # ==================================================
+#     # evaluate loaded model on test data
+#     result_logits = loaded_model.predict(x)
+#     prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
+#     return prediction[0]
 
-    # Get model
-    loaded_model = nn_models[daphne_version]["general"]
 
-    # Map data into vocabulary
-    model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, "general")
-    vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
-    with open(vocab_path, 'rb') as handle:
-        tokenizer = pickle.load(handle)
-
-    x = tokenizer.texts_to_sequences([cleaned_command])
-    expected_input_length = loaded_model.layers[0].input_shape[0][1]
-    x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-    print("\nEvaluating...\n")
-
-    # Evaluation
-    # ==================================================
-    # evaluate loaded model on test data
-    result_logits = loaded_model.predict(x)
-    prediction = data_helpers.get_label_using_logits(result_logits, top_number=1)
-    return prediction[0]
-
-
-def command_type_predictions(processed_command, daphne_version, module_name):
-    cleaned_question = data_helpers.clean_str(processed_command)
-
-    # Get model
-    loaded_model = nn_models[daphne_version][module_name]
-
-    # Map data into vocabulary
-    model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
-    vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
-    with open(vocab_path, 'rb') as handle:
-        tokenizer = pickle.load(handle)
-
-    x = tokenizer.texts_to_sequences([cleaned_question])
-    expected_input_length = loaded_model.layers[0].input_shape[0][1]
-    x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
-    print("\nEvaluating...\n")
-
-    # Evaluation
-    # ==================================================
-    # evaluate loaded model on test data
-    result_logits = loaded_model.predict(x)
-
-    return result_logits
+# def command_type_predictions(processed_command, daphne_version, module_name):
+#     cleaned_question = data_helpers.clean_str(processed_command)
+#
+#     # Get model
+#     loaded_model = nn_models[daphne_version][module_name]
+#
+#     # Map data into vocabulary
+#     model_folder_path = os.path.join(os.getcwd(), "dialogue", "models", daphne_version, module_name)
+#     vocab_path = os.path.join(model_folder_path, "tokenizer.pickle")
+#     with open(vocab_path, 'rb') as handle:
+#         tokenizer = pickle.load(handle)
+#
+#     x = tokenizer.texts_to_sequences([cleaned_question])
+#     expected_input_length = loaded_model.layers[0].input_shape[0][1]
+#     x = np.array([x[0] + [0] * (expected_input_length - len(x[0]))])
+#     print("\nEvaluating...\n")
+#
+#     # Evaluation
+#     # ==================================================
+#     # evaluate loaded model on test data
+#     result_logits = loaded_model.predict(x)
+#
+#     return result_logits
 
 
 def get_top_types(logits, daphne_version, module_name, top_number):
