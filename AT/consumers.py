@@ -36,10 +36,12 @@ class ATConsumer(DaphneConsumer):
         r = redis.Redis()
         r.sadd("all-users", self.channel_name)
         if r.sismember("all-users", self.channel_name) == 1:
-            print(f"{self.channel_name} was successfully added to the all users group. The all users group contains "
-                  f"{r.smembers('all-users')}")
+            # print(f"{self.channel_name} was successfully added to the all users group. The all users group contains "
+            #       f"{r.smembers('all-users')}")
+            pass
         else:
-            print(f"{self.channel_name} was not successfully added to the all users group.")
+            # print(f"{self.channel_name} was not successfully added to the all users group.")
+            pass
 
 
         """ ---HERE-----In the event daphne at needs to have all variables and queues cleared and threads killed"""
@@ -82,7 +84,7 @@ class ATConsumer(DaphneConsumer):
         r.delete("fake-telemetry-three")
         r.delete("fake-telemetry-four")
         r.delete("all-users")
-        print("Cleared on redis variables.")
+        #print("Cleared on redis variables.")
 
         # Clear the queues and print a stop message, queues between hub and other threads get cleared in their threads
         # But ensure all get cleared anyway to ensure everything starts on a clean slate
@@ -107,7 +109,7 @@ class ATConsumer(DaphneConsumer):
         global_obj.simulator_at_to_hub_queues[1].queue.clear()
         global_obj.simulator_at_to_hub_queues[2].queue.clear()
         global_obj.simulator_at_to_hub_queues[3].queue.clear()
-        print("Cleared all queues.")
+        #print("Cleared all queues.")
         """ ---TO HERE-----"""
 
         # Reset ping timer

@@ -84,13 +84,18 @@ class Command(APIView):
         context.append({'role': 'user', 'content': str(prompt)})
         return context
 
+    def run_cypher_query(self, graph, query):
+        print("555555555555555555555555555555555555555555555555555555555555555555555555555555555555555", query)
+        results = graph.query(query)
+        return results
+
     def post(self, request, format=None):
         # Example usage
         try:
             # JSON changes
             load_dotenv()
             os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
-            chat = ChatOpenAI(model="gpt-4-0125-preview")
+            chat = ChatOpenAI(model="ft:gpt-4o-mini-2024-07-18:seak-lab:daphne-third-test:A9i2G8En")
 
             messages = [
                 SystemMessage(
@@ -124,7 +129,7 @@ class Command(APIView):
             print("typee: ", sensor_data)
             spec = JsonSpec(dict_=dict(sensor_data), max_value_length=sys.maxsize)
             toolkit = JsonToolkit(spec=spec)
-            agent = create_json_agent(llm=ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), toolkit=toolkit,
+            agent = create_json_agent(llm=ChatOpenAI(temperature=0, model="ft:gpt-4o-mini-2024-07-18:seak-lab:daphne-third-test:A9i2G8En"), toolkit=toolkit,
                                       max_iterations=sys.maxsize,
                                       verbose=True)
             response = agent.run(request.data['command'])
@@ -139,19 +144,7 @@ class Command(APIView):
         except Exception as e:
             print("Error:", e)
             print("hi: ", request.data['command'])
-            # templates = [r"^Check measurement (.+) status$", r"^Check (.+) status$",
-            #              r"^Show the current value of (.+) measurement$", r"^Show the current value of (.+)$",
-            #              r"^Read steps of procedure (.+)", r"^Read steps of (.+)", "Next", "previous", "Repeat",
-            #              "Previous", "next", "repeat"]
-            # flag = False
-            # for template in templates:
-            #     pattern = re.compile(template, re.IGNORECASE)
-            #     flag = bool(pattern.match(request.data['command']))
-            #     print(flag)
-            #     if flag:
-            #         break
-            # if flag == False:
-            # langchain changes
+
             graph = Neo4jGraph(
                 url="bolt://13.58.54.49:7687",
                 username="neo4j",
@@ -163,289 +156,14 @@ class Command(APIView):
             load_dotenv()
             os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
             print("HERE")
-            chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
-            )
+            # chain = GraphCypherQAChain.from_llm(
+            #     ChatOpenAI(temperature=0), graph=graph, verbose=True, return_when_no_match=False, return_direct=True
+            # )
 
-            CYPHER_GENERATION_TEMPLATE = """
-        
-                                Task:Generate Cypher statement to query a graph database.
-        
-                                Instructions:
-                                You are a virtual assistant that helps astronauts when there are spacecraft anomalies and 
-                                mission control is not available. Astronauts will ask you questions about the anomalies, 
-                                their signature, the procedures to solve those anomalies, etc. To answer these questions, 
-                                you can generate a Cypher statement to query a graph database.
-                                
-                                Use only the provided relationship types and properties in the schema.
-                                Do not use any other relationship types or properties that are not provided.
-                                If the cipher query has empty return say no info available.
-                                If multiple answers exists mention all.
-                                Just list the query results don't try to frame answers.
-        
-                                Schema:
-                                {schema}
-        
-                                Cypher examples:
-                                # Risks of main cabin fan failure include what?
-                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                                WITH apoc.text.sorensenDiceSimilarity(a.Name,'main cabin fan failure') AS similarity, risk
-                                WHERE similarity > 0.85
-                                Return
-                                CASE WHEN risk IS NULL
-                                  THEN 'No risks found'
-                                  ELSE risk.Title
-                                  END
-        
-                                # What are the potential risks of nitrogen tank leak
-                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'N2 Ballast Tank Line Leak') AS similarity, risk
-                                WHERE similarity > 0.85
-                                Return
-                                CASE WHEN risk IS NULL
-                                  THEN 'No risks found'
-                                  ELSE risk.Title
-                                  END
-        
-                                # What are the potential risks of a nitrogen tank burst and a nitrogen tank line leak.
-                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                                WHERE anomaly.Name IN ['N2 Tank Burst', 'N2 Ballast Tank Line Leak']
-                                RETURN risk.Title
-                                Instructions : give answers from return value
-        
-                                # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
-                                # What are the potential risks of a reduced cabin fan capacity. Don't give answers from the web
-                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Reduced Main Cabin Fan #1 Capacity') AS similarity, risk
-                                WHERE similarity > 0.85
-                                RETURN
-                                  CASE WHEN risk IS NULL
-                                  THEN 'No risks found'
-                                  ELSE risk.Title
-                                  END
-                                Instructions :  Don't give answers from the web
-        
-                                # what are the potential risks of trace contaminants. Don't give answers from the web
-                                # what are the risks of trace contaminants. Don't give answers from the web
-                                # What are the potential risks of trace contaminants. Don't give answers from the web
-                                MATCH (anomaly:Anomaly)-[:Can_Cause]->(risk:Risk)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Trace Contaminants') AS similarity, risk
-                                WHERE similarity > 0.85
-                                RETURN
-                                  CASE WHEN risk IS NULL
-                                  THEN 'No risks found'
-                                  ELSE risk.Title
-                                  END
-        
-                                # what is the signature of CDRA Failure. Mention all m.Name, m.ParameterGroup, r
-                                # what is the signature associated with cdra failure. Mention all m.Name, m.ParameterGroup, r
-                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement, relationship
-                                WHERE similarity > 0.85
-                                RETURN measurement.Name, measurement.ParameterGroup, relationship
-                                # Note: Give answers from query results
-        
-                                # what are the symptoms of cdra failure. Mention all m.Name, m.ParameterGroup, r
-                                # if cdra failure was occurring what symptoms would I expect to see. Give answer from the query result
-                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement, relationship
-                                WHERE similarity > 0.85
-                                RETURN measurement.Name, measurement.ParameterGroup, relationship
-        
-                                # what measurements are affected by main cabin fan failure
-                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Main Cabin Fan Failure') AS similarity, measurement, relationship
-                                WHERE similarity > 0.85
-                                RETURN measurement.Name, measurement.ParameterGroup, relationship
-        
-                                # Note: Give answers from query results
-        
-                                # what are the characteristic symptoms of cdra lioh filter clogged. Mention all m.Name, m.ParameterGroup, r
-                                MATCH (measurement:Measurement)-[relationship:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,cdra lioh filter clogged') AS similarity, measurement, relationship
-                                WHERE similarity > 0.85
-                                RETURN measurement.Name, measurement.ParameterGroup, relationship
-        
-        
-                                # Note: Give answers from query results
-        
-                                # what subsystems does biological filter saturation affect. Answer SubSystem's Title value
-                                MATCH (anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, subsystem
-                                WHERE similarity > 0.85
-                                RETURN subsystem.Title
-                                # Note: Answer subsystem.Title value
-        
-                                # how do i fix biological filter saturation. Mention the procedure titlte
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, procedure
-                                WHERE similarity > 0.85
-                                RETURN procedure.Title
-                                # Note: Mention the procedure title
-        
-                                Note: Do not include any explanations or apologies in your responses.
-                                Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
-                                Do not include any text except the generated Cypher statement.
-                                If multiple answers list all
-        
-                                # how long will it take me to solve biological filter saturation
-                                # what is the average timeframe for resolving biological filter saturation
-                                # how long will it take to complete fuel cell maintenance. Mention all times with correspnding procesdures, give the higher value first
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'Biological Filter Saturation') AS similarity, procedure
-                                WHERE similarity > 0.85
-                                RETURN procedure.ETR
-        
-                                #Instructions: Mention all times in order with correspnding procesdures titles and number
-        
-                                # how long is 3.109
-                                # time of completion 3.101
-                                MATCH (procedure:Procedure)
-                                WHERE procedure.pNumber = '3.109'
-                                RETURN procedure.ETR
-        
-                                # how long would electrolysis system biological filter swap out take to complete
-                                MATCH (procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(procedure.Title,'Electrolysis System Biological Filter Swapout') AS similarity, procedure
-                                WHERE similarity > 0.85
-                                RETURN procedure.ETR
-        
-                                # read steps of procedure 3.109
-                                MATCH (procedure:Procedure)-[:Has]->(step:Step)
-                                WHERE procedure.pNumber = '3.109'
-                                RETURN step.Title, step.Action
-        
-                                # how long will it take to solve wrs off nominal ph level.
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'WRS Off Nominal pH Level') AS similarity, procedure
-                                WHERE similarity > 0.85
-                                RETURN procedure.ETR, procedure.Title, procedure.pNumber
-        
-                                # What are the procedures for cdra failure
-                                # Provide the link for cdra failure
-                                # Provide the pdf for cdra failure 
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
-                                WHERE similarity > 0.85
-                                RETURN procedure.Title, procedure.pNumber
-                                
-                                # Give me the link for cdra failure
-                                # Givde me the pdf for cdra failure 
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, procedure
-                                WHERE similarity > 0.85
-                                RETURN procedure.Title, procedure.pNumber
-        
-                                Note: answer the question like -> The title of the procedure is "CDRA Zeolite Filter Swapout" and the procedure number is 3.104.
-        
-                                # provide the link for procedure 3.104
-                                # provide the pdf for procedure 3.104
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WHERE procedure.pNumber = '3.104'
-                                RETURN procedure.Title, procedure.pNumber
-                                
-                                # read steps cdra zeolite filter swap out
-                                MATCH (procedure:Procedure)-[:Has]->(step:Step)
-                                WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                                
-                                MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
-                                WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                                
-                                
-                                MATCH (procedure:Procedure)-[:Has]->(subsubstep:SubSubStep)
-                                WHERE procedure.Title = 'CDRA Zeolite Filter Swapout'
-                                RETURN step.Title, step.Action, substep.Title, substep.Action, subsubstep.Title, subsubstep.Action
-                                
-                                ORDER BY step.Step,subsubstep.SubSubStep,substep.SubStep
-        
-                                Note: always check all nodes connected through has relationship
-        
-                                # list all substeps of step 1 of procedure 3.106
-                                MATCH (procedure:Procedure)-[:Has]->(ss)
-                                WHERE procedure.pNumber = '3.106' AND ss.Step = 1
-                                RETURN ss.Title, ss.Action
-                                ORDER BY ss.SubStep
-        
-                                Note: always check all nodes connected through has relationship
-                                
-                                # what is the procedure for Fuel Cell #1 and PDU Failure
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                Where anomaly.Name='Fuel Cell #1 and PDU Failure'
-                                RETURN procedure.Title, procedure.pNumber
-    
-                                Note: use the name of the node type as the variable for that node
-                                
-                                #what anomalies are related to the ppCO2
-                                MATCH (measurement:Measurement)-[]->(anomaly:Anomaly)
-                                WHERE measurement.Name = 'ppCO2'
-                                RETURN anomaly.Name, measurement.ParameterGroup
-                                
-                                # give me a list of possible anomalies regarding the Sabatier system
-                                Match(anomaly:Anomaly)-[:Affects]->(subsystem:SubSystem)
-                                WITH apoc.text.sorensenDiceSimilarity(subsystem.Title,'Sabatier') AS similarity, anomaly
-                                WHERE similarity > 0.85
-                                return anomaly.Name 
-                                
-                                # what is step 1.1 of procedure 3.124
-                                MATCH (procedure:Procedure)-[:Has]->(substep:SubStep)
-                                WHERE procedure.pNumber = '3.124' AND substep.Step = 1 AND substep.SubStep = 1
-                                RETURN substep.Title, substep.Action
-                                
-                                # how long it takes to solve tccs fan failure
-                                MATCH (anomaly:Anomaly)-[:Solution]->(procedure:Procedure)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'TCCS Aux Fan #1 Failure') AS similarity, procedure
-                                WHERE similarity > 0.8
-                                RETURN procedure.ETR, procedure.Title, procedure.pNumber
-                                
-                                # what is the difference in symptoms between cdra failure and main cabin fan failure
-                                MATCH (measurement:Measurement)-[r:Exceeds_LowerCautionLimit | Exceeds_LowerWarningLimit | Exceeds_UpperCautionLimit | Exceeds_UpperWarningLimit]->(anomaly:Anomaly)
-                                WHERE anomaly.Name IN ['CDRA Failure', 'Main Cabin Fan Failure']
-                                RETURN anomaly.Name,  measurement.Name,  measurement.ParameterGroup, type(r)
-    
-                                # What is the confidence score of 'ppCO2','Exceeds_UpperWarningLimit','L2','ppCO2','Exceeds_UpperWarningLimit','L1','ppO2','Exceeds_LowerCautionLimit','L1','ppO2','Exceeds_LowerCautionLimit','L2' for cdra failure
-                                MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_LowerCautionLimit]->(anomaly:Anomaly)
-                                WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement
-                                WHERE similarity > 0.8 AND 
-                                measurement.Name = 'ppCO2' AND type(r) = 'Exceeds_UpperWarningLimit' OR 
-                                measurement.Name = 'ppO2' AND type(r) = 'Exceeds_LowerCautionLimit'
-                                WITH COUNT(DISTINCT measurement) AS measurementCount
-    
-                                MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_UpperCautionLimit|Exceeds_LowerCautionLimit|Exceeds_LowerWarningLimit]->(anomaly:Anomaly)
-                                WHERE anomaly.Name = 'CDRA Failure'
-                                WITH COUNT(DISTINCT measurement) AS totalCount, measurementCount
-    
-    
-                                WITH measurementCount * 1.0 / totalCount AS ratio
-    
-    
-                                WITH ratio,
-                                CASE 
-                                    WHEN ratio < 0.12 THEN "Extremely Unlikely : 0-0.11"
-                                    WHEN 0.12 <= ratio < 0.23 THEN "Highly Unlikely : 0.12-0.22"
-                                    WHEN 0.23 <= ratio < 0.34 THEN "Unlikely : 0.23-0.33"
-                                    WHEN 0.34 <= ratio < 0.45 THEN "Moderately Unlikely : 0.34-0.44"
-                                    WHEN 0.45 <= ratio < 0.56 THEN "Equally Likely and Unlikely : 0.45-0.55"
-                                    WHEN 0.56 <= ratio < 0.67 THEN "Moderately Likely : 0.56-0.66"
-                                    WHEN 0.67 <= ratio < 0.78 THEN "Likely : 0.67-0.77"
-                                    WHEN 0.78 <= ratio < 0.89 THEN "Highly Likely : 0.78-0.88"
-                                    ELSE "Extremely Likely : 0.89-1.0"
-                                END AS text_score
-    
-                                RETURN ratio, text_score
-    
-                                The question is:
-                                {question}"""
+            chatModel = ChatOpenAI(model="ft:gpt-4o-mini-2024-07-18:seak-lab:daphne-third-test:A9i2G8En")
 
-            CYPHER_GENERATION_PROMPT = PromptTemplate(
-                input_variables=["schema", "question"], template=CYPHER_GENERATION_TEMPLATE
-            )
-
-            chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), graph=graph, verbose=True,
-                cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
-            )
             print("ques:", request.data['command'])
-            print(chain)
+            #print(chain)
             try:
                 temps = [r"^Show the image of component (.+)$", r"^Show the image of (.+)$"]
                 image_link = ""
@@ -482,7 +200,17 @@ class Command(APIView):
                 # print(question)
                 ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {request.data['command']}"
                 print("QUES_DESC:", ques_desc)
-                result1 = chain.run(ques_desc)
+                messagesChatModel = [
+                    SystemMessage(
+                        content="You are a virtual assistant that helps astronauts when there are spacecraft anomalies and mission control is not available. Astronauts will ask you questions about the anomalies, their signature, the procedures to solve those anomalies, and general questions etc. To answer the questions which need the database data, you can generate a Cypher statement to query a graph database. Use only the provided relationship types and properties in the schema. Do not use any other relationship types or properties that are not provided. If the Cypher query has an empty return, say 'no info available.' If multiple answers exist, mention all. Just list the query results; don't try to frame answers. But if the question does not need data from database, just give the natural language answer. If the question has data from database then give the cypher query only."
+                    ),
+                    HumanMessage(content=ques_desc),
+                ]
+                res1 = chatModel(messagesChatModel)
+                print("resssssssssssssssssssssssssssssssssssssssssssssssssssss", res1)
+                result1 = self.run_cypher_query(graph, res1.content)
+                # result1 = chain.run(ques_desc)
+                print("6666666666666666666666666666666666666", result1)
 
                 self.session_state['user_input'].append(request.data['command'])
                 self.session_state['database_results'].append(str(result1))
@@ -499,21 +227,35 @@ class Command(APIView):
                         "writer": "daphne"}
                     })
                 try:
-                    result1 = chain.run(request.data['command'])
+                    messagesChatModel = [
+                        SystemMessage(
+                            content="You are a virtual assistant that helps astronauts when there are spacecraft anomalies and mission control is not available. Astronauts will ask you questions about the anomalies, their signature, the procedures to solve those anomalies, and general questions etc. To answer the questions which need the database data, you can generate a Cypher statement to query a graph database. Use only the provided relationship types and properties in the schema. Do not use any other relationship types or properties that are not provided. If the Cypher query has an empty return, say 'no info available.' If multiple answers exist, mention all. Just list the query results; don't try to frame answers. But if the question does not need data from database, just give the natural language answer. If the question has data from database then give the cypher query only."
+                        ),
+                        HumanMessage(content=request.data['command']),
+                    ]
+                    # result1 = chain.run(request.data['command'])
+                    res1 = chatModel(messagesChatModel)
+                    print("hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii", res1.content)
+                    result1 = self.run_cypher_query(graph, res1)
+                    print("888888888888888888888888888888888888888", result1)
 
                     self.session_state['user_input'].append(request.data['command'])
                     self.session_state['database_results'].append(str(result1))
+                    # self.session_state['generated'].append(res1.content)
+                    # self.generate_context(res1.content, 'generated')
                 except Exception as err:
-                    chat = ChatOpenAI(model="gpt-4-0125-preview")
-
+                    chat = ChatOpenAI(model="ft:gpt-4o-mini-2024-07-18:seak-lab:daphne-third-test:A9i2G8En")
+                    ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {request.data['command']}"
+                    print("QUES_DESC:", ques_desc)
                     messages = [
                         SystemMessage(
                             content="You are a helpful assistant that helps present cipher query results to human readable form"
                         ),
-                        HumanMessage(content=request.data['command']),
+                        HumanMessage(content=ques_desc),
                     ]
-
                     response = chat(messages)
+
+                    print("444444444444444444444444444444444444444444444444444444444444")
                     self.session_state['user_input'].append(request.data['command'])
                     self.session_state['generated'].append(response.content)
                     self.generate_context(response.content, 'generated')
@@ -570,8 +312,9 @@ class Command(APIView):
             print("Description:", description)
             # conversation.run(description)
 
-            chat = ChatOpenAI(model="gpt-4-0125-preview")
-
+            chat = ChatOpenAI(model="ft:gpt-4o-mini-2024-07-18:seak-lab:daphne-third-test:A9i2G8En")
+            ques_desc = f"Using this as history of conversation and context {self.generate_context(request.data['command'], 'generated')} answer the following question {description}"
+            print("QUES_DESC:", ques_desc)
             messages = [
                 SystemMessage(
                     content="You are a helpful assistant that helps present cipher query results to human readable form, don't write any fullforms, present information as it is in sentences, give line breaks whereever required to improve formatting"
@@ -580,6 +323,7 @@ class Command(APIView):
             ]
 
             response = chat(messages)
+            print("222222222222222222222222222222222222222222222222222222222222222222")
 
             response.content = response.content.replace('\n', '<br>')
             print("Yahoo:", response.dict)
@@ -610,103 +354,6 @@ class Command(APIView):
                 "visual_message": [response.content],
                 "writer": "daphne"}
             })
-
-            # End of langchain changes
-        # else:
-        #     # Define context and see if it was already defined for this session
-        #
-        #     user_info = get_or_create_user_information(request.session, request.user, self.daphne_version)
-        #
-        #     # Obtain the merged context
-        #     context = self.get_current_context(user_info)
-        #
-        #     # Save user input as part of the dialogue history
-        #     DialogueHistory.objects.create(user_information=user_info,
-        #                                    voice_message=request.data["command"],
-        #                                    visual_message_type="[\"text\"]",
-        #                                    visual_message="[\"" + request.data["command"] + "\"]",
-        #                                    writer="user",
-        #                                    date=datetime.datetime.utcnow())
-        #
-        #     print("hi: ", request.data)
-        #
-        #     # Experiment-specific code to limit what can be asked to Daphne
-        #     AllowedCommand.objects.filter(user_information__exact=user_info).delete()
-        #
-        #     if 'allowed_commands' in request.data:
-        #         allowed_commands = json.loads(request.data['allowed_commands'])
-        #         for command_type, command_list in allowed_commands.items():
-        #             for command_number in command_list:
-        #                 AllowedCommand.objects.create(user_information=user_info, command_type=command_type,
-        #                                               command_descriptor=command_number)
-        #
-        #     # If this a choice between three options, check the one the user chose and go on with that
-        #     if "is_clarifying_input" in context["dialogue"] and context["dialogue"]["is_clarifying_input"]:
-        #         user_choice = request.data['command'].strip().lower()
-        #         choices = json.loads(context["dialogue"]["clarifying_commands"])
-        #         if user_choice == "first":
-        #             choice = choices[0]
-        #         elif user_choice == "second":
-        #             choice = choices[1]
-        #         elif user_choice == "third":
-        #             choice = choices[2]
-        #         else:
-        #             choice = choices[0]
-        #         user_turn = DialogueHistory.objects.filter(writer__exact="user").order_by("-date")[1]
-        #
-        #         # Preprocess the command
-        #         processed_command = nlp(user_turn.voice_message.strip().lower())
-        #
-        #         role_index = context["dialogue"]["clarifying_role"]
-        #         command_class = self.command_options[role_index]
-        #         condition_name = self.condition_names[role_index]
-        #
-        #         new_dialogue_contexts = self.create_dialogue_contexts()
-        #         dialogue_turn = command_processing.answer_command(processed_command, choice, command_class,
-        #                                                           condition_name, user_info, context,
-        #                                                           new_dialogue_contexts, request.session)
-        #         self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
-        #
-        #     else:
-        #         # Preprocess the command
-        #         processed_command = nlp(request.data['command'].strip())
-        #
-        #         # Classify the command, obtaining a command type
-        #         command_roles = command_processing.classify_command_role(processed_command, self.daphne_version)
-        #
-        #         # Act based on the types
-        #         for command_role in command_roles:
-        #             command_class = self.command_options[command_role]
-        #             condition_name = self.condition_names[command_role]
-        #
-        #             command_predictions = command_processing.command_type_predictions(processed_command,
-        #                                                                               self.daphne_version,
-        #                                                                               command_class)
-        #
-        #             # If highest value prediction is over 95%, take that question. If over 90%, ask the user to make sure
-        #             # that is correct by choosing over 3. If less, call BS
-        #             max_value = np.amax(command_predictions)
-        #             if max_value > 0.95:
-        #                 command_type = command_processing.get_top_types(command_predictions, self.daphne_version,
-        #                                                                 command_class, top_number=1)[0]
-        #                 new_dialogue_contexts = self.create_dialogue_contexts()
-        #                 dialogue_turn = command_processing.answer_command(processed_command, command_type,
-        #                                                                   command_class,
-        #                                                                   condition_name, user_info, context,
-        #                                                                   new_dialogue_contexts, request.session)
-        #                 self.save_dialogue_contexts(new_dialogue_contexts, dialogue_turn)
-        #             elif max_value > 0.90:
-        #                 command_types = command_processing.get_top_types(command_predictions, self.daphne_version,
-        #                                                                  command_class, top_number=3)
-        #                 command_processing.choose_command(command_types, self.daphne_version, command_role,
-        #                                                   command_class,
-        #                                                   user_info)
-        #             else:
-        #                 command_processing.not_answerable(user_info)
-        #
-        #     frontend_response = command_processing.think_response(user_info)
-        #
-        #     return Response({'response': frontend_response})
 
     def get_current_context(self, user_info):
         context = {}
