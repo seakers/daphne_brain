@@ -93,7 +93,7 @@ class Command(APIView):
             # JSON changes
             load_dotenv()
             os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
-            chat = ChatOpenAI(model="gpt-4-0125-preview")
+            chat = ChatOpenAI(model="gpt-4o")
 
             messages = [
                 SystemMessage(
@@ -127,7 +127,7 @@ class Command(APIView):
             print("typee: ", sensor_data)
             spec = JsonSpec(dict_=dict(sensor_data), max_value_length=sys.maxsize)
             toolkit = JsonToolkit(spec=spec)
-            agent = create_json_agent(llm=ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), toolkit=toolkit,
+            agent = create_json_agent(llm=ChatOpenAI(temperature=0, model="gpt-4o"), toolkit=toolkit,
                                       max_iterations=sys.maxsize,
                                       verbose=True)
             response = agent.run(request.data['command'])
@@ -444,7 +444,7 @@ class Command(APIView):
             )
 
             chain = GraphCypherQAChain.from_llm(
-                ChatOpenAI(temperature=0, model="gpt-4-0125-preview"), graph=graph, verbose=True,
+                ChatOpenAI(temperature=0, model="gpt-4o"), graph=graph, verbose=True,
                 cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True
             )
             print("ques:", request.data['command'])
@@ -507,7 +507,7 @@ class Command(APIView):
                     self.session_state['user_input'].append(request.data['command'])
                     self.session_state['database_results'].append(str(result1))
                 except Exception as err:
-                    chat = ChatOpenAI(model="gpt-4-0125-preview")
+                    chat = ChatOpenAI(model="gpt-4o")
 
                     messages = [
                         SystemMessage(
@@ -573,7 +573,7 @@ class Command(APIView):
             print("Description:", description)
             # conversation.run(description)
 
-            chat = ChatOpenAI(model="gpt-4-0125-preview")
+            chat = ChatOpenAI(model="gpt-4o")
 
             messages = [
                 SystemMessage(
