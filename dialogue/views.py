@@ -69,15 +69,13 @@ class Command(APIView):
 
         print("helooooooooo")
         context = []
-
-        print("helooooooooo1")
         # print(self.session_state['generated'])
         # If any history exists
         if self.session_state['generated']:
             print("helooooooooo2")
             # Add the last three exchanges
             size = len(self.session_state['generated'])
-            for i in range(max(size - 5, 0), size):
+            for i in range(max(size - 3, 0), size):
                 context.append(
                     {'role': 'user', 'content': self.session_state['user_input'][i]})
                 context.append(
@@ -109,23 +107,16 @@ class Command(APIView):
                                                 Question: Show the value of X.
                                                 Question: Provide the current value of measurement X.
                                                 Question: Provide the value of the X measurement.
-                                                Question: Provide the value of X.
-                                                Question: What is the current value of measurement X?
-                                                Question: What is the value of the X measurement?
                                                 Question: What is the value of X?
                                                 Question: X measurement current value.
                                                 Question: X measurement value.
                                                 Question: X value.
                                                 Question: Is measurement X normal?.
-                                                Question: Is measurement X nominal?.
-                                                Question: Is measurement X correct?.
                                                 Question: Is X normal?.
-                                                Question: Is X nominal?.
-                                                Question: Is X correct?.
                                                 Question: Check the X status.
                                                 Question: Check measurement X status.
                                                 Question: Check X status.
-                                                Question: The status of which of them in nominal
+                                                Question: The status of which of them is nominal
                                                 Question: The status of which of them is not nominal
                                                 Question: Which have a status not nominal
                                                 Answer: parameter query
@@ -135,59 +126,48 @@ class Command(APIView):
                                                 Question: next
                                                 Question: Previous
                                                 Question: previous
+                                                Question: Give me the nominal values of X
+                                                Question: What are the nominal values of X
                                                 Question: Show the thresholds of measurement X.
                                                 Question: Show the X thresholds.
                                                 Question: Provide the X limits.
                                                 Question: Provide the thresholds of measurement X.
-                                                Question: Provide the X measurement limits.
                                                 Question: What are the measurement X thresholds?
                                                 Question: What are the X thresholds?
                                                 Question: X thresholds.
                                                 Question: X limits.
                                                 Question: What are the risks of anomaly X?
+                                                Question: What are the risks of X?
                                                 Question: What are the potential risks of anomaly X?
                                                 Question: Give me the pdf for procedure 3.104
                                                 Question: what is the difference in symptoms between cdra failure and main cabin fan failure
                                                 Question: what are the symptoms of cdra failure and main cabin fan failure
                                                 Question: difference in symptoms between cdra failure and main cabin fan failure
                                                 Question: compare symptoms between cdra failure and main cabin fan failure
-                                                Question: What are the risks of X?
                                                 Question: What are the risks of main cabin fan failure?
                                                 Question: Risks of main cabin fan failure?
                                                 Question: What are the potential risks of X?
                                                 Question: What are the hazards of anomaly X?
                                                 Question: What are the potential hazards of anomaly X?
-                                                Question: What are the hazards of X?
-                                                Question: What are the potential hazards of X?
                                                 Question: Why is anomaly X dangerous?
                                                 Question: Why is X dangerous?
-                                                Question: Why is anomaly X hazardous?
                                                 Question: Why is X hazardous?
-                                                Question: What is the signature of anomaly X?
                                                 Question: What is the signature of X?
-                                                Question: What parameters does anomaly X affect?
                                                 Question: What parameters does X affect?
-                                                Question: What are the measurements affected by anomaly X?
                                                 Question: What are the measurements affected by X?
-                                                Question: What are the symptoms of anomaly X?
                                                 Question: What are the symptoms of X?
                                                 Question: Anomaly X signature.
                                                 Question: Anomaly X symptoms.
                                                 Question: X signature.
                                                 Question: X symptoms.
-                                                Question: What subsystems does anomaly X affect?
                                                 Question: What subsystems does X affect?
-                                                Question: What components does anomaly X affect?
                                                 Question: What components does X affect?
-                                                Question: What are the components affected by anomaly X?
                                                 Question: What are the components affected by X?
                                                 Question: Anomaly X subsystems.
                                                 Question: Anomaly X components.
                                                 Question: X subsystems.
                                                 Question: X components.
-                                                Question: What are the procedures for anomaly X?
                                                 Question: What is the procedure for X?
-                                                Question: Are there any procedures for anomaly X?
                                                 Question: Are there any procedures for X?
                                                 Question: Provide anomaly X procedures.
                                                 Question: Show me the procedure to solve X.
@@ -219,21 +199,14 @@ class Command(APIView):
                                                 Question: Provide me the image for X.
                                                 Question: Give the image of X.
                                                 Question: Show me the picture of X.
-                                                Question: Provide me the picture for X.
                                                 Question: Give the picture of X.
-                                                Question: Show me the image of component X.
-                                                Question: Provide me the image for component X.
-                                                Question: Give the image of component X.
-                                                Question: Show me the picture of component X.
-                                                Question: Provide me the picture for component X.
+                                                Question: Provide me the image for X.
+                                                Question: Give the image of X.
                                                 Question: Give the picture of component X.
                                                 Question: Show me the visual of component X.
                                                 Question: Display an image of component X.
                                                 Question: Retrieve the picture of component X.
-                                                Question: Can you bring up the visual for component X?
                                                 Question: Can you provide a visual of X?
-                                                Question: I'd like to see the image of X.
-                                                Question: Can you give me a look at X's picture?
                                                 Answer: image request
 
                                                 # STORAGE QUERY Questions
@@ -294,7 +267,7 @@ class Command(APIView):
             measurement_name = self.run_cypher_query(graph, "MATCH (n:Measurement) RETURN n.Name")
             procedure_name = self.run_cypher_query(graph, "MATCH (n:Procedure) RETURN n.Title")
 
-            cypher_template = f"""Task:Generate Cypher statement to query a graph database.
+            cypher_template = """Task:Generate Cypher statement to query a graph database.
 
                                                                Instructions:
                                                                You are a virtual assistant designed to assist astronauts in resolving spacecraft anomalies when mission control is unavailable. Astronauts will ask you questions regarding anomalies, their causes, signatures, procedures for fixing them, related risks, etc. To answer these questions, generate appropriate Cypher statements to query a graph database.
@@ -577,10 +550,6 @@ class Command(APIView):
 
                                                                # What is the confidence score of 'ppCO2','Exceeds_UpperWarningLimit','L2','ppCO2','Exceeds_UpperWarningLimit','L1','ppO2','Exceeds_LowerCautionLimit','L1','ppO2','Exceeds_LowerCautionLimit','L2' for cdra failure
                                                                MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_LowerCautionLimit]->(anomaly:Anomaly) WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'CDRA Failure') AS similarity, measurement WHERE similarity > 0.8 AND measurement.Name = 'ppCO2' AND type(r) = 'Exceeds_UpperWarningLimit' OR measurement.Name = 'ppO2' AND type(r) = 'Exceeds_LowerCautionLimit' WITH COUNT(DISTINCT measurement) AS measurementCount MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_UpperCautionLimit|Exceeds_LowerCautionLimit|Exceeds_LowerWarningLimit]->(anomaly:Anomaly) WHERE anomaly.Name = 'CDRA Failure' WITH COUNT(DISTINCT measurement) AS totalCount, measurementCount WITH measurementCount * 1.0 / totalCount AS ratio WITH ratio, CASE WHEN ratio < 0.12 THEN 'Extremely Unlikely : 0-0.11' WHEN 0.12 <= ratio < 0.23 THEN 'Highly Unlikely : 0.12-0.22' WHEN 0.23 <= ratio < 0.34 THEN 'Unlikely : 0.23-0.33' WHEN 0.34 <= ratio < 0.45 THEN 'Moderately Unlikely : 0.34-0.44' WHEN 0.45 <= ratio < 0.56 THEN 'Equally Likely and Unlikely : 0.45-0.55' WHEN 0.56 <= ratio < 0.67 THEN 'Moderately Likely : 0.56-0.66' WHEN 0.67 <= ratio < 0.78 THEN 'Likely : 0.67-0.77' WHEN 0.78 <= ratio < 0.89 THEN 'Highly Likely : 0.78-0.88' ELSE 'Extremely Likely : 0.89-1.0' END AS text_score RETURN ratio, text_score
-
-                                                               # What is the confidence score of 'Acetaldehyde','Exceeds_UpperWarningLimit','L2','Acetaldehyde','Exceeds_UpperWarningLimit','L1','Aux Cabin Fan #1','Exceeds_LowerCautionLimit','L1','Aux Cabin Fan #1','Exceeds_LowerCautionLimit','L2' for tccs auxilary fan 1 failure
-                                                               MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_LowerCautionLimit]->(anomaly:Anomaly) WITH apoc.text.sorensenDiceSimilarity(anomaly.Name,'TCCS Auxiliary Fan #1 Failure') AS similarity, measurement WHERE similarity > 0.8 AND measurement.Name = 'Acetaldehyde' AND type(r) = 'Exceeds_UpperWarningLimit' OR measurement.Name = 'Aux Cabin Fan #1' AND type(r) = 'Exceeds_LowerCautionLimit' WITH COUNT(DISTINCT measurement) AS measurementCount MATCH (measurement:Measurement)-[r:Exceeds_UpperWarningLimit|Exceeds_UpperCautionLimit|Exceeds_LowerCautionLimit|Exceeds_LowerWarningLimit]->(anomaly:Anomaly) WHERE anomaly.Name = 'CDRA Failure' WITH COUNT(DISTINCT measurement) AS totalCount, measurementCount WITH measurementCount * 1.0 / totalCount AS ratio WITH ratio, CASE WHEN ratio < 0.12 THEN 'Extremely Unlikely : 0-0.11' WHEN 0.12 <= ratio < 0.23 THEN 'Highly Unlikely : 0.12-0.22' WHEN 0.23 <= ratio < 0.34 THEN 'Unlikely : 0.23-0.33' WHEN 0.34 <= ratio < 0.45 THEN 'Moderately Unlikely : 0.34-0.44' WHEN 0.45 <= ratio < 0.56 THEN 'Equally Likely and Unlikely : 0.45-0.55' WHEN 0.56 <= ratio < 0.67 THEN 'Moderately Likely : 0.56-0.66' WHEN 0.67 <= ratio < 0.78 THEN 'Likely : 0.67-0.77' WHEN 0.78 <= ratio < 0.89 THEN 'Highly Likely : 0.78-0.88' ELSE 'Extremely Likely : 0.89-1.0' END AS text_score RETURN ratio, text_score
-
                                                                Note: if multiple answers list all
 
                                                                """
@@ -600,6 +569,18 @@ class Command(APIView):
                 ],
                 temperature=0,
             )
+
+            # intent_classification_prompt = PromptTemplate(
+            #     input_variables=["question"],  # Add more variables here
+            #     template=intent_classification_template
+            # )
+
+            # intent_classification_chain = LLMChain(
+            #     llm=ChatOpenAI(temperature=0, model="gpt-4o"),
+            #     prompt=intent_classification_prompt 
+            # )
+            # result = intent_classification_chain.run(question=request.data['command'])
+            # classify_answer = result.strip
             classify_answer = response.choices[0].message.content.strip()
             print("classify intent: ", classify_answer)
 
@@ -611,9 +592,9 @@ class Command(APIView):
                         model="gpt-4o",
                         messages=[
                             {"role": "system",
-                             "content": f"You are a helpful assistant that answers questions based on sensor data which is given to you as a JSON data - {sensor_data}. According to the question asked, provide clear, natural, and conversational answers strictly based on the information found in the data. If the data doesn't contain the requested information,say that the info is not available, without offering external information or suggestions. All answers should remain within the context of the data."},
+                             "content": f"You are a helpful assistant that answers questions based on sensor data which is given to you as a JSON data - {sensor_data}. According to the question asked, provide clear, natural, and conversational answers strictly based on the information found in the data. If the data doesn't contain the requested information,say that the info is not available, without offering external information or suggestions. All answers should remain within the context of the data. This is the history of previous conversations for your context: {self.generate_context(request.data['command'], 'generated')}"},
                             {"role": "user",
-                             "content": f"This is the history of previous conversations for your context: {self.generate_context(request.data['command'], 'generated')}. Answer the question - {request.data['command']}"}
+                             "content": request.data['command']}
                         ],
                         temperature=0,
                     )
@@ -645,6 +626,24 @@ class Command(APIView):
                 history = self.generate_context(request.data['command'], 'generated')
                 user_question = f"This is the history of previous conversations for your context: {history}. Now give the cypher query for this question. If an exact match is not found, select the closest possible match based on similarity or relevance in the given data to you. Only give the query. Do NOT format it as code. Do NOT include any backticks or language indicators like cypher. Only output the query as plain text. The question is: {request.data['command']}"
 
+                # user_question = f"This is the history of previous conversations for your context: {history}. The question is: {request.data['command']}"
+
+            #     CYPHER_GENERATION_PROMPT = PromptTemplate(
+            #     input_variables=["schema","anomaly_name","measurement_name","procedure_name", "question"], template=CYPHER_GENERATION_TEMPLATE
+            # )
+
+            #     chain = GraphCypherQAChain.from_llm(
+            #     ChatOpenAI(temperature=0, model="gpt-4o"), allow_dangerous_requests=True, graph=graph, verbose=True,
+            #     cypher_prompt=CYPHER_GENERATION_PROMPT, return_direct=True, top_k=sys.maxsize, validate_cypher=True)
+
+                # graph_result = chain.run({
+                #     "schema": schema,
+                #     "anomaly_name": anomaly_name,
+                #     "measurement_name": measurement_name,
+                #     "procedure_name": procedure_name,
+                #     "question": user_question
+                # })
+
                 response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
@@ -666,7 +665,7 @@ class Command(APIView):
                             model="gpt-4o",
                             messages=[
                                 {"role": "system",
-                                "content": "You are a virtual assistant called Daphne, designed to assist astronauts in resolving spacecraft anomalies when mission control is unavailable. Astronauts will ask you questions regarding anomalies, their causes, signatures, procedures for fixing them, related risks, etc. If asked about likelihood scores, you can use this info - Daphne is a diagnostic system that utilizes a knowledge-driven approach to assess anomalies based on user-selected symptoms, drawing from a knowledge graph of expert-validated anomaly scenarios. The system identifies anomalies (A) as a collection of known issues, where each anomaly 𝑎 𝑘 a k ​ has a set of associated symptoms 𝑆 𝑘 S k ​ . The overall set of possible symptoms is represented as 𝑆 S, which is the union of all symptoms across anomalies. When users select symptoms for diagnosis, this subset is denoted as 𝑋 X. The diagnosis function 𝑓 ( 𝑋 ) f(X) identifies anomalies that share symptoms with the selected set 𝑋 X. For each identified anomaly 𝑎 𝑘 a k ​ , a likelihood score 𝑔 ( 𝑎 𝑘 ) g(a k ​ ) is computed by combining two metrics: precision 𝑔 1 ( 𝑎 𝑘 ) g 1 ​ (a k ​ ), which measures the proportion of selected symptoms matching the anomaly's symptoms, and recall 𝑔 2 ( 𝑎 𝑘 ) g 2 ​ (a k ​ ), which assesses the proportion of the anomaly's symptoms that match the selected symptoms. These scores are then translated into qualitative categories, such as 'Very Likely' or 'Unlikely,' based on defined thresholds.  NOTE: When asked about the calculation of likelihood scores, refer to this background information to explain the process without executing any calculations or applying the logic in practice. The focus should be on providing a clear understanding of the theoretical framework behind the likelihood score assessment."},
+                                "content": "You are a virtual assistant called Daphne, designed to assist astronauts in resolving spacecraft anomalies when mission control is unavailable. Astronauts will ask you questions regarding anomalies, their causes, signatures, procedures for fixing them, related risks, etc. If asked about likelihood scores, you can use this info - Daphne is a diagnostic system that utilizes a knowledge-driven approach to assess anomalies based on user-selected symptoms, drawing from a knowledge graph of expert-validated anomaly scenarios. The system identifies anomalies (A) as a collection of known issues, where each anomaly 𝑎 𝑘 a k ​ has a set of associated symptoms 𝑆 𝑘 S k ​ . The overall set of possible symptoms is represented as 𝑆 S, which is the union of all symptoms across anomalies. When users select symptoms for diagnosis, this subset is denoted as 𝑋 X. The diagnosis function 𝑓 (𝑋) f(X) identifies anomalies that share symptoms with the selected set 𝑋 X. For each identified anomaly 𝑎 𝑘 a k ​ , a likelihood score 𝑔 ( 𝑎 𝑘 ) g(a k ​ ) is computed by combining two metrics: precision 𝑔 1 ( 𝑎 𝑘 ) g 1 ​ (a k ​ ), which measures the proportion of selected symptoms matching the anomaly's symptoms, and recall 𝑔 2 ( 𝑎 𝑘 ) g 2 ​ (a k ​ ), which assesses the proportion of the anomaly's symptoms that match the selected symptoms. These scores are then translated into qualitative categories, such as 'Very Likely' or 'Unlikely,' based on defined thresholds.  NOTE: When asked about the calculation of likelihood scores, refer to this background information to explain the process without executing any calculations or applying the logic in practice. The focus should be on providing a clear understanding of the theoretical framework behind the likelihood score assessment."},
                                 {"role": "user", "content": user_question}
                             ],
                             temperature=0,
@@ -698,8 +697,11 @@ class Command(APIView):
 
                 self.session_state['user_input'].append(request.data['command'])
                 self.session_state['database_results'].append(str(graph_result))
+                
 
-                ques_desc = f"This is the history of previous conversations for your context: {self.generate_context(request.data['command'], 'generated')} . These are the cypher query result - {graph_result}. Now, answer the following question - {request.data['command']}"
+                # ques_desc = f"This is the history of previous conversations for your context: {self.generate_context(request.data['command'], 'generated')} . These are the cypher query result - {graph_result}. Now, answer the following question - {request.data['command']}"
+
+                ques_desc = f"These are the cypher query result - {graph_result}. Now, answer the following question - {request.data['command']}"
 
                 print("question desc for cypher query presenting", ques_desc)
 
@@ -824,39 +826,39 @@ class Command(APIView):
                 ##################################################################################################################
                 ##################################################################################################################
 
-            elif classify_answer == 'storage query':
-                response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system",
-                         "content": f"You are a helpful assistant that gives the location of the item asked, using the list containing the items and their corresponding locations provided to you. When a user asks for the location of an item, look through the list of available item names and return the loation of the item that matches the user's request most closely. Consider spelling variations or synonyms and prioritize the closest match based on object names or descriptions. The storage list is: {images_list}. According to the question asked, provide clear, natural, and conversational answers strictly based on the information found in the data. If the data doesn't contain the requested information,say that the info is not available, without offering external information or suggestions. All answers should remain within the context of the data."},
-                        {"role": "user", "content": request.data['command']}
-                    ],
-                    temperature=0,
-                )
+            # elif classify_answer == 'storage query':
+            #     response = client.chat.completions.create(
+            #         model="gpt-4",
+            #         messages=[
+            #             {"role": "system",
+            #              "content": f"You are a helpful assistant that gives the location of the item asked, using the list containing the items and their corresponding locations provided to you. When a user asks for the location of an item, look through the list of available item names and return the loation of the item that matches the user's request most closely. Consider spelling variations or synonyms and prioritize the closest match based on object names or descriptions. The storage list is: {images_list}. According to the question asked, provide clear, natural, and conversational answers strictly based on the information found in the data. If the data doesn't contain the requested information,say that the info is not available, without offering external information or suggestions. All answers should remain within the context of the data."},
+            #             {"role": "user", "content": request.data['command']}
+            #         ],
+            #         temperature=0,
+            #     )
 
-                image_name = response.choices[0].message.content.strip()
-                image_name = image_name.replace("'", "")
+            #     image_name = response.choices[0].message.content.strip()
+            #     image_name = image_name.replace("'", "")
 
-                print("image query name: ", image_name)
+            #     print("image query name: ", image_name)
 
-                encoded_file_path = urllib.parse.quote(
-                    os.path.join("home", "ubuntu", "daphne-at-interface", "src", "images",
-                                 image_name + ".png"), safe="")
-                encoded_file_path = f"home%2Fubuntu%2Fdaphne-at-interface%2Fsrc%2Fimages%2F{image_name}.png"
-                image_link = f"https://daphne-at.selva-research.com/api/at/recommendation/figure?filename=%2F{encoded_file_path}"
-                image_name = image_name.replace("_", " ")
+            #     encoded_file_path = urllib.parse.quote(
+            #         os.path.join("home", "ubuntu", "daphne-at-interface", "src", "images",
+            #                      image_name + ".png"), safe="")
+            #     encoded_file_path = f"home%2Fubuntu%2Fdaphne-at-interface%2Fsrc%2Fimages%2F{image_name}.png"
+            #     image_link = f"https://daphne-at.selva-research.com/api/at/recommendation/figure?filename=%2F{encoded_file_path}"
+            #     image_name = image_name.replace("_", " ")
 
-                print("image query link: ", image_link)
+            #     print("image query link: ", image_link)
 
-                res = "\nHere is the image<br>" + f'<a href="{image_link}" target="_blank">{image_name}</a>'
-                res_voice = "Here is the image you requested"
-                return Response({"response": {
-                    "voice_message": res_voice,
-                    "visual_message_type": ["text"],
-                    "visual_message": [res],
-                    "writer": "daphne"}
-                })
+            #     res = "\nHere is the image<br>" + f'<a href="{image_link}" target="_blank">{image_name}</a>'
+            #     res_voice = "Here is the image you requested"
+            #     return Response({"response": {
+            #         "voice_message": res_voice,
+            #         "visual_message_type": ["text"],
+            #         "visual_message": [res],
+            #         "writer": "daphne"}
+            #     })
 
             ##################################################################################################################
             ##################################################################################################################
