@@ -51,7 +51,6 @@ def convert_threshold_tag_to_neo4j_relationship(threshold_tag):
 
 
 def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
-    print("symptoms: ", symptoms_list)
     parsed_symptoms_list = []
     for item in symptoms_list:
         threshold_tag = item['threshold_tag']
@@ -60,7 +59,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
                    'display_name': item['display_name'],
                    'relationship': relationship}
         parsed_symptoms_list.append(symptom)
-    print("parsed_symptoms: ", parsed_symptoms_list)
     # Setup neo4j database connection
     driver = GraphDatabase.driver("bolt://13.58.54.49:7687", auth=basic_auth("neo4j", "goSEAKers!"))
     session = driver.session()
@@ -74,7 +72,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
             clause = clause + ' OR '
         query = query + clause
     query = query + ' RETURN DISTINCT a.Title'
-    print("query: ", query)
+    # print("query: ", query)
     # Query the database and parse the result (which is a list of the anomalies which symptoms have non empty
     # intersection with the requested symptoms)
     result = session.run(query)
@@ -86,13 +84,11 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
     parsed_input_symptoms = []
     for symptom in parsed_symptoms_list:
         parsed_input_symptoms.append({'measurement': symptom['display_name'], 'relationship': symptom['relationship']})
-    print("parsed_input_symptoms:", parsed_input_symptoms)
 
     parsed_symptoms_of_each_anomaly = {}
     for anomaly in diagnosis:
         # Retrieve symptoms of anomaly
         anomaly_symptoms = retrieve_symptoms_from_anomaly(anomaly)
-        print("anomaly_symptoms", anomaly_symptoms)
         parsed_symptom_of_anomaly = []
         symptom_of_anomaly = []
 
@@ -114,9 +110,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         # Append the resulting object to the dictionary
         parsed_symptoms_of_each_anomaly[anomaly] = parsed_symptom_of_anomaly
 
-        print("parsed_symptom_of_anomaly", parsed_symptom_of_anomaly)
-        print("symptom_of_anomaly", symptom_of_anomaly)
-    print("parsed_symptom_of_each_anomaly", parsed_symptoms_of_each_anomaly)
 
     # Start-Creating pairs of parsed anomalies
 
@@ -130,11 +123,11 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
                 paired_key = (key1, key2)
                 temp_pair_dict[paired_key] = values
 
-    print("TEMP_PAIR_DICT: ", temp_pair_dict)
+    # print("TEMP_PAIR_DICT: ", temp_pair_dict)
 
     parsed_symptoms_of_each_anomaly.update(temp_pair_dict)
 
-    print("parsed_symptom_of_each_anomaly", parsed_symptoms_of_each_anomaly)
+    # print("parsed_symptom_of_each_anomaly", parsed_symptoms_of_each_anomaly)
 
     # adding pairs of anomalies to diagnosis as they don't exist in knowledge graph
     temp_diagnosis = []
@@ -149,7 +142,7 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
             temp_diagnosis.append(pair)
 
     diagnosis.extend(temp_diagnosis)
-    print("DIAGNOSIS: ", diagnosis)
+    # print("DIAGNOSIS: ", diagnosis)
 
     # Creating pairs of parsed anomalies-End
 
@@ -202,8 +195,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         size_of_each_anomaly[anomaly] = len(parsed_symptoms_of_each_anomaly[anomaly])
         signature[anomaly] = signatureSymptom
         missing_anomaly_symptoms[anomaly] = missing_symptom
-        print("cardinality_for_each_anomaly[", anomaly, "]: ", cardinality_for_each_anomaly[anomaly])
-        print("signature: ", signature)
     # Create the result storing variable and parse the size of the requested symptoms set
     scored_diagnosis = {}
     total_requested_symptoms = len(parsed_symptoms_list)
@@ -219,7 +210,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
         score = round(g, 2)
         # Save it
         scored_diagnosis[anomaly] = score
-    print("scored_diagnosis", scored_diagnosis)
     # Sort the result according to the scores
     ordered_diagnosis = {k: v for k, v in sorted(scored_diagnosis.items(), key=lambda item1: item1[1])}
 
@@ -231,7 +221,6 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
     top_n_diagnosis = []
     size_limit = min(7, len(ordered_diagnosis))
 
-    print("ordered_diagnosis: ", ordered_diagnosis)
     # Adding in different arrays based on score to list in ordered fashion
     # very_likely = []
     # likely = []
@@ -289,8 +278,8 @@ def diagnose_symptoms_by_intersection_with_anomaly(symptoms_list):
 
     sorted_top_n_diagnosis = sorted(top_n_diagnosis, key=lambda x: (-x['score'], len(x['name'])))
 
-    print("top_n_diagnosis_all", top_n_diagnosis)
-    print("sorted_top_n_diagnosis_all", sorted_top_n_diagnosis)
+    # print("top_n_diagnosis_all", top_n_diagnosis)
+    # print("sorted_top_n_diagnosis_all", sorted_top_n_diagnosis)
     # top_n_diagnosis = top_n_diagnosis[0:8]
     # print("top_n_diagnosis", top_n_diagnosis)
 

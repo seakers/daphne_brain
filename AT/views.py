@@ -82,8 +82,8 @@ class SeclssFeed(APIView):
                     {'type': 'sensor_data', 'content': parsed_sensor_data['Parameters']})
             return Response(parsed_sensor_data)
         else:
-            print(request.data)
-            print(request.headers)
+            # print(request.data)
+            # print(request.headers)
             print('ERROR retrieving the sensor data from the Lab simulator')
             return Response({
                 "status": "error",

@@ -179,17 +179,17 @@ class GetState(APIView):
 
     def post(self, request, format=None):
         state_query = ATExperimentContext.objects.filter(user_information__id__exact=int(request.data["user_id"]))
-        print("state query",state_query)
+        # print("state query",state_query)
         
         if len(state_query) > 0:
             current_state = state_query[0].current_state
             if current_state != '':
 
                 json_current_state = json.loads(current_state)
-                print("json_current_state", json_current_state)
+                # print("json_current_state", json_current_state)
             else:
                 json_current_state = json.loads('' or 'null')
-                print("json_current_stateeee", json_current_state)
+                # print("json_current_stateeee", json_current_state)
                 
             state = json_current_state
             return Response(state)

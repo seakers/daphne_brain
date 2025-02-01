@@ -137,8 +137,10 @@ def handle_eclss_update(sEclss_to_hub, hub_to_sEclss, ser_to_sEclss):
                 current_time = time.time()
             elif signal['type'] == 'get_real_telemetry_params':
                 if tf_window['info'] is None:
+                    print("get telemetry values none")
                     hub_to_sEclss.put(signal)
                 else:
+                    print("get telemetry values initialize")
                     sEclss_to_hub.put({'type': 'initialize_telemetry', 'content': tf_window})
 
         while not ser_to_sEclss.empty():
