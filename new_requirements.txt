@@ -49,7 +49,7 @@ interchange==2021.0.4
 itsdangerous==2.1.2
 Jinja2==3.1.2
 jmespath==1.0.1
-joblib==1.1.0
+joblib==1.2.0
 kiwisolver==1.4.4
 langcodes==3.3.0
 MarkupSafe==2.1.1
