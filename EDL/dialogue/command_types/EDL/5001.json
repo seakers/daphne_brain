@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true,"from_context": false },
+    { "name": "edl_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context":false }
+  ],
+"function":
+  {
+    "run_template": "dialogue_functions.load_mat_files('${mission}', '${edl_mat_file}', context)",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "load_result": "command_results[index]"
+        }
+      }
+    ]
+  },
+
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${load_result}"
+    }
+  ],
+
+  "visual_response": [
+    {
+    "type": "text",
+    "from": "single",
+    "template": "${load_result}"
+    }
+ ]
+}

@@ -1,0 +1,7 @@
+timestamp,Tot. Photo Curr. mA,Battery mV,Tot. System Curr. mA,anomalyType,anomalyAction
+2013-12-15 10:16:00,0,7815,141,Low Battery ,Activate Backup Battery
+2013-11-23 21:21:00,135,7715,201,Low Battery ,Activate Backup Battery
+2013-11-11 11:16:00,15,7815,141,Low Battery ,Activate Backup Battery
+2013-12-20 21:07:00,387,8421,180,Battery Overcharge,Disable Solar Panels
+2013-12-14 02:30:00,394,8350,200,Battery Overcharge,Disable Solar Panels
+2013-11-24 23:46:00,372,8400,146,Battery Overcharge,Disable Solar Panels

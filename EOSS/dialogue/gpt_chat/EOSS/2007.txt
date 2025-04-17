@@ -1,0 +1,8 @@
+200
+--
+design_id1 design_id
+design_id2 design_id
+--
+0100
+--
+what are the differences between architecture ${design_id1} and ${design_id2}

@@ -1,0 +1,33 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": true, "context": "edlcontext", "subcontext": ""}
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.load_scorecard('None', '${current_mat_file}', context)",
+      "results": [
+        {
+          "result_type": "single",
+          "result_fields": {
+            "load_result": "command_results[index]"
+          }
+        }
+      ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${load_result}"
+    }
+  ],
+
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${load_result}"
+    }
+  ]
+}

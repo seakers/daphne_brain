@@ -1,0 +1,10 @@
+200
+--
+instrument instrument
+--
+1000
+--
+which of the designs use instrument ${instrument}
+which of the designs do not use instrument ${instrument}
+highlight designs that does not use instrument ${instrument}
+highlight designs that use instrument ${instrument}

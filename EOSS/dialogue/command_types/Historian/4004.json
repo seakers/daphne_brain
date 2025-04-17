@@ -1,0 +1,47 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "technology", "type": "technology", "options": "", "from_context": false, "mandatory": true },
+    { "name": "year1", "type": "year", "options": "begin", "from_context": false, "mandatory": false },
+    { "name": "year2", "type": "year", "options": "end", "from_context": false, "mandatory": false },
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
+  ],
+  "objective": "know what missions have flown a certain technology",
+  "query":
+  {
+    "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(or_(models.Instrument.technology.ilike('%${technology}%'), models.Instrument.types.any(models.InstrumentType.name.ilike('%${technology}%'))))",
+    "opt":
+    [
+      { "cond": "year1", "query_part": ".filter(models.Mission.eol_date > data['year1'])" },
+      { "cond": "year2", "query_part": ".filter(models.Mission.launch_date < data['year2'])" },
+      { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
+    ],
+    "end": ".order_by(models.Mission.launch_date)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "name": "row.name"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The missions that fly ${technology} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "list",
+      "begin": "The missions that fly ${technology} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ]
+}

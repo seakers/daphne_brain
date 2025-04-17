@@ -1,0 +1,13 @@
+200
+--
+measurement measurement
+year1 year
+year2 year
+space_agency space_agency
+--
+0001
+--
+which missions can measure ${measurement}
+which missions can measure ${measurement} between ${year1} and ${year2}
+which missions from ${space_agency} can measure ${measurement}
+which missions from ${space_agency} can measure ${measurement} between ${year1} and ${year2}

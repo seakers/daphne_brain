@@ -1,0 +1,105 @@
+TYPE: ANALYST
+what are the features that are shared by the target designs
+what is the feature that is unique to the solutions in the target region
+what are the patterns that are found in the target designs
+what are the patterns that are found in the selected region
+what are the patterns that are found in good designs
+what are the patterns that are found in the high performance region
+what are the recurring patterns within the low-cost region
+what are the driving features
+what is the driving feature
+can you suggest a good feature that describes the target region well
+which feature can be found in the designs in the target region
+which feature covers all the solutions in the target region
+what feature covers the selected region well
+what is a good feature describing this target region
+what features describe the target region well
+what are the recurring patterns in the target region
+which of the designs have instrument ${instrument} assigned to orbit ${orbit}
+highlight designs that assign instrument ${instrument} in orbit ${orbit}
+show designs that assign instrument ${instrument} in orbit ${orbit}
+which of the designs use instrument ${instrument}
+which of the designs do not use instrument ${instrument}
+highlight designs that does not use instrument ${instrument}
+highlight designs that use instrument ${instrument}
+which of the designs use ${number} instruments in total
+what are the designs that use total ${number} instruments
+what are the designs that assigns ${number} instruments in orbit ${orbit}
+which of the designs use ${number} orbits
+highlight designs that use ${number} orbits
+
+
+TYPE: ENGINEER
+why does design ${design_id} have this science benefit
+why does design ${design_id} have this science score
+how does design ${design_id} satisfy ${subobjective}
+why does design ${design_id} not satisfy ${subobjective}
+who satisfies ${objective} in design ${design_id}
+how many objectives are ${not_partial_full} satisfied in design ${design_id}
+which objectives are ${not_partial_full} satisfied in design ${design_id}
+why is architecture ${design_id1} better than ${design_id2}
+what are the differences between architecture ${design_id1} and ${design_id2}
+what is the ${instrument_parameter} of ${vassar_instrument}
+the one for ${vassar_measurement}
+what is the requirement for ${instrument_parameter} for ${vassar_measurement}
+the one for ${subobjective}
+why does this design have this science benefit
+why does this design have this science score
+explain the stakeholder ${vassar_stakeholder} science score for this design
+explain the stakeholder ${vassar_stakeholder} science benefit for this design
+explain the objective ${objective} science score for this design
+explain the objective ${objective} science benefit for this design
+which instruments improve the science score for objective ${objective}
+which instruments improve the science benefit for objective ${objective}
+which instruments improve the science score for stakeholder ${vassar_stakeholder}
+which instruments improve the science benefit for stakeholder ${vassar_stakeholder}
+why does this design have this cost
+what requirements are not being satisfied
+how can this requirement be satisfied
+what does delta-v mean
+what is delta-v
+what does eccentricity mean
+what is eccentricity
+what does inclination mean
+what is inclination
+
+TYPE: CRITIC
+are there any similar missions to ${design_id}
+what does the ${agent} think of ${design_id}
+does ${design_id} have any good features
+do you have any suggestion to improve design ${design_id}
+what do you think of this design
+
+
+TYPE: HISTORIAN
+which missions can measure ${measurement}
+which missions can measure ${measurement} between ${year1} and ${year2}
+which missions from ${space_agency} can measure ${measurement}
+which missions from ${space_agency} can measure ${measurement} between ${year1} and ${year2}
+which missions do we currently use to measure ${measurement}
+which missions from ${space_agency} do we currently use to measure ${measurement}
+which instruments can measure ${measurement}
+which instruments can measure ${measurement} between ${year1} and ${year2}
+which instruments from ${space_agency} can measure ${measurement}
+which instruments from ${space_agency} can measure ${measurement} between ${year1} and ${year2}
+which instruments do we currently use to measure ${measurement}
+which instruments from ${space_agency} do we currently use to measure ${measurement}
+which missions have flown ${technology}
+which missions have flown ${technology} between ${year1} and ${year2}
+which missions from ${space_agency} have flown ${technology}
+which missions from ${space_agency} have flown ${technology} between ${year1} and ${year2}
+which missions are currently flying ${technology}
+which missions from ${space_agency} are currently flying ${technology}
+which orbit is the most common for ${technology}
+which orbit is the most typical for ${technology}
+what orbit do you recommend for ${technology}
+which orbit is the most common for ${measurement}
+which orbit is the most typical for ${measurement}
+what orbit do you recommend for ${measurement}
+when was mission ${mission} launched
+which missions have been launched by ${space_agency}
+which missions have been designed by ${space_agency}
+show me a timeline of missions which measure ${measurement}
+show me a timeline of missions that measure ${measurement}
+show me a timeline of missions from ${space_agency} which measure ${measurement}
+show me a timeline of missions from ${space_agency} that measure ${measurement}

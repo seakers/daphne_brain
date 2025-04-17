@@ -1,0 +1,8 @@
+200
+--
+instrument_parameter instrument_parameter
+vassar_instrument vassar_instrument
+--
+0100
+--
+what is the ${instrument_parameter} of ${vassar_instrument}

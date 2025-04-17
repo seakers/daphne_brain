@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": true, "context": "edlcontext", "subcontext": "" },
+    { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context": false }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.get_scorecard_post_results('${current_scorecard}', '${edl_metric_names}', context)",
+    "results":[
+    {
+        "result_type": "list",
+        "result_fields": {
+          "load_result": "item['command_result']"
+      }
+    }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The POST results are:",
+      "repeat": "${load_result}",
+      "end":"."
+    }
+  ],
+  "visual_response": [
+  {
+      "type": "list",
+      "begin": "The POST results are:",
+      "item_template": "${load_result}"
+  }
+  ]
+}

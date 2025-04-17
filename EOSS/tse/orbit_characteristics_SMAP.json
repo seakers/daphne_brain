@@ -1,0 +1,152 @@
+[
+    {
+        "name": "GEO-36000-equat-NA",
+        "type": "GEO",
+        "altitude": 36000.0,
+        "inclination": 0.0
+    },
+    {
+        "name": "LEO-275-polar-NA",
+        "type": "LEO",
+        "altitude": 275.0,
+        "inclination": 90.0
+    },
+    {
+        "name": "LEO-400-polar-NA",
+        "type": "LEO",
+        "altitude": 400.0,
+        "inclination": 90.0
+    },
+    {
+        "name": "LEO-600-polar-NA",
+        "type": "LEO",
+        "altitude": 600.0,
+        "inclination": 90.0
+    },
+    {
+        "name": "LEO-800-polar-NA",
+        "type": "LEO",
+        "altitude": 800.0,
+        "inclination": 90.0
+    },
+    {
+        "name": "SSO-400-SSO-DD",
+        "type": "SSO",
+        "altitude": 400.0,
+        "inclination": 97.02
+    },
+    {
+        "name": "SSO-400-SSO-AM",
+        "type": "SSO",
+        "altitude": 400.0,
+        "inclination": 97.02
+    },
+    {
+        "name": "SSO-400-SSO-noon",
+        "type": "SSO",
+        "altitude": 400.0,
+        "inclination": 97.02
+    },
+    {
+        "name": "SSO-400-SSO-PM",
+        "type": "SSO",
+        "altitude": 400.0,
+        "inclination": 97.02
+    },
+    {
+        "name": "SSO-600-SSO-DD",
+        "type": "SSO",
+        "altitude": 600.0,
+        "inclination": 97.78
+    },
+    {
+        "name": "SSO-600-SSO-AM",
+        "type": "SSO",
+        "altitude": 600.0,
+        "inclination": 97.78
+    },
+    {
+        "name": "SSO-600-SSO-noon",
+        "type": "SSO",
+        "altitude": 600.0,
+        "inclination": 97.78
+    },
+    {
+        "name": "SSO-600-SSO-PM",
+        "type": "SSO",
+        "altitude": 600.0,
+        "inclination": 97.78
+    },
+    {
+        "name": "SSO-800-SSO-DD",
+        "type": "SSO",
+        "altitude": 800.0,
+        "inclination": 98.6
+    },
+    {
+        "name": "SSO-800-SSO-AM",
+        "type": "SSO",
+        "altitude": 800.0,
+        "inclination": 98.6
+    },
+    {
+        "name": "SSO-800-SSO-noon",
+        "type": "SSO",
+        "altitude": 800.0,
+        "inclination": 98.6
+    },
+    {
+        "name": "SSO-800-SSO-PM",
+        "type": "SSO",
+        "altitude": 800.0,
+        "inclination": 98.6
+    },
+    {
+        "name": "LEO-275-equat-NA",
+        "type": "LEO",
+        "altitude": 260.0,
+        "inclination": 0.0
+    },
+    {
+        "name": "LEO-1000-near-polar-NA",
+        "type": "LEO",
+        "altitude": 1000.0,
+        "inclination": 66.0
+    },
+    {
+        "name": "LEO-1300-near-polar-NA",
+        "type": "LEO",
+        "altitude": 1300.0,
+        "inclination": 66.0
+    },
+    {
+        "name": "LEO-600-near-polar-NA",
+        "type": "LEO",
+        "altitude": 600.0,
+        "inclination": 66.0
+    },
+    {
+        "name": "SSO-1000-SSO-AM",
+        "type": "SSO",
+        "altitude": 1000.0,
+        "inclination": 99.0
+    },
+    {
+        "name": "LEO-600-equat-NA",
+        "type": "LEO",
+        "altitude": 600.0,
+        "inclination": 66.0
+    },
+    {
+        "name": "SSO-700-SSO-PM",
+        "type": "SSO",
+        "altitude": 700.0,
+        "inclination": 98.14
+    },
+    {
+        "name": "SSO-500-SSO-PM",
+        "type": "SSO",
+        "altitude": 500.0,
+        "inclination": 97.78
+    }
+]

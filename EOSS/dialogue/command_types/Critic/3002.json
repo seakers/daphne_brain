@@ -1,0 +1,36 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "agent", "type": "agent", "options": "", "from_context": false, "mandatory": true },
+    { "name": "design_id", "type": "design_id", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "get an agent to criticize an architecture given by an ID",
+  "function":
+  {
+    "run_template": "dialogue_functions.critic.specific_call(${design_id}, '${agent}', data['designs'], data['session_key'])",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "advice": "item[\"advice\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have as a ${agent} for design ${design_id} is: ",
+      "repeat": "${advice}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have as a ${agent} for design ${design_id} is: ",
+      "item_template": "${advice}"
+    }
+  ]
+}

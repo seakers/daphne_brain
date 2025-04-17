@@ -1,0 +1,35 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "mission", "type": "mission", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "know when a mission was launched",
+  "query":
+  {
+    "always": "session.query(models.Mission).filter(models.Mission.name.ilike('%${mission}%'))",
+    "opt": [],
+    "end": "",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "launch_date": "response_helpers.print_date(row.launch_date)"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "Mission ${mission} was launched in ${launch_date}."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "Mission ${mission} was launched in ${launch_date}."
+    }
+  ]
+}

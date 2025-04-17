@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=daphneeo
+      - POSTGRES_PASSWORD=daphneeo
+      - POSTGRES_DB=daphneeo
+      # - POSTGRES_HOST=postgres
+      # - POSTGRES_PORT=5433
+    container_name: daphne_database
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    container_name: daphne_redis
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+      - "5671:5671"
+    hostname: "my-rabbitmq"
+    container_name: daphne_rabbitmq
+  graphql:
+    image: hasura/graphql-engine:latest
+    ports:
+      - "6002:8080"
+    depends_on:
+      - postgres
+    restart: always
+    environment:
+      - HASURA_GRAPHQL_DATABASE_URL=postgres://daphneeo:daphneeo@postgres:5432/daphneeo
+      - HASURA_GRAPHQL_ENABLE_CONSOLE=true
+      - HASURA_GRAPHQL_ADMIN_SECRET=daphne
+      # - HASURA_GRAPHQL_AUTH_HOOK=http://daphne:8001/
+      - HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL=100
+    container_name: daphne_graphql
+  neo4j:
+    image: neo4j:4.4.26-enterprise
+    platform: linux/arm64
+    ports: 
+      - "7474:7474"
+      - "7687:7687"
+    container_name: daphne_neo4j
+    volumes: 
+      - ../databases/neo4j/data:/data
+      - ../databases/neo4j/logs:/logs
+    environment: 
+      - NEO4J_AUTH=neo4j/test
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes

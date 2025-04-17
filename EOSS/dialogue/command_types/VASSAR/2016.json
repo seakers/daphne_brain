@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "vassar_stakeholder", "type": "vassar_stakeholder", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "list all instruments that can improve a certain stakeholder",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_instruments_for_stakeholder('${vassar_stakeholder}', context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "instrument_name": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
+      "repeat": "${instrument_name}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The following instruments improve stakeholder ${vassar_stakeholder}: ",
+      "item_template": "${instrument_name}"
+    }
+  ]
+}

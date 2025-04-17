@@ -1,0 +1,1934 @@
+{
+  "tabs": {
+    "Attributes": {
+      "columns": [
+        "Subobjective",
+        "Measurement",
+        "Attribute",
+        "Type",
+        "Thresholds",
+        "Scores",
+        "Justification"
+      ],
+      "rows": [
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[4200,12000,30000]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[24,72,168]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "WEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[40000,80000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet needs for river streamflow forecasts (40-80km achieved, 40km desired, 80km required)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[24,72,168]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "WEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,80000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet needs for river flas flood forecasts (50km required)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[24,72,168]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "WEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "CLI1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (80% goal, 70% target)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.8,0.7]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "CLI1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[150000,300000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.2,0.6]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (0.6 psu achieved, 0.2 psu required)\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650-1000km achieved, >1000km required)\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.0]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "CLI2-1",
+          "Measurement": "\"3.3.1 Ocean salinity\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[60000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[1.0,2.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (0.6 psu achieved, 0.2 psu required)\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650-1000km achieved, >1000km required)\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[polar]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"SSO orbit does not provide adequate tidal sampling (polar orbit required)\""
+        },
+        {
+          "Subobjective": "CLI2-2",
+          "Measurement": "\"3.4.1 Ocean surface wind speed\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[4200,12000,30000]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[48,72,168]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3 days required 2 days ideal)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.8,0.7]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "ECO1-1",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "ECO2-1",
+          "Measurement": "\"2.3.3 Carbon net ecosystem exchange NEE\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "WAT1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[12000,40000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3 days required 2 days ideal)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.8,0.7]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.5,0.01,0.001]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[3.0,1.5,0.0]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "WAT1-2",
+          "Measurement": "\"2.3.1 Freeze/thaw state\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[60000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[5.0,10.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (0.6 psu achieved, 0.2 psu required)\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650-1000km achieved, >1000km required)\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.0]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "WAT2-1",
+          "Measurement": "\"1.7.3 Rain rate, tropical storms, and hurricanes\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[60000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "Accuracy",
+          "Type": "OL",
+          "Thresholds": "[High,Medium,Low]",
+          "Scores": "[1.0,0.67,0.33]",
+          "Justification": "\"Insufficient accuracy (High accuracy req'd, obtained through multispectral combination of sensors)\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650-1000km achieved, >1000km required)\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[polar]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"SSO orbit does not provide adequate coverage of polar regions (polar orbit required)\""
+        },
+        {
+          "Subobjective": "WAT3-1",
+          "Measurement": "\"4.2.4 snow cover\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[60000,100000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "Accuracy",
+          "Type": "OL",
+          "Thresholds": "[High,Medium,Low]",
+          "Scores": "[1.0,0.67,0.33]",
+          "Justification": "\"Insufficient accuracy (High accuracy req'd, obtained through multispectral combination of sensors)\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650-1000km achieved, >1000km required)\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[polar]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"SSO orbit does not provide adequate coverage of polar regions (polar orbit required)\""
+        },
+        {
+          "Subobjective": "WAT4-1",
+          "Measurement": "\"4.3.2 Sea ice cover\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[10000,50000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.11,0.15]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (10% goal, 15% threshold)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.01,0.001]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[1.5,0.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "HEA1-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[10000,50000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.11,0.15]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (10% goal, 15% threshold)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.01,0.001]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[1.5,0.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "HEA2-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,80000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet needs for river flas flood forecasts (50km required)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[24,72,168]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.01,0.001]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[1.5,0.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "HEA3-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[10000,50000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[72,168]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.11,0.15]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (10% goal, 15% threshold)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.01,0.001]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[1.5,0.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "HEA4-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Horizontal-Spatial-Resolution#",
+          "Type": "SIB",
+          "Thresholds": "[50000,80000]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient HSR to meet needs for river flas flood forecasts (50km required)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Temporal-resolution#",
+          "Type": "SIB",
+          "Thresholds": "[24,72,168]",
+          "Scores": "[1.0,0.67,0.33,0.0]",
+          "Justification": "\"Insufficient temporal resolution (2-3 days required 1 days ideal)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Accuracy#",
+          "Type": "SIB",
+          "Thresholds": "[0.04,0.11]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient accuracy (4-10% achieved, 4% required)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "soil-penetration#",
+          "Type": "LIB",
+          "Thresholds": "[0.01,0.001]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient penetration (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "Swath#",
+          "Type": "LIB",
+          "Thresholds": "[1000,600]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient swath (650km degraded, 1000km required)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "sensitivity#",
+          "Type": "LIB",
+          "Thresholds": "[1.5,0.0]",
+          "Scores": "[1.0,0.5,0.0]",
+          "Justification": "\"Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "image-distortion#",
+          "Type": "LIB",
+          "Thresholds": "[0.8]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Too large image distortion\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-inclination",
+          "Type": "BOOL",
+          "Thresholds": "[SSO]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Suboptimal illumination conditions (not SSO)\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "orbit-RAAN",
+          "Type": "OL",
+          "Thresholds": "[DD,AM,PM]",
+          "Scores": "[1.0,0.67,0.67,0.0]",
+          "Justification": "\"AM/PM SSO (DD required) - degraded quality\""
+        },
+        {
+          "Subobjective": "HEA5-1",
+          "Measurement": "\"2.3.2 soil moisture\"",
+          "Attribute": "All-weather",
+          "Type": "BOOL",
+          "Thresholds": "[yes]",
+          "Scores": "[1.0,0.5]",
+          "Justification": "\"Missing all-weather capability.\""
+        }
+      ],
+      "row_count": 176,
+      "description": "Tab 'Attributes' from spreadsheet 'Requirement Rules'"
+    },
+    "Sheet1": {
+      "columns": [
+        "OCE2",
+        "Ocean Circulation, Heat Storage",
+        "OCE2-5",
+        0.2,
+        "Sea level height",
+        "nominal",
+        1,
+        "\"Conditions for full satisfaction \"",
+        "\"3.2.1 Sea level height\"",
+        "ContainsRegion Region-of-interest Global",
+        "Coverage-of-region-of-interest Global",
+        "SameOrBetter Temporal-resolution Low-3days-1-week",
+        "rms-total# ?rms-total&:(<= ?rms-total 3.1)",
+        "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+        "On-board-calibration High",
+        "All-weather yes"
+      ],
+      "rows": [
+        {
+          "OCE2": "OCE2",
+          "Ocean Circulation, Heat Storage": "Ocean Circulation, Heat Storage",
+          "OCE2-5": "OCE2-5",
+          "0.2": 0.2,
+          "Sea level height": "Sea level height",
+          "nominal": "degraded-1",
+          "1": 0.95,
+          "\"Conditions for full satisfaction \"": "\"Accuracy between 3-5 cm\"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 5.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "OCE2",
+          "Ocean Circulation, Heat Storage": "Ocean Circulation, Heat Storage",
+          "OCE2-5": "OCE2-5",
+          "0.2": 0.2,
+          "Sea level height": "Sea level height",
+          "nominal": "degraded-2",
+          "1": 0.5,
+          "\"Conditions for full satisfaction \"": "\"Accuracy between 5-11cm\"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 11.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "OCE2",
+          "Ocean Circulation, Heat Storage": "Ocean Circulation, Heat Storage",
+          "OCE2-5": "OCE2-5",
+          "0.2": 0.2,
+          "Sea level height": "Sea level height",
+          "nominal": "degraded-3",
+          "1": 0.25,
+          "\"Conditions for full satisfaction \"": "\"Accuracy between 11-15cm\"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 15.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "OCE3",
+          "Ocean Circulation, Heat Storage": "Sea ice dynamics",
+          "OCE2-5": "OCE3-3",
+          "0.2": "",
+          "Sea level height": "Sea level height",
+          "nominal": "nominal",
+          "1": 1.0,
+          "\"Conditions for full satisfaction \"": "\"Conditions for full satisfaction \"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 3.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "OCE3",
+          "Ocean Circulation, Heat Storage": "Sea ice dynamics",
+          "OCE2-5": "OCE3-3",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Sea level height",
+          "nominal": "degraded-1",
+          "1": 0.95,
+          "\"Conditions for full satisfaction \"": "\"Accuracy between 3-5 cm\"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 5.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "OCE3",
+          "Ocean Circulation, Heat Storage": "Sea ice dynamics",
+          "OCE2-5": "OCE3-3",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Sea level height",
+          "nominal": "degraded-2",
+          "1": 0.5,
+          "\"Conditions for full satisfaction \"": "\"Accuracy between 5-7 cm\"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 11.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "OCE3",
+          "Ocean Circulation, Heat Storage": "Sea ice dynamics",
+          "OCE2-5": "OCE3-3",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Sea level height",
+          "nominal": "degraded-3",
+          "1": 0.25,
+          "\"Conditions for full satisfaction \"": "\"Accuracy between 7-10 cm\"",
+          "\"3.2.1 Sea level height\"": "\"3.2.1 Sea level height\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "SameOrBetter Temporal-resolution Low-3days-1-week",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "rms-total# ?rms-total&:(<= ?rms-total 15.1)",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": "All-weather yes"
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-1",
+          "0.2": "",
+          "Sea level height": "Total solar irradiance",
+          "nominal": "nominal",
+          "1": 1.0,
+          "\"Conditions for full satisfaction \"": "\"Conditions for full satisfaction \"",
+          "\"3.2.1 Sea level height\"": "\"1.9.1 Spectrally resolved solar irradiance\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "orbit-type GEO",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "Accuracy High",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "Geometry sun-pointing",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-1",
+          "0.2": "",
+          "Sea level height": "Total solar irradiance",
+          "nominal": "degraded-1",
+          "1": 1.0,
+          "\"Conditions for full satisfaction \"": "\"SSO instead of GEO\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.1 Spectrally resolved solar irradiance\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "orbit-type SSO",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "Accuracy High",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "Geometry sun-pointing",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-1",
+          "0.2": "",
+          "Sea level height": "Total solar irradiance",
+          "nominal": "degraded-2",
+          "1": 0.6,
+          "\"Conditions for full satisfaction \"": "\"Not sun-looking\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.1 Spectrally resolved solar irradiance\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "Accuracy High",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "Geometry nadir",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "On-board-calibration High",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-1",
+          "0.2": "",
+          "Sea level height": "Total solar irradiance",
+          "nominal": "degraded-3",
+          "1": 0.5,
+          "\"Conditions for full satisfaction \"": "\"Not enough accuracy\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.1 Spectrally resolved solar irradiance\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "orbit-type SSO",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "SameOrBetter Accuracy Medium",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "Geometry sun-pointing",
+          "On-board-calibration High": "On-board-calibration High",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-2",
+          "0.2": "",
+          "Sea level height": "Short-wave radiation (solar reflected)",
+          "nominal": "nominal",
+          "1": 1.0,
+          "\"Conditions for full satisfaction \"": "\"Conditions for full satisfaction \"",
+          "\"3.2.1 Sea level height\"": "\"1.9.3 Spectrally resolved SW radiance -0.3-2um-\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "rms-total# ?rms-total&:(<= ?rms-total 5)",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "orbit-RAAN AM",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-2",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Short-wave radiation (solar reflected)",
+          "nominal": "degraded-1",
+          "1": 0.5,
+          "\"Conditions for full satisfaction \"": "\"Insufficient accuracy between 5-10 W/m2\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.3 Spectrally resolved SW radiance -0.3-2um-\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "rms-total# ?rms-total&:(<= ?rms-total 10.0)",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "orbit-RAAN AM",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-2",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Short-wave radiation (solar reflected)",
+          "nominal": "degraded-2",
+          "1": 0.25,
+          "\"Conditions for full satisfaction \"": "\"Insufficient accuracy between 11-15 W/m2\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.3 Spectrally resolved SW radiance -0.3-2um-\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "rms-total# ?rms-total&:(<= ?rms-total 15)",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "orbit-RAAN AM",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-3",
+          "0.2": "",
+          "Sea level height": "Long-wave radiation (thermal emission)",
+          "nominal": "nominal",
+          "1": 1.0,
+          "\"Conditions for full satisfaction \"": "\"Conditions for full satisfaction \"",
+          "\"3.2.1 Sea level height\"": "\"1.9.2 Spectrally resolved IR radiance -200-2000cm-1-\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "rms-total# ?rms-total&:(<= ?rms-total 5)",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "orbit-RAAN AM",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-3",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Long-wave radiation (thermal emission)",
+          "nominal": "degraded-1",
+          "1": 0.5,
+          "\"Conditions for full satisfaction \"": "\"Insufficient accuracy between 5-10 W/m2\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.2 Spectrally resolved IR radiance -200-2000cm-1-\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "rms-total# ?rms-total&:(<= ?rms-total 10.0)",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "orbit-RAAN AM",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        },
+        {
+          "OCE2": "WAE6",
+          "Ocean Circulation, Heat Storage": "Radiation budget",
+          "OCE2-5": "WAE6-3",
+          "0.2": 0.3333333333333333,
+          "Sea level height": "Long-wave radiation (thermal emission)",
+          "nominal": "degraded-2",
+          "1": 0.25,
+          "\"Conditions for full satisfaction \"": "\"Insufficient accuracy between 11-15 W/m2\"",
+          "\"3.2.1 Sea level height\"": "\"1.9.2 Spectrally resolved IR radiance -200-2000cm-1-\"",
+          "ContainsRegion Region-of-interest Global": "ContainsRegion Region-of-interest Global",
+          "Coverage-of-region-of-interest Global": "Coverage-of-region-of-interest Global",
+          "SameOrBetter Temporal-resolution Low-3days-1-week": "rms-total# ?rms-total&:(<= ?rms-total 15)",
+          "rms-total# ?rms-total&:(<= ?rms-total 3.1)": "orbit-RAAN AM",
+          "SameOrBetter Horizontal-Spatial-Resolution Low-1km-10km": "",
+          "On-board-calibration High": "",
+          "All-weather yes": ""
+        }
+      ],
+      "row_count": 17,
+      "description": "Tab 'Sheet1' from spreadsheet 'Requirement Rules'"
+    }
+  },
+  "name": "Requirement Rules"
+}

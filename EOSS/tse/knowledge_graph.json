@@ -1,0 +1,570 @@
+{
+  "nodes": {
+    "tools": [
+      {
+        "name": "OREKIT",
+        "labels": [
+          "Tool"
+        ],
+        "properties": {
+          "name": "OREKIT"
+        }
+      },
+      {
+        "name": "OrbitPy",
+        "labels": [
+          "Tool"
+        ],
+        "properties": {
+          "name": "OrbitPy"
+        }
+      },
+      {
+        "name": "InstruPy",
+        "labels": [
+          "Tool"
+        ],
+        "properties": {
+          "name": "InstruPy"
+        }
+      },
+      {
+        "name": "SpaDes",
+        "labels": [
+          "Tool"
+        ],
+        "properties": {
+          "name": "SpaDes"
+        }
+      },
+      {
+        "name": "TATC",
+        "labels": [
+          "Tool"
+        ],
+        "properties": {
+          "httpAddress": "http://localhost:5000/tatc",
+          "name": "TATC"
+        }
+      },
+      {
+        "name": "VASSAR",
+        "labels": [
+          "Tool"
+        ],
+        "properties": {
+          "name": "VASSAR"
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "ScienceModel",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "ScienceModel"
+        }
+      },
+      {
+        "name": "CostModel",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "CostModel"
+        }
+      },
+      {
+        "name": "RevisitAnalysis",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "RevisitAnalysis"
+        }
+      },
+      {
+        "name": "InstrumentModel",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "InstrumentModel"
+        }
+      },
+      {
+        "name": "InstrumentDatabase",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "InstrumentDatabase"
+        }
+      },
+      {
+        "name": "OrbitPropagation",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "OrbitPropagation"
+        }
+      },
+      {
+        "name": "OrbitTrack",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "OrbitTrack"
+        }
+      },
+      {
+        "name": "GroundTrack",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "GroundTrack"
+        }
+      },
+      {
+        "name": "LatencyAnalysis",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "LatencyAnalysis"
+        }
+      },
+      {
+        "name": "ObservationsCollection",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "ObservationsCollection"
+        }
+      },
+      {
+        "name": "SpacecraftModel",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "SpacecraftModel"
+        }
+      },
+      {
+        "name": "CoverageAnalysis",
+        "labels": [
+          "Function"
+        ],
+        "properties": {
+          "name": "CoverageAnalysis"
+        }
+      }
+    ],
+    "metrics": [
+      {
+        "name": "ScienceScore",
+        "labels": [
+          "Metric"
+        ],
+        "properties": {
+          "name": "ScienceScore"
+        }
+      },
+      {
+        "name": "CoverageFraction",
+        "labels": [
+          "Metric"
+        ],
+        "properties": {
+          "name": "CoverageFraction"
+        }
+      },
+      {
+        "name": "LifecycleCost",
+        "labels": [
+          "Metric"
+        ],
+        "properties": {
+          "name": "LifecycleCost"
+        }
+      },
+      {
+        "name": "HarmonicMeanRevisitTime",
+        "labels": [
+          "Metric"
+        ],
+        "properties": {
+          "name": "HarmonicMeanRevisitTime"
+        }
+      },
+      {
+        "name": "InstrumentScore",
+        "labels": [
+          "Metric"
+        ],
+        "properties": {
+          "name": "InstrumentScore"
+        }
+      }
+    ]
+  },
+  "relationships": {
+    "tool_implements_function": [
+      {
+        "tool": "OREKIT",
+        "function": "OrbitPropagation",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "InstruPy",
+        "function": "InstrumentModel",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "SpaDes",
+        "function": "CostModel",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "RevisitAnalysis",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "OrbitPropagation",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "OrbitTrack",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "GroundTrack",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "LatencyAnalysis",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "ObservationsCollection",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "TATC",
+        "function": "CoverageAnalysis",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      },
+      {
+        "tool": "VASSAR",
+        "function": "ScienceModel",
+        "relationship": "IMPLEMENTS",
+        "rel_properties": {}
+      }
+    ],
+    "function_calculates_metric": [
+      {
+        "function": "ScienceModel",
+        "metric": "ScienceScore",
+        "relationship": "CALCULATES",
+        "rel_properties": {}
+      },
+      {
+        "function": "CostModel",
+        "metric": "LifecycleCost",
+        "relationship": "CALCULATES",
+        "rel_properties": {}
+      },
+      {
+        "function": "RevisitAnalysis",
+        "metric": "HarmonicMeanRevisitTime",
+        "relationship": "CALCULATES",
+        "rel_properties": {}
+      },
+      {
+        "function": "InstrumentModel",
+        "metric": "InstrumentScore",
+        "relationship": "CALCULATES",
+        "rel_properties": {}
+      },
+      {
+        "function": "CoverageAnalysis",
+        "metric": "CoverageFraction",
+        "relationship": "CALCULATES",
+        "rel_properties": {}
+      }
+    ],
+    "function_requires_function": [
+      {
+        "source_function": "ScienceModel",
+        "required_function": "RevisitAnalysis",
+        "relationship": "REQUIRES",
+        "rel_properties": {}
+      },
+      {
+        "source_function": "InstrumentModel",
+        "required_function": "OrbitPropagation",
+        "relationship": "REQUIRES",
+        "rel_properties": {}
+      },
+      {
+        "source_function": "CoverageAnalysis",
+        "required_function": "OrbitPropagation",
+        "relationship": "REQUIRES",
+        "rel_properties": {}
+      }
+    ]
+  },
+  "complete_graph": [
+    {
+      "source": "OREKIT",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "OrbitPropagation",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "InstruPy",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "InstrumentModel",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "SpaDes",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "CostModel",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "RevisitAnalysis",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "OrbitPropagation",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "OrbitTrack",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "GroundTrack",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "LatencyAnalysis",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "ObservationsCollection",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "TATC",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "CoverageAnalysis",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "VASSAR",
+      "source_type": [
+        "Tool"
+      ],
+      "target": "ScienceModel",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "IMPLEMENTS",
+      "rel_properties": {}
+    },
+    {
+      "source": "ScienceModel",
+      "source_type": [
+        "Function"
+      ],
+      "target": "ScienceScore",
+      "target_type": [
+        "Metric"
+      ],
+      "relationship": "CALCULATES",
+      "rel_properties": {}
+    },
+    {
+      "source": "ScienceModel",
+      "source_type": [
+        "Function"
+      ],
+      "target": "RevisitAnalysis",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "REQUIRES",
+      "rel_properties": {}
+    },
+    {
+      "source": "CostModel",
+      "source_type": [
+        "Function"
+      ],
+      "target": "LifecycleCost",
+      "target_type": [
+        "Metric"
+      ],
+      "relationship": "CALCULATES",
+      "rel_properties": {}
+    },
+    {
+      "source": "RevisitAnalysis",
+      "source_type": [
+        "Function"
+      ],
+      "target": "HarmonicMeanRevisitTime",
+      "target_type": [
+        "Metric"
+      ],
+      "relationship": "CALCULATES",
+      "rel_properties": {}
+    },
+    {
+      "source": "InstrumentModel",
+      "source_type": [
+        "Function"
+      ],
+      "target": "InstrumentScore",
+      "target_type": [
+        "Metric"
+      ],
+      "relationship": "CALCULATES",
+      "rel_properties": {}
+    },
+    {
+      "source": "InstrumentModel",
+      "source_type": [
+        "Function"
+      ],
+      "target": "OrbitPropagation",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "REQUIRES",
+      "rel_properties": {}
+    },
+    {
+      "source": "CoverageAnalysis",
+      "source_type": [
+        "Function"
+      ],
+      "target": "CoverageFraction",
+      "target_type": [
+        "Metric"
+      ],
+      "relationship": "CALCULATES",
+      "rel_properties": {}
+    },
+    {
+      "source": "CoverageAnalysis",
+      "source_type": [
+        "Function"
+      ],
+      "target": "OrbitPropagation",
+      "target_type": [
+        "Function"
+      ],
+      "relationship": "REQUIRES",
+      "rel_properties": {}
+    }
+  ]
+}

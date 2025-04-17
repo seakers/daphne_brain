@@ -1,0 +1,36 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "selected_arch_id", "type": "design_id", "options": "", "from_context": true, "context_path": ["screen"], "mandatory": true }
+  ],
+  "objective": "criticize the architecture you're designing",
+  "function":
+  {
+    "run_template": "dialogue_functions.critic.general_call(${selected_arch_id}, data['designs'], data['session_key'], context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "adv_type": "item[\"type\"]",
+          "advice": "item[\"advice\"]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
+      "repeat": "${adv_type}: ${advice}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "The advice I have for the selected design (${selected_arch_id}) is: ",
+      "item_template": "<b>${adv_type}</b>: ${advice}"
+    }
+  ]
+}

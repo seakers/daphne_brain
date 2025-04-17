@@ -1,0 +1,2042 @@
+{
+  "tabs": {
+    "CHARACTERISTICS": {
+      "columns": [
+        "Name",
+        "All-weather yes",
+        "Angular-resolution# nil",
+        "Angular-resolution-azimuth# nil",
+        "Angular-resolution-elevation# nil",
+        "Aperture# nil",
+        "average-data-rate# nil",
+        "average-power# nil",
+        "peak-power# 132",
+        "bandwidth# nil",
+        "characteristic-orbit nil",
+        "characteristic-power# nil",
+        "Concept \"clouds and precipitation\"",
+        "Day-Night",
+        "developed-by nil",
+        "dimension-x# nil",
+        "dimension-y# nil",
+        "dimension-z# nil",
+        "Field-of-view# nil",
+        "Column1",
+        "Geometry nil",
+        "has-deployment-mechanism nil",
+        "High-lat-sensitivity nil",
+        "Illumination Active",
+        "Intent \"Cloud profile and rain radars\"",
+        "mass# nil",
+        "Column4",
+        "Column43",
+        "Column42",
+        "Column3",
+        "num-of-NIR-channels nil",
+        "num-of-SWIR-channels nil",
+        "num-of-TIR-channels nil",
+        "num-of-UV-channels nil",
+        "num-of-VNIR-channels nil",
+        "off-axis-angle-plus-minus# nil",
+        "On-board-calibration nil",
+        "Penetration Medium-other-MW",
+        "Pointing-capability Low",
+        "Pointing-requirements nil",
+        "Polarimetry yes",
+        "Radiometric-accuracy# nil",
+        "scanning nil",
+        "scanning-angle-plus-minus# nil",
+        "spectral-bands nil",
+        "Spectral-region nil",
+        "Spectral-resolution# nil",
+        "Swath# nil",
+        "Technology-Readiness-Level nil",
+        "Thermal-control nil"
+      ],
+      "rows": [
+        {
+          "Name": "Name ACE_ORCA",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# 0.1",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 12.0",
+          "average-power# nil": "average-power# 132",
+          "peak-power# 132": "peak-power# 132",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 132",
+          "Concept \"clouds and precipitation\"": "Concept \"imaging spectrometer for ocean color\"",
+          "Day-Night": "Day-Night Only-day",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 1",
+          "dimension-y# nil": "dimension-y# 1",
+          "dimension-z# nil": "dimension-z# 1",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# 6e14",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity Yes",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Imaging multi-spectral radiometers -passive optical-\"",
+          "mass# nil": "mass# 137",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration nil",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements Medium",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands nil",
+          "Spectral-region nil": "Spectral-region opt-VNIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 6",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name ACE_POL",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# 0.01",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 15.5",
+          "average-power# nil": "average-power# 152",
+          "peak-power# 132": "peak-power# 152",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 152",
+          "Concept \"clouds and precipitation\"": "Concept \"polarimeter for shape and size of aerosols\"",
+          "Day-Night": "Day-Night Only-day",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 1",
+          "dimension-y# nil": "dimension-y# 1",
+          "dimension-z# nil": "dimension-z# 1",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# 6e14",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity Yes",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Imaging multi-spectral radiometers -passive optical-\"",
+          "mass# nil": "mass# 132",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration nil",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements Medium",
+          "Polarimetry yes": "Polarimetry yes",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands nil",
+          "Spectral-region nil": "Spectral-region opt-VNIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 5",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name ACE_LID",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# nil",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 11.1",
+          "average-power# nil": "average-power# nil",
+          "peak-power# 132": "peak-power# nil",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit 400",
+          "characteristic-power# nil": "characteristic-power# 658",
+          "Concept \"clouds and precipitation\"": "Concept \"laser altimeter for aerosols and cloud properties combined with a DIAL for ozone\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by DOM-GSFC",
+          "dimension-x# nil": "dimension-x# 1",
+          "dimension-y# nil": "dimension-y# 1",
+          "dimension-z# nil": "dimension-z# 1",
+          "Field-of-view# nil": "Field-of-view# 10",
+          "Column1": "frequency# nil",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Active",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Laser altimeters\"",
+          "mass# nil": "mass# 515",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration High",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements High",
+          "Polarimetry yes": "Polarimetry yes",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands nil",
+          "Spectral-region nil": "Spectral-region opt-VNIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 4",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name CLAR_ERB",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# nil",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 160",
+          "average-power# nil": "average-power# 387",
+          "peak-power# 132": "peak-power# 387",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 387",
+          "Concept \"clouds and precipitation\"": "Concept \"Suite of three pushbroom hyperspectral spectrometers for reflected solar SW Earth radiation budget + infrared FTS for SW+LW\"",
+          "Day-Night": "Day-Night Only-day",
+          "developed-by nil": "developed-by DOM-Langley",
+          "dimension-x# nil": "dimension-x# 2.0",
+          "dimension-y# nil": "dimension-y# 0.70",
+          "dimension-z# nil": "dimension-z# 0.80",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# nil",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism nil",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Earth radiation budget radiometers\"",
+          "mass# nil": "mass# 238",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration High",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability High",
+          "Pointing-requirements nil": "Pointing-requirements Low",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands opt-SWIR+LWIR",
+          "Spectral-region nil": "Spectral-region opt-SWIR+LWIR",
+          "Spectral-resolution# nil": "Spectral-resolution# 2",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 6",
+          "Thermal-control nil": "Thermal-control Active-cryocooler"
+        },
+        {
+          "Name": "Name ACE_CPR",
+          "All-weather yes": "All-weather yes",
+          "Angular-resolution# nil": "Angular-resolution# nil",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# 5.0",
+          "average-data-rate# nil": "average-data-rate# 20.0",
+          "average-power# nil": "average-power# nil",
+          "peak-power# 132": "peak-power# nil",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit 600",
+          "characteristic-power# nil": "characteristic-power# 700",
+          "Concept \"clouds and precipitation\"": "Concept \"dual-frequency clouds and precipitation radar\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 5",
+          "dimension-y# nil": "dimension-y# 5",
+          "dimension-z# nil": "dimension-z# 1",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# 35e9",
+          "Geometry nil": "Geometry slant",
+          "has-deployment-mechanism nil": "has-deployment-mechanism yes",
+          "High-lat-sensitivity nil": "High-lat-sensitivity Yes",
+          "Illumination Active": "Illumination Active",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Cloud profile and rain radars\"",
+          "mass# nil": "mass# 480",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# 55",
+          "On-board-calibration nil": "On-board-calibration nil",
+          "Penetration Medium-other-MW": "Penetration Medium-other-MW",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements Low",
+          "Polarimetry yes": "Polarimetry yes",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning conical",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# 55",
+          "spectral-bands nil": "spectral-bands MW-94GHz MW-35GHz",
+          "Spectral-region nil": "Spectral-region MW-Ku",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 5",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name DESD_SAR",
+          "All-weather yes": "All-weather yes",
+          "Angular-resolution# nil": "Angular-resolution# nil",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# 6.0",
+          "average-data-rate# nil": "average-data-rate# 60",
+          "average-power# nil": "average-power# nil",
+          "peak-power# 132": "peak-power# nil",
+          "bandwidth# nil": "bandwidth# 15e6",
+          "characteristic-orbit nil": "characteristic-orbit 600",
+          "characteristic-power# nil": "characteristic-power# 500",
+          "Concept \"clouds and precipitation\"": "Concept \"Vegetation and deformation repeat pass interferometric L-band SAR\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by DOM-GSFC",
+          "dimension-x# nil": "dimension-x# 6.0",
+          "dimension-y# nil": "dimension-y# 6.0",
+          "dimension-z# nil": "dimension-z# 2.7",
+          "Field-of-view# nil": "Field-of-view# 10",
+          "Column1": "frequency# 1.2e9",
+          "Geometry nil": "Geometry slant",
+          "has-deployment-mechanism nil": "has-deployment-mechanism yes",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Active",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Imaging MW radars -SAR-\"",
+          "mass# nil": "mass# 400",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# 1",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# 10",
+          "On-board-calibration nil": "On-board-calibration nil",
+          "Penetration Medium-other-MW": "Penetration High-P-or-L-band",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements nil",
+          "Polarimetry yes": "Polarimetry yes",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning cross-track",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# 10",
+          "spectral-bands nil": "spectral-bands MW-L",
+          "Spectral-region nil": "Spectral-region MW-L",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 6",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name DESD_LID",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# nil",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 1",
+          "average-power# nil": "average-power# nil",
+          "peak-power# 132": "peak-power# nil",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit 400",
+          "characteristic-power# nil": "characteristic-power# 500",
+          "Concept \"clouds and precipitation\"": "Concept \"Vegetation full waveform 532nm laser altimeter, 1064nm also being studied for ice\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by DOM-GSFC",
+          "dimension-x# nil": "dimension-x# 1.5",
+          "dimension-y# nil": "dimension-y# 1.5",
+          "dimension-z# nil": "dimension-z# 2",
+          "Field-of-view# nil": "Field-of-view# 10",
+          "Column1": "frequency# nil",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Active",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Laser altimeters\"",
+          "mass# nil": "mass# 200",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration nil",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements High",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands opt-NIR-1064nm",
+          "Spectral-region nil": "Spectral-region opt-NIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 5",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name GACM_VIS",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# 0.2",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 0.77",
+          "average-power# nil": "average-power# 56",
+          "peak-power# 132": "peak-power# 56",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 56",
+          "Concept \"clouds and precipitation\"": "Concept \"A modified version of OMI with improved HSR, swath.\"",
+          "Day-Night": "Day-Night Day-only",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 0.5",
+          "dimension-y# nil": "dimension-y# 0.4",
+          "dimension-z# nil": "dimension-z# 0.35",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# 6e14",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Atmospheric chemistry: IR passive limb sounders\"",
+          "mass# nil": "mass# 46",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels 0",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels 0",
+          "num-of-TIR-channels nil": "num-of-TIR-channels 0",
+          "num-of-UV-channels nil": "num-of-UV-channels 2",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels 18",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration Medium",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability nil",
+          "Pointing-requirements nil": "Pointing-requirements Medium",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands opt-UV-O3- opt-UV-BLUE-0.32-0.64um",
+          "Spectral-region nil": "Spectral-region opt-UV",
+          "Spectral-resolution# nil": "Spectral-resolution# 0.5-nm",
+          "Swath# nil": "Swath# 2600",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 5",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name GACM_SWIR",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# 0.2",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 40",
+          "average-power# nil": "average-power# 208",
+          "peak-power# 132": "peak-power# 208",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 208",
+          "Concept \"clouds and precipitation\"": "Concept \"LEO Atmospheric chemistry\"",
+          "Day-Night": "Day-Night Only-day",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 1",
+          "dimension-y# nil": "dimension-y# 1",
+          "dimension-z# nil": "dimension-z# 1",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# 1e14",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Imaging multi-spectral radiometers -passive optical-\"",
+          "mass# nil": "mass# 250",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration nil",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability High",
+          "Pointing-requirements nil": "Pointing-requirements Low",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# nil",
+          "spectral-bands nil": "spectral-bands nil",
+          "Spectral-region nil": "Spectral-region opt-SWIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# 2000",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 4",
+          "Thermal-control nil": "Thermal-control Active-cryocooler"
+        },
+        {
+          "Name": "Name HYSP_TIR",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# 0.0055",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# 0.0055",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# 0.0055",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 65",
+          "average-power# nil": "average-power# 78",
+          "peak-power# 132": "peak-power# 78",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 78",
+          "Concept \"clouds and precipitation\"": "Concept \"high spatial resolution hyperspectral imager 8-12 um similar to ASTER surface composition\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 1.2",
+          "dimension-y# nil": "dimension-y# 0.5",
+          "dimension-z# nil": "dimension-z# 0.4",
+          "Field-of-view# nil": "Field-of-view# 10",
+          "Column1": "frequency# 3e13",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Imaging multi-spectral radiometers -passive optical-\"",
+          "mass# nil": "mass# 99",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# 256",
+          "Column42": "num-pixels-cross-track# 9272",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels 1",
+          "num-of-TIR-channels nil": "num-of-TIR-channels 7",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration High",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability High",
+          "Pointing-requirements nil": "Pointing-requirements Medium",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning cross-track",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# 10",
+          "spectral-bands nil": "spectral-bands nil",
+          "Spectral-region nil": "Spectral-region opt-TIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 6",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        },
+        {
+          "Name": "Name POSTEPS_IRS",
+          "All-weather yes": "All-weather no",
+          "Angular-resolution# nil": "Angular-resolution# 0.1",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# nil",
+          "average-data-rate# nil": "average-data-rate# 7.5",
+          "average-power# nil": "average-power# 457",
+          "peak-power# 132": "peak-power# 457",
+          "bandwidth# nil": "bandwidth# nil",
+          "characteristic-orbit nil": "characteristic-orbit nil",
+          "characteristic-power# nil": "characteristic-power# 457",
+          "Concept \"clouds and precipitation\"": "Concept \"high resolution IR sounder\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by EUR-CNES",
+          "dimension-x# nil": "dimension-x# 1.0",
+          "dimension-y# nil": "dimension-y# 1.0",
+          "dimension-z# nil": "dimension-z# 1.0",
+          "Field-of-view# nil": "Field-of-view# 55",
+          "Column1": "frequency# nil",
+          "Geometry nil": "Geometry nadir",
+          "has-deployment-mechanism nil": "has-deployment-mechanism no",
+          "High-lat-sensitivity nil": "High-lat-sensitivity nil",
+          "Illumination Active": "Illumination Passive",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"IR Atmospheric temperature and humidity sounders\"",
+          "mass# nil": "mass# 316",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# nil",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# nil",
+          "On-board-calibration nil": "On-board-calibration High",
+          "Penetration Medium-other-MW": "Penetration Low-optical",
+          "Pointing-capability Low": "Pointing-capability High",
+          "Pointing-requirements nil": "Pointing-requirements Medium",
+          "Polarimetry yes": "Polarimetry no",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning cross-track",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# 55",
+          "spectral-bands nil": "spectral-bands nil",
+          "Spectral-region nil": "Spectral-region opt-SWIR",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 6",
+          "Thermal-control nil": "Thermal-control Active-cryocooler"
+        },
+        {
+          "Name": "Name CNES_KaRIN",
+          "All-weather yes": "All-weather yes",
+          "Angular-resolution# nil": "Angular-resolution# nil",
+          "Angular-resolution-azimuth# nil": "Angular-resolution-azimuth# nil",
+          "Angular-resolution-elevation# nil": "Angular-resolution-elevation# nil",
+          "Aperture# nil": "Aperture# 10.0",
+          "average-data-rate# nil": "average-data-rate# 10",
+          "average-power# nil": "average-power# nil",
+          "peak-power# 132": "peak-power# nil",
+          "bandwidth# nil": "bandwidth# 15e6",
+          "characteristic-orbit nil": "characteristic-orbit 800",
+          "characteristic-power# nil": "characteristic-power# 300",
+          "Concept \"clouds and precipitation\"": "Concept \"Wide-swath altimetry\"",
+          "Day-Night": "Day-Night Day-and-night",
+          "developed-by nil": "developed-by DOM-JPL",
+          "dimension-x# nil": "dimension-x# 10",
+          "dimension-y# nil": "dimension-y# 2.2",
+          "dimension-z# nil": "dimension-z# 0.18",
+          "Field-of-view# nil": "Field-of-view# 10",
+          "Column1": "frequency# 27e9",
+          "Geometry nil": "Geometry slant",
+          "has-deployment-mechanism nil": "has-deployment-mechanism yes",
+          "High-lat-sensitivity nil": "High-lat-sensitivity Yes",
+          "Illumination Active": "Illumination Active",
+          "Intent \"Cloud profile and rain radars\"": "Intent \"Radar altimeter\"",
+          "mass# nil": "mass# 300",
+          "Column4": "num-pixels# nil",
+          "Column43": "num-pixels-along-track# nil",
+          "Column42": "num-pixels-cross-track# nil",
+          "Column3": "number-of-looks# 1",
+          "num-of-NIR-channels nil": "num-of-NIR-channels nil",
+          "num-of-SWIR-channels nil": "num-of-SWIR-channels nil",
+          "num-of-TIR-channels nil": "num-of-TIR-channels nil",
+          "num-of-UV-channels nil": "num-of-UV-channels nil",
+          "num-of-VNIR-channels nil": "num-of-VNIR-channels nil",
+          "off-axis-angle-plus-minus# nil": "off-axis-angle-plus-minus# 10",
+          "On-board-calibration nil": "On-board-calibration Low",
+          "Penetration Medium-other-MW": "Penetration Medium-other-MW",
+          "Pointing-capability Low": "Pointing-capability Low",
+          "Pointing-requirements nil": "Pointing-requirements High",
+          "Polarimetry yes": "Polarimetry yes",
+          "Radiometric-accuracy# nil": "Radiometric-accuracy# nil",
+          "scanning nil": "scanning no-scanning",
+          "scanning-angle-plus-minus# nil": "scanning-angle-plus-minus# 10",
+          "spectral-bands nil": "spectral-bands MW-Ku",
+          "Spectral-region nil": "spectral-bands MW-Ku",
+          "Spectral-resolution# nil": "Spectral-resolution# nil",
+          "Swath# nil": "Swath# nil",
+          "Technology-Readiness-Level nil": "Technology-Readiness-Level 5",
+          "Thermal-control nil": "Thermal-control Passive-radiators"
+        }
+      ],
+      "row_count": 12,
+      "description": "Tab 'CHARACTERISTICS' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "ACE_CPR": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.5.2 Cloud type\"",
+        "Coverage Global",
+        "Vertical-Spatial-Resolution# 500",
+        "Accuracy# nil"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.5.3 Cloud amount/distribution -horizontal and vertical-\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.6.4 Cloud ice\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# 9.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.5.6 Cloud top height\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.6.3 Cloud particle phase - ice/water transition\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.7.1 Cloud liquid water\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.7.2 Cloud droplet size\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.5.5 Cloud cover\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# 0.09"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.5.4 cloud mask\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# 500",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.2 Cloud type\"": "Parameter \"1.7.4 Precipitation rate at surface\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 500": "Vertical-Spatial-Resolution# nil",
+          "Accuracy# nil": "Accuracy# 0.09"
+        }
+      ],
+      "row_count": 9,
+      "description": "Tab 'ACE_CPR' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "ACE_ORCA": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.1.1 aerosol height/optical depth\"",
+        "Coverage Global",
+        "Accuracy# 0.01",
+        "rms-system-tropo-dry# nil"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.6 aerosol absorption optical thickness and profiles\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.1 Ocean color - 410-680nm -Chlorophyll absorption and fluorescence, pigments, phytoplankton, CDOM-\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.2 Extended ocean color - UV -enhanced DOC, CDOM-\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.3 Extended ocean color - NIR -atmospheric correction-\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.4 Ocean color - chlorophyl\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 0.045",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.5 Ocean color - Color Dissolved Organic Matter\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 4.5",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.6 Ocean color - Suspended Sediments\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 0.09",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.7 Ocean color - phytoplankton\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.6 aerosol absorption optical depth\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 0.004",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        }
+      ],
+      "row_count": 9,
+      "description": "Tab 'ACE_ORCA' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "ACE_POL": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.1.1 aerosol height/optical depth\"",
+        "Coverage Global",
+        "Accuracy# 0.01"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.2 aerosol shape, composition, physical and chemical properties\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.3 aerosol scattering properties\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.5 aerosol size and size distribution\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.6 aerosol absorption optical depth\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 0.004"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.6 Cloud top height\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.6.4 Cloud ice\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 9.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.6.3 Cloud particle phase - ice/water transition\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.7.2 Cloud droplet size\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.3.1 Atmospheric humidity\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 3"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.13 Black carbon and other polluting aerosols\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"A5. Leaf area index\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.01": "Accuracy# 4.5"
+        }
+      ],
+      "row_count": 11,
+      "description": "Tab 'ACE_POL' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "ACE_LID": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.1.1 aerosol height/optical depth\"",
+        "Coverage Global",
+        "Horizontal-Spatial-Resolution# 250",
+        "Vertical-Spatial-Resolution# 100",
+        "Accuracy# 0.005"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.2 aerosol shape, composition, physical and chemical properties\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.3 aerosol scattering properties\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.4 aerosol extinction profiles/vertical concentration\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# 0.9e-5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.5 aerosol size and size distribution\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.6 aerosol absorption optical depth\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# 0.003"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.6 Cloud top height\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"2.4.3 vegetation height\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.7.1 Cloud liquid water\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# 0.7"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.6.4 Cloud ice\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 250": "Horizontal-Spatial-Resolution# 250",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.005": "Accuracy# 0.7"
+        }
+      ],
+      "row_count": 9,
+      "description": "Tab 'ACE_LID' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "CLAR_ERB": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"",
+        "Coverage Global",
+        "Horizontal-Spatial-Resolution# 20000",
+        "Accuracy# 4.5"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.9.2 Spectrally resolved IR radiance -200-2000cm-1-\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.9.9 Upward long-wave irradiance at TOA\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.9.3 Spectrally resolved SW radiance -0.3-2um-\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.9.8 Upward short-wave irradiance at TOA\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.9.7 Downward short-wave irradiance at TOA\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 0.9"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.9.6 Downward short-wave irradiance at Earth surface\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 0.9"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"1.5.1 Cloud top temperature\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 0.25"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.9.5 Downward long-wave irradiance at Earth surface\"": "Parameter \"3.5.2 Sea Surface Temperature\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 20000": "Horizontal-Spatial-Resolution# 20000",
+          "Accuracy# 4.5": "Accuracy# 0.09"
+        }
+      ],
+      "row_count": 8,
+      "description": "Tab 'CLAR_ERB' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "DESD_SAR": {
+      "columns": [
+        "Measurement",
+        "Parameter \"2.2.1 surface deformation\"",
+        "Coverage Global",
+        "Accuracy# nil"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.2.2 Hi-res topography\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.3.2 soil moisture\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 0.006"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.4.1 vegetation type and structure\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.4.4 canopy density\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.6.1 land use\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.6.2 landcover status\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 0.01"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.6.3 disaster monitoring\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.6.4 hydrocarbon reservoir monitoring\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.1.4 Ice sheet velocity\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.1.5 Ice Sheet topography\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 0.09"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.2.4 snow cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.3.1 Sea ice thickness\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.3.2 Sea ice cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.1.1 ice sheet volume\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.1.2 Glacier surface elevation\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 9.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.1.3 glacier cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.1.8 Permafrost\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"2.4.5 Biomass\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 6"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"4.3.2 Sea ice cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 6"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.1 surface deformation\"": "Parameter \"3.8.1 Sea surface currents\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 40"
+        }
+      ],
+      "row_count": 20,
+      "description": "Tab 'DESD_SAR' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "DESD_LID": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.1.1 aerosol height/optical depth\"",
+        "Coverage Global",
+        "Horizontal-Spatial-Resolution# 35",
+        "Vertical-Spatial-Resolution# 100",
+        "Accuracy# 0.01"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.4 aerosol extinction profiles/vertical concentration\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 1.5e-5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.3 Cloud amount/distribution -horizontal and vertical-\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"2.2.2 Hi-res topography\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"2.4.1 vegetation type and structure\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"2.4.3 vegetation height\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"2.4.4 canopy density\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"4.1.5 Ice Sheet topography\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 9"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"4.1.3 glacier cover\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.6 Cloud top height\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.5 Cloud cover\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 0.09"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"2.4.5 Biomass\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 6"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"4.1.2 Glacier surface elevation\"",
+          "Coverage Global": "Coverage Global",
+          "Horizontal-Spatial-Resolution# 35": "Horizontal-Spatial-Resolution# 35",
+          "Vertical-Spatial-Resolution# 100": "Vertical-Spatial-Resolution# 100",
+          "Accuracy# 0.01": "Accuracy# 9"
+        }
+      ],
+      "row_count": 12,
+      "description": "Tab 'DESD_LID' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "GACM_SWIR": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.8.4 CH4\"",
+        "Coverage Global",
+        "Accuracy# 1.9",
+        "Vertical-Spatial-Resolution# 250"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.5 CO\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 4.5",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.3 CO2\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 0.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter  \"1.8.2 O3\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 5.0",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.3.2 Water vapor transport - Winds\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# nil",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.22 CH4 - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.23 CH4 - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.24 CH4 - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.25 CH4 - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.18 CO2 - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 0.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.19 CO2 - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 0.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.20 CO2 - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 0.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.21 CO2 - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 0.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.3.7 Atmospheric humidity - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.3.8 Atmospheric humidity - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.3.9 Atmospheric humidity - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.3.10 Atmospheric humidity - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 1.9",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.26 O3 - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 5.0",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.27 O3 - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 5.0",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.28 O3 - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 5.0",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.8.4 CH4\"": "Parameter \"1.8.29 O3 - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 1.9": "Accuracy# 5.0",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250"
+        }
+      ],
+      "row_count": 20,
+      "description": "Tab 'GACM_SWIR' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "GACM_VIS": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.1.1 aerosol height/optical depth\"",
+        "Coverage Global",
+        "Vertical-Spatial-Resolution# 250",
+        "Accuracy# 0.03"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.1.5 aerosol size and size distribution\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.2 O3\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 5.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.7 NOx-NO, NO2-, N2O5, HNO3\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.8 CH2O and non-CH4 VOC\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.11 SO2\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.13 Black carbon and other polluting aerosols\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.1 Ocean color - 410-680nm -Chlorophyll absorption and fluorescence, pigments, phytoplankton, CDOM-\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# nil",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.2 Extended ocean color - UV -enhanced DOC, CDOM-\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.4 cloud mask\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.5.6 Cloud top height\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 0.75"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.9.4 Spectrally resolved UV radiance -0.15-0.3um-\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.12 Vulcanic SO2, OCS and other vulcanic aerosols\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.14 ClO, BrO, halogen compounds\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.26 O3 - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 5.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.27 O3 - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 5.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.28 O3 - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 5.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.29 O3 - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 5.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.4 Ocean color - chlorophyl\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# nil",
+          "Accuracy# 0.03": "Accuracy# 0.12"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.5 Ocean color - Color Dissolved Organic Matter\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# nil",
+          "Accuracy# 0.03": "Accuracy# 12"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"3.1.6 Ocean color - Suspended Sediments\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# nil",
+          "Accuracy# 0.03": "Accuracy# 0.20"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.1.1 aerosol height/optical depth\"": "Parameter \"1.8.9 CFCs/HFCs\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 250": "Vertical-Spatial-Resolution# 250",
+          "Accuracy# 0.03": "Accuracy# 4.5"
+        }
+      ],
+      "row_count": 21,
+      "description": "Tab 'GACM_VIS' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "HYSP_TIR": {
+      "columns": [
+        "Measurement",
+        "Parameter \"1.5.1 Cloud top temperature\"",
+        "Coverage Global",
+        "Accuracy# 0.25"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"1.5.5 Cloud cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 0.09"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"1.5.2 Cloud type\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"1.8.1 H2O\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.1.1 Albedo\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.3.2 soil moisture\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 0.25"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.4.1 vegetation type and structure\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.4.2 vegetation state\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.5.1 Surface temperature -land-\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.6.1 land use\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.6.2 landcover status\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 0.015"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.6.3 disaster monitoring\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.6.5 surface composition\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"3.5.2 Sea Surface Temperature\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 0.09"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"3.7.2 coral reef health/extent\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"4.2.4 snow cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 6"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"4.3.2 Sea ice cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"A2. Fire Monitoring\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.8.1 Fire burned area\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.8.2 Active Fire\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"2.8.3 Fire Radiated Power\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 0.0045"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"A6. FaPAR\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"1.5.1 Cloud top temperature\"": "Parameter \"A5. Leaf area index\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# 0.25": "Accuracy# 4.5"
+        }
+      ],
+      "row_count": 22,
+      "description": "Tab 'HYSP_TIR' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "CNES_KaRIN": {
+      "columns": [
+        "Measurement",
+        "Parameter \"2.2.2 Hi-res topography\"",
+        "Coverage Global",
+        "Accuracy# nil",
+        "rms-system-tropo-dry# nil"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.4.1 vegetation type and structure\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.6.1 land use\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.6.2 landcover status\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 0.03",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.7.1 river and lake elevation\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 1.9",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.7.3 groundwater storage\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"3.2.1 Sea level height\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 9.5",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# High"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"3.2.2 seafloor topography\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"4.2.1 snow-water equivalence\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"4.2.2 snow depth\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"4.2.3 snow wetness\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"4.2.4 snow cover\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.7.2 flood monitoring\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# nil",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"3.6.4 Wave height\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 1.9",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"2.7.4 river discharge\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 4.5",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.2.2 Hi-res topography\"": "Parameter \"3.8.1 Sea surface currents\"",
+          "Coverage Global": "Coverage Global",
+          "Accuracy# nil": "Accuracy# 40",
+          "rms-system-tropo-dry# nil": "rms-system-tropo-dry# nil"
+        }
+      ],
+      "row_count": 15,
+      "description": "Tab 'CNES_KaRIN' from spreadsheet 'Instrument Capability Definition'"
+    },
+    "POSTEPS_IRS": {
+      "columns": [
+        "Measurement",
+        "Parameter \"2.5.1 Surface temperature -land-\"",
+        "Coverage Global",
+        "Vertical-Spatial-Resolution# 800",
+        "Accuracy# nil"
+      ],
+      "rows": [
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.7.1 Cloud liquid water\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 4.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.5.1 Cloud top temperature\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 0.25"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.2.3 Atmospheric temperature - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.2.4 Atmospheric temperature - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.2.5 Atmospheric temperature - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.3.7 Atmospheric humidity - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.3.8 Atmospheric humidity - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.3.9 Atmospheric humidity - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.3.10 Atmospheric humidity - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.3.5 Air humidity at surface\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.5"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.2.2 Air temperature at surface\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 0.45"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.3.6 Air pressure at surface\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 0.9"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.5 atmospheric wind speed - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.9 atmospheric wind direction - lower troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.6 atmospheric wind speed - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.10 atmospheric wind direction - upper troposphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.7 atmospheric wind speed - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.11 atmospheric wind direction - lower stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# nil"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.8 atmospheric wind speed - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# 2.0"
+        },
+        {
+          "Measurement": "Measurement",
+          "Parameter \"2.5.1 Surface temperature -land-\"": "Parameter \"1.4.12 atmospheric wind direction - upper stratosphere\"",
+          "Coverage Global": "Coverage Global",
+          "Vertical-Spatial-Resolution# 800": "Vertical-Spatial-Resolution# 800",
+          "Accuracy# nil": "Accuracy# nil"
+        }
+      ],
+      "row_count": 20,
+      "description": "Tab 'POSTEPS_IRS' from spreadsheet 'Instrument Capability Definition'"
+    }
+  },
+  "name": "Instrument Capability Definition"
+}

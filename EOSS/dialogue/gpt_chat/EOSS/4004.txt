@@ -1,0 +1,13 @@
+500
+--
+technology technology
+year1 year
+year2 year
+space_agency space_agency
+--
+0001
+--
+which missions have flown ${technology}
+which missions have flown ${technology} between ${year1} and ${year2}
+which missions from ${space_agency} have flown ${technology}
+which missions from ${space_agency} have flown ${technology} between ${year1} and ${year2}

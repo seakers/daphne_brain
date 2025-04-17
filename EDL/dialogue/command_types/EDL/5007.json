@@ -1,0 +1,34 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": true, "context": "edlcontext", "subcontext": "" },
+    { "name": "edl_metric_calculate", "type": "edl_metric_calculate", "options": "", "mandatory": true, "from_context": false },
+    { "name": "edl_metric_names", "type": "edl_metric_names", "options": "", "mandatory": true, "from_context": false }
+  ],
+  "function":
+  {"run_template": "dialogue_functions.calculate_scorecard_metric('${current_mat_file}', '${edl_metric_calculate}','${edl_metric_names}', context)",
+    "results":[
+      {
+        "result_type": "single",
+        "result_fields": {
+        "load_result": "command_results[index]"
+        }
+      }
+    ]
+
+  },
+  "voice_response": [
+  {
+    "type": "single",
+    "template": "${load_result}"
+  }
+  ],
+  "visual_response": [
+  {
+    "type": "text",
+    "from": "single",
+    "template": "${load_result}"
+  }
+  ]
+}

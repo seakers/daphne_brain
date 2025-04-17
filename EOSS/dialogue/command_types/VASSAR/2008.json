@@ -1,0 +1,34 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "instrument_parameter", "type": "instrument_parameter", "options": "", "from_context": false, "mandatory": true },
+    { "name": "vassar_instrument", "type": "vassar_instrument", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "get information about a parameter of an instrument",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_instrument_parameter('${vassar_instrument}', '${instrument_parameter}', context, new_dialogue_contexts)",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "text_response": "command_results[0]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${text_response}"
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${text_response}"
+    }
+  ]
+}

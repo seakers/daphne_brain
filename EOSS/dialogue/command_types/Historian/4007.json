@@ -1,0 +1,35 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "know what orbit is the most common for a certain measurement",
+  "query":
+  {
+    "always": "session.query(models.MeasurementMostCommonOrbit).filter(models.MeasurementMostCommonOrbit.measurement.ilike('%${measurement}%'))",
+    "opt": [],
+    "end": "",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "orbit": "response_helpers.print_orbit(row.orbit)"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "The most common orbit for ${measurement} is ${orbit}."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "The most common orbit for ${measurement} is ${orbit}."
+    }
+  ]
+}

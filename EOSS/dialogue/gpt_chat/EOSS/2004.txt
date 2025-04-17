@@ -1,0 +1,8 @@
+200
+--
+design_id design_id
+not_partial_full not_partial_full
+--
+0100
+--
+how many objectives are ${not_partial_full} satisfied in design ${design_id}

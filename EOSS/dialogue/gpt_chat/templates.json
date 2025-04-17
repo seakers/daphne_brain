@@ -1,0 +1,337 @@
+{
+    "analyst": {
+        "1000": {
+            "parameters": [],
+            "examples": [
+                "what are the features that are shared by the target designs",
+                "what is the feature that is unique to the solutions in the target region",
+                "what are the patterns that are found in the target designs",
+                "what are the patterns that are found in the selected region",
+                "what are the patterns that are found in good designs",
+                "what are the patterns that are found in the high performance region",
+                "what are the recurring patterns within the low-cost region",
+                "what are the driving features",
+                "what is the driving feature",
+                "can you suggest a good feature that describes the target region well",
+                "which feature can be found in the designs in the target region",
+                "which feature covers all the solutions in the target region",
+                "what feature covers the selected region well",
+                "what is a good feature describing this target region",
+                "what features describe the target region well",
+                "what are the recurring patterns in the target region"
+            ]
+        },
+        "1001": {
+            "parameters": ["instrument", "orbit"],
+            "examples": [
+                "Which of the designs have instrument ${instrument} assigned to orbit ${orbit}?",
+                "Highlight designs that assign instrument ${instrument} in orbit ${orbit}.",
+                "show designs that assign instrument ${instrument} in orbit ${orbit}"
+            ]
+        },
+        "1002": {
+            "parameters": ["instrument"],
+            "examples": [
+                "which of the designs use instrument ${instrument}",
+                "which of the designs do not use instrument ${instrument}",
+                "highlight designs that does not use instrument ${instrument}",
+                "highlight designs that use instrument ${instrument}"
+
+            ]
+        },
+        "1003": {
+            "parameters": ["number", "orbit"],
+            "examples": [
+                "Which of the designs use ${number} instruments in total?",
+                "What are the designs that assign ${number} instruments in orbit ${orbit}?",
+                "What are the designs that use total ${number} instruments?"
+            ]
+        },
+        "1004": {
+            "parameters": ["number"],
+            "examples": [
+                "Which of the designs use ${number} orbits?",
+                "Highlight designs that use ${number} orbits"
+            ]
+        }
+    },
+    "engineer": {
+        "2000": {
+            "parameters": ["design_id"],
+            "examples": [
+                "Why does design ${design_id} have this science benefit?",
+                "Why does design ${design_id} have this science score?"
+            ]
+        },
+        "2001": {
+            "parameters": ["design_id", "subobjective"],
+            "examples": [
+                "How does design ${design_id} satisfy ${subobjective}?"
+            ]
+        },
+        "2002": {
+            "parameters": ["design_id", "subobjective"],
+            "examples": [
+                "Why does design ${design_id} not satisfy ${subobjective}?"
+            ]
+        },
+        "2003": {
+            "parameters": ["design_id", "objective"],
+            "examples": [
+                "Who satisfies ${objective} in design ${design_id}?"
+            ]
+        },
+        "2004": {
+            "parameters": ["design_id", "not_partial_full"],
+            "examples": [
+                "How many objectives are ${not_partial_full} satisfied in design ${design_id}"
+            ]
+        },
+        "2005": {
+            "parameters": ["design_id", "not_partial_full"],
+            "examples": [
+                "Which objectives are ${not_partial_full} satisfied in design ${design_id}"
+            ]
+        },
+        "2006": {
+            "parameters": ["design_id1", "design_id2"],
+            "examples": [
+                "Why is architecture ${design_id1} better than ${design_id2}"
+            ]
+        },
+        "2007": {
+            "parameters": ["design_id1", "design_id2"],
+            "examples": [
+                "What are the differences between architecture ${design_id1} and ${design_id2}"
+            ]
+        },
+        "2008": {
+            "parameters": ["instrument_parameter", "vassar_instrument"],
+            "examples": [
+                "What is the ${instrument_parameter} of ${vassar_instrument}"
+            ]
+        },
+        "2009": {
+            "parameters": ["vassar_measurement"],
+            "examples": [
+                "The one for ${vassar_measurement}"
+            ]
+        },
+        "2010": {
+            "parameters": ["instrument_parameter", "vassar_measurement"],
+            "examples": [
+                "What is the requirement for ${instrument_parameter} for ${vassar_measurement}"
+            ]
+        },
+        "2011": {
+            "parameters": ["subobjective"],
+            "examples": [
+                "The one for ${subobjective}"
+            ]
+        },
+        "2012": {
+            "parameters": [],
+            "examples": [
+                "Why does this design have this science benefit",
+                "Why does this design have this science score"
+            ]
+        },
+        "2013": {
+            "parameters": ["vassar_stakeholder"],
+            "examples": [
+                "Explain the stakeholder ${vassar_stakeholder} science score for this design",
+                "Explain the stakeholder ${vassar_stakeholder} science benefit for this design"
+            ]
+        },
+        "2014": {
+            "parameters": ["objective"],
+            "examples": [
+                "Explain the objective ${objective} science score for this design",
+                "Explain the objective ${objective} science benefit for this design"
+            ]
+        },
+        "2015": {
+            "parameters": ["objective"],
+            "examples": [
+                "Which instruments improve the science score for objective ${objective}",
+                "Which instruments improve the science benefit for objective ${objective}"
+            ]
+        },
+        "2016": {
+            "parameters": ["vassar_stakeholder"],
+            "examples": [
+                "Which instruments improve the science score for stakeholder ${vassar_stakeholder}",
+                "Which instruments improve the science benefit for stakeholder ${vassar_stakeholder}"
+            ]
+        },
+        "2017": {
+            "parameters": [],
+            "examples": [
+                "Why does this design have this cost"
+            ]
+        },
+        "2018": {
+            "parameters": [],
+            "examples": [
+                "What requirements are not being satisfied"
+            ]
+        },
+        "2019": {
+            "parameters": [],
+            "examples": [
+                "How can this requirement be satisfied"
+            ]
+        },
+        "2020": {
+            "parameters": [],
+            "examples": [
+                "What does delta-v mean",
+                "What is delta-v"
+            ]
+        },
+        "2021": {
+            "parameters": [],
+            "examples": [
+                "What does eccentricity mean",
+                "What is eccentricity"
+            ]
+        },
+        "2022": {
+            "parameters": [],
+            "examples": [
+                "What does inclination mean",
+                "What is inclination"
+            ]
+        }
+    },
+    "critic":{
+        "3000": {
+            "parameters": ["design_id"],
+            "examples": [
+                "what are the strengths and weaknesses of ${design_id}",
+                "what are the strengths of ${design_id}",
+                "what are the weaknesses of ${design_id}",
+                "what do you think of design ${design_id}"
+            ]
+        },
+        "3001": {
+            "parameters": ["design_id"],
+            "examples": [
+                "Are there any similar missions to ${design_id}"
+            ]
+        },
+        "3002": {
+            "parameters": ["agent", "design_id"],
+            "examples": [
+                "What does the ${agent} think of ${design_id}"
+            ]
+        },
+        "3003": {
+            "parameters": ["design_id"],
+            "examples": [
+                "Does ${design_id} have any good features"
+            ]
+        },
+        "3004": {
+            "parameters": ["design_id"],
+            "examples": [
+                "Do you have any suggestion to improve design ${design_id}"
+            ]
+        },
+        "3005": {
+            "parameters": [],
+            "examples": [
+                "What do you think of this design"
+            ]
+        }
+    },
+    "historian": {
+        "4000": {
+            "parameters": ["measurement", "year1", "year2", "space_agency"],
+            "examples": [
+                "Which missions can measure ${measurement}",
+                "Which missions can measure ${measurement} between ${year1} and ${year2}",
+                "Which missions from ${space_agency} can measure ${measurement}",
+                "Which missions from ${space_agency} can measure ${measurement} between ${year1} and ${year2}"
+            ]
+        },
+        "4001": {
+            "parameters": ["measurement", "space_agency"],
+            "examples": [
+                "Which missions do we currently use to measure ${measurement}",
+                "Which missions from ${space_agency} do we currently use to measure ${measurement}"
+            ]
+        },
+        "4002": {
+            "parameters": ["measurement", "year1", "year2", "space_agency"],
+            "examples": [
+                "Which instruments can measure ${measurement}",
+                "Which instruments can measure ${measurement} between ${year1} and ${year2}",
+                "Which instruments from ${space_agency} can measure ${measurement}",
+                "Which instruments from ${space_agency} can measure ${measurement} between ${year1} and ${year2}"
+            ]
+        },
+        "4003": {
+            "parameters": ["measurement", "space_agency"],
+            "examples": [
+                "Which instruments do we currently use to measure ${measurement}",
+                "Which instruments from ${space_agency} do we currently use to measure ${measurement}"
+            ]
+        },
+        "4004": {
+            "parameters": ["technology", "year1", "year2", "space_agency"],
+            "examples": [
+                "Which missions have flown ${technology}",
+                "Which missions have flown ${technology} between ${year1} and ${year2}",
+                "Which missions from ${space_agency} have flown ${technology}",
+                "Which missions from ${space_agency} have flown ${technology} between ${year1} and ${year2}"
+            ]
+        },
+        "4005": {
+            "parameters": ["technology", "space_agency"],
+            "examples": [
+                "Which missions are currently flying ${technology}",
+                "Which missions from ${space_agency} are currently flying ${technology}"
+            ]
+        },
+        "4006": {
+            "parameters": ["technology"],
+            "examples": [
+                "Which orbit is the most common for ${technology}",
+                "Which orbit is the most typical for ${technology}",
+                "What orbit do you recommend for ${technology}"
+            ]
+        },
+        "4007": {
+            "parameters": ["measurement"],
+            "examples": [
+                "Which orbit is the most common for ${measurement}",
+                "Which orbit is the most typical for ${measurement}",
+                "What orbit do you recommend for ${measurement}"
+            ]
+        },
+        "4008": {
+            "parameters": ["mission"],
+            "examples": [
+                "When was mission ${mission} launched",
+                "When was ${mission} launched"
+            ]
+        },
+        "4009": {
+            "parameters": ["space_agency"],
+            "examples": [
+                "Which missions have been launched by ${space_agency}",
+                "Which missions have been designed by ${space_agency}"
+            ]
+        },
+        "4010": {
+            "parameters": ["space_agency", "measurement"],
+            "examples": [
+                "Show me a timeline of missions which measure ${measurement}",
+                "Show me a timeline of missions that measure ${measurement}",
+                "Show me a timeline of missions from ${space_agency} which measure ${measurement}",
+                "Show me a timeline of missions from ${space_agency} that measure ${measurement}"
+            ]
+        }
+    }
+}

@@ -1,0 +1,41 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "edl_mat_param", "type": "edl_mat_param", "options": "", "mandatory": true, "from_context": false },
+    { "name": "edl_mat_param2", "type": "edl_mat_param", "options": "", "mandatory": true, "from_context": false },
+    { "name": "edl_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": false }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.plot_from_matfile('${edl_mat_file}','${edl_mat_param}', '${edl_mat_param2}', context)",
+    "results":[
+      {
+        "result_type": "list",
+        "result_fields": {
+        "load_result": "row.command_result"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+  {
+    "type": "list",
+    "begin": "test",
+    "repeat": "${load_result}",
+    "end":"."
+  }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "test",
+      "item_template": "${load_result}"
+    },
+    {
+      "type": "plot",
+      "begin": "This is a test of the plot",
+      "item_template": "${plot_elem}"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "instrument_parameter", "type": "instrument_parameter", "options": "", "from_context": true, "context_path": ["dialogue", "eossdialoguecontext", "engineercontext"], "mandatory": true },
+    { "name": "vassar_measurement", "type": "vassar_measurement", "options": "", "from_context": true, "context_path": ["dialogue", "eossdialoguecontext", "engineercontext"], "mandatory": true },
+    { "name": "subobjective", "type": "subobjective", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "get information about the requirements for a measurement for a certain stakeholder",
+  "function":
+  {
+    "run_template": "dialogue_functions.engineer.get_measurement_requirement_followup('${vassar_measurement}', '${instrument_parameter}', '${subobjective}', context)",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "text_response": "command_results[0]"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "${text_response}"
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "${text_response}"
+    }
+  ]
+}

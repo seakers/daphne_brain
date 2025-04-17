@@ -1,0 +1,271 @@
+{
+  "@type": "TradespaceSearch",
+  "evaluation": {
+    "metrics": {
+      "ScienceScore": "MAX",
+      "LifecycleCost": "MIN",
+      "HarmonicMeanRevisitTime": "MAX"
+    },
+    "tool_constraints": {
+      "OrbitPropagation": "TATC"
+    }
+  },
+  "mission": {
+    "name": "Problem",
+    "acronym": "Problem",
+    "agency": {
+      "agencyType": "GOVERNMENT",
+      "@type": "Agency"
+    },
+    "start": "2019-08-01T00:00:00Z",
+    "duration": "P0Y0M07D",
+    "target": [
+      {
+        "latitude": {
+          "minValue": -90,
+          "maxValue": 90,
+          "@type": "QuantitativeValue"
+        },
+        "longitude": {
+          "minValue": -180,
+          "maxValue": 180,
+          "@type": "QuantitativeValue"
+        },
+        "@type": "Region"
+      }
+    ],
+    "objectives": [
+      {
+        "objectiveName": "MeanRevisitTime",
+        "objectiveType": "MIN",
+        "evaluator": "science_score"
+      },
+      {
+        "objectiveName": "lifecycleCost",
+        "objectiveType": "MIN",
+        "evaluator": "lifecycle_cost"
+      },
+      {
+        "objectiveName": "Coverage",
+        "objectiveType": "MAX",
+        "evaluator": "science_score"
+      }
+    ],
+    "@type": "MissionConcept"
+  },
+  "designSpace": {
+    "decisionVariables": {
+      "missionConfigurations": {
+        "type": "Combining",
+        "combiningDecisions": [
+          "numberSatellites",
+          "altitude",
+          "inclination",
+          "focalLength",
+          "apertureDia",
+          "numberOfDetectorsColsCrossTrack",
+          "dataRate",
+          "bitsPerPixel",
+          "orbitType"
+        ],
+        "parents": []
+      }
+    },
+    "spaceSegment": [
+      {
+        "constellationType": "DELTA_HOMOGENEOUS",
+        "numberSatellites": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "numberPlanes": 1,
+        "orbit": {
+          "orbitType": "SSO",
+          "altitude": [
+            400,
+            500,
+            600,
+            700,
+            800,
+            900
+          ],
+          "inclination": [
+            30,
+            45,
+            60,
+            75,
+            90,
+            98
+          ],
+          "eccentricity": 0,
+          "@type": "Orbit"
+        },
+        "satellites": [
+          {
+            "name": "MicroMAS-2",
+            "acronym": "MicroMAS-2",
+            "mass": 28,
+            "dryMass": 2.5,
+            "volume": 0.12,
+            "power": 9.1,
+            "commBand": [
+              "X",
+              "Ka"
+            ],
+            "payload": [
+              {
+                "id": "FireSat-Sensor",
+                "scanTechnique": "PUSHBROOM",
+                "type": "passiveOpticalScanner",
+                "numberOfDetectorsRowsAlongTrack": 1,
+                "numberOfDetectorsColsCrossTrack": [
+                  1000,
+                  3000,
+                  5000,
+                  7000
+                ],
+                "Fnum": 2.7,
+                "focalLength": [
+                  0.3,
+                  0.4,
+                  0.6,
+                  0.8
+                ],
+                "apertureDia": [
+                  0.1,
+                  0.2,
+                  0.4,
+                  0.6
+                ],
+                "operatingWavelength": 4.2e-06,
+                "bandwidth": 1.9e-06,
+                "opticsSysEff": 0.75,
+                "quantumEff": 0.5,
+                "numOfReadOutE": 25,
+                "targetBlackBodyTemp": 290,
+                "detectorWidth": 3e-05,
+                "maxDetectorExposureTime": 0.0036,
+                "snrThreshold": 25,
+                "name": "Landsat 10 Blue Band",
+                "acronym": "Landsat 10 Blue Band",
+                "mass": 28,
+                "volume": 0.12,
+                "power": 32,
+                "orientation": {
+                  "convention": "SIDE_LOOK",
+                  "sideLookAngle": 0,
+                  "@type": "Orientation"
+                },
+                "fieldOfView": {
+                  "sensorGeometry": "RECTANGULAR",
+                  "fullConeAngle": 30,
+                  "alongTrackFieldOfView": 40,
+                  "crossTrackFieldOfView": 114,
+                  "angle_height_fov": 0.628,
+                  "angle_width_fov": 115.8,
+                  "@type": "FieldOfView"
+                },
+                "dataRate": [
+                  10,
+                  50,
+                  100,
+                  200,
+                  500
+                ],
+                "bitsPerPixel": [
+                  4,
+                  6,
+                  8,
+                  12,
+                  16
+                ],
+                "techReadinessLevel": 9,
+                "mountType": "BODY",
+                "@type": "Passive Optical Scanner"
+              }
+            ],
+            "techReadinessLevel": 9,
+            "isGroundCommand": true,
+            "isSpare": false,
+            "propellantType": "MONO_PROP",
+            "stabilizationType": "AXIS_3",
+            "@type": "Satellite"
+          }
+        ],
+        "@type": "Constellation"
+      }
+    ],
+    "groundSegment": [
+      {
+        "name": "Problem ground network",
+        "acronym": "Problem GN",
+        "numberStations": 1,
+        "groundStations": [
+          {
+            "name": "Wallops",
+            "acronym": "Wallops",
+            "agency": {
+              "agencyType": "GOVERNMENT",
+              "@type": "Agency"
+            },
+            "latitude": 37.940194,
+            "longitude": -75.466389,
+            "elevation": 1570,
+            "commBand": [
+              "UHF"
+            ],
+            "@type": "GroundStation"
+          }
+        ],
+        "@type": "GroundNetwork"
+      }
+    ],
+    "@type": "DesignSpace"
+  },
+  "settings": {
+    "searchStrategy": "MOEA",
+    "proxyInstrument": true,
+    "proxyCostRisk": false,
+    "proxyLaunch": false,
+    "proxyOrbits": false,
+    "proxyValue": true,
+    "proxyMaintenance": true,
+    "useCache": true,
+    "useThreading": true,
+    "@type": "AnalysisSettings",
+    "searchParameters": {
+      "@type": "SearchParameters",
+      "maxNFE": 500,
+      "populationSize": 50,
+      "epsilons": 0.05,
+      "sizeTournament": 2,
+      "pCrossover": 0.9,
+      "pMutation": 0.2,
+      "alpha": 0.9,
+      "beta": 0.7,
+      "pmin": 0.03,
+      "dOperators": [],
+      "iOperators": [
+        "TwoPointCrossover",
+        "IntegerUM"
+      ],
+      "NFEtriggerDM": 20,
+      "nOperRepl": 2
+    },
+    "outputs": {
+      "obsTimeStep": true,
+      "keepLowLevelData": false,
+      "@type": "AnalysisOutputs",
+      "orbits.global": true,
+      "orbits.local": true,
+      "orbits.states": true,
+      "orbits.access": true,
+      "orbits.instrumentAccess": true
+    },
+    "includePropulsion": false
+  }
+}

@@ -1,0 +1,9 @@
+20
+--
+measurement measurement
+space_agency space_agency
+--
+0001
+--
+which instruments do we currently use to measure ${measurement}
+which instruments from ${space_agency} do we currently use to measure ${measurement}

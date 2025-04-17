@@ -1,0 +1,53 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "edl_mat_param", "type": "edl_mat_param", "options": "", "mandatory": true, "from_context":false },
+    { "name": "current_mat_file", "type": "edl_mat_file", "options": "", "from_context": true,  "context": "edlcontext", "subcontext": "", "mandatory": true },
+    { "name": "current_mat_file_for_print", "type": "edl_mat_file", "options": "", "from_context": true, "context": "edlcontext", "subcontext": "", "mandatory": true }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.compute_stat('None','${current_mat_file}', '${edl_mat_param}', context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "load_result": "item['command_result']"
+        }
+      },
+      {
+        "result_type": "list",
+        "result_fields": {
+          "hist_elem": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "For ${edl_mat_param} in ${current_mat_file_for_print}, the statistics are",
+      "repeat": "${load_result}",
+      "end":"."
+    },
+    {
+      "type": "list",
+      "begin": "",
+      "repeat": "",
+      "end":""
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "For ${edl_mat_param} in ${current_mat_file_for_print}, the statistics are",
+      "item_template": "${load_result}"
+    },
+    {
+      "type": "hist_plot",
+      "title": "Statistics for ${edl_mat_param}",
+      "item_template": "${hist_elem}"
+    }
+  ]
+}

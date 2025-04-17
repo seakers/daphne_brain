@@ -1,0 +1,34 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true, "from_context": false }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.mat_file_list('${mission}', context)",
+    "results": [
+      {
+        "result_type": "list",
+       "result_fields": {
+        "load_result": "item['command_result']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "For ${mission} the files available are",
+      "repeat": "${load_result}",
+      "end":"."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "For ${mission} the files available are",
+      "item_template": "${load_result}"
+    }
+  ]
+}

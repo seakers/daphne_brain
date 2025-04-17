@@ -1,0 +1,42 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "technology", "type": "technology", "options": "", "from_context": false, "mandatory": true },
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
+  ],
+  "objective": "know what current missions have flown a certain technology",
+  "query":
+  {
+    "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(or_(models.Instrument.technology.ilike('%${technology}%'), models.Instrument.types.any(models.InstrumentType.name.ilike('%${technology}%')))).filter(models.Mission.launch_date < data['now']).filter(models.Mission.eol_date > data['now'])",
+    "opt": [
+      { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
+    ],
+    "end": ".order_by(models.Mission.launch_date)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "name": "row.name"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The missions that currently fly ${technology} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "list",
+      "begin": "The missions that currently fly ${technology} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ]
+}

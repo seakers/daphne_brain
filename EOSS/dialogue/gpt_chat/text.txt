@@ -1,0 +1,698 @@
+# File: 1000.txt
+
+200
+--
+--
+1000
+--
+what are the features that are shared by the target designs
+what is the feature that is unique to the solutions in the target region
+what are the patterns that are found in the target designs
+what are the patterns that are found in the selected region
+what are the patterns that are found in good designs
+what are the patterns that are found in the high performance region
+what are the recurring patterns within the low-cost region
+what are the driving features
+what is the driving feature
+can you suggest a good feature that describes the target region well
+which feature can be found in the designs in the target region
+which feature covers all the solutions in the target region
+what feature covers the selected region well
+what is a good feature describing this target region
+what features describe the target region well
+what are the recurring patterns in the target region
+
+
+
+
+==================================================
+
+# File: 1001.txt
+
+200
+--
+instrument instrument
+orbit orbit
+--
+1000
+--
+which of the designs have instrument ${instrument} assigned to orbit ${orbit}
+highlight designs that assign instrument ${instrument} in orbit ${orbit}
+show designs that assign instrument ${instrument} in orbit ${orbit}
+
+
+
+==================================================
+
+# File: 1002.txt
+
+200
+--
+instrument instrument
+--
+1000
+--
+which of the designs use instrument ${instrument}
+which of the designs do not use instrument ${instrument}
+highlight designs that does not use instrument ${instrument}
+highlight designs that use instrument ${instrument}
+
+
+
+==================================================
+
+# File: 1003.txt
+
+200
+--
+instrument instrument
+orbit orbit
+number number
+--
+1000
+--
+which of the designs use ${number} instruments in total
+what are the designs that use total ${number} instruments
+what are the designs that assigns ${number} instruments in orbit ${orbit}
+
+
+
+==================================================
+
+# File: 1004.txt
+
+200
+--
+number number
+--
+1000
+--
+which of the designs use ${number} orbits
+highlight designs that use ${number} orbits
+
+
+
+==================================================
+
+# File: 2000.txt
+
+200
+--
+design_id design_id
+--
+0100
+--
+why does design ${design_id} have this science benefit
+why does design ${design_id} have this science score
+
+
+
+==================================================
+
+# File: 2001.txt
+
+200
+--
+design_id design_id
+subobjective subobjective
+--
+0100
+--
+how does design ${design_id} satisfy ${subobjective}
+
+
+
+==================================================
+
+# File: 2002.txt
+
+200
+--
+design_id design_id
+subobjective subobjective
+--
+0100
+--
+why does design ${design_id} not satisfy ${subobjective}
+
+
+
+==================================================
+
+# File: 2003.txt
+
+200
+--
+design_id design_id
+objective objective
+--
+0100
+--
+who satisfies ${objective} in design ${design_id}
+
+
+
+==================================================
+
+# File: 2004.txt
+
+200
+--
+design_id design_id
+not_partial_full not_partial_full
+--
+0100
+--
+how many objectives are ${not_partial_full} satisfied in design ${design_id}
+
+
+
+==================================================
+
+# File: 2005.txt
+
+200
+--
+design_id design_id
+not_partial_full not_partial_full
+--
+0100
+--
+which objectives are ${not_partial_full} satisfied in design ${design_id}
+
+
+
+==================================================
+
+# File: 2006.txt
+
+200
+--
+design_id1 design_id
+design_id2 design_id
+--
+0100
+--
+why is architecture ${design_id1} better than ${design_id2}
+
+
+
+==================================================
+
+# File: 2007.txt
+
+200
+--
+design_id1 design_id
+design_id2 design_id
+--
+0100
+--
+what are the differences between architecture ${design_id1} and ${design_id2}
+
+
+
+==================================================
+
+# File: 2008.txt
+
+200
+--
+instrument_parameter instrument_parameter
+vassar_instrument vassar_instrument
+--
+0100
+--
+what is the ${instrument_parameter} of ${vassar_instrument}
+
+
+
+==================================================
+
+# File: 2009.txt
+
+200
+--
+vassar_measurement vassar_measurement
+--
+0100
+--
+the one for ${vassar_measurement}
+
+
+
+==================================================
+
+# File: 2010.txt
+
+200
+--
+instrument_parameter instrument_parameter
+vassar_measurement vassar_measurement
+--
+0100
+--
+what is the requirement for ${instrument_parameter} for ${vassar_measurement}
+
+
+
+==================================================
+
+# File: 2011.txt
+
+200
+--
+subobjective subobjective
+--
+0100
+--
+the one for ${subobjective}
+
+
+
+==================================================
+
+# File: 2012.txt
+
+200
+--
+--
+0100
+--
+why does this design have this science benefit
+why does this design have this science score
+
+
+
+==================================================
+
+# File: 2013.txt
+
+200
+--
+vassar_stakeholder vassar_stakeholder
+--
+0100
+--
+explain the stakeholder ${vassar_stakeholder} science score for this design
+explain the stakeholder ${vassar_stakeholder} science benefit for this design
+
+
+
+==================================================
+
+# File: 2014.txt
+
+200
+--
+objective objective
+--
+0100
+--
+explain the objective ${objective} science score for this design
+explain the objective ${objective} science benefit for this design
+
+
+
+==================================================
+
+# File: 2015.txt
+
+200
+--
+objective objective
+--
+0100
+--
+which instruments improve the science score for objective ${objective}
+which instruments improve the science benefit for objective ${objective}
+
+
+
+==================================================
+
+# File: 2016.txt
+
+200
+--
+vassar_stakeholder vassar_stakeholder
+--
+0100
+--
+which instruments improve the science score for stakeholder ${vassar_stakeholder}
+which instruments improve the science benefit for stakeholder ${vassar_stakeholder}
+
+
+
+==================================================
+
+# File: 2017.txt
+
+200
+--
+--
+0100
+--
+why does this design have this cost
+
+
+
+==================================================
+
+# File: 2018.txt
+
+200
+--
+--
+0100
+--
+what requirements are not being satisfied
+
+
+
+==================================================
+
+# File: 2019.txt
+
+200
+--
+--
+0100
+--
+how can this requirement be satisfied
+
+
+
+==================================================
+
+# File: 2020.txt
+
+200
+--
+--
+0100
+--
+what does delta-v mean
+what is delta-v
+
+
+==================================================
+
+# File: 2021.txt
+
+200
+--
+--
+0100
+--
+what does eccentricity mean
+what is eccentricity
+
+
+
+==================================================
+
+# File: 2022.txt
+
+200
+--
+--
+0100
+--
+what does inclination mean
+what is inclination
+
+
+
+==================================================
+
+# File: 3000.txt
+
+800
+--
+design_id design_id
+--
+0010
+--
+what are the strengths and weaknesses of ${design_id}
+what are the strengths of ${design_id}
+what are the weaknesses of ${design_id}
+what do you think of design ${design_id}
+
+
+
+==================================================
+
+# File: 3001.txt
+
+200
+--
+design_id design_id
+--
+0010
+--
+are there any similar missions to ${design_id}
+
+
+
+==================================================
+
+# File: 3002.txt
+
+200
+--
+agent agent
+design_id design_id
+--
+0010
+--
+what does the ${agent} think of ${design_id}
+
+
+
+==================================================
+
+# File: 3003.txt
+
+200
+--
+design_id design_id
+--
+0010
+--
+does ${design_id} have any good features
+
+
+
+==================================================
+
+# File: 3004.txt
+
+200
+--
+design_id design_id
+--
+0010
+--
+do you have any suggestion to improve design ${design_id}
+
+
+
+==================================================
+
+# File: 3005.txt
+
+200
+--
+--
+0010
+--
+what do you think of this design
+
+
+
+==================================================
+
+# File: 4000.txt
+
+200
+--
+measurement measurement
+year1 year
+year2 year
+space_agency space_agency
+--
+0001
+--
+which missions can measure ${measurement}
+which missions can measure ${measurement} between ${year1} and ${year2}
+which missions from ${space_agency} can measure ${measurement}
+which missions from ${space_agency} can measure ${measurement} between ${year1} and ${year2}
+
+
+
+==================================================
+
+# File: 4001.txt
+
+200
+--
+measurement measurement
+space_agency space_agency
+--
+0001
+--
+which missions do we currently use to measure ${measurement}
+which missions from ${space_agency} do we currently use to measure ${measurement}
+
+
+
+==================================================
+
+# File: 4002.txt
+
+500
+--
+measurement measurement
+year1 year
+year2 year
+space_agency space_agency
+--
+0001
+--
+which instruments can measure ${measurement}
+which instruments can measure ${measurement} between ${year1} and ${year2}
+which instruments from ${space_agency} can measure ${measurement}
+which instruments from ${space_agency} can measure ${measurement} between ${year1} and ${year2}
+
+
+
+==================================================
+
+# File: 4003.txt
+
+20
+--
+measurement measurement
+space_agency space_agency
+--
+0001
+--
+which instruments do we currently use to measure ${measurement}
+which instruments from ${space_agency} do we currently use to measure ${measurement}
+
+
+
+==================================================
+
+# File: 4004.txt
+
+500
+--
+technology technology
+year1 year
+year2 year
+space_agency space_agency
+--
+0001
+--
+which missions have flown ${technology}
+which missions have flown ${technology} between ${year1} and ${year2}
+which missions from ${space_agency} have flown ${technology}
+which missions from ${space_agency} have flown ${technology} between ${year1} and ${year2}
+
+
+
+==================================================
+
+# File: 4005.txt
+
+50
+--
+technology technology
+space_agency space_agency
+--
+0001
+--
+which missions are currently flying ${technology}
+which missions from ${space_agency} are currently flying ${technology}
+
+
+
+==================================================
+
+# File: 4006.txt
+
+100
+--
+technology technology
+--
+0001
+--
+which orbit is the most common for ${technology}
+which orbit is the most typical for ${technology}
+what orbit do you recommend for ${technology}
+
+
+
+==================================================
+
+# File: 4007.txt
+
+100
+--
+measurement measurement
+--
+0001
+--
+which orbit is the most common for ${measurement}
+which orbit is the most typical for ${measurement}
+what orbit do you recommend for ${measurement}
+
+
+
+==================================================
+
+# File: 4008.txt
+
+400
+--
+mission mission
+--
+0001
+--
+when was mission ${mission} launched
+
+
+
+==================================================
+
+# File: 4009.txt
+
+200
+--
+space_agency space_agency
+--
+0001
+--
+which missions have been launched by ${space_agency}
+which missions have been designed by ${space_agency}
+
+
+
+==================================================
+
+# File: 4010.txt
+
+200
+--
+space_agency space_agency
+measurement measurement
+--
+0001
+--
+show me a timeline of missions which measure ${measurement}
+show me a timeline of missions that measure ${measurement}
+show me a timeline of missions from ${space_agency} which measure ${measurement}
+show me a timeline of missions from ${space_agency} that measure ${measurement}
+

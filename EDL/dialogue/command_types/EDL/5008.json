@@ -1,0 +1,33 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "current_scorecard", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": true, "context": "edlcontext", "subcontext": "" }
+  ],
+  "function":
+  {"run_template": "dialogue_functions.get_flag_summary('${current_scorecard}', context, 'flagged_results')",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+        "load_result": "item['command_result']"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+  {
+    "type": "list",
+    "begin": "The flagged metrics in this scorecard are",
+    "repeat": "${load_result}",
+    "end":"."
+  }
+  ],
+  "visual_response": [
+      {
+    "type": "list",
+    "begin": "The flagged metrics in this scorecard are",
+    "item_template": "${load_result}"
+      }
+  ]
+}

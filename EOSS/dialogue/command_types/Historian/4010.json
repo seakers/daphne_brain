@@ -1,0 +1,48 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "measurement", "type": "measurement", "options": "", "from_context": false, "mandatory": true },
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": false }
+  ],
+  "objective": "see a timeline of missions that take a certain measurement",
+  "query":
+  {
+    "always": "session.query(models.Mission).join(models.Instrument, models.Mission.instruments).filter(models.Instrument.measurements.any(models.Measurement.name.ilike('%${measurement}%')))",
+    "opt": [
+      { "cond": "space_agency", "query_part": ".filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))" }
+    ],
+    "end": ".order_by(models.Mission.launch_date)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "name": "row.name",
+          "status": "row.status",
+          "launch_date": "row.launch_date",
+          "end_date": "row.eol_date"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The timeline for ${measurement} can be seen at the Daphne Answer space.",
+      "repeat": "",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "timeline_plot",
+      "title": "Timeline of missions for ${measurement}",
+      "item": {
+        "category": "${status}",
+        "id": "${name}",
+        "start": "${launch_date}",
+        "end": "${end_date}"
+      }
+    }
+  ]
+}

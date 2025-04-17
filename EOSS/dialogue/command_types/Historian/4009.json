@@ -1,0 +1,39 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "space_agency", "type": "space_agency", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "know which missions were built by a certain space agency",
+  "query":
+  {
+    "always": "session.query(models.Mission).filter(models.Mission.agencies.any(models.Agency.name.ilike('%${space_agency}%')))",
+    "opt": [],
+    "end": ".order_by(models.Mission.launch_date)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "name": "row.name"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "The missions from ${space_agency} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "list",
+      "begin": "The missions from ${space_agency} are ",
+      "repeat": "${name}",
+      "end": "."
+    }
+  ]
+}

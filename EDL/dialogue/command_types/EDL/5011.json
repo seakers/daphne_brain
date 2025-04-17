@@ -1,0 +1,53 @@
+{
+  "type": "run_function",
+  "params":
+  [
+    { "name": "mission", "type": "edl_mission", "options": "", "mandatory": true, "from_context": false },
+    { "name": "edl_mat_param", "type": "edl_mat_param", "options": "", "mandatory": true, "from_context": false },
+    { "name": "edl_mat_file", "type": "edl_mat_file", "options": "", "mandatory": true, "from_context": false }
+  ],
+  "function":
+  {
+    "run_template": "dialogue_functions.compute_stat('${mission}','${edl_mat_file}', '${edl_mat_param}', context)",
+    "results": [
+      {
+        "result_type": "list",
+        "result_fields": {
+          "load_result": "item['command_result']"
+        }
+      },
+      {
+        "result_type": "list",
+        "result_fields": {
+          "hist_elem": "item"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "list",
+      "begin": "For ${edl_mat_param} in ${edl_mat_file}, the statistics are",
+      "repeat": "${load_result}",
+      "end":"."
+    },
+    {
+      "type": "list",
+      "begin": "",
+      "repeat": "",
+      "end":""
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "list",
+      "begin": "For ${edl_mat_param} in ${edl_mat_file}, the statistics are",
+      "item_template": "${load_result}"
+    },
+    {
+      "type": "hist_plot",
+      "title": "Statistics for ${edl_mat_param}",
+      "item_template": "${hist_elem}"
+    }
+  ]
+}

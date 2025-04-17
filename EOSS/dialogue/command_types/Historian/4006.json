@@ -1,0 +1,36 @@
+{
+  "type": "db_query",
+  "params":
+  [
+    { "name": "technology", "type": "technology", "options": "", "from_context": false, "mandatory": true }
+  ],
+  "objective": "know what orbit is the most common for a certain technology",
+  "query":
+  {
+    "always": "session.query(models.TechTypeMostCommonOrbit).filter(models.TechTypeMostCommonOrbit.techtype.ilike('%${technology}%'))",
+    "opt": [],
+    "end": "",
+    "results": [
+      {
+        "result_type": "single",
+        "result_fields": {
+          "orbit": "response_helpers.print_orbit(row.orbit)"
+        }
+      }
+    ]
+  },
+  "voice_response": [
+    {
+      "type": "single",
+      "template": "The most common orbit for ${technology} is ${orbit}."
+
+    }
+  ],
+  "visual_response": [
+    {
+      "type": "text",
+      "from": "single",
+      "template": "The most common orbit for ${technology} is ${orbit}."
+    }
+  ]
+}

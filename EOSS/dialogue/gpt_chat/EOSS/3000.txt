@@ -1,0 +1,10 @@
+800
+--
+design_id design_id
+--
+0010
+--
+what are the strengths and weaknesses of ${design_id}
+what are the strengths of ${design_id}
+what are the weaknesses of ${design_id}
+what do you think of design ${design_id}

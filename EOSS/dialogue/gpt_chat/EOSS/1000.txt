@@ -1,0 +1,21 @@
+200
+--
+--
+1000
+--
+what are the features that are shared by the target designs
+what is the feature that is unique to the solutions in the target region
+what are the patterns that are found in the target designs
+what are the patterns that are found in the selected region
+what are the patterns that are found in good designs
+what are the patterns that are found in the high performance region
+what are the recurring patterns within the low-cost region
+what are the driving features
+what is the driving feature
+can you suggest a good feature that describes the target region well
+which feature can be found in the designs in the target region
+which feature covers all the solutions in the target region
+what feature covers the selected region well
+what is a good feature describing this target region
+what features describe the target region well
+what are the recurring patterns in the target region
